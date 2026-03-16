@@ -9,8 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { getAgents, toggleAgentStatus, topUpAgentBalance, resetAgentBalance } from '@/services/agent';
-import { signUp } from '@/services/auth';
+import { getAgents, toggleAgentStatus, topUpAgentBalance, resetAgentBalance, createAgent } from '@/services/agent';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import type { AgentWithBalance, UserRole } from '@/types';
 import { Users, Plus, Search, Phone, Mail, CreditCard, CheckCircle, AlertCircle, RotateCcw } from 'lucide-react';
@@ -62,7 +61,7 @@ export default function AgentsPage() {
     e.preventDefault();
     setCreating(true);
     try {
-      const result = await signUp({
+      const result = await createAgent({
         ...newAgent,
         role: 'gestor' as UserRole,
         country: '',

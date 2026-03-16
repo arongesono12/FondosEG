@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { AuthzError, requireProfile, requireRole } from '@/lib/server/authz';
 
 interface UserPresence {
   id: string;
@@ -41,6 +42,8 @@ function parseUA(ua: string): { device: UserPresence['device']; browser: string;
 
 export async function GET() {
   try {
+    const profile = await requireProfile();
+    requireRole(profile, 'admin');
     const adminClient = createAdminClient();
 
     // Get all users
@@ -107,6 +110,9 @@ export async function GET() {
     return NextResponse.json(result);
   } catch (err) {
     console.error('[GET /api/users-presence]', err);
-    return NextResponse.json([], { status: 500 });
+    if (err instanceof AuthzError) {
+      return NextResponse.json({ error: err.message }, { status: err.status });
+    }
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

@@ -47,7 +47,7 @@ export function SearchModal({ open, onOpenChange }: SearchModalProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl bg-card/95 glass-premium border-border/20 rounded-[2.5rem] p-0 overflow-hidden outline-none fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50">
+      <DialogContent className="max-w-2xl bg-card/95 glass-premium border-border/20 rounded-[2.5rem] p-0 overflow-hidden outline-none max-h-[80vh] flex flex-col">
         <DialogTitle className="sr-only">Buscador Global</DialogTitle>
 
         <div className="p-6 border-b border-border/10 relative">

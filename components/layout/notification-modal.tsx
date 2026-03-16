@@ -127,7 +127,7 @@ export function NotificationModal({ open, onOpenChange }: NotificationModalProps
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-md bg-card/95 glass-premium border-border/20 rounded-3xl p-0 overflow-hidden outline-none fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50 max-h-[80vh] flex flex-col">
+        <DialogContent className="max-w-md bg-card border-border/20 rounded-3xl p-0 overflow-hidden max-h-[80vh] flex flex-col">
           <DialogHeader className="p-6 border-b border-border/10 shrink-0">
             <div className="flex items-center justify-between">
               <DialogTitle className="flex items-center gap-2 text-xl font-black text-foreground">

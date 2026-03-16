@@ -68,7 +68,7 @@ export default function TransfersPage() {
           user?.role === 'admin' 
             ? Promise.resolve(null) 
             : getAgentDashboardStats(user?.id || ''),
-          getRecentTransfers(20, user?.role === 'gestor' ? user.id : undefined),
+          getRecentTransfers(20),
           user?.role === 'admin' ? getDailyTransferStats(30) : Promise.resolve([]),
         ]);
         
@@ -89,13 +89,13 @@ export default function TransfersPage() {
 
   const refreshData = async () => {
     try {
-      const [statsData, transfersData, dailyData] = await Promise.all([
-        user?.role === 'admin' 
-          ? Promise.resolve(null) 
-          : getAgentDashboardStats(user?.id || ''),
-        getRecentTransfers(20, user?.role === 'gestor' ? user.id : undefined),
-        user?.role === 'admin' ? getDailyTransferStats(30) : Promise.resolve([]),
-      ]);
+        const [statsData, transfersData, dailyData] = await Promise.all([
+          user?.role === 'admin' 
+            ? Promise.resolve(null) 
+            : getAgentDashboardStats(user?.id || ''),
+          getRecentTransfers(20),
+          user?.role === 'admin' ? getDailyTransferStats(30) : Promise.resolve([]),
+        ]);
       
       setStats(statsData);
       setRecentTransfers(transfersData || []);

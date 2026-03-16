@@ -5,9 +5,6 @@ import { createClient } from '@/lib/supabase/server';
 import type { RegisterFormData } from '@/types';
 
 export async function signUpAction(data: RegisterFormData) {
-  console.log('signUpAction starting...');
-  console.log('URL:', process.env.NEXT_PUBLIC_SUPABASE_URL);
-  
   const adminClient = createAdminClient();
 
   const { data: authData, error } = await adminClient.auth.admin.createUser({
@@ -33,9 +30,6 @@ export async function signUpAction(data: RegisterFormData) {
 }
 
 export async function signInAction(email: string, password: string) {
-  console.log('signInAction starting for:', email);
-  console.log('URL:', process.env.NEXT_PUBLIC_SUPABASE_URL);
-
   try {
     const supabase = await createClient();
     const { data, error } = await supabase.auth.signInWithPassword({

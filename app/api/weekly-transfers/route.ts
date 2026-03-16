@@ -1,8 +1,11 @@
 import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { AuthzError, requireProfile, requireRole } from '@/lib/server/authz';
 
 export async function GET() {
   try {
+    const profile = await requireProfile();
+    requireRole(profile, 'admin');
     const adminClient = createAdminClient();
 
     const startDate = new Date();
@@ -44,6 +47,9 @@ export async function GET() {
     return NextResponse.json(result);
   } catch (err) {
     console.error('[GET /api/weekly-transfers]', err);
-    return NextResponse.json([], { status: 500 });
+    if (err instanceof AuthzError) {
+      return NextResponse.json({ error: err.message }, { status: err.status });
+    }
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

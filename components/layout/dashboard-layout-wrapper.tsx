@@ -39,7 +39,7 @@ import { SearchModal } from './search-modal';
 import { NotificationModal } from './notification-modal';
 import { SettingsModal } from './settings-modal';
 import { SupportModal } from './support-modal';
-import { getAgentNotifications, getAdminNotifications, getUnreadNotificationCount, getClientUnreadNotificationCount } from '@/services/transfer';
+import { getUnreadNotificationCount, getClientUnreadNotificationCount, getAdminUnreadNotificationCount } from '@/services/transfer';
 import { getAgentBalance } from '@/services/agent';
 import { useTheme } from 'next-themes';
 
@@ -76,8 +76,8 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
       if (!user?.id) return;
       try {
         if (user.role === 'admin') {
-          const notifications = await getAdminNotifications();
-          setNotificationCount(notifications.length);
+          const count = await getAdminUnreadNotificationCount();
+          setNotificationCount(count);
         } else if (user.role === 'gestor') {
           const count = await getUnreadNotificationCount(user.id);
           setNotificationCount(count);
@@ -152,15 +152,17 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
         </div>
       </div>
       
-      {/* Mobile: Full screen card | Desktop: Max width card */}
+      {/* Mobile: Full screen card | Desktop: Max width card with rounded top corners */}
       <div className={cn(
         "mx-auto w-full relative flex flex-col",
         "md:max-w-[1440px] md:h-[calc(100vh-4rem)] md:rounded-[2.5rem] md:shadow-xl md:shadow-slate-200/20 dark:md:shadow-black/20 md:border md:border-border/10",
         "h-screen md:h-auto"
       )}>
-        {/* Top Header Navigation */}
+        {/* Top Header Navigation - rounded top corners to match container */}
         <header className={cn(
-          "h-16 md:h-20 flex items-center justify-between px-4 md:px-10 border-b border-border/10 shrink-0 bg-card/50 backdrop-blur-xl transition-all duration-300 z-50",
+          "h-16 md:h-20 flex items-center justify-between px-4 md:px-10 border-b border-border/10 shrink-0 transition-all duration-300 z-50",
+          isDark ? "bg-gradient-to-b from-slate-900 to-slate-950" : "bg-gradient-to-b from-white to-slate-50",
+          "md:rounded-t-[2.5rem]",
           scrolled && "h-14 md:h-16 shadow-lg shadow-black/5"
         )}>
           {/* Left side: Logo + Nav */}

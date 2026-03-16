@@ -12,7 +12,7 @@ ADD COLUMN IF NOT EXISTS read_at TIMESTAMPTZ;
 CREATE INDEX IF NOT EXISTS idx_notifications_is_read ON public.notifications(is_read);
 
 -- Create function to mark notification as read
-CREATE OR REPLACE FUNCTION mark_notification_read(notification_id UUID)
+CREATE OR REPLACE FUNCTION public.mark_notification_read(notification_id UUID)
 RETURNS VOID AS $$
 BEGIN
   UPDATE public.notifications 
@@ -20,21 +20,22 @@ BEGIN
       read_at = NOW()
   WHERE id = notification_id;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
 -- Create function to mark all notifications as read for a transfer
-CREATE OR REPLACE FUNCTION mark_transfer_notifications_read(transfer_id UUID)
+DROP FUNCTION IF EXISTS public.mark_transfer_notifications_read(UUID);
+CREATE OR REPLACE FUNCTION public.mark_transfer_notifications_read(transfer_id UUID)
 RETURNS VOID AS $$
 BEGIN
   UPDATE public.notifications 
   SET is_read = TRUE, 
       read_at = NOW()
-  WHERE transfer_id = transfer_id;
+  WHERE public.notifications.transfer_id = transfer_id;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
 -- Create function to get unread count
-CREATE OR REPLACE FUNCTION get_unread_notification_count(agent_id UUID)
+CREATE OR REPLACE FUNCTION public.get_unread_notification_count(agent_id UUID)
 RETURNS INTEGER AS $$
 DECLARE
   count_val INTEGER;
@@ -47,8 +48,19 @@ BEGIN
   
   RETURN count_val;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
 -- Add unique constraint for notifications to prevent duplicates
-ALTER TABLE public.notifications
-ADD CONSTRAINT unique_notification UNIQUE (transfer_id, phone);
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_constraint
+    WHERE conname = 'unique_notification'
+      AND conrelid = 'public.notifications'::regclass
+  ) THEN
+    ALTER TABLE public.notifications
+    ADD CONSTRAINT unique_notification UNIQUE (transfer_id, phone);
+  END IF;
+END
+$$;

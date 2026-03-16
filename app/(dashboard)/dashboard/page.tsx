@@ -61,7 +61,7 @@ export default function DashboardPage() {
       try {
         const [statsData, transfersData, commissionData] = await Promise.all([
           user?.role === 'admin' ? getAdminDashboardStats() : getAgentDashboardStats(user?.id || ''),
-          getRecentTransfers(5, user?.role === 'gestor' ? user.id : undefined),
+          getRecentTransfers(5),
           user?.role === 'admin' ? getAgentsCommissionStats() : Promise.resolve(null)
         ]);
         setStats(statsData);

@@ -6,14 +6,14 @@ import { ThemeProvider } from "@/components/theme-provider";
 
 const poppins = Poppins({
   subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
+  weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
   variable: "--font-poppins",
   display: "swap",
 });
 
 const inter = Inter({
   subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
+  weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
   variable: "--font-inter",
   display: "swap",
 });
@@ -35,7 +35,7 @@ export default function RootLayout({
           attribute="class"
           defaultTheme="system"
           enableSystem
-          disableTransitionOnChange
+          disableTransitionOnChange={false}
         >
           {children}
         </ThemeProvider>

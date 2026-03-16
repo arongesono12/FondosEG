@@ -1,10 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  env: {
-    NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
-    SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
-  },
+  // Do not expose server-only secrets (e.g. Supabase service role key) via `env`.
+  // `NEXT_PUBLIC_*` vars are automatically available to the client by Next.js.
 };
 
 export default nextConfig;

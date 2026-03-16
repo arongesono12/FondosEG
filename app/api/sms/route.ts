@@ -1,22 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { AuthzError, requireProfile, requireRole } from '@/lib/server/authz';
 
 const accountSid = process.env.TWILIO_ACCOUNT_SID;
 const authToken = process.env.TWILIO_AUTH_TOKEN;
 const twilioPhoneNumber = process.env.TWILIO_PHONE_NUMBER;
 
-interface SMSData {
+interface SMSBody {
   transferId: string;
-  transferCode: string;
-  senderPhone: string;
-  receiverPhone: string;
-  senderName: string;
-  receiverName: string;
-  amount: number;
-  currency: string;
-  destinationCity?: string;
-  agentName?: string;
-  agentPhone?: string;
+}
+
+function formatPhoneNumber(phone: string): string {
+  const cleaned = phone.replace(/\D/g, '');
+  if (cleaned.startsWith('237')) return `+${cleaned}`;
+  if (cleaned.startsWith('6') && cleaned.length === 9) return `+237${cleaned}`;
+  if (phone.trim().startsWith('+')) return phone.trim();
+  return `+${cleaned}`;
 }
 
 async function saveNotification(
@@ -28,109 +27,110 @@ async function saveNotification(
   twilioSid?: string,
   errorMessage?: string
 ) {
-  await supabaseAdmin.from('notifications').insert({
-    transfer_id: transferId,
-    phone: phone,
-    message: message,
-    status: status,
-    twilio_sid: twilioSid || null,
-    error_message: errorMessage || null,
-    sent_at: status === 'sent' ? new Date().toISOString() : null,
-  });
-}
-
-async function sendSMS(client: any, to: string, body: string, from: string) {
-  return await client.messages.create({
-    body: body,
-    from: from,
-    to: to,
-  });
+  try {
+    await supabaseAdmin.from('notifications').insert({
+      transfer_id: transferId,
+      phone,
+      message,
+      status,
+      twilio_sid: twilioSid || null,
+      error_message: errorMessage || null,
+      sent_at: status === 'sent' ? new Date().toISOString() : null,
+    });
+  } catch (err) {
+    // Avoid failing the whole request due to notification logging.
+    console.error('Error saving notification:', err);
+  }
 }
 
 export async function POST(request: NextRequest) {
   const supabaseAdmin = createAdminClient();
-  
-  try {
-    const data: SMSData = await request.json();
 
-    if (!accountSid || !authToken || !twilioPhoneNumber) {
-      console.log('Twilio not configured, skipping SMS');
-      
-      await Promise.all([
-        saveNotification(supabaseAdmin, data.transferId, data.senderPhone, 'SMS no enviado - Twilio no configurado', 'failed'),
-        saveNotification(supabaseAdmin, data.transferId, data.receiverPhone, 'SMS no enviado - Twilio no configurado', 'failed'),
-      ]);
-      
-      return NextResponse.json({ 
-        success: true, 
-        message: 'Twilio no configurado, SMS omitido' 
-      });
+  try {
+    const profile = await requireProfile();
+    requireRole(profile, ['admin', 'gestor']);
+
+    const body: SMSBody = await request.json();
+    if (!body.transferId) {
+      return NextResponse.json({ error: 'transferId is required' }, { status: 400 });
     }
 
-    function formatPhoneNumber(phone: string): string {
-      const cleaned = phone.replace(/\D/g, '');
-      if (cleaned.startsWith('237')) {
-        return '+' + cleaned;
-      }
-      if (cleaned.startsWith('6') && cleaned.length === 9) {
-        return '+237' + cleaned;
-      }
-      if (cleaned.startsWith('+')) {
-        return cleaned;
-      }
-      return '+' + cleaned;
+    const { data: transfer, error: transferError } = await supabaseAdmin
+      .from('transfers')
+      .select('id, transfer_code, agent_id, sender_name, sender_phone, receiver_name, receiver_phone, destination_city, amount, currency')
+      .eq('id', body.transferId)
+      .single();
+
+    if (transferError || !transfer) {
+      return NextResponse.json({ error: 'Transfer not found' }, { status: 404 });
+    }
+
+    if (profile.role === 'gestor' && transfer.agent_id !== profile.id) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
+    const senderMessage = `SendDirect: Su transferencia de ${transfer.amount} ${transfer.currency} ha sido registrada correctamente.\n\nRemitente: ${transfer.sender_name}\nDestinatario: ${transfer.receiver_name}\nMonto: ${transfer.amount} ${transfer.currency}\nCódigo: ${transfer.transfer_code}\n\nGracias por confiar en SendDirect.`;
+
+    const receiverMessage = `SendDirect: Tiene una transferencia disponible de ${transfer.amount} ${transfer.currency} de ${transfer.sender_name}.\n\nCiudad: ${transfer.destination_city || 'N/A'}\nCódigo de retiro: ${transfer.transfer_code}\n\nAcuda a cualquier agente SendDirect para retirar su dinero.`;
+
+    if (!accountSid || !authToken || !twilioPhoneNumber) {
+      await Promise.all([
+        saveNotification(supabaseAdmin, transfer.id, transfer.sender_phone, 'SMS no enviado - Twilio no configurado', 'failed'),
+        saveNotification(supabaseAdmin, transfer.id, transfer.receiver_phone, 'SMS no enviado - Twilio no configurado', 'failed'),
+      ]);
+      return NextResponse.json({ success: true, message: 'Twilio no configurado, SMS omitido' });
     }
 
     const twilio = await import('twilio');
     const client = twilio.default(accountSid, authToken);
 
-    const formattedSenderPhone = formatPhoneNumber(data.senderPhone);
-    const formattedReceiverPhone = formatPhoneNumber(data.receiverPhone);
+    const formattedSenderPhone = formatPhoneNumber(transfer.sender_phone);
+    const formattedReceiverPhone = formatPhoneNumber(transfer.receiver_phone);
 
-    console.log('Sending SMS from:', formattedSenderPhone, 'to:', formattedReceiverPhone);
-
-    const senderMessage = `SendDirect: Su transferencia de ${data.amount} ${data.currency} ha sido registrada correctamente.\n\nRemitente: ${data.senderName}\nDestinatario: ${data.receiverName}\nMonto: ${data.amount} ${data.currency}\nCódigo: ${data.transferCode}\n\nGracias por confiar en SendDirect.`;
-    
-    const receiverMessage = `SendDirect: Tiene una transferencia disponible de ${data.amount} ${data.currency} de ${data.senderName}.\n\nCiudad: ${data.destinationCity || 'N/A'}\nCódigo de retiro: ${data.transferCode}\n\nAcuda a cualquier agente SendDirect para retirar su dinero.`;
-
-    let senderSid = null;
-    let receiverSid = null;
-    let senderError = null;
-    let receiverError = null;
+    let senderSid: string | null = null;
+    let receiverSid: string | null = null;
+    let senderError: string | null = null;
+    let receiverError: string | null = null;
 
     try {
-      const senderResult = await sendSMS(client, formattedSenderPhone, senderMessage, twilioPhoneNumber);
+      const senderResult = await client.messages.create({
+        body: senderMessage,
+        from: twilioPhoneNumber,
+        to: formattedSenderPhone,
+      });
       senderSid = senderResult.sid;
-      console.log('SMS sent to sender:', senderSid);
     } catch (error: any) {
-      senderError = error.message || 'Error sending to sender';
+      senderError = error?.message || 'Error sending to sender';
       console.error('Error sending SMS to sender:', senderError);
     }
 
     try {
-      const receiverResult = await sendSMS(client, formattedReceiverPhone, receiverMessage, twilioPhoneNumber);
+      const receiverResult = await client.messages.create({
+        body: receiverMessage,
+        from: twilioPhoneNumber,
+        to: formattedReceiverPhone,
+      });
       receiverSid = receiverResult.sid;
-      console.log('SMS sent to receiver:', receiverSid);
     } catch (error: any) {
-      receiverError = error.message || 'Error sending to receiver';
+      receiverError = error?.message || 'Error sending to receiver';
       console.error('Error sending SMS to receiver:', receiverError);
     }
 
     await Promise.all([
       saveNotification(
-        supabaseAdmin, 
-        data.transferId, 
-        data.senderPhone, 
-        senderMessage, 
+        supabaseAdmin,
+        transfer.id,
+        transfer.sender_phone,
+        senderMessage,
         senderSid ? 'sent' : 'failed',
         senderSid || undefined,
         senderError || undefined
       ),
       saveNotification(
-        supabaseAdmin, 
-        data.transferId, 
-        data.receiverPhone, 
-        receiverMessage, 
+        supabaseAdmin,
+        transfer.id,
+        transfer.receiver_phone,
+        receiverMessage,
         receiverSid ? 'sent' : 'failed',
         receiverSid || undefined,
         receiverError || undefined
@@ -139,19 +139,20 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      senderSid: senderSid,
-      receiverSid: receiverSid,
+      senderSid,
+      receiverSid,
       senderStatus: senderSid ? 'sent' : 'failed',
       receiverStatus: receiverSid ? 'sent' : 'failed',
-      senderError: senderError,
-      receiverError: receiverError,
+      senderError,
+      receiverError,
     });
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     console.error('SMS Error:', errorMessage);
-    return NextResponse.json({
-      success: false,
-      error: errorMessage,
-    }, { status: 500 });
+    if (error instanceof AuthzError) {
+      return NextResponse.json({ success: false, error: error.message }, { status: error.status });
+    }
+    return NextResponse.json({ success: false, error: errorMessage }, { status: 500 });
   }
 }
+

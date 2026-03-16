@@ -4,7 +4,7 @@
 :root {
   --background: hsl(220 33% 98%);
   --foreground: hsl(224 71.4% 4.1%);
-  --card: hsl(0 0% 100% / 0.6);
+  --card: hsl(0 0% 100% / 0.72);
   --card-foreground: hsl(224 71.4% 4.1%);
   --popover: hsl(0 0% 100% / 0.8);
   --popover-foreground: hsl(224 71.4% 4.1%);
@@ -24,17 +24,21 @@
   --radius: 1.5rem;
 
   /* Glass Effects */
-  --glass-bg: rgba(255, 255, 255, 0.05);
-  --glass-border: rgba(255, 255, 255, 0.3);
-  --glass-glow: rgba(255, 255, 255, 0.8);
-
-
+  --glass-border: rgba(2, 6, 23, 0.08);
+  --glass-glow: rgba(255, 255, 255, 0.75);
+  --glass-overlay-top: rgba(255, 255, 255, 0.35);
+  --glass-overlay-bottom: rgba(255, 255, 255, 0.10);
+  --glass-radial: rgba(255, 255, 255, 0.25);
+  --glass-edge-strong: rgba(255, 255, 255, 0.65);
+  --glass-edge-soft: rgba(255, 255, 255, 0.25);
+  --glass-shadow: 0 18px 60px rgba(2, 6, 23, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  --glass-shadow-hover: 0 22px 80px rgba(2, 6, 23, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.6);
 }
 
 .dark {
   --background: hsl(224 71% 4%);
   --foreground: hsl(210 20% 98%);
-  --card: hsl(224 71% 7% / 0.8);
+  --card: hsl(224 71% 7% / 0.56);
   --card-foreground: hsl(210 20% 98%);
   --popover: hsl(224 71% 4% / 0.9);
   --popover-foreground: hsl(210 20% 98%);
@@ -53,9 +57,15 @@
   --ring: hsl(346 80% 55%);
 
   /* Glass Dark Effects */
-  --glass-bg: rgba(255, 255, 255, 0.03);
-  --glass-border: rgba(255, 255, 255, 0.08);
-  --glass-glow: rgba(255, 255, 255, 0.05);
+  --glass-border: rgba(255, 255, 255, 0.10);
+  --glass-glow: rgba(255, 255, 255, 0.20);
+  --glass-overlay-top: rgba(255, 255, 255, 0.08);
+  --glass-overlay-bottom: rgba(255, 255, 255, 0.02);
+  --glass-radial: rgba(255, 255, 255, 0.10);
+  --glass-edge-strong: rgba(255, 255, 255, 0.22);
+  --glass-edge-soft: rgba(255, 255, 255, 0.08);
+  --glass-shadow: 0 22px 80px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  --glass-shadow-hover: 0 28px 95px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
 @theme {
@@ -89,20 +99,26 @@
 
 @layer utilities {
 
-
+  .glass,
   .glass-premium {
-    background: var(--glass-bg);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border-radius: 20px;
-    border: 1px solid var(--border);
-    box-shadow: 
-      0 12px 40px rgba(0, 0, 0, 0.05),
-      inset 0 1px 0 rgba(255, 255, 255, 0.05),
-      inset 0 -1px 0 rgba(0, 0, 0, 0.02);
+    position: relative;
     overflow: hidden;
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+    background-image:
+      radial-gradient(900px circle at 0% 0%, var(--glass-radial), transparent 55%),
+      radial-gradient(800px circle at 100% 0%, rgba(255, 255, 255, 0.08), transparent 60%),
+      linear-gradient(180deg, var(--glass-overlay-top), var(--glass-overlay-bottom));
   }
 
+  .glass:hover,
+  .glass-premium:hover {
+    box-shadow: var(--glass-shadow-hover);
+  }
+
+  .glass::before,
   .glass-premium::before {
     content: '';
     position: absolute;
@@ -120,6 +136,7 @@
     pointer-events: none;
   }
 
+  .glass::after,
   .glass-premium::after {
     content: '';
     position: absolute;
@@ -129,9 +146,9 @@
     height: 100%;
     background: linear-gradient(
       180deg,
-      rgba(255, 255, 255, 0.8),
+      var(--glass-edge-strong),
       transparent,
-      rgba(255, 255, 255, 0.3)
+      var(--glass-edge-soft)
     );
     z-index: 1;
     pointer-events: none;
@@ -160,21 +177,54 @@
 }
 
 html {
-  transition: background-color 0.3s ease, color 0.3s ease;
+  transition: background-color 0.15s ease, color 0.15s ease;
 }
 
 body {
   @apply bg-background text-foreground;
   font-family: var(--font-poppins), var(--font-inter), system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   min-height: 100vh;
-  transition: background-color 0.3s ease, color 0.3s ease;
+  transition: background-color 0.15s ease, color 0.15s ease;
 }
 
-/* Theme transition for all elements */
-html, body, div, section, header, footer, main, nav, aside, article, 
-p, span, h1, h2, h3, h4, h5, h6, a, button, input, textarea, select,
-.card, .bg-card, .bg-background, .bg-muted, .bg-primary, .bg-secondary,
-.text-foreground, .text-muted-foreground, .text-primary, .text-secondary-foreground,
-.border, .border-border, .divide-border, .ring, .accent {
-  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+/* Theme transition - optimized for performance */
+*, *::before, *::after {
+  transition-property: background-color, border-color, color, fill, stroke;
+  transition-duration: 0.15s;
+  transition-timing-function: ease;
+}
+
+/* Disable transitions for animations that should be instant */
+[data-state="open"],
+[data-state="closed"],
+.animate-in,
+.animate-out,
+[aria-expanded="true"],
+[aria-expanded="false"],
+dialog,
+dialog *,
+.sr-only,
+.pointer-events-none {
+  transition: none !important;
+}
+
+/* Smooth theme transitions for specific elements */
+.bg-card,
+.bg-background,
+.bg-muted,
+.bg-primary\/5,
+.bg-primary\/10,
+.bg-green-50,
+.bg-red-50,
+.bg-amber-50,
+.bg-blue-50,
+.bg-purple-50,
+.text-foreground,
+.text-muted-foreground,
+.border,
+.border-border,
+.border-border\/5,
+.border-border\/10,
+.border-border\/20 {
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
 }

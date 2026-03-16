@@ -1,8 +1,10 @@
 import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { AuthzError, requireProfile } from '@/lib/server/authz';
 
 export async function GET() {
   try {
+    await requireProfile();
     const adminClient = createAdminClient();
     const { data, error } = await adminClient
       .from('users')
@@ -18,6 +20,9 @@ export async function GET() {
     return NextResponse.json(data || []);
   } catch (err) {
     console.error('[GET /api/admins]', err);
-    return NextResponse.json([], { status: 500 });
+    if (err instanceof AuthzError) {
+      return NextResponse.json({ error: err.message }, { status: err.status });
+    }
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

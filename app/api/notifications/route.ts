@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { AuthzError, requireProfile, requireRole, requireSelfOrAdmin } from '@/lib/server/authz';
 
 export async function GET(request: NextRequest) {
   try {
@@ -7,8 +8,13 @@ export async function GET(request: NextRequest) {
     const userId = searchParams.get('userId');
     const type = searchParams.get('type');
 
-    if (!userId) {
-      return NextResponse.json({ error: 'User ID required' }, { status: 400 });
+    const profile = await requireProfile();
+    const targetUserId = userId || profile.id;
+
+    if (type === 'admin') {
+      requireRole(profile, 'admin');
+    } else if (userId) {
+      requireSelfOrAdmin(profile, userId);
     }
 
     const adminClient = createAdminClient();
@@ -16,7 +22,7 @@ export async function GET(request: NextRequest) {
     let query = adminClient
       .from('notifications')
       .select('*')
-      .eq('user_id', userId)
+      .eq('user_id', targetUserId)
       .order('created_at', { ascending: false })
       .limit(50);
 
@@ -35,12 +41,18 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(data || []);
   } catch (error) {
     console.error('Notifications API error:', error);
+    if (error instanceof AuthzError) {
+      return NextResponse.json({ error: error.message }, { status: error.status });
+    }
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
+    const profile = await requireProfile();
+    requireRole(profile, 'admin');
+
     const body = await request.json();
     const { 
       userId, 
@@ -77,6 +89,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: true, notification: data });
   } catch (error) {
     console.error('Create notification error:', error);
+    if (error instanceof AuthzError) {
+      return NextResponse.json({ error: error.message }, { status: error.status });
+    }
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
