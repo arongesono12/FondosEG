@@ -127,7 +127,7 @@ export function NotificationModal({ open, onOpenChange }: NotificationModalProps
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-md bg-card border-border/20 rounded-3xl p-0 overflow-hidden max-h-[80vh] flex flex-col">
+        <DialogContent className="max-w-md p-0 overflow-hidden max-h-[80vh] flex flex-col">
           <DialogHeader className="p-6 border-b border-border/10 shrink-0">
             <div className="flex items-center justify-between">
               <DialogTitle className="flex items-center gap-2 text-xl font-black text-foreground">
@@ -246,7 +246,7 @@ export function NotificationModal({ open, onOpenChange }: NotificationModalProps
 
       {/* Modal de Detalle de Notificación */}
       <Dialog open={!!selectedNotification} onOpenChange={(open) => !open && setSelectedNotification(null)}>
-        <DialogContent className="max-w-lg bg-card/95 border-border/20 rounded-3xl p-0 overflow-hidden outline-none">
+        <DialogContent className="max-w-lg p-0 overflow-hidden outline-none">
           <DialogHeader className="p-6 border-b border-border/10">
             <div className="flex items-center justify-between">
               <DialogTitle className="flex items-center gap-2 text-xl font-black text-foreground">

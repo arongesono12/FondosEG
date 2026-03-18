@@ -3,9 +3,34 @@
 import { createAdminClient } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
 import type { RegisterFormData } from '@/types';
+import { isValidEmailDomain, isValidEmailFormat, validatePassword } from '@/lib/email-validation';
 
 export async function signUpAction(data: RegisterFormData) {
   const adminClient = createAdminClient();
+
+  if (!isValidEmailFormat(data.email)) {
+    return { success: false, error: 'El formato del correo electrónico es inválido' };
+  }
+
+  const emailValidation = isValidEmailDomain(data.email);
+  if (!emailValidation.valid) {
+    return { success: false, error: emailValidation.message };
+  }
+
+  const passwordValidation = validatePassword(data.password);
+  if (!passwordValidation.valid) {
+    return { success: false, error: passwordValidation.errors[0] };
+  }
+
+  const { data: existingUser } = await adminClient
+    .from('users')
+    .select('email')
+    .eq('email', data.email.toLowerCase())
+    .single();
+
+  if (existingUser) {
+    return { success: false, error: 'El correo electrónico ya está registrado' };
+  }
 
   const { data: authData, error } = await adminClient.auth.admin.createUser({
     email: data.email,

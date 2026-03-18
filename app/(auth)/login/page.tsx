@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { signInAction } from '@/app/actions/auth';
 import { TrendingUp, Eye, EyeOff } from 'lucide-react';
 
@@ -36,7 +36,7 @@ export default function LoginPage() {
 
   return (
     <div className="w-full">
-      <Card className="backdrop-blur-xl bg-card/80 border-border/50 shadow-xl hover:shadow-primary/10 transition-all duration-300 rounded-2xl md:rounded-3xl overflow-hidden ring-1 ring-border/5">
+      <div className="bg-white/40 dark:bg-[#10121B]/40 border border-white/18 shadow-xl hover:shadow-2xl hover:border-white/30 dark:hover:shadow-[0_0_20px_rgba(255,255,255,0.15)] transition-all duration-500 rounded-[10px] backdrop-blur-[2px] overflow-hidden text-card-foreground dark:text-white">
         <CardHeader className="space-y-2 text-center pb-4 md:pb-2">
           <div className="flex justify-center mb-2">
             <div className="p-3 rounded-2xl bg-linear-to-br from-pink-500 to-rose-600 text-white shadow-lg">
@@ -46,7 +46,7 @@ export default function LoginPage() {
           <CardTitle className="text-2xl md:text-3xl font-black tracking-tighter bg-brand-gradient bg-clip-text text-transparent">
             SendDirect
           </CardTitle>
-          <CardDescription className="text-muted-foreground text-sm">
+          <CardDescription className="text-muted-foreground dark:text-white/60 text-sm">
             Ingresa tus credenciales
           </CardDescription>
         </CardHeader>
@@ -58,32 +58,32 @@ export default function LoginPage() {
               </div>
             )}
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-sm font-medium text-muted-foreground">Correo electrónico</Label>
+              <Label htmlFor="email" className="text-sm font-medium text-foreground/80 dark:text-white/80">Correo electrónico</Label>
               <Input
                 id="email"
                 type="email"
                 placeholder="correo@ejemplo.com"
-                className="border border-border focus:ring-2 focus:ring-pink-500/50 focus:border-transparent transition-all h-11 px-4 rounded-xl text-foreground placeholder:text-muted-foreground"
+                className="bg-white dark:bg-[#1a1a1a] border border-border/50 dark:border-white/10 focus:ring-2 focus:ring-pink-500/50 focus:border-primary/50 dark:focus:border-white/20 transition-all h-11 px-4 rounded-xl text-foreground dark:text-white placeholder:text-muted-foreground dark:placeholder:text-white/50"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password" className="text-sm font-medium text-muted-foreground">Contraseña</Label>
+              <Label htmlFor="password" className="text-sm font-medium text-foreground/80 dark:text-white/80">Contraseña</Label>
               <div className="relative">
                 <Input
                   id="password"
                   type={showPassword ? "text" : "password"}
                   placeholder="••••••••"
-                  className="border border-border focus:ring-2 focus:ring-pink-500/50 focus:border-transparent transition-all h-11 px-4 pr-10 rounded-xl text-foreground placeholder:text-muted-foreground"
+                  className="bg-white dark:bg-[#1a1a1a] border border-border/50 dark:border-white/10 focus:ring-2 focus:ring-pink-500/50 focus:border-primary/50 dark:focus:border-white/20 transition-all h-11 px-4 pr-10 rounded-xl text-foreground dark:text-white placeholder:text-muted-foreground dark:placeholder:text-white/50"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
                 />
                 <button
                   type="button"
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-pink-500 dark:hover:text-pink-400 transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground dark:text-white/50 hover:text-foreground dark:hover:text-white transition-colors"
                   onClick={() => setShowPassword(!showPassword)}
                 >
                   {showPassword ? (
@@ -103,7 +103,7 @@ export default function LoginPage() {
             >
               {loading ? 'Iniciando...' : 'Iniciar sesión'}
             </Button>
-            <p className="text-sm text-center text-muted-foreground">
+            <p className="text-sm text-center text-muted-foreground dark:text-white/60">
               ¿No tienes cuenta?{' '}
               <Link href="/register" className="font-medium bg-linear-to-r from-pink-500 to-rose-600 bg-clip-text text-transparent hover:from-pink-600 hover:to-rose-700 dark:from-pink-400 dark:to-rose-400 transition-all">
                 Regístrate
@@ -111,7 +111,7 @@ export default function LoginPage() {
             </p>
           </CardFooter>
         </form>
-      </Card>
+      </div>
     </div>
   );
 }

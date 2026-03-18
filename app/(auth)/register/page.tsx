@@ -6,10 +6,10 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { signUpAction } from '@/app/actions/auth';
-import { TrendingUp, CheckCircle2, Eye, EyeOff } from 'lucide-react';
+import { TrendingUp, CheckCircle2, Eye, EyeOff, AlertCircle } from 'lucide-react';
 import type { UserRole } from '@/types';
 import {
   Dialog,
@@ -19,6 +19,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { PhoneInput } from '@/components/ui/phone-input';
+import { isValidEmailDomain, isValidEmailFormat, validatePassword } from '@/lib/email-validation';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -34,13 +35,130 @@ export default function RegisterPage() {
     city: '',
   });
   const [error, setError] = useState('');
+  const [emailError, setEmailError] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
+  const validateField = (field: string, value: string) => {
+    switch (field) {
+      case 'name':
+        break;
+      case 'email':
+        if (!value) {
+          setEmailError('');
+          return;
+        }
+        if (!isValidEmailFormat(value)) {
+          setEmailError('Formato de correo inválido');
+          return;
+        }
+        const validation = isValidEmailDomain(value);
+        if (!validation.valid) {
+          setEmailError(validation.message || 'Dominio de correo no permitido');
+          return;
+        }
+        setEmailError('');
+        return;
+      case 'phone':
+        break;
+      case 'password':
+        if (!value) {
+          setPasswordError('');
+          return;
+        }
+        const pwdValidation = validatePassword(value);
+        if (!pwdValidation.valid) {
+          setPasswordError(pwdValidation.errors[0]);
+          return;
+        }
+        setPasswordError('');
+        return;
+      case 'document_number':
+        break;
+      default:
+        break;
+    }
+  };
+
+  const handleBlur = (field: string) => {
+    setTouched({ ...touched, [field]: true });
+    validateField(field, formData[field as keyof typeof formData] as string);
+  };
+
+  const handleEmailChange = (value: string) => {
+    setFormData({ ...formData, email: value });
+    if (touched.email) {
+      validateField('email', value);
+    }
+  };
+
+  const handlePasswordChange = (value: string) => {
+    setFormData({ ...formData, password: value });
+    if (touched.password) {
+      validateField('password', value);
+    }
+  };
+
+  const handleNameChange = (value: string) => {
+    setFormData({ ...formData, name: value });
+    if (touched.name && value.trim().length < 3) {
+      // Keep validation message
+    }
+  };
+
+  const handlePhoneChange = (value: string) => {
+    setFormData({ ...formData, phone: value });
+  };
+
+  const handleDocumentNumberChange = (value: string) => {
+    setFormData({ ...formData, document_number: value });
+  };
+
+  const isFieldValid = (field: string): boolean => {
+    const value = formData[field as keyof typeof formData];
+    switch (field) {
+      case 'name':
+        return value.trim().length >= 3;
+      case 'email':
+        return isValidEmailFormat(value) && isValidEmailDomain(value).valid;
+      case 'phone':
+        return value.length >= 8;
+      case 'password':
+        return validatePassword(value).valid;
+      case 'document_number':
+        return value.trim().length >= 4;
+      default:
+        return false;
+    }
+  };
+
+  const getFieldClass = (field: string, baseClass: string): string => {
+    if (!touched[field]) return baseClass;
+    
+    const valid = isFieldValid(field);
+    const hasError = field === 'email' ? emailError : field === 'password' ? passwordError : !valid;
+    
+    if (hasError) {
+      return `${baseClass} border-red-500 focus:ring-red-500/50`;
+    }
+    if (valid) {
+      return `${baseClass} border-green-500 focus:ring-green-500/50`;
+    }
+    return baseClass;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    
+    if (emailError || passwordError) {
+      setError('Por favor, corrige los errores antes de continuar');
+      return;
+    }
+
     setLoading(true);
 
     const result = await signUpAction(formData);
@@ -55,7 +173,7 @@ export default function RegisterPage() {
 
   return (
     <>
-      <Card className="backdrop-blur-xl bg-card/80 border-border/50 shadow-xl hover:shadow-primary/10 transition-all duration-300 rounded-3xl overflow-hidden ring-1 ring-border/5">
+      <div className="bg-white/40 dark:bg-[#10121B]/40 border border-white/18 shadow-xl hover:shadow-2xl hover:border-white/30 dark:hover:shadow-[0_0_20px_rgba(255,255,255,0.15)] transition-all duration-500 rounded-[10px] backdrop-blur-[2px] overflow-hidden text-card-foreground dark:text-white">
         <CardHeader className="space-y-2 text-center">
           <div className="flex justify-center mb-2">
             <div className="p-3 rounded-2xl bg-linear-to-br from-pink-500 to-rose-600 text-white shadow-lg">
@@ -65,7 +183,7 @@ export default function RegisterPage() {
           <CardTitle className="text-3xl font-black tracking-tighter bg-brand-gradient bg-clip-text text-transparent">
             Crear cuenta
           </CardTitle>
-          <CardDescription className="text-muted-foreground">
+          <CardDescription className="text-muted-foreground dark:text-white/80">
             Únete a SendDirect y comienza a gestionar envíos
           </CardDescription>
         </CardHeader>
@@ -78,70 +196,135 @@ export default function RegisterPage() {
             )}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="name" className="text-muted-foreground">Nombre completo</Label>
-                <Input
-                  id="name"
-                  placeholder="Juan Pérez"
-                  className="border-border focus:ring-2 focus:ring-pink-500/50 focus:border-transparent transition-colors h-11 px-4 rounded-xl text-foreground placeholder:text-muted-foreground"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  required
-                />
+                <Label htmlFor="name" className="text-foreground/80 dark:text-white/80">Nombre completo</Label>
+                <div className="relative">
+                  <Input
+                    id="name"
+                    placeholder="Juan Pérez"
+                    className={getFieldClass('name', "bg-white dark:bg-[#1a1a1a] border border-border/50 dark:border-white/10 focus:ring-2 focus:ring-pink-500/50 focus:border-primary/50 dark:focus:border-white/20 transition-all h-11 px-4 rounded-xl text-foreground dark:text-white placeholder:text-muted-foreground dark:placeholder:text-white/50")}
+                    value={formData.name}
+                    onChange={(e) => handleNameChange(e.target.value)}
+                    onBlur={() => handleBlur('name')}
+                    required
+                  />
+                  {touched.name && isFieldValid('name') && (
+                    <CheckCircle2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-green-500" />
+                  )}
+                </div>
+                {touched.name && !isFieldValid('name') && formData.name && (
+                  <p className="text-xs text-red-500">El nombre debe tener al menos 3 caracteres</p>
+                )}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-muted-foreground">Correo electrónico</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="correo@ejemplo.com"
-                  className="border-border focus:ring-2 focus:ring-pink-500/50 focus:border-transparent transition-colors h-11 px-4 rounded-xl text-foreground placeholder:text-muted-foreground"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  required
-                />
+                <Label htmlFor="email" className="text-foreground/80 dark:text-white/80">Correo electrónico</Label>
+                <div className="relative">
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="correo@gmail.com"
+                    className={getFieldClass('email', `bg-white dark:bg-[#1a1a1a] border border-border/50 dark:border-white/10 focus:ring-2 focus:ring-pink-500/50 focus:border-primary/50 dark:focus:border-white/20 transition-all h-11 px-4 rounded-xl text-foreground dark:text-white placeholder:text-muted-foreground dark:placeholder:text-white/50`)}
+                    value={formData.email}
+                    onChange={(e) => handleEmailChange(e.target.value)}
+                    onBlur={() => handleBlur('email')}
+                    required
+                  />
+                  {touched.email && isFieldValid('email') && !emailError && (
+                    <CheckCircle2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-green-500" />
+                  )}
+                  {touched.email && emailError && (
+                    <AlertCircle className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-red-500" />
+                  )}
+                </div>
+                {touched.email && emailError && (
+                  <p className="text-xs text-red-500 flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3" />
+                    {emailError}
+                  </p>
+                )}
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="phone" className="text-muted-foreground">Teléfono</Label>
-              <PhoneInput
-                value={formData.phone}
-                onChange={(value) => setFormData({ ...formData, phone: value })}
-                placeholder="Número de teléfono"
-                required
-                className="w-full"
-              />
+              <Label htmlFor="phone" className="text-foreground/80 dark:text-white/80">Teléfono</Label>
+              <div className="relative">
+                <PhoneInput
+                  value={formData.phone}
+                  onChange={(value) => handlePhoneChange(value)}
+                  placeholder="Número de teléfono"
+                  required
+                  className={`w-full ${touched.phone && isFieldValid('phone') ? '[&_input]:border-green-500' : ''}`}
+                />
+                {touched.phone && isFieldValid('phone') && (
+                  <CheckCircle2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-green-500 z-10" />
+                )}
+              </div>
+              {touched.phone && !isFieldValid('phone') && formData.phone && (
+                <p className="text-xs text-red-500">El teléfono debe tener al menos 8 dígitos</p>
+              )}
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password" className="text-muted-foreground">Contraseña</Label>
+              <Label htmlFor="password" className="text-foreground/80 dark:text-white/80">Contraseña</Label>
               <div className="relative">
                 <Input
                   id="password"
                   type={showPassword ? "text" : "password"}
                   placeholder="••••••••"
-                  className="border-border focus:ring-2 focus:ring-pink-500/50 focus:border-transparent transition-colors h-11 px-4 pr-10 rounded-xl text-foreground placeholder:text-muted-foreground"
+                  className={`bg-white dark:bg-[#1a1a1a] border border-border/50 dark:border-white/10 focus:ring-2 focus:ring-pink-500/50 focus:border-primary/50 dark:focus:border-white/20 transition-all h-11 px-4 pr-16 rounded-xl text-foreground dark:text-white placeholder:text-muted-foreground dark:placeholder:text-white/50 ${
+                    passwordError ? 'border-red-500 focus:ring-red-500/50' : ''
+                  }`}
                   value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  onChange={(e) => handlePasswordChange(e.target.value)}
+                  onBlur={() => handleBlur('password')}
                   required
                 />
-                <button
-                  type="button"
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-pink-500 dark:hover:text-pink-400 transition-colors"
-                  onClick={() => setShowPassword(!showPassword)}
-                >
-                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                </button>
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                  {touched.password && isFieldValid('password') && !passwordError && (
+                    <CheckCircle2 className="h-4 w-4 text-green-500" />
+                  )}
+                  <button
+                    type="button"
+                    className="text-muted-foreground dark:text-white/50 hover:text-foreground dark:hover:text-white transition-colors"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
               </div>
+              {passwordError && (
+                <p className="text-xs text-red-500 flex items-center gap-1">
+                  <AlertCircle className="h-3 w-3" />
+                  {passwordError}
+                </p>
+              )}
+              {!passwordError && formData.password && (
+                <div className="space-y-1 mt-2">
+                  <p className="text-[10px] font-medium text-muted-foreground dark:text-white/50">La contraseña debe tener:</p>
+                  <div className="grid grid-cols-2 gap-1 text-[10px]">
+                    <span className={`flex items-center gap-1 ${formData.password.length >= 8 ? 'text-green-500' : 'text-muted-foreground dark:text-white/40'}`}>
+                      ✓ 8+ caracteres
+                    </span>
+                    <span className={`flex items-center gap-1 ${/[A-Z]/.test(formData.password) ? 'text-green-500' : 'text-muted-foreground dark:text-white/40'}`}>
+                      ✓ Mayúscula
+                    </span>
+                    <span className={`flex items-center gap-1 ${/[0-9]/.test(formData.password) ? 'text-green-500' : 'text-muted-foreground dark:text-white/40'}`}>
+                      ✓ Número
+                    </span>
+                    <span className={`flex items-center gap-1 ${/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(formData.password) ? 'text-green-500' : 'text-muted-foreground dark:text-white/40'}`}>
+                      ✓ Carácter especial
+                    </span>
+                  </div>
+                </div>
+              )}
             </div>
             <div className="space-y-2">
-              <Label htmlFor="role" className="text-muted-foreground">Tipo de cuenta</Label>
+              <Label htmlFor="role" className="text-foreground/80 dark:text-white/80">Tipo de cuenta</Label>
               <Select 
                 value={formData.role} 
                 onValueChange={(value: UserRole) => setFormData({ ...formData, role: value })}
               >
-                <SelectTrigger className="border-border focus:ring-2 focus:ring-pink-500/50 focus:border-transparent h-11 px-4 rounded-xl text-foreground">
+                <SelectTrigger className="bg-white dark:bg-[#1a1a1a] border border-border/50 dark:border-white/10 focus:ring-2 focus:ring-pink-500/50 focus:border-primary/50 dark:focus:border-white/20 transition-all h-11 px-4 rounded-xl text-foreground dark:text-white">
                   <SelectValue placeholder="Selecciona tipo" />
                 </SelectTrigger>
-                <SelectContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
+                <SelectContent className="bg-white dark:bg-[#1a1a1a] border border-border/50 dark:border-white/10 text-foreground dark:text-white">
                   <SelectItem value="gestor">Gestor (Agente)</SelectItem>
                   <SelectItem value="cliente">Cliente</SelectItem>
                 </SelectContent>
@@ -149,15 +332,15 @@ export default function RegisterPage() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="document_type" className="text-muted-foreground">Tipo documento</Label>
+                <Label htmlFor="document_type" className="text-foreground/80 dark:text-white/80">Tipo documento</Label>
                 <Select 
                   value={formData.document_type} 
                   onValueChange={(value) => setFormData({ ...formData, document_type: value })}
                 >
-                  <SelectTrigger className="border-border focus:ring-2 focus:ring-pink-500/50 focus:border-transparent h-11 px-4 rounded-xl text-foreground">
+                  <SelectTrigger className="bg-white dark:bg-[#1a1a1a] border border-border/50 dark:border-white/10 focus:ring-2 focus:ring-pink-500/50 focus:border-primary/50 dark:focus:border-white/20 transition-all h-11 px-4 rounded-xl text-foreground dark:text-white">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
+                  <SelectContent className="bg-white dark:bg-[#1a1a1a] border border-border/50 dark:border-white/10 text-foreground dark:text-white">
                     <SelectItem value="dni">DNI</SelectItem>
                     <SelectItem value="nie">NIE</SelectItem>
                     <SelectItem value="pasaporte">Pasaporte</SelectItem>
@@ -165,33 +348,42 @@ export default function RegisterPage() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="document_number" className="text-muted-foreground">Número</Label>
-                <Input
-                  id="document_number"
-                  placeholder="12345678A"
-                  className="border-border focus:ring-2 focus:ring-pink-500/50 focus:border-transparent transition-colors h-11 px-4 rounded-xl text-foreground placeholder:text-muted-foreground"
-                  value={formData.document_number}
-                  onChange={(e) => setFormData({ ...formData, document_number: e.target.value })}
-                />
+                <Label htmlFor="document_number" className="text-foreground/80 dark:text-white/80">Número</Label>
+                <div className="relative">
+                  <Input
+                    id="document_number"
+                    placeholder="12345678A"
+                    className={getFieldClass('document_number', "bg-white dark:bg-[#1a1a1a] border border-border/50 dark:border-white/10 focus:ring-2 focus:ring-pink-500/50 focus:border-primary/50 dark:focus:border-white/20 transition-all h-11 px-4 rounded-xl text-foreground dark:text-white placeholder:text-muted-foreground dark:placeholder:text-white/50")}
+                    value={formData.document_number}
+                    onChange={(e) => handleDocumentNumberChange(e.target.value)}
+                    onBlur={() => handleBlur('document_number')}
+                  />
+                  {touched.document_number && isFieldValid('document_number') && (
+                    <CheckCircle2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-green-500" />
+                  )}
+                </div>
+                {touched.document_number && !isFieldValid('document_number') && formData.document_number && (
+                  <p className="text-xs text-red-500">El número debe tener al menos 4 caracteres</p>
+                )}
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="country" className="text-muted-foreground">País</Label>
+                <Label htmlFor="country" className="text-foreground/80 dark:text-white/80">País</Label>
                 <Input
                   id="country"
                   placeholder="Su país"
-                  className="border-border focus:ring-2 focus:ring-pink-500/50 focus:border-transparent transition-colors h-11 px-4 rounded-xl text-foreground placeholder:text-muted-foreground"
+                  className="bg-white dark:bg-[#1a1a1a] border border-border/50 dark:border-white/10 focus:ring-2 focus:ring-pink-500/50 focus:border-primary/50 dark:focus:border-white/20 transition-all h-11 px-4 rounded-xl text-foreground dark:text-white placeholder:text-muted-foreground dark:placeholder:text-white/50"
                   value={formData.country}
                   onChange={(e) => setFormData({ ...formData, country: e.target.value })}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="city" className="text-muted-foreground">Ciudad</Label>
+                <Label htmlFor="city" className="text-foreground/80 dark:text-white/80">Ciudad</Label>
                 <Input
                   id="city"
                   placeholder="Su ciudadd"
-                  className="border-border focus:ring-2 focus:ring-pink-500/50 focus:border-transparent transition-colors h-11 px-4 rounded-xl text-foreground placeholder:text-muted-foreground"
+                  className="bg-white dark:bg-[#1a1a1a] border border-border/50 dark:border-white/10 focus:ring-2 focus:ring-pink-500/50 focus:border-primary/50 dark:focus:border-white/20 transition-all h-11 px-4 rounded-xl text-foreground dark:text-white placeholder:text-muted-foreground dark:placeholder:text-white/50"
                   value={formData.city}
                   onChange={(e) => setFormData({ ...formData, city: e.target.value })}
                 />
@@ -202,7 +394,7 @@ export default function RegisterPage() {
             <Button type="submit" className="w-full h-12 rounded-2xl text-base font-black uppercase tracking-widest bg-brand-gradient hover:opacity-90 text-white shadow-lg hover:shadow-primary/25 transition-all duration-300" disabled={loading}>
               {loading ? 'Creando cuenta...' : 'Crear cuenta'}
             </Button>
-            <p className="text-sm text-center text-muted-foreground">
+            <p className="text-sm text-center text-muted-foreground dark:text-white/60">
               ¿Ya tienes cuenta?{' '}
               <Link href="/login" className="font-medium bg-linear-to-r from-pink-500 to-rose-600 bg-clip-text text-transparent hover:from-pink-600 hover:to-rose-700 dark:from-pink-400 dark:to-rose-400 transition-all">
                 Inicia sesión ahora
@@ -210,10 +402,10 @@ export default function RegisterPage() {
             </p>
           </CardFooter>
         </form>
-      </Card>
+      </div>
 
       <Dialog open={showSuccessModal} onOpenChange={setShowSuccessModal}>
-        <DialogContent className="sm:max-w-md bg-card/95 glass-premium border-border/20 text-center py-10 rounded-3xl outline-none fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50">
+        <DialogContent className="sm:max-w-md text-center py-10 outline-none fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50">
           <DialogHeader className="flex flex-col items-center space-y-4">
             <div className="p-4 rounded-full bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 animate-in zoom-in duration-500">
               <CheckCircle2 className="h-16 w-16" />

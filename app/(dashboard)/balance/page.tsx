@@ -244,7 +244,7 @@ export default function BalancePage() {
       </div>
 
       <Dialog open={successOpen} onOpenChange={setSuccessOpen}>
-        <DialogContent className="max-w-md bg-card/90 glass-premium border-border/20 rounded-4xl p-10 outline-none fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50">
+        <DialogContent className="max-w-md p-10 outline-none fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50">
           <DialogHeader className="flex flex-col items-center">
              <div className="h-20 w-20 rounded-full bg-green-100 flex items-center justify-center mb-6">
                 <CheckCircle className="h-10 w-10 text-green-600" />
@@ -271,7 +271,7 @@ export default function BalancePage() {
       </Dialog>
 
       <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
-        <DialogContent className="max-w-md bg-card/90 glass-premium border-border/20 rounded-4xl p-8 outline-none">
+        <DialogContent className="max-w-md p-8 outline-none">
           <DialogHeader>
             <DialogTitle className="text-xl font-black text-foreground">
               Recargar Saldo a Gestor
@@ -328,7 +328,7 @@ export default function BalancePage() {
       </Dialog>
 
       <Dialog open={finalConfirmOpen} onOpenChange={setFinalConfirmOpen}>
-        <DialogContent className="max-w-md bg-card/90 glass-premium border-border/20 rounded-4xl p-8 outline-none">
+        <DialogContent className="max-w-md p-8 outline-none">
           <DialogHeader className="text-center">
             <div className="mx-auto w-16 h-16 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center mb-4">
               <AlertCircle className="h-8 w-8 text-amber-600 dark:text-amber-400" />

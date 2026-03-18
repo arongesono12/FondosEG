@@ -60,15 +60,15 @@ export function PhoneInput({ value, onChange, placeholder = 'Número de teléfon
           <button
             type="button"
             onClick={() => setIsOpen(!isOpen)}
-            className="flex items-center gap-1 px-2 h-10 rounded-l-lg border border-r-0 border-border bg-muted hover:bg-muted/80 transition-colors focus:ring-2 focus:ring-pink-500/50"
+            className="flex items-center gap-1 px-2 h-10 rounded-l-lg border border-r-0 border-border bg-muted hover:bg-muted/80 dark:bg-[#1a1a1a] dark:border-white/10 dark:hover:bg-white/5 transition-colors focus:ring-2 focus:ring-pink-500/50"
           >
-            <span className="text-xs font-medium">{selectedCountry.prefix}</span>
-            <ChevronDown className={`h-3 w-3 text-muted-foreground transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+            <span className="text-xs font-medium text-foreground dark:text-white">{selectedCountry.prefix}</span>
+            <ChevronDown className={`h-3 w-3 text-muted-foreground dark:text-white/50 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
           </button>
           
           {isOpen && (
-            <div className="absolute z-50 top-full left-0 mt-1 w-56 bg-card border border-border rounded-lg shadow-xl overflow-hidden">
-              <div className="p-2 border-b border-border/10">
+            <div className="absolute z-50 top-full left-0 mt-1 w-56 bg-card dark:bg-[#1a1a1a] border border-border dark:border-white/10 rounded-lg shadow-xl overflow-hidden">
+              <div className="p-2 border-b border-border/10 dark:border-white/10">
                 <div className="relative">
                   <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
                   <input
@@ -76,7 +76,7 @@ export function PhoneInput({ value, onChange, placeholder = 'Número de teléfon
                     placeholder="Buscar..."
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    className="w-full h-8 pl-8 pr-2 rounded-md border border-border bg-background text-xs focus:outline-none focus:ring-2 focus:ring-pink-500/50"
+                    className="w-full h-8 pl-8 pr-2 rounded-md border border-border dark:border-white/10 bg-background dark:bg-[#2a2a2a] text-foreground dark:text-white text-xs focus:outline-none focus:ring-2 focus:ring-pink-500/50"
                     autoFocus
                   />
                 </div>
@@ -87,12 +87,12 @@ export function PhoneInput({ value, onChange, placeholder = 'Número de teléfon
                     key={country.code}
                     type="button"
                     onClick={() => handleCountrySelect(country.prefix)}
-                    className={`w-full flex items-center gap-2 px-2 py-1.5 hover:bg-muted/50 transition-colors text-left ${
+                    className={`w-full flex items-center gap-2 px-2 py-1.5 hover:bg-muted/50 dark:hover:bg-white/5 transition-colors text-left ${
                       country.prefix === currentPrefix ? 'bg-primary/5' : ''
                     }`}
                   >
-                    <span className="text-xs font-medium w-10 shrink-0">{country.prefix}</span>
-                    <span className="text-xs truncate">{country.name}</span>
+                    <span className="text-xs font-medium text-foreground dark:text-white w-10 shrink-0">{country.prefix}</span>
+                    <span className="text-xs text-foreground dark:text-white truncate">{country.name}</span>
                   </button>
                 ))}
               </div>
@@ -107,7 +107,7 @@ export function PhoneInput({ value, onChange, placeholder = 'Número de teléfon
           onChange={handleNumberChange}
           placeholder={placeholder}
           required={required}
-          className="flex-1 h-10 px-3 rounded-r-lg border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-pink-500/50 transition-colors placeholder:text-muted-foreground"
+          className="flex-1 h-10 px-3 rounded-r-lg border border-border dark:border-white/10 bg-background dark:bg-[#1a1a1a] text-foreground dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-pink-500/50 transition-colors placeholder:text-muted-foreground dark:placeholder:text-white/50"
         />
       </div>
     </div>

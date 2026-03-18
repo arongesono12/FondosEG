@@ -31,7 +31,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [supportModalOpen, setSupportModalOpen] = useState(false);
   const [supportRequestType, setSupportRequestType] = useState<'balance_topup' | 'report_error' | 'general'>('general');
-  const [commissionStats, setCommissionStats] = useState<any>(null);
+  const [commissionStats, setCommissionStats] = useState<{agents?: Array<Record<string, unknown>>, totalCommission?: number, todayCommission?: number} | null>(null);
 
   // Detail modal states
   const [flujoDiaOpen, setFlujoDiaOpen] = useState(false);
@@ -144,7 +144,7 @@ export default function DashboardPage() {
       {/* 2 & 3: Today Stats & Radial Progress */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
         {/* FLUJO DEL DÍA */}
-        <div className="lg:col-span-2 space-y-4 bg-card/80 dark:bg-card/50 p-5 md:p-8 rounded-[2rem] border border-border/10 shadow-sm hover:shadow-lg hover:shadow-primary/5 hover:border-primary/20 transition-all duration-300 text-card-foreground">
+        <div className="lg:col-span-2 space-y-4 bg-white/40 dark:bg-[#10121B]/40 p-5 md:p-8 rounded-[10px] border border-white/18 backdrop-blur-[2px] shadow-sm hover:shadow-xl dark:hover:shadow-[0_0_20px_rgba(255,255,255,0.15)] hover:border-white/30 transition-all duration-500 text-card-foreground dark:text-white">
           <div className="flex items-center justify-between">
             <h2 className="text-lg md:text-xl font-bold">Flujo del Día</h2>
             <Button
@@ -156,7 +156,7 @@ export default function DashboardPage() {
             </Button>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <div className="p-5 rounded-[1.5rem] bg-gradient-to-br from-blue-50 to-blue-100/50 dark:from-blue-950/30 dark:to-blue-900/10 border border-blue-100 dark:border-blue-800/20 flex flex-col gap-3 hover:shadow-lg hover:shadow-blue-500/10 hover:border-blue-300/30 transition-all duration-300">
+            <div className="p-5 rounded-3xl bg-linear-to-br from-blue-50 to-blue-100/50 dark:from-blue-950/30 dark:to-blue-900/10 border border-blue-100 dark:border-blue-800/20 flex flex-col gap-3 hover:shadow-lg hover:shadow-blue-500/10 hover:border-blue-300/30 transition-all duration-300">
               <div className="flex items-center gap-2">
                 <div className="h-8 w-8 rounded-xl bg-blue-500 flex items-center justify-center">
                   <svg className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -170,10 +170,10 @@ export default function DashboardPage() {
                 <p className="text-xs font-medium text-blue-500/80">Saldo disponible</p>
               </div>
               <div className="mt-auto h-1.5 w-full bg-blue-200/50 dark:bg-blue-800/30 rounded-full overflow-hidden">
-                <div className="h-full bg-gradient-to-r from-blue-400 to-blue-500 rounded-full" style={{ width: `${balanceProgress}%` }} />
+                <div className="h-full bg-linear-to-r from-blue-400 to-blue-500 rounded-full" style={{ width: `${balanceProgress}%` }} />
               </div>
             </div>
-            <div className="p-5 rounded-[1.5rem] bg-gradient-to-br from-purple-50 to-purple-100/50 dark:from-purple-950/30 dark:to-purple-900/10 border border-purple-100 dark:border-purple-800/20 flex flex-col gap-3 hover:shadow-lg hover:shadow-purple-500/10 hover:border-purple-300/30 transition-all duration-300">
+            <div className="p-5 rounded-3xl bg-linear-to-br from-purple-50 to-purple-100/50 dark:from-purple-950/30 dark:to-purple-900/10 border border-purple-100 dark:border-purple-800/20 flex flex-col gap-3 hover:shadow-lg hover:shadow-purple-500/10 hover:border-purple-300/30 transition-all duration-300">
               <div className="flex items-center gap-2">
                 <div className="h-8 w-8 rounded-xl bg-purple-500 flex items-center justify-center">
                   <svg className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -187,10 +187,10 @@ export default function DashboardPage() {
                 <p className="text-xs font-medium text-purple-500/80">Volumen procesado</p>
               </div>
               <div className="mt-auto h-1.5 w-full bg-purple-200/50 dark:bg-purple-800/30 rounded-full overflow-hidden">
-                <div className="h-full bg-gradient-to-r from-purple-400 to-purple-500 rounded-full" style={{ width: `${sentProgress}%` }} />
+                <div className="h-full bg-linear-to-r from-purple-400 to-purple-500 rounded-full" style={{ width: `${sentProgress}%` }} />
               </div>
             </div>
-            <div className="p-5 rounded-[1.5rem] bg-gradient-to-br from-orange-50 to-orange-100/50 dark:from-orange-950/30 dark:to-orange-900/10 border border-orange-100 dark:border-orange-800/20 flex flex-col gap-3 hover:shadow-lg hover:shadow-orange-500/10 hover:border-orange-300/30 transition-all duration-300">
+            <div className="p-5 rounded-3xl bg-linear-to-br from-orange-50 to-orange-100/50 dark:from-orange-950/30 dark:to-orange-900/10 border border-orange-100 dark:border-orange-800/20 flex flex-col gap-3 hover:shadow-lg hover:shadow-orange-500/10 hover:border-orange-300/30 transition-all duration-300">
               <div className="flex items-center gap-2">
                 <div className="h-8 w-8 rounded-xl bg-orange-500 flex items-center justify-center">
                   <svg className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -204,14 +204,14 @@ export default function DashboardPage() {
                 <p className="text-xs font-medium text-orange-500/80">Total transacciones</p>
               </div>
               <div className="mt-auto h-1.5 w-full bg-orange-200/50 dark:bg-orange-800/30 rounded-full overflow-hidden">
-                <div className="h-full bg-gradient-to-r from-orange-400 to-orange-500 rounded-full" style={{ width: `${operationsProgress}%` }} />
+                <div className="h-full bg-linear-to-r from-orange-400 to-orange-500 rounded-full" style={{ width: `${operationsProgress}%` }} />
               </div>
             </div>
           </div>
         </div>
 
         {/* Radial Distribution */}
-        <div className="bg-card/80 dark:bg-card/50 p-5 md:p-8 rounded-[2rem] border border-border/10 shadow-sm hover:shadow-lg hover:shadow-primary/5 hover:border-primary/20 transition-all duration-300 flex flex-col gap-4 md:gap-6 text-card-foreground">
+        <div className="bg-white/40 dark:bg-[#10121B]/40 p-5 md:p-8 rounded-[10px] border border-white/18 backdrop-blur-[2px] shadow-sm hover:shadow-xl dark:hover:shadow-[0_0_20px_rgba(255,255,255,0.15)] hover:border-white/30 transition-all duration-500 flex flex-col gap-4 md:gap-6 text-card-foreground dark:text-white">
           <div className="flex items-center justify-between">
             <h2 className="text-lg md:text-xl font-bold">Distribución</h2>
             <p className="text-xs font-medium text-muted-foreground">{totalTransfersCount} total</p>
@@ -256,7 +256,7 @@ export default function DashboardPage() {
 
         {/* COMISIONES - Only Admin and Gestor */}
         {user?.role !== 'cliente' && (
-        <div className="bg-card/80 dark:bg-card/50 p-5 md:p-8 rounded-[2rem] border border-border/10 shadow-sm hover:shadow-lg hover:shadow-primary/5 hover:border-primary/20 transition-all duration-300 text-card-foreground">
+        <div className="bg-white/40 dark:bg-[#10121B]/40 p-5 md:p-8 rounded-[10px] border border-white/18 backdrop-blur-[2px] shadow-sm hover:shadow-xl dark:hover:shadow-[0_0_20px_rgba(255,255,255,0.15)] hover:border-white/30 transition-all duration-500 text-card-foreground dark:text-white">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg md:text-xl font-bold">Comisiones</h2>
             <Button
@@ -270,17 +270,17 @@ export default function DashboardPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             {user?.role === 'admin' ? (
               <>
-                <div className="p-4 rounded-[1.25rem] bg-gradient-to-br from-green-50 to-green-100/50 dark:from-green-950/30 dark:to-green-900/10 border border-green-100 dark:border-green-800/20">
+                <div className="p-4 rounded-[1.25rem] bg-linear-to-br from-green-50 to-green-100/50 dark:from-green-950/30 dark:to-green-900/10 border border-green-100 dark:border-green-800/20">
                   <Badge className="bg-white/80 text-green-600 dark:text-green-400 border-none text-[10px] font-bold uppercase mb-2">Comisión Total</Badge>
                   <p className="text-2xl font-bold text-green-600 dark:text-green-400">{formatBalance(commissionStats?.totalCommission || 0)}</p>
                   <p className="text-xs font-medium text-muted-foreground mt-1">Todos los gestores</p>
                 </div>
-                <div className="p-4 rounded-[1.25rem] bg-gradient-to-br from-emerald-50 to-emerald-100/50 dark:from-emerald-950/30 dark:to-emerald-900/10 border border-emerald-100 dark:border-emerald-800/20">
+                <div className="p-4 rounded-[1.25rem] bg-linear-to-br from-emerald-50 to-emerald-100/50 dark:from-emerald-950/30 dark:to-emerald-900/10 border border-emerald-100 dark:border-emerald-800/20">
                   <Badge className="bg-white/80 text-emerald-600 dark:text-emerald-400 border-none text-[10px] font-bold uppercase mb-2">Comisión Hoy</Badge>
                   <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{formatBalance(commissionStats?.todayCommission || 0)}</p>
                   <p className="text-xs font-medium text-muted-foreground mt-1">Ganado hoy</p>
                 </div>
-                <div className="p-4 rounded-[1.25rem] bg-gradient-to-br from-teal-50 to-teal-100/50 dark:from-teal-950/30 dark:to-teal-900/10 border border-teal-100 dark:border-teal-800/20">
+                <div className="p-4 rounded-[1.25rem] bg-linear-to-br from-teal-50 to-teal-100/50 dark:from-teal-950/30 dark:to-teal-900/10 border border-teal-100 dark:border-teal-800/20">
                   <Badge className="bg-white/80 text-teal-600 dark:text-teal-400 border-none text-[10px] font-bold uppercase mb-2">Gestores</Badge>
                   <p className="text-2xl font-bold text-teal-600 dark:text-teal-400">{commissionStats?.agents?.length || 0}</p>
                   <p className="text-xs font-medium text-muted-foreground mt-1">Activos</p>
@@ -288,17 +288,17 @@ export default function DashboardPage() {
               </>
             ) : (
               <>
-                <div className="p-4 rounded-[1.25rem] bg-gradient-to-br from-green-50 to-green-100/50 dark:from-green-950/30 dark:to-green-900/10 border border-green-100 dark:border-green-800/20">
+                <div className="p-4 rounded-[1.25rem] bg-linear-to-br from-green-50 to-green-100/50 dark:from-green-950/30 dark:to-green-900/10 border border-green-100 dark:border-green-800/20">
                   <Badge className="bg-white/80 text-green-600 dark:text-green-400 border-none text-[10px] font-bold uppercase mb-2">Mi Comisión Total</Badge>
                   <p className="text-2xl font-bold text-green-600 dark:text-green-400">{formatBalance(stats?.totalCommission || 0)}</p>
                   <p className="text-xs font-medium text-muted-foreground mt-1">Ganancias por envíos</p>
                 </div>
-                <div className="p-4 rounded-[1.25rem] bg-gradient-to-br from-emerald-50 to-emerald-100/50 dark:from-emerald-950/30 dark:to-emerald-900/10 border border-emerald-100 dark:border-emerald-800/20">
+                <div className="p-4 rounded-[1.25rem] bg-linear-to-br from-emerald-50 to-emerald-100/50 dark:from-emerald-950/30 dark:to-emerald-900/10 border border-emerald-100 dark:border-emerald-800/20">
                   <Badge className="bg-white/80 text-emerald-600 dark:text-emerald-400 border-none text-[10px] font-bold uppercase mb-2">Comisión Hoy</Badge>
                   <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{formatBalance(stats?.todayCommission || 0)}</p>
                   <p className="text-xs font-medium text-muted-foreground mt-1">Ganado hoy</p>
                 </div>
-                <div className="p-4 rounded-[1.25rem] bg-gradient-to-br from-teal-50 to-teal-100/50 dark:from-teal-950/30 dark:to-teal-900/10 border border-teal-100 dark:border-teal-800/20">
+                <div className="p-4 rounded-[1.25rem] bg-linear-to-br from-teal-50 to-teal-100/50 dark:from-teal-950/30 dark:to-teal-900/10 border border-teal-100 dark:border-teal-800/20">
                   <Badge className="bg-white/80 text-teal-600 dark:text-teal-400 border-none text-[10px] font-bold uppercase mb-2">Promedio</Badge>
                   <p className="text-2xl font-bold text-teal-600 dark:text-teal-400">{formatBalance(stats?.commissionPerTransfer || 0)}</p>
                   <p className="text-xs font-medium text-muted-foreground mt-1">Por transacción</p>
@@ -310,7 +310,7 @@ export default function DashboardPage() {
         )}
 
       {stats?.balancesByCurrency && Object.keys(stats.balancesByCurrency).length > 0 && (
-        <div className="bg-card/80 dark:bg-card/50 p-5 md:p-8 rounded-[2rem] border border-border/10 shadow-sm hover:shadow-lg hover:shadow-primary/5 hover:border-primary/20 transition-all duration-300 text-card-foreground">
+        <div className="bg-white/40 dark:bg-[#10121B]/40 p-5 md:p-8 rounded-[10px] border border-white/18 backdrop-blur-[2px] shadow-sm hover:shadow-xl dark:hover:shadow-[0_0_20px_rgba(255,255,255,0.15)] hover:border-white/30 transition-all duration-500 text-card-foreground dark:text-white">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg md:text-xl font-bold">Saldo por Moneda</h2>
           </div>
@@ -319,7 +319,7 @@ export default function DashboardPage() {
               const currencyToShow = preferredCurrency || 'XAF';
               const amount = stats.balancesByCurrency![currencyToShow] || stats.balancesByCurrency!['XAF'] || 0;
               return (
-                <div key={currencyToShow} className="p-4 rounded-[1.25rem] bg-gradient-to-br from-slate-50 to-slate-100/50 dark:from-slate-950/30 dark:to-slate-900/10 border border-slate-100 dark:border-slate-800/20 flex flex-col items-start">
+                <div key={currencyToShow} className="p-4 rounded-[1.25rem] bg-linear-to-br from-slate-50 to-slate-100/50 dark:from-slate-950/30 dark:to-slate-900/10 border border-slate-100 dark:border-slate-800/20 flex flex-col items-start">
                   <span className="text-xs font-bold text-muted-foreground uppercase">{currencyToShow}</span>
                   <span className="text-lg font-bold mt-1">{formatCurrency(amount, currencyToShow)}</span>
                 </div>
@@ -334,7 +334,7 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
 
         {/* ENVÍOS DE GESTORES */}
-        <div className="space-y-4 bg-card/80 dark:bg-card/50 p-5 md:p-8 rounded-[2rem] border border-border/10 shadow-sm hover:shadow-lg hover:shadow-primary/5 hover:border-primary/20 transition-all duration-300 text-card-foreground">
+        <div className="space-y-4 bg-white/40 dark:bg-[#10121B]/40 p-5 md:p-8 rounded-[10px] border border-white/18 backdrop-blur-[2px] shadow-sm hover:shadow-xl dark:hover:shadow-[0_0_20px_rgba(255,255,255,0.15)] hover:border-white/30 transition-all duration-500 text-card-foreground dark:text-white">
           <div className="flex items-center justify-between">
             <h2 className="text-lg md:text-xl font-bold">
               {user?.role === 'admin' ? 'Envíos de Gestores' : user?.role === 'gestor' ? 'Actividad Top' : 'Mi Actividad'}
@@ -363,15 +363,15 @@ export default function DashboardPage() {
                 <div className="flex items-center gap-4">
                   <div className={cn(
                     "w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-white text-xs",
-                    idx === 0 ? "bg-gradient-to-br from-orange-400 to-orange-500" : idx === 1 ? "bg-gradient-to-br from-blue-400 to-blue-500" : "bg-gradient-to-br from-purple-400 to-purple-500"
+                    idx === 0 ? "bg-linear-to-br from-orange-400 to-orange-500" : idx === 1 ? "bg-linear-to-br from-blue-400 to-blue-500" : "bg-linear-to-br from-purple-400 to-purple-500"
                   )}>
                     {getInitials(item.receiver_name)}
                   </div>
                   <div>
                     <p className="text-sm font-bold leading-none">{item.receiver_name}</p>
-                    {user?.role === 'admin' && (item as any).agent?.name && (
+                    {user?.role === 'admin' && (item as Transfer & { agent?: { name: string } }).agent?.name && (
                       <p className="text-[10px] font-medium text-primary uppercase tracking-tighter">
-                        Gestor: {(item as any).agent.name}
+                        Gestor: {(item as Transfer & { agent?: { name: string } }).agent?.name}
                       </p>
                     )}
                     <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-tighter mt-0.5">{item.destination_city}</p>
@@ -390,7 +390,7 @@ export default function DashboardPage() {
         </div>
 
         {/* VOLUMEN SEMANAL */}
-        <div className="space-y-4 bg-card/80 dark:bg-card/50 p-5 md:p-8 rounded-[2rem] border border-border/10 shadow-sm hover:shadow-lg hover:shadow-primary/5 hover:border-primary/20 transition-all duration-300 text-card-foreground">
+        <div className="space-y-4 bg-white/40 dark:bg-[#10121B]/40 p-5 md:p-8 rounded-[10px] border border-white/18 backdrop-blur-[2px] shadow-sm hover:shadow-xl dark:hover:shadow-[0_0_20px_rgba(255,255,255,0.15)] hover:border-white/30 transition-all duration-500 text-card-foreground dark:text-white">
           <div className="flex items-center justify-between">
             <h2 className="text-lg md:text-xl font-bold">Volumen Semanal</h2>
             <Button
@@ -409,7 +409,7 @@ export default function DashboardPage() {
                   <div
                     className={cn(
                       "w-full rounded-full transition-all duration-700",
-                      i % 2 === 0 ? "bg-gradient-to-b from-rose-400 to-rose-500" : "bg-gradient-to-b from-blue-400 to-blue-500"
+                      i % 2 === 0 ? "bg-linear-to-b from-rose-400 to-rose-500" : "bg-linear-to-b from-blue-400 to-blue-500"
                     )}
                     style={{ height: `${h}%` }}
                     title={`${h}%`}
@@ -431,7 +431,7 @@ export default function DashboardPage() {
         </div>
 
         {/* SOPORTE */}
-        <div className="space-y-4 bg-card/80 dark:bg-card/50 p-5 md:p-8 rounded-[2rem] border border-border/10 shadow-sm hover:shadow-lg hover:shadow-primary/5 hover:border-primary/20 transition-all duration-300 relative overflow-hidden text-card-foreground">
+        <div className="space-y-4 bg-white/40 dark:bg-[#10121B]/40 p-5 md:p-8 rounded-[10px] border border-white/18 backdrop-blur-[2px] shadow-sm hover:shadow-xl dark:hover:shadow-[0_0_20px_rgba(255,255,255,0.15)] hover:border-white/30 transition-all duration-500 relative overflow-hidden text-card-foreground dark:text-white">
           <div className="flex items-center justify-between">
             <h2 className="text-lg md:text-xl font-bold">Soporte</h2>
             <Button
@@ -451,7 +451,7 @@ export default function DashboardPage() {
               <span className="text-[9px] font-medium text-muted-foreground/60 uppercase">Admin - 10:25</span>
             </div>
 
-            <div className="flex items-center gap-3 bg-gradient-to-br from-primary/5 to-primary/10 dark:from-primary/10 dark:to-primary/5 p-4 rounded-2xl border border-primary/10">
+            <div className="flex items-center gap-3 bg-linear-to-br from-primary/5 to-primary/10 dark:from-primary/10 dark:to-primary/5 p-4 rounded-2xl border border-primary/10">
               <div className="h-10 w-10 shrink-0 bg-brand-gradient flex items-center justify-center rounded-xl text-white shadow-lg shadow-pink-500/20">
                 <TrendingUp className="h-4 w-4" />
               </div>
@@ -511,6 +511,26 @@ export default function DashboardPage() {
         userRole={user?.role}
         stats={stats}
         commissionStats={commissionStats}
+        preferredCurrency={displayCurrency}
+      />
+
+      <FlujoDiaModal
+        open={flujoDiaOpen}
+        onClose={() => setFlujoDiaOpen(false)}
+        stats={stats}
+        preferredCurrency={displayCurrency}
+      />
+
+      <GestoresModal
+        open={gestoresOpen}
+        onClose={() => setGestoresOpen(false)}
+        userRole={user?.role}
+        preferredCurrency={displayCurrency}
+      />
+
+      <VolumenSemanalModal
+        open={volumenOpen}
+        onClose={() => setVolumenOpen(false)}
         preferredCurrency={displayCurrency}
       />
     </div>

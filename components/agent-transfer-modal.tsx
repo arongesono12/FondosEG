@@ -256,7 +256,7 @@ export function AgentTransferModal({ open, onOpenChange, onSuccess }: AgentTrans
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-lg bg-card/95 border-border/20 rounded-3xl p-0 overflow-hidden outline-none max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-lg p-0 overflow-hidden outline-none max-h-[90vh] overflow-y-auto">
         <DialogHeader className="p-6 border-b border-border/10">
           <DialogTitle className="flex items-center gap-2 text-xl font-black text-foreground">
             <Send className="h-5 w-5 text-primary" /> Nueva Transferencia
@@ -557,7 +557,7 @@ export function AgentTransferModal({ open, onOpenChange, onSuccess }: AgentTrans
 
         {/* Modal de Confirmación */}
         <Dialog open={showConfirm} onOpenChange={(open) => { if (!open) setShowConfirm(false); }}>
-          <DialogContent className="max-w-md bg-card/95 border-border/20 rounded-3xl p-0 overflow-hidden outline-none">
+          <DialogContent className="max-w-md p-0 overflow-hidden outline-none">
             <DialogHeader className="p-6 border-b border-border/10">
               <DialogTitle className="flex items-center gap-2 text-xl font-black text-foreground">
                 <CheckCircle2 className="h-5 w-5 text-green-500" /> Confirmar Transferencia

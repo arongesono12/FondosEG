@@ -142,7 +142,6 @@ export const COUNTRIES = [
   { code: 'CZ', name: 'República Checa', prefix: '+420' },
   { code: 'CF', name: 'República Centroafricana', prefix: '+236' },
   { code: 'CD', name: 'República Democrática del Congo', prefix: '+243' },
-  { code: 'DO', name: 'República Dominicana', prefix: '+1' },
   { code: 'RW', name: 'Ruanda', prefix: '+250' },
   { code: 'RO', name: 'Rumania', prefix: '+40' },
   { code: 'RU', name: 'Rusia', prefix: '+7' },
