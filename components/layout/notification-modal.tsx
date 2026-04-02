@@ -16,17 +16,26 @@ import {
   CheckCheck,
   Mail,
   MailOpen,
-  X,
 } from 'lucide-react';
-import { getAgentNotifications, deleteNotification, markNotificationAsRead, markAllNotificationsAsRead, getClientNotifications, markAllClientNotificationsAsRead } from '@/services/transfer';
+import {
+  getAdminNotifications,
+  getAgentNotifications,
+  getClientNotifications,
+  deleteNotification,
+  markNotificationAsRead,
+  markAllAdminNotificationsAsRead,
+  markAllClientNotificationsAsRead,
+  markAllNotificationsAsRead,
+} from '@/services/transfer';
 import { useAppStore } from '@/lib/store';
 import { formatDistanceToNow, format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useCallback, useEffect, useState } from 'react';
 import { Notification, Transfer } from '@/types';
+import { HttpError } from '@/services/http';
 
 type NotificationWithTransfer = Notification & {
-  transfer: Pick<Transfer, 'transfer_code' | 'sender_name' | 'receiver_name' | 'receiver_phone' | 'amount' | 'currency' | 'destination_city' | 'created_at'>;
+  transfer?: Pick<Transfer, 'transfer_code' | 'sender_name' | 'receiver_name' | 'receiver_phone' | 'amount' | 'currency' | 'destination_city' | 'created_at'> | null;
 };
 
 interface NotificationModalProps {
@@ -50,14 +59,18 @@ export function NotificationModal({ open, onOpenChange }: NotificationModalProps
     setLoading(true);
     try {
       let data;
-      if (user.role === 'cliente') {
-        data = await getClientNotifications(user.id);
+      if (user.role === 'admin') {
+        data = await getAdminNotifications();
+      } else if (user.role === 'cliente') {
+        data = await getClientNotifications();
       } else {
-        data = await getAgentNotifications(user.id);
+        data = await getAgentNotifications();
       }
       setNotifications(data as NotificationWithTransfer[]);
     } catch (error) {
-      console.error('Error loading notifications:', error);
+      if (!(error instanceof HttpError && error.status === 401)) {
+        console.error('Error loading notifications:', error);
+      }
     } finally {
       setLoading(false);
     }
@@ -80,45 +93,67 @@ export function NotificationModal({ open, onOpenChange }: NotificationModalProps
         }
       }
     } catch (error) {
-      console.error('Error deleting notification:', error);
+      if (!(error instanceof HttpError && error.status === 401)) {
+        console.error('Error deleting notification:', error);
+      }
     } finally {
       setDeleting(null);
     }
   };
 
   const handleMarkAsRead = async (notificationId: string) => {
-    const result = await markNotificationAsRead(notificationId);
-    if (result.success) {
-      setNotifications(prev => prev.map(n => 
-        n.id === notificationId ? { ...n, is_read: true, read_at: new Date().toISOString() } : n
-      ));
-      if (selectedNotification?.id === notificationId) {
-        setSelectedNotification(prev => prev ? { ...prev, is_read: true, read_at: new Date().toISOString() } : null);
+    try {
+      const result = await markNotificationAsRead(notificationId);
+      if (result.success) {
+        setNotifications(prev => prev.map(n => 
+          n.id === notificationId ? { ...n, is_read: true, read_at: new Date().toISOString() } : n
+        ));
+        if (selectedNotification?.id === notificationId) {
+          setSelectedNotification(prev => prev ? { ...prev, is_read: true, read_at: new Date().toISOString() } : null);
+        }
+      }
+    } catch (error) {
+      if (!(error instanceof HttpError && error.status === 401)) {
+        console.error('Error marking notification as read:', error);
       }
     }
   };
 
   const handleMarkAllAsRead = async () => {
     if (!user?.id) return;
-    let result;
-    if (user.role === 'cliente') {
-      result = await markAllClientNotificationsAsRead(user.id);
-    } else {
-      result = await markAllNotificationsAsRead(user.id);
-    }
-    if (result.success) {
-      setNotifications(prev => prev.map(n => ({ 
-        ...n, 
-        is_read: true, 
-        read_at: new Date().toISOString() 
-      })));
+    try {
+      let result;
+      if (user.role === 'admin') {
+        result = await markAllAdminNotificationsAsRead();
+      } else if (user.role === 'cliente') {
+        result = await markAllClientNotificationsAsRead();
+      } else {
+        result = await markAllNotificationsAsRead();
+      }
+      if (result.success) {
+        setNotifications(prev => prev.map(n => ({ 
+          ...n, 
+          is_read: true, 
+          read_at: new Date().toISOString() 
+        })));
+      }
+    } catch (error) {
+      if (!(error instanceof HttpError && error.status === 401)) {
+        console.error('Error marking all notifications as read:', error);
+      }
     }
   };
 
   const handleOpenNotification = async (notification: NotificationWithTransfer) => {
     setSelectedNotification(notification);
     if (!notification.is_read) {
-      await handleMarkAsRead(notification.id);
+      try {
+        await handleMarkAsRead(notification.id);
+      } catch (error) {
+        if (!(error instanceof HttpError && error.status === 401)) {
+          console.error('Error opening notification:', error);
+        }
+      }
     }
   };
 
@@ -168,8 +203,8 @@ export function NotificationModal({ open, onOpenChange }: NotificationModalProps
                   onClick={() => handleOpenNotification(notif)}
                   className={cn(
                     "p-4 rounded-2xl border transition-all cursor-pointer group relative",
-                    notif.is_read 
-                      ? "bg-muted/20 border-border/5 hover:bg-muted/30" 
+                    notif.is_read
+                      ? "bg-muted/20 border-border/5 hover:bg-muted/30"
                       : "bg-primary/5 border-primary/10 hover:bg-primary/10"
                   )}
                 >
@@ -188,7 +223,7 @@ export function NotificationModal({ open, onOpenChange }: NotificationModalProps
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-2">
                         <p className="text-xs font-bold text-foreground uppercase tracking-tighter truncate">
-                          {notif.transfer.transfer_code}
+                          {notif.transfer?.transfer_code || 'ADMIN'}
                         </p>
                         <div className="flex items-center gap-1 shrink-0">
                           {!notif.is_read && (
@@ -204,7 +239,7 @@ export function NotificationModal({ open, onOpenChange }: NotificationModalProps
                       </p>
                       <div className="flex items-center gap-2 mt-2">
                         <span className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">
-                          Para: {notif.transfer.receiver_name}
+                          Para: {notif.transfer?.receiver_name || notif.phone}
                         </span>
                         <span className={cn(
                           "text-[9px] font-bold uppercase tracking-widest",
@@ -238,7 +273,7 @@ export function NotificationModal({ open, onOpenChange }: NotificationModalProps
           
           <div className="p-3 bg-muted/20 border-t border-border/5 flex justify-center shrink-0">
             <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
-              SendDirect Notification System
+              FondosEG Notification System
             </p>
           </div>
         </DialogContent>
@@ -295,7 +330,7 @@ export function NotificationModal({ open, onOpenChange }: NotificationModalProps
               {/* Código de transferencia */}
               <div className="space-y-2">
                 <label className="text-xs font-bold text-muted-foreground uppercase tracking-wide">Código de Transferencia</label>
-                <p className="text-lg font-black text-primary">{selectedNotification.transfer.transfer_code}</p>
+                <p className="text-lg font-black text-primary">{selectedNotification.transfer?.transfer_code || 'ADMIN'}</p>
               </div>
 
               {/* Información del mensaje */}
@@ -312,19 +347,23 @@ export function NotificationModal({ open, onOpenChange }: NotificationModalProps
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <label className="text-xs font-bold text-muted-foreground uppercase tracking-wide">Destinatario</label>
-                  <p className="text-sm font-bold text-foreground">{selectedNotification.transfer.receiver_name}</p>
+                  <p className="text-sm font-bold text-foreground">{selectedNotification.transfer?.receiver_name || 'Administración'}</p>
                 </div>
                 <div className="space-y-2">
                   <label className="text-xs font-bold text-muted-foreground uppercase tracking-wide">Teléfono</label>
-                  <p className="text-sm font-bold text-foreground">{selectedNotification.transfer.receiver_phone}</p>
+                  <p className="text-sm font-bold text-foreground">{selectedNotification.transfer?.receiver_phone || selectedNotification.phone}</p>
                 </div>
                 <div className="space-y-2">
                   <label className="text-xs font-bold text-muted-foreground uppercase tracking-wide">Monto</label>
-                  <p className="text-sm font-bold text-green-600">{selectedNotification.transfer.amount} {selectedNotification.transfer.currency}</p>
+                  <p className="text-sm font-bold text-green-600">
+                    {selectedNotification.transfer
+                      ? `${selectedNotification.transfer.amount} ${selectedNotification.transfer.currency}`
+                      : 'N/A'}
+                  </p>
                 </div>
                 <div className="space-y-2">
                   <label className="text-xs font-bold text-muted-foreground uppercase tracking-wide">Ciudad</label>
-                  <p className="text-sm font-bold text-foreground">{selectedNotification.transfer.destination_city || 'N/A'}</p>
+                  <p className="text-sm font-bold text-foreground">{selectedNotification.transfer?.destination_city || 'Sistema'}</p>
                 </div>
               </div>
 

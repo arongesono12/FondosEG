@@ -2,13 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import { cn, getInitials, formatCurrency, convertCurrency } from '@/lib/utils';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
   X,
   TrendingUp,
-  TrendingDown,
   Send,
   ShieldAlert,
   MessageSquare,
@@ -20,7 +18,7 @@ import {
   Clock,
   XCircle,
 } from 'lucide-react';
-import type { Transfer, DashboardStats } from '@/types';
+import type { AgentsCommissionStats, Transfer, DashboardStats } from '@/types';
 
 /* -----------------------------------------------------------------
    Shared Drawer Wrapper
@@ -215,7 +213,7 @@ interface GestoresModalProps {
 }
 
 export function GestoresModal({ open, onClose, userRole, preferredCurrency }: GestoresModalProps) {
-  const [transfers, setTransfers] = useState<any[]>([]);
+  const [transfers, setTransfers] = useState<Transfer[]>([]);
   const [loading, setLoading] = useState(false);
   const fmt = (n: number) => formatCurrency(convertCurrency(n, 'XAF', preferredCurrency), preferredCurrency);
 
@@ -224,7 +222,7 @@ export function GestoresModal({ open, onClose, userRole, preferredCurrency }: Ge
     setLoading(true);
     fetch('/api/all-transfers?limit=50')
       .then((r) => r.json())
-      .then((data) => setTransfers(data || []))
+      .then((data: unknown) => setTransfers(Array.isArray(data) ? (data as Transfer[]) : []))
       .catch(() => {})
       .finally(() => setLoading(false));
   }, [open]);
@@ -334,12 +332,12 @@ export function VolumenSemanalModal({ open, onClose, preferredCurrency }: Volume
         <>
           {/* Summary cards */}
           <div className="grid grid-cols-2 gap-3">
-            <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/20">
+          <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/20">
               <p className="text-[10px] font-black uppercase text-rose-500 tracking-wide">Total Envíos</p>
               <p className="text-2xl font-black text-foreground mt-1">{totals.count}</p>
               <p className="text-[10px] text-muted-foreground">en los últimos 7 días</p>
             </div>
-            <div className="p-4 rounded-2xl bg-blue-500/10 border border-blue-500/20">
+          <div className="p-4 rounded-2xl bg-blue-500/10 border border-blue-500/20">
               <p className="text-[10px] font-black uppercase text-blue-500 tracking-wide">Volumen Total</p>
               <p className="text-xl font-black text-foreground mt-1">{fmt(totals.amount)}</p>
               <p className="text-[10px] text-muted-foreground">acumulado semanal</p>
@@ -525,7 +523,7 @@ interface ComisionesModalProps {
   onClose: () => void;
   userRole?: string;
   stats: DashboardStats | null;
-  commissionStats: any;
+  commissionStats: AgentsCommissionStats | null;
   preferredCurrency: string;
 }
 
@@ -551,13 +549,13 @@ export function ComisionesModal({ open, onClose, userRole, stats, commissionStat
           </div>
 
           <p className="text-[10px] font-black text-muted-foreground uppercase tracking-wide mb-2">Comisiones por gestor</p>
-          <div className="space-y-2 max-h-[60vh] overflow-y-auto">
-            {(commissionStats?.agents || []).map((agent: any) => (
-              <div key={agent.agent_id} className="flex items-center justify-between p-3 rounded-xl border border-border/10 hover:bg-muted/30">
-                <div className="flex items-center gap-3">
-                  <div className="h-8 w-8 rounded-full bg-brand-gradient flex items-center justify-center text-white text-xs font-bold">
-                    {getInitials(agent.agent_name)}
-                  </div>
+           <div className="space-y-2 max-h-[60vh] overflow-y-auto">
+             {(commissionStats?.agents || []).map((agent) => (
+               <div key={agent.agent_id} className="flex items-center justify-between p-3 rounded-xl border border-border/10 hover:bg-muted/30">
+                 <div className="flex items-center gap-3">
+                   <div className="h-8 w-8 rounded-full bg-brand-gradient flex items-center justify-center text-white text-xs font-bold">
+                     {getInitials(agent.agent_name)}
+                   </div>
                   <div>
                     <p className="text-sm font-bold text-foreground">{agent.agent_name}</p>
                     <p className="text-[10px] text-muted-foreground">{agent.transfer_count} envíos</p>

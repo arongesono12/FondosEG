@@ -2,9 +2,10 @@
 
 import { useEffect, useState } from 'react';
 import { useAppStore } from '@/lib/store';
-import { getAgentDashboardStats, getAdminDashboardStats, getRecentTransfers, getAgentsCommissionStats } from '@/services/dashboard';
-import type { DashboardStats, Transfer } from '@/types';
+import { getDashboardStats, getRecentTransfers, getAgentsCommissionStats } from '@/services/dashboard';
+import type { AgentsCommissionStats, DashboardStats, Transfer } from '@/types';
 import { formatCurrency, cn, getInitials, convertCurrency } from '@/lib/utils';
+import { HttpError } from '@/services/http';
 import { 
   ArrowUpRight,
   TrendingUp,
@@ -31,7 +32,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [supportModalOpen, setSupportModalOpen] = useState(false);
   const [supportRequestType, setSupportRequestType] = useState<'balance_topup' | 'report_error' | 'general'>('general');
-  const [commissionStats, setCommissionStats] = useState<{agents?: Array<Record<string, unknown>>, totalCommission?: number, todayCommission?: number} | null>(null);
+  const [commissionStats, setCommissionStats] = useState<AgentsCommissionStats | null>(null);
 
   // Detail modal states
   const [flujoDiaOpen, setFlujoDiaOpen] = useState(false);
@@ -41,6 +42,12 @@ export default function DashboardPage() {
   const [soporteOpen, setSoporteOpen] = useState(false);
 
   const displayCurrency = preferredCurrency || 'XAF';
+  const dashboardCardClass =
+    'glass-premium bg-card/30 dark:bg-card/20 relative border-border/10 overflow-hidden shadow-2xl';
+  const dashboardSubCardClass =
+    'p-5 rounded-3xl bg-muted/20 dark:bg-slate-900/40 border border-border/5 flex flex-col gap-3 transition-all duration-300 hover:bg-muted/30 dark:hover:bg-slate-900/50';
+  const dashboardSubCardSmClass =
+    'p-4 rounded-[1.25rem] bg-muted/20 dark:bg-slate-900/40 border border-border/5 transition-colors hover:bg-muted/30 dark:hover:bg-slate-900/50';
 
   const formatBalance = (amount: number) => {
     const converted = convertCurrency(amount, 'XAF', displayCurrency);
@@ -60,7 +67,7 @@ export default function DashboardPage() {
     async function loadData() {
       try {
         const [statsData, transfersData, commissionData] = await Promise.all([
-          user?.role === 'admin' ? getAdminDashboardStats() : getAgentDashboardStats(user?.id || ''),
+          getDashboardStats(),
           getRecentTransfers(5),
           user?.role === 'admin' ? getAgentsCommissionStats() : Promise.resolve(null)
         ]);
@@ -68,7 +75,9 @@ export default function DashboardPage() {
         setRecentTransfers(transfersData);
         setCommissionStats(commissionData);
       } catch (error) {
-        console.error('Error loading dashboard data:', error);
+        if (!(error instanceof HttpError && error.status === 401)) {
+          console.error('Error loading dashboard data:', error);
+        }
       } finally {
         setLoading(false);
       }
@@ -94,7 +103,9 @@ export default function DashboardPage() {
         <div className="space-y-1">
           <h1 className="text-2xl md:text-3xl font-black text-foreground tracking-tighter">Panel</h1>
           <div className="flex items-center gap-2 text-muted-foreground font-bold text-xs md:text-sm">
-            <span className="hidden sm:inline">SendDirect x {user?.name || 'Equipo Directo'}</span>
+            <span className="hidden sm:inline">
+              <span className="text-brand-gradient">FondosEG</span> x {user?.name || 'Equipo Directo'}
+            </span>
             <span className="sm:hidden">{user?.name || 'Usuario'}</span>
             <span className="w-1.5 h-1.5 rounded-full bg-slate-200 dark:bg-slate-700 hidden md:inline" />
             <span className="items-center gap-1 cursor-pointer hover:text-foreground transition-colors uppercase tracking-widest text-[10px] hidden md:flex">
@@ -144,7 +155,12 @@ export default function DashboardPage() {
       {/* 2 & 3: Today Stats & Radial Progress */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
         {/* FLUJO DEL DÍA */}
-        <div className="lg:col-span-2 space-y-4 bg-white/40 dark:bg-[#10121B]/40 p-5 md:p-8 rounded-[10px] border border-white/18 backdrop-blur-[2px] shadow-sm hover:shadow-xl dark:hover:shadow-[0_0_20px_rgba(255,255,255,0.15)] hover:border-white/30 transition-all duration-500 text-card-foreground dark:text-white">
+        <div
+          className={cn(
+            'lg:col-span-2 space-y-4 p-5 md:p-8 rounded-[10px] transition-all duration-500 text-card-foreground',
+            dashboardCardClass
+          )}
+        >
           <div className="flex items-center justify-between">
             <h2 className="text-lg md:text-xl font-bold">Flujo del Día</h2>
             <Button
@@ -156,54 +172,60 @@ export default function DashboardPage() {
             </Button>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <div className="p-5 rounded-3xl bg-linear-to-br from-blue-50 to-blue-100/50 dark:from-blue-950/30 dark:to-blue-900/10 border border-blue-100 dark:border-blue-800/20 flex flex-col gap-3 hover:shadow-lg hover:shadow-blue-500/10 hover:border-blue-300/30 transition-all duration-300">
+            <div className={dashboardSubCardClass}>
               <div className="flex items-center gap-2">
                 <div className="h-8 w-8 rounded-xl bg-blue-500 flex items-center justify-center">
                   <svg className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
-                <Badge className="bg-white/80 text-blue-600 dark:text-blue-400 border-none shadow-sm text-[10px] font-bold uppercase">Capital Total</Badge>
+                <Badge className="bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 shadow-none text-[10px] font-bold uppercase">
+                  Capital Total
+                </Badge>
               </div>
               <div className="space-y-1">
                 <p className="text-xl md:text-2xl font-bold">{formatBalance(stats?.totalBalance || 0)}</p>
-                <p className="text-xs font-medium text-blue-500/80">Saldo disponible</p>
+                <p className="text-xs font-medium text-muted-foreground">Saldo disponible</p>
               </div>
-              <div className="mt-auto h-1.5 w-full bg-blue-200/50 dark:bg-blue-800/30 rounded-full overflow-hidden">
+              <div className="mt-auto h-1.5 w-full bg-muted/40 dark:bg-muted/20 rounded-full overflow-hidden">
                 <div className="h-full bg-linear-to-r from-blue-400 to-blue-500 rounded-full" style={{ width: `${balanceProgress}%` }} />
               </div>
             </div>
-            <div className="p-5 rounded-3xl bg-linear-to-br from-purple-50 to-purple-100/50 dark:from-purple-950/30 dark:to-purple-900/10 border border-purple-100 dark:border-purple-800/20 flex flex-col gap-3 hover:shadow-lg hover:shadow-purple-500/10 hover:border-purple-300/30 transition-all duration-300">
+            <div className={dashboardSubCardClass}>
               <div className="flex items-center gap-2">
                 <div className="h-8 w-8 rounded-xl bg-purple-500 flex items-center justify-center">
                   <svg className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
                   </svg>
                 </div>
-                <Badge className="bg-white/80 text-purple-600 dark:text-purple-400 border-none shadow-sm text-[10px] font-bold uppercase">Enviado Hoy</Badge>
+                <Badge className="bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20 shadow-none text-[10px] font-bold uppercase">
+                  Enviado Hoy
+                </Badge>
               </div>
               <div className="space-y-1">
                 <p className="text-xl md:text-2xl font-bold">{formatBalance(stats?.totalSent || 0)}</p>
-                <p className="text-xs font-medium text-purple-500/80">Volumen procesado</p>
+                <p className="text-xs font-medium text-muted-foreground">Volumen procesado</p>
               </div>
-              <div className="mt-auto h-1.5 w-full bg-purple-200/50 dark:bg-purple-800/30 rounded-full overflow-hidden">
+              <div className="mt-auto h-1.5 w-full bg-muted/40 dark:bg-muted/20 rounded-full overflow-hidden">
                 <div className="h-full bg-linear-to-r from-purple-400 to-purple-500 rounded-full" style={{ width: `${sentProgress}%` }} />
               </div>
             </div>
-            <div className="p-5 rounded-3xl bg-linear-to-br from-orange-50 to-orange-100/50 dark:from-orange-950/30 dark:to-orange-900/10 border border-orange-100 dark:border-orange-800/20 flex flex-col gap-3 hover:shadow-lg hover:shadow-orange-500/10 hover:border-orange-300/30 transition-all duration-300">
+            <div className={dashboardSubCardClass}>
               <div className="flex items-center gap-2">
                 <div className="h-8 w-8 rounded-xl bg-orange-500 flex items-center justify-center">
                   <svg className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                   </svg>
                 </div>
-                <Badge className="bg-white/80 text-orange-600 dark:text-orange-400 border-none shadow-sm text-[10px] font-bold uppercase">Operaciones</Badge>
+                <Badge className="bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-500/20 shadow-none text-[10px] font-bold uppercase">
+                  Operaciones
+                </Badge>
               </div>
               <div className="space-y-1">
                 <p className="text-xl md:text-2xl font-bold">{stats?.todayTransfers || 0}</p>
-                <p className="text-xs font-medium text-orange-500/80">Total transacciones</p>
+                <p className="text-xs font-medium text-muted-foreground">Total transacciones</p>
               </div>
-              <div className="mt-auto h-1.5 w-full bg-orange-200/50 dark:bg-orange-800/30 rounded-full overflow-hidden">
+              <div className="mt-auto h-1.5 w-full bg-muted/40 dark:bg-muted/20 rounded-full overflow-hidden">
                 <div className="h-full bg-linear-to-r from-orange-400 to-orange-500 rounded-full" style={{ width: `${operationsProgress}%` }} />
               </div>
             </div>
@@ -211,7 +233,12 @@ export default function DashboardPage() {
         </div>
 
         {/* Radial Distribution */}
-        <div className="bg-white/40 dark:bg-[#10121B]/40 p-5 md:p-8 rounded-[10px] border border-white/18 backdrop-blur-[2px] shadow-sm hover:shadow-xl dark:hover:shadow-[0_0_20px_rgba(255,255,255,0.15)] hover:border-white/30 transition-all duration-500 flex flex-col gap-4 md:gap-6 text-card-foreground dark:text-white">
+        <div
+          className={cn(
+            'p-5 md:p-8 rounded-[10px] transition-all duration-500 flex flex-col gap-4 md:gap-6 text-card-foreground',
+            dashboardCardClass
+          )}
+        >
           <div className="flex items-center justify-between">
             <h2 className="text-lg md:text-xl font-bold">Distribución</h2>
             <p className="text-xs font-medium text-muted-foreground">{totalTransfersCount} total</p>
@@ -256,7 +283,12 @@ export default function DashboardPage() {
 
         {/* COMISIONES - Only Admin and Gestor */}
         {user?.role !== 'cliente' && (
-        <div className="bg-white/40 dark:bg-[#10121B]/40 p-5 md:p-8 rounded-[10px] border border-white/18 backdrop-blur-[2px] shadow-sm hover:shadow-xl dark:hover:shadow-[0_0_20px_rgba(255,255,255,0.15)] hover:border-white/30 transition-all duration-500 text-card-foreground dark:text-white">
+        <div
+          className={cn(
+            'p-5 md:p-8 rounded-[10px] transition-all duration-500 text-card-foreground',
+            dashboardCardClass
+          )}
+        >
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg md:text-xl font-bold">Comisiones</h2>
             <Button
@@ -270,36 +302,48 @@ export default function DashboardPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             {user?.role === 'admin' ? (
               <>
-                <div className="p-4 rounded-[1.25rem] bg-linear-to-br from-green-50 to-green-100/50 dark:from-green-950/30 dark:to-green-900/10 border border-green-100 dark:border-green-800/20">
-                  <Badge className="bg-white/80 text-green-600 dark:text-green-400 border-none text-[10px] font-bold uppercase mb-2">Comisión Total</Badge>
+                <div className={dashboardSubCardSmClass}>
+                  <Badge className="bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/20 shadow-none text-[10px] font-bold uppercase mb-2">
+                    Comisión Total
+                  </Badge>
                   <p className="text-2xl font-bold text-green-600 dark:text-green-400">{formatBalance(commissionStats?.totalCommission || 0)}</p>
                   <p className="text-xs font-medium text-muted-foreground mt-1">Todos los gestores</p>
                 </div>
-                <div className="p-4 rounded-[1.25rem] bg-linear-to-br from-emerald-50 to-emerald-100/50 dark:from-emerald-950/30 dark:to-emerald-900/10 border border-emerald-100 dark:border-emerald-800/20">
-                  <Badge className="bg-white/80 text-emerald-600 dark:text-emerald-400 border-none text-[10px] font-bold uppercase mb-2">Comisión Hoy</Badge>
+                <div className={dashboardSubCardSmClass}>
+                  <Badge className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 shadow-none text-[10px] font-bold uppercase mb-2">
+                    Comisión Hoy
+                  </Badge>
                   <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{formatBalance(commissionStats?.todayCommission || 0)}</p>
                   <p className="text-xs font-medium text-muted-foreground mt-1">Ganado hoy</p>
                 </div>
-                <div className="p-4 rounded-[1.25rem] bg-linear-to-br from-teal-50 to-teal-100/50 dark:from-teal-950/30 dark:to-teal-900/10 border border-teal-100 dark:border-teal-800/20">
-                  <Badge className="bg-white/80 text-teal-600 dark:text-teal-400 border-none text-[10px] font-bold uppercase mb-2">Gestores</Badge>
+                <div className={dashboardSubCardSmClass}>
+                  <Badge className="bg-teal-500/10 text-teal-600 dark:text-teal-400 border border-teal-500/20 shadow-none text-[10px] font-bold uppercase mb-2">
+                    Gestores
+                  </Badge>
                   <p className="text-2xl font-bold text-teal-600 dark:text-teal-400">{commissionStats?.agents?.length || 0}</p>
                   <p className="text-xs font-medium text-muted-foreground mt-1">Activos</p>
                 </div>
               </>
             ) : (
               <>
-                <div className="p-4 rounded-[1.25rem] bg-linear-to-br from-green-50 to-green-100/50 dark:from-green-950/30 dark:to-green-900/10 border border-green-100 dark:border-green-800/20">
-                  <Badge className="bg-white/80 text-green-600 dark:text-green-400 border-none text-[10px] font-bold uppercase mb-2">Mi Comisión Total</Badge>
+                <div className={dashboardSubCardSmClass}>
+                  <Badge className="bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/20 shadow-none text-[10px] font-bold uppercase mb-2">
+                    Mi Comisión Total
+                  </Badge>
                   <p className="text-2xl font-bold text-green-600 dark:text-green-400">{formatBalance(stats?.totalCommission || 0)}</p>
                   <p className="text-xs font-medium text-muted-foreground mt-1">Ganancias por envíos</p>
                 </div>
-                <div className="p-4 rounded-[1.25rem] bg-linear-to-br from-emerald-50 to-emerald-100/50 dark:from-emerald-950/30 dark:to-emerald-900/10 border border-emerald-100 dark:border-emerald-800/20">
-                  <Badge className="bg-white/80 text-emerald-600 dark:text-emerald-400 border-none text-[10px] font-bold uppercase mb-2">Comisión Hoy</Badge>
+                <div className={dashboardSubCardSmClass}>
+                  <Badge className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 shadow-none text-[10px] font-bold uppercase mb-2">
+                    Comisión Hoy
+                  </Badge>
                   <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{formatBalance(stats?.todayCommission || 0)}</p>
                   <p className="text-xs font-medium text-muted-foreground mt-1">Ganado hoy</p>
                 </div>
-                <div className="p-4 rounded-[1.25rem] bg-linear-to-br from-teal-50 to-teal-100/50 dark:from-teal-950/30 dark:to-teal-900/10 border border-teal-100 dark:border-teal-800/20">
-                  <Badge className="bg-white/80 text-teal-600 dark:text-teal-400 border-none text-[10px] font-bold uppercase mb-2">Promedio</Badge>
+                <div className={dashboardSubCardSmClass}>
+                  <Badge className="bg-teal-500/10 text-teal-600 dark:text-teal-400 border border-teal-500/20 shadow-none text-[10px] font-bold uppercase mb-2">
+                    Promedio
+                  </Badge>
                   <p className="text-2xl font-bold text-teal-600 dark:text-teal-400">{formatBalance(stats?.commissionPerTransfer || 0)}</p>
                   <p className="text-xs font-medium text-muted-foreground mt-1">Por transacción</p>
                 </div>
@@ -310,7 +354,12 @@ export default function DashboardPage() {
         )}
 
       {stats?.balancesByCurrency && Object.keys(stats.balancesByCurrency).length > 0 && (
-        <div className="bg-white/40 dark:bg-[#10121B]/40 p-5 md:p-8 rounded-[10px] border border-white/18 backdrop-blur-[2px] shadow-sm hover:shadow-xl dark:hover:shadow-[0_0_20px_rgba(255,255,255,0.15)] hover:border-white/30 transition-all duration-500 text-card-foreground dark:text-white">
+        <div
+          className={cn(
+            'p-5 md:p-8 rounded-[10px] transition-all duration-500 text-card-foreground',
+            dashboardCardClass
+          )}
+        >
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg md:text-xl font-bold">Saldo por Moneda</h2>
           </div>
@@ -319,7 +368,7 @@ export default function DashboardPage() {
               const currencyToShow = preferredCurrency || 'XAF';
               const amount = stats.balancesByCurrency![currencyToShow] || stats.balancesByCurrency!['XAF'] || 0;
               return (
-                <div key={currencyToShow} className="p-4 rounded-[1.25rem] bg-linear-to-br from-slate-50 to-slate-100/50 dark:from-slate-950/30 dark:to-slate-900/10 border border-slate-100 dark:border-slate-800/20 flex flex-col items-start">
+                <div key={currencyToShow} className={cn(dashboardSubCardSmClass, 'flex flex-col items-start')}>
                   <span className="text-xs font-bold text-muted-foreground uppercase">{currencyToShow}</span>
                   <span className="text-lg font-bold mt-1">{formatCurrency(amount, currencyToShow)}</span>
                 </div>
@@ -334,7 +383,12 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
 
         {/* ENVÍOS DE GESTORES */}
-        <div className="space-y-4 bg-white/40 dark:bg-[#10121B]/40 p-5 md:p-8 rounded-[10px] border border-white/18 backdrop-blur-[2px] shadow-sm hover:shadow-xl dark:hover:shadow-[0_0_20px_rgba(255,255,255,0.15)] hover:border-white/30 transition-all duration-500 text-card-foreground dark:text-white">
+        <div
+          className={cn(
+            'space-y-4 p-5 md:p-8 rounded-[10px] transition-all duration-500 text-card-foreground',
+            dashboardCardClass
+          )}
+        >
           <div className="flex items-center justify-between">
             <h2 className="text-lg md:text-xl font-bold">
               {user?.role === 'admin' ? 'Envíos de Gestores' : user?.role === 'gestor' ? 'Actividad Top' : 'Mi Actividad'}
@@ -352,7 +406,7 @@ export default function DashboardPage() {
             <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-100 dark:border-amber-800/20 text-amber-600 dark:text-amber-400">
               <ShieldAlert className="h-3.5 w-3.5 shrink-0" />
               <span className="text-[10px] font-bold uppercase tracking-wide">
-                Supervisión — Admins no realizan envíos directamente
+                Únete a <span className="text-brand-gradient">FondosEG</span> y comienza a gestionar envíos directamente
               </span>
             </div>
           )}
@@ -390,7 +444,12 @@ export default function DashboardPage() {
         </div>
 
         {/* VOLUMEN SEMANAL */}
-        <div className="space-y-4 bg-white/40 dark:bg-[#10121B]/40 p-5 md:p-8 rounded-[10px] border border-white/18 backdrop-blur-[2px] shadow-sm hover:shadow-xl dark:hover:shadow-[0_0_20px_rgba(255,255,255,0.15)] hover:border-white/30 transition-all duration-500 text-card-foreground dark:text-white">
+        <div
+          className={cn(
+            'space-y-4 p-5 md:p-8 rounded-[10px] transition-all duration-500 text-card-foreground',
+            dashboardCardClass
+          )}
+        >
           <div className="flex items-center justify-between">
             <h2 className="text-lg md:text-xl font-bold">Volumen Semanal</h2>
             <Button
@@ -431,7 +490,12 @@ export default function DashboardPage() {
         </div>
 
         {/* SOPORTE */}
-        <div className="space-y-4 bg-white/40 dark:bg-[#10121B]/40 p-5 md:p-8 rounded-[10px] border border-white/18 backdrop-blur-[2px] shadow-sm hover:shadow-xl dark:hover:shadow-[0_0_20px_rgba(255,255,255,0.15)] hover:border-white/30 transition-all duration-500 relative overflow-hidden text-card-foreground dark:text-white">
+        <div
+          className={cn(
+            'space-y-4 p-5 md:p-8 rounded-[10px] transition-all duration-500 text-card-foreground',
+            dashboardCardClass
+          )}
+        >
           <div className="flex items-center justify-between">
             <h2 className="text-lg md:text-xl font-bold">Soporte</h2>
             <Button

@@ -56,20 +56,20 @@ async function logNotification(phone: string, message: string, status: string, t
 }
 
 export async function sendTransferSMS(data: SMSData): Promise<void> {
-  const senderMessage = `SendDirect: Su transferencia de ${data.amount}${data.currency} ha sido registrada correctamente. Código: ${data.transferCode}`;
+  const senderMessage = `FondosEG: Su transferencia de ${data.amount}${data.currency} ha sido registrada correctamente. Código: ${data.transferCode}`;
   
-  const receiverMessage = `SendDirect: Tiene una transferencia disponible de ${data.amount}${data.currency} de ${data.senderName}. Código de retiro: ${data.transferCode}`;
+  const receiverMessage = `FondosEG: Tiene una transferencia disponible de ${data.amount}${data.currency} de ${data.senderName}. Código de retiro: ${data.transferCode}`;
 
   await sendSMS(data.senderPhone, senderMessage);
   await sendSMS(data.receiverPhone, receiverMessage);
 }
 
 export async function sendBalanceAlert(phone: string, agentName: string, balance: number): Promise<void> {
-  const message = `SendDirect: Alerta - El saldo de ${agentName} es bajo: ${balance} EUR. Considere recargar.`;
+  const message = `FondosEG: Alerta - El saldo de ${agentName} es bajo: ${balance} EUR. Considere recargar.`;
   await sendSMS(phone, message);
 }
 
 export async function sendWelcomeSMS(phone: string, name: string, role: string): Promise<void> {
-  const message = `SendDirect: Bienvenido ${name}. Su cuenta de ${role} ha sido creada exitosamente.`;
+  const message = `FondosEG: Bienvenido ${name}. Su cuenta de ${role} ha sido creada exitosamente.`;
   await sendSMS(phone, message);
 }

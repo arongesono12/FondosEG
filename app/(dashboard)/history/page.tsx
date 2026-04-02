@@ -26,7 +26,7 @@ export default function HistoryPage() {
           const data = await getAllTransfers(100);
           setTransfers(data);
         } else {
-          const data = await getTransfers(user?.id || '', 100);
+          const data = await getTransfers(100);
           setTransfers(data);
         }
       } catch (error) {

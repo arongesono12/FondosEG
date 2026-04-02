@@ -25,7 +25,6 @@ import {
   MapPin,
   Wallet,
   ArrowLeft,
-  ArrowRight,
 } from 'lucide-react';
 import { getAgentBalance } from '@/services/agent';
 
@@ -207,7 +206,7 @@ export function AgentTransferModal({ open, onOpenChange, onSuccess }: AgentTrans
         amount: amount,
         currency: formData.currency,
         notes: formData.notes || undefined,
-      }, user.id);
+      });
 
       if (result.success) {
         setShowConfirm(false);
@@ -238,7 +237,8 @@ export function AgentTransferModal({ open, onOpenChange, onSuccess }: AgentTrans
         setError(result.error || 'Error al crear la transferencia');
         setShowConfirm(false);
       }
-    } catch (err) {
+    } catch (error) {
+      console.error('Error creating transfer:', error);
       setError('Error al conectar con el servidor');
       setShowConfirm(false);
     } finally {

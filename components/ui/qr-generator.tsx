@@ -95,5 +95,5 @@ interface QRData {
 
 export function generateQRData(transfer: QRData): string {
   const jsonStr = JSON.stringify(transfer);
-  return `senddirect://transfer/${btoa(jsonStr)}`;
+  return `FondosEG://transfer/${btoa(jsonStr)}`;
 }

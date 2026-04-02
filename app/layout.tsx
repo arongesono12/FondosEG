@@ -19,7 +19,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "SendDirect - Gestión de Envíos de Dinero",
+  title: "FondosEG - Gestión de Envíos de Dinero",
   description: "Plataforma profesional para gestionar envíos de dinero entre personas a través de gestores",
 };
 

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { AuthzError, requireProfile, requireRole } from '@/lib/server/authz';
+import { requireProfile, requireRole } from '@/lib/server/authz';
+import { handleRouteError } from '@/lib/server/route-error';
 import { calculateCommission } from '@/lib/tariffs';
 
 export async function GET() {
@@ -52,11 +53,6 @@ export async function GET() {
 
     return NextResponse.json({ agents, totalCommission, todayCommission });
   } catch (err) {
-    console.error('[GET /api/dashboard/agents-commission]', err);
-    if (err instanceof AuthzError) {
-      return NextResponse.json({ error: err.message }, { status: err.status });
-    }
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return handleRouteError(err, 'GET /api/dashboard/agents-commission');
   }
 }
-

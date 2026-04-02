@@ -7,6 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn, getInitials } from '@/lib/utils';
 import { useAppStore } from '@/lib/store';
 import { ThemeToggle } from "@/components/theme-toggle";
+import { DashboardLogo } from './dashboard-logo';
 import { 
   DropdownMenu,
   DropdownMenuContent,
@@ -23,7 +24,6 @@ import {
   Users, 
   Wallet, 
   History,
-  TrendingUp,
   UserCog,
   LogOut,
   Menu,
@@ -42,12 +42,14 @@ import { SupportModal } from './support-modal';
 import { getUnreadNotificationCount, getClientUnreadNotificationCount, getAdminUnreadNotificationCount } from '@/services/transfer';
 import { getAgentBalance } from '@/services/agent';
 import { useTheme } from 'next-themes';
+import { HttpError } from '@/services/http';
 
 export function DashboardLayoutWrapper({ children }: { children: React.ReactNode }) {
-  const { user, setUser, theme } = useAppStore();
+  const { user, setUser } = useAppStore();
   const pathname = usePathname();
   const router = useRouter();
-  const { theme: currentTheme, setTheme } = useTheme();
+  const { resolvedTheme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -57,7 +59,11 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
   const [notificationCount, setNotificationCount] = useState(0);
   const [lowBalance, setLowBalance] = useState(false);
   
-  const isDark = theme === 'dark';
+  const isDark = mounted && resolvedTheme === 'dark';
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     const mainArea = document.querySelector('main');
@@ -79,14 +85,16 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
           const count = await getAdminUnreadNotificationCount();
           setNotificationCount(count);
         } else if (user.role === 'gestor') {
-          const count = await getUnreadNotificationCount(user.id);
+          const count = await getUnreadNotificationCount();
           setNotificationCount(count);
         } else if (user.role === 'cliente') {
-          const count = await getClientUnreadNotificationCount(user.id);
+          const count = await getClientUnreadNotificationCount();
           setNotificationCount(count);
         }
       } catch (error) {
-        console.error('Error loading notification count:', error);
+        if (!(error instanceof HttpError && error.status === 401)) {
+          console.error('Error loading notification count:', error);
+        }
       }
     }
     loadNotificationCount();
@@ -105,7 +113,9 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
         const balance = balanceData?.balance || 0;
         setLowBalance(balance < 25000);
       } catch (error) {
-        console.error('Error checking balance:', error);
+        if (!(error instanceof HttpError && error.status === 401)) {
+          console.error('Error checking balance:', error);
+        }
       }
     }
     checkLowBalance();
@@ -121,7 +131,7 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
   
   const navItems = user?.role === 'admin' 
     ? [
-        { href: '/', label: 'Dashboard', icon: LayoutDashboard },
+        { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
         { href: '/transfers', label: 'Envíos', icon: Send },
         { href: '/agents', label: 'Gestores', icon: Users },
         { href: '/balance', label: 'Saldos', icon: Wallet },
@@ -129,26 +139,20 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
         { href: '/history', label: 'Historial', icon: History },
       ]
     : [
-        { href: '/', label: 'Dashboard', icon: LayoutDashboard },
+        { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
         { href: '/transfers', label: 'Enviar', icon: Send },
         { href: '/balance', label: 'Billetera', icon: Wallet },
         { href: '/history', label: 'Actividad', icon: History },
       ];
 
   return (
-    <div className={`main-container min-h-screen font-sans ${isDark ? 'bg-black' : 'bg-white'}`}>
+    <div className="main-container min-h-screen font-sans bg-white dark:bg-black">
       {/* Background decoration - hidden on mobile */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none hidden md:block">
         <div className="absolute top-0 left-0 w-full h-full">
-          <div className={`absolute top-20 left-20 w-96 h-96 rounded-full blur-3xl ${
-            isDark ? 'bg-pink-500/10' : 'bg-pink-100/60'
-          }`} />
-          <div className={`absolute bottom-20 right-20 w-96 h-96 rounded-full blur-3xl ${
-            isDark ? 'bg-rose-500/10' : 'bg-rose-100/60'
-          }`} />
-          <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full blur-3xl ${
-            isDark ? 'bg-pink-600/5' : 'bg-pink-50/50'
-          }`} />
+          <div className="absolute top-20 left-20 w-96 h-96 rounded-full blur-3xl bg-pink-100/60 dark:bg-pink-500/10" />
+          <div className="absolute bottom-20 right-20 w-96 h-96 rounded-full blur-3xl bg-rose-100/60 dark:bg-rose-500/10" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full blur-3xl bg-pink-50/50 dark:bg-pink-600/5" />
         </div>
       </div>
       
@@ -161,7 +165,7 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
         {/* Top Header Navigation - rounded top corners to match container */}
         <header className={cn(
           "h-16 md:h-20 flex items-center justify-between px-4 md:px-10 border-b border-border/10 shrink-0 transition-all duration-300 z-50",
-          isDark ? "bg-gradient-to-b from-slate-900 to-slate-950" : "bg-gradient-to-b from-white to-slate-50",
+          "bg-linear-to-b from-white to-slate-50 dark:from-slate-900 dark:to-slate-950",
           "md:rounded-t-[2.5rem]",
           scrolled && "h-14 md:h-16 shadow-lg shadow-black/5"
         )}>
@@ -174,10 +178,12 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
             >
-              <div className="p-1.5 rounded-lg bg-brand-gradient text-white">
-                <TrendingUp className="h-5 w-5" />
-              </div>
-              <span className="text-lg md:text-xl font-black tracking-tighter text-foreground">SendDirect</span>
+              <DashboardLogo
+                priority
+                size="md"
+                iconClassName="h-11 w-11 rounded-full"
+                labelClassName="text-lg md:text-xl"
+              />
             </Link>
 
             <nav className="hidden lg:flex items-center gap-1 ml-4">
@@ -284,8 +290,13 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
                       </span>
                     )}
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setTheme(currentTheme === 'dark' ? 'light' : 'dark')} className="md:hidden">
-                    {currentTheme === 'dark' ? (
+                  <DropdownMenuItem onClick={() => setTheme(isDark ? 'light' : 'dark')} className="md:hidden">
+                    {!mounted ? (
+                      <>
+                        <Moon className="mr-2 h-4 w-4" />
+                        <span>Tema</span>
+                      </>
+                    ) : isDark ? (
                       <>
                         <Sun className="mr-2 h-4 w-4" />
                         <span>Modo Claro</span>
@@ -349,12 +360,7 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
         )}
 
         {/* Content Area */}
-        <main className={cn(
-          "flex-1 overflow-y-auto scrollbar-hide bg-card md:bg-transparent",
-          isDark ? 'bg-black md:bg-transparent' : 'bg-white md:bg-transparent',
-          "p-4 md:p-10",
-          "h-[calc(100vh-4rem)] md:h-auto"
-        )}>
+        <main className="flex-1 overflow-y-auto scrollbar-hide bg-white dark:bg-black md:bg-transparent p-4 md:p-10 h-[calc(100vh-4rem)] md:h-auto">
           {children}
         </main>
 

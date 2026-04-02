@@ -10,6 +10,7 @@ import {
 import { Settings, DollarSign, Palette, Bell } from 'lucide-react';
 import { useAppStore } from '@/lib/store';
 import { useState, useEffect } from 'react';
+import { useTheme } from 'next-themes';
 
 interface SettingsModalProps {
   open: boolean;
@@ -24,21 +25,22 @@ const currencies = [
 ];
 
 export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
-  const { theme, setTheme, preferredCurrency, setPreferredCurrency } = useAppStore();
+  const { preferredCurrency, setPreferredCurrency } = useAppStore();
+  const { resolvedTheme, setTheme } = useTheme();
   const [localCurrency, setLocalCurrency] = useState(preferredCurrency);
-  const [localTheme, setLocalTheme] = useState(theme);
+  const [localTheme, setLocalTheme] = useState<'light' | 'dark'>((resolvedTheme as 'light' | 'dark') || 'dark');
   const [notifications, setNotifications] = useState(true);
 
   useEffect(() => {
     setLocalCurrency(preferredCurrency);
-    setLocalTheme(theme);
-  }, [preferredCurrency, theme, open]);
+    if (resolvedTheme === 'light' || resolvedTheme === 'dark') {
+      setLocalTheme(resolvedTheme);
+    }
+  }, [preferredCurrency, resolvedTheme, open]);
 
   const handleSave = () => {
     setPreferredCurrency(localCurrency);
     setTheme(localTheme);
-    localStorage.setItem('preferredCurrency', localCurrency);
-    localStorage.setItem('theme', localTheme);
     onOpenChange(false);
   };
 
@@ -50,7 +52,7 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
             <Settings className="h-5 w-5 text-primary" /> Configuración
           </DialogTitle>
           <DialogDescription className="text-sm text-muted-foreground">
-            Personaliza tu experiencia en SendDirect
+            Personaliza tu experiencia en FondosEG
           </DialogDescription>
         </DialogHeader>
         

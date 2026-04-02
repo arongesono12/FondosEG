@@ -1,25 +1,16 @@
-import type { Notification, Transfer, TransferFormData } from '@/types';
+import type { Transfer, TransferFormData } from '@/types';
+import { fetchJSON } from '@/services/http';
 
-async function fetchJSON<T>(input: RequestInfo | URL, init?: RequestInit): Promise<T> {
-  const res = await fetch(input, init);
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    throw new Error((data as any)?.error || `Request failed: ${res.status}`);
-  }
-  return data as T;
-}
-
-export async function getTransfers(_userId: string, limit: number = 50): Promise<Transfer[]> {
+export async function getTransfers(limit: number = 50): Promise<Transfer[]> {
   return fetchJSON<Transfer[]>(`/api/transfers?limit=${encodeURIComponent(String(limit))}`);
 }
 
 export async function getAllTransfers(limit: number = 50): Promise<Transfer[]> {
-  return fetchJSON<Transfer[]>(`/api/transfers?limit=${encodeURIComponent(String(limit))}`);
+  return getTransfers(limit);
 }
 
 export async function createTransfer(
-  data: TransferFormData,
-  _agentId: string
+  data: TransferFormData
 ): Promise<{ success: boolean; transfer?: Transfer; error?: string }> {
   return fetchJSON<{ success: boolean; transfer?: Transfer; error?: string }>('/api/transfers', {
     method: 'POST',
@@ -28,20 +19,20 @@ export async function createTransfer(
   });
 }
 
-export async function searchTransfers(query: string, _agentId?: string) {
+export async function searchTransfers(query: string): Promise<Transfer[]> {
   return fetchJSON<Transfer[]>(`/api/transfers/search?q=${encodeURIComponent(query)}&limit=10`);
 }
 
-export async function getAdminNotifications(limit: number = 50) {
-  return fetchJSON<any[]>(`/api/me/notifications?kind=admin&limit=${encodeURIComponent(String(limit))}`);
+export async function getAdminNotifications(limit: number = 50): Promise<unknown[]> {
+  return fetchJSON<unknown[]>(`/api/me/notifications?kind=admin&limit=${encodeURIComponent(String(limit))}`);
 }
 
-export async function getAgentNotifications(_agentId: string, limit: number = 50) {
-  return fetchJSON<any[]>(`/api/me/notifications?kind=agent&limit=${encodeURIComponent(String(limit))}`);
+export async function getAgentNotifications(limit: number = 50): Promise<unknown[]> {
+  return fetchJSON<unknown[]>(`/api/me/notifications?kind=agent&limit=${encodeURIComponent(String(limit))}`);
 }
 
-export async function getClientNotifications(_clientId: string, limit: number = 50) {
-  return fetchJSON<any[]>(`/api/me/notifications?kind=client&limit=${encodeURIComponent(String(limit))}`);
+export async function getClientNotifications(limit: number = 50): Promise<unknown[]> {
+  return fetchJSON<unknown[]>(`/api/me/notifications?kind=client&limit=${encodeURIComponent(String(limit))}`);
 }
 
 export async function deleteNotification(notificationId: string): Promise<{ success: boolean; error?: string }> {
@@ -58,7 +49,7 @@ export async function markNotificationAsRead(notificationId: string): Promise<{ 
   });
 }
 
-export async function markAllNotificationsAsRead(_agentId: string): Promise<{ success: boolean; error?: string }> {
+export async function markAllNotificationsAsRead(): Promise<{ success: boolean; error?: string }> {
   return fetchJSON<{ success: boolean; error?: string }>('/api/me/notifications/read-all', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -66,7 +57,7 @@ export async function markAllNotificationsAsRead(_agentId: string): Promise<{ su
   });
 }
 
-export async function markAllClientNotificationsAsRead(_clientId: string): Promise<{ success: boolean; error?: string }> {
+export async function markAllClientNotificationsAsRead(): Promise<{ success: boolean; error?: string }> {
   return fetchJSON<{ success: boolean; error?: string }>('/api/me/notifications/read-all', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -74,12 +65,20 @@ export async function markAllClientNotificationsAsRead(_clientId: string): Promi
   });
 }
 
-export async function getUnreadNotificationCount(_agentId: string): Promise<number> {
+export async function markAllAdminNotificationsAsRead(): Promise<{ success: boolean; error?: string }> {
+  return fetchJSON<{ success: boolean; error?: string }>('/api/me/notifications/read-all', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ kind: 'admin' }),
+  });
+}
+
+export async function getUnreadNotificationCount(): Promise<number> {
   const data = await fetchJSON<{ count: number }>('/api/me/notifications/unread-count?kind=agent');
   return data.count || 0;
 }
 
-export async function getClientUnreadNotificationCount(_clientId: string): Promise<number> {
+export async function getClientUnreadNotificationCount(): Promise<number> {
   const data = await fetchJSON<{ count: number }>('/api/me/notifications/unread-count?kind=client');
   return data.count || 0;
 }

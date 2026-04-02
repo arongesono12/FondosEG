@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils';
 import { useAppStore } from '@/lib/store';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { DashboardLogo } from './dashboard-logo';
 import {
   LayoutDashboard,
   Send,
@@ -15,7 +16,6 @@ import {
   History,
   Menu,
   X,
-  TrendingUp,
   LogOut,
   UserCog,
   UsersRound,
@@ -26,7 +26,7 @@ import { useState } from 'react';
 import { UsersPanel } from './users-panel';
 
 const adminRoutes = [
-  { href: '/', label: 'Panel', icon: LayoutDashboard },
+  { href: '/dashboard', label: 'Panel', icon: LayoutDashboard },
   { href: '/transfers', label: 'Transferencias', icon: Send },
   { href: '/agents', label: 'Gestores', icon: Users },
   { href: '/balance', label: 'Saldos', icon: Wallet },
@@ -36,7 +36,7 @@ const adminRoutes = [
 ];
 
 const agentRoutes = [
-  { href: '/', label: 'Panel', icon: LayoutDashboard },
+  { href: '/dashboard', label: 'Panel', icon: LayoutDashboard },
   { href: '/transfers', label: 'Nueva transferencia', icon: Send },
   { href: '/history', label: 'Mis transferencias', icon: History },
   { href: '/balance', label: 'Mi saldo', icon: Wallet },
@@ -44,7 +44,7 @@ const agentRoutes = [
 ];
 
 const clientRoutes = [
-  { href: '/', label: 'Panel', icon: LayoutDashboard },
+  { href: '/dashboard', label: 'Panel', icon: LayoutDashboard },
   { href: '/transfers', label: 'Enviar dinero', icon: Send },
   { href: '/history', label: 'Mis transferencias', icon: History },
   { href: '/balance', label: 'Mi saldo', icon: Wallet },
@@ -81,11 +81,14 @@ export function Sidebar({ isCollapsed, toggleCollapse }: SidebarProps) {
         isCollapsed ? "w-20" : "w-64"
       )}>
         <div className="flex h-20 items-center px-6 justify-between">
-          <Link href="/" className="flex items-center gap-2 font-bold text-2xl tracking-tight text-primary">
-            <div className="p-2 rounded-xl bg-primary/10 text-primary shadow-sm">
-              <TrendingUp className="h-6 w-6" />
-            </div>
-            {!isCollapsed && <span className="text-brand-gradient">SendDirect</span>}
+          <Link href="/dashboard" className="flex items-center">
+            <DashboardLogo
+              showLabel={!isCollapsed}
+              size="lg"
+              className={cn(isCollapsed && "justify-center")}
+              iconClassName="h-12 w-12 rounded-full"
+              labelClassName="text-brand-gradient text-2xl"
+            />
           </Link>
         </div>
         

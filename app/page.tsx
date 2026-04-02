@@ -1,9 +1,13 @@
 import { redirect } from 'next/navigation';
-import { createClient } from '@/lib/supabase/server';
+import { ServiceUnavailableScreen } from '@/components/layout/service-unavailable-screen';
+import { getOptionalAuthState } from '@/lib/server/authz';
 
 export default async function Home() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const { user, serviceUnavailable } = await getOptionalAuthState();
+
+  if (serviceUnavailable) {
+    return <ServiceUnavailableScreen retryHref="/" />;
+  }
 
   if (user) {
     redirect('/dashboard');

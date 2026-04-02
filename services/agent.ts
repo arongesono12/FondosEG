@@ -1,14 +1,6 @@
 import type { AgentBalance, BalanceTransaction, AgentWithBalance } from '@/types';
 import type { RegisterFormData } from '@/types';
-
-async function fetchJSON<T>(input: RequestInfo | URL, init?: RequestInit): Promise<T> {
-  const res = await fetch(input, init);
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    throw new Error((data as any)?.error || `Request failed: ${res.status}`);
-  }
-  return data as T;
-}
+import { fetchJSON } from '@/services/http';
 
 export async function getAgents(): Promise<AgentWithBalance[]> {
   return fetchJSON<AgentWithBalance[]>('/api/agents');
@@ -56,8 +48,8 @@ export async function resetAgentBalance(
   });
 }
 
-export async function createAgent(data: RegisterFormData): Promise<{ success: boolean; user?: any; error?: string }> {
-  return fetchJSON<{ success: boolean; user?: any; error?: string }>('/api/agents', {
+export async function createAgent(data: RegisterFormData): Promise<{ success: boolean; user?: unknown; error?: string }> {
+  return fetchJSON<{ success: boolean; user?: unknown; error?: string }>('/api/agents', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),

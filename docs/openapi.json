@@ -1,12 +1,12 @@
 {
   "openapi": "3.0.0",
   "info": {
-    "title": "SendDirect API",
+    "title": "FondosEG API",
     "description": "API de Billetera Digital para aplicaciones externas. Autentica usando API Key y API Secret en los headers.",
     "version": "1.0.0",
     "contact": {
-      "name": "Soporte SendDirect",
-      "email": "soporte@senddirect.com"
+      "name": "Soporte FondosEG",
+      "email": "soporte@FondosEG.com"
     }
   },
   "servers": [

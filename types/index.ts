@@ -1,4 +1,5 @@
 export type UserRole = 'admin' | 'gestor' | 'cliente';
+export type TransferStatus = 'created' | 'available_for_pickup' | 'paid_out' | 'completed' | 'cancelled';
 
 export interface User {
   id: string;
@@ -29,6 +30,7 @@ export interface ClientBalance {
   id: string;
   client_id: string;
   balance: number;
+  reserved_balance?: number;
   currency: string;
   created_at: string;
   updated_at: string;
@@ -50,8 +52,12 @@ export interface Transfer {
   destination_country?: string;
   amount: number;
   currency: string;
-  status: 'created' | 'completed' | 'cancelled';
+  status: TransferStatus;
   notes?: string;
+  commission_amount?: number;
+  pricing_rule_code?: string;
+  available_at?: string;
+  paid_out_at?: string;
   created_at: string;
   completed_at?: string;
   cancelled_at?: string;
@@ -126,6 +132,20 @@ export interface AgentTransferStats {
   last_transfer: string;
 }
 
+export interface AgentCommissionStat {
+  agent_id: string;
+  agent_name: string;
+  total_commission: number;
+  today_commission: number;
+  transfer_count: number;
+}
+
+export interface AgentsCommissionStats {
+  agents: AgentCommissionStat[];
+  totalCommission: number;
+  todayCommission: number;
+}
+
 export interface TransferFormData {
   sender_name: string;
   sender_phone: string;
@@ -171,6 +191,8 @@ export interface LoginFormData {
 
 export interface DashboardStats {
   totalBalance: number;
+  availableBalance?: number;
+  reservedBalance?: number;
   todayTransfers: number;
   totalSent: number;
   totalClients: number;
@@ -178,6 +200,13 @@ export interface DashboardStats {
   totalCommission: number;
   todayCommission: number;
   commissionPerTransfer: number;
+  averageTicket?: number;
+  activeAgents?: number;
+  agentsBelowThreshold?: number;
+  projectedTopups24h?: number;
+  liquidityCoverageDays?: number;
+  floatUtilization?: number;
+  pickupReadyTransfers?: number;
   completedTransfers: number;
   pendingTransfers: number;
   cancelledTransfers: number;
@@ -200,6 +229,9 @@ export interface WalletTransfer {
   currency: string;
   verification_code: string;
   status: 'pending' | 'confirmed' | 'cancelled' | 'expired';
+  notes?: string;
+  expires_at?: string;
+  reserved_at?: string;
   created_at: string;
   confirmed_at?: string;
   sender?: {

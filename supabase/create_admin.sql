@@ -1,4 +1,4 @@
--- Script para crear un usuario administrador en SendDirect
+-- Script para crear un usuario administrador en FondosEG
 -- Ejecuta este script en el SQL Editor de Supabase
 
 -- 1. Asegurarse de que pgcrypto esté habilitado para el hash de contraseñas

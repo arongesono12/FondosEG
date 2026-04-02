@@ -1,54 +1,27 @@
 import { create } from 'zustand';
-import type { User, DashboardStats, Transfer } from '@/types';
+import type { User, Transfer } from '@/types';
 
 interface AppState {
   user: User | null;
   isLoading: boolean;
-  theme: 'light' | 'dark';
   preferredCurrency: string;
   setUser: (user: User | null) => void;
   setLoading: (loading: boolean) => void;
-  setTheme: (theme: 'light' | 'dark') => void;
-  toggleTheme: () => void;
   setPreferredCurrency: (currency: string) => void;
 }
 
-export const useAppStore = create<AppState>((set, get) => ({
+export const useAppStore = create<AppState>((set) => ({
   user: null,
   isLoading: true,
-  theme: 'dark',
   preferredCurrency: 'XAF',
   setUser: (user) => set({ user }),
   setLoading: (isLoading) => set({ isLoading }),
-  setTheme: (theme) => {
-    set({ theme });
-    if (typeof window !== 'undefined') {
-      try {
-        localStorage.setItem('theme', theme);
-        document.body.setAttribute('data-theme', theme);
-      } catch (e) {
-        // Ignore localStorage errors
-      }
-    }
-  },
-  toggleTheme: () => {
-    const newTheme = get().theme === 'dark' ? 'light' : 'dark';
-    set({ theme: newTheme });
-    if (typeof window !== 'undefined') {
-      try {
-        localStorage.setItem('theme', newTheme);
-        document.body.setAttribute('data-theme', newTheme);
-      } catch (e) {
-        // Ignore localStorage errors
-      }
-    }
-  },
   setPreferredCurrency: (currency) => {
     set({ preferredCurrency: currency });
     if (typeof window !== 'undefined') {
       try {
         localStorage.setItem('preferredCurrency', currency);
-      } catch (e) {
+      } catch {
         // Ignore localStorage errors
       }
     }

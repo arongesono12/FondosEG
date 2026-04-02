@@ -13,6 +13,7 @@ import { useAppStore } from '@/lib/store';
 import { formatCurrency } from '@/lib/utils';
 import { Transfer } from '@/types';
 import Link from 'next/link';
+import { HttpError } from '@/services/http';
 
 interface SearchModalProps {
   open: boolean;
@@ -30,10 +31,12 @@ export function SearchModal({ open, onOpenChange }: SearchModalProps) {
       if (query.length > 2) {
         setLoading(true);
         try {
-          const data = await searchTransfers(query, user?.role !== 'admin' ? user?.id : undefined);
+          const data = await searchTransfers(query);
           setResults(data);
         } catch (error) {
-          console.error('Search error:', error);
+          if (!(error instanceof HttpError && error.status === 401)) {
+            console.error('Search error:', error);
+          }
         } finally {
           setLoading(false);
         }

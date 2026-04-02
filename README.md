@@ -1,6 +1,6 @@
-# SendDirect Dashboard - Plataforma de Gestión de Envíos
+# FondosEG Dashboard - Plataforma de Gestión de Envíos
 
-SendDirect es una aplicación moderna de gestión de transferencias y envíos, diseñada para ofrecer una experiencia premium a gestores y administradores. Este dashboard integra herramientas avanzadas de seguimiento, gestión de saldos y comunicación en tiempo real.
+FondosEG es una aplicación moderna de gestión de transferencias y envíos, diseñada para ofrecer una experiencia premium a gestores y administradores. Este dashboard integra herramientas avanzadas de seguimiento, gestión de saldos y comunicación en tiempo real.
 
 ## 🚀 Tecnologías Principales
 

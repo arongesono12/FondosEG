@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { AuthzError, requireProfile, requireSelfOrAdmin } from '@/lib/server/authz';
+import { requireProfile, requireSelfOrAdmin } from '@/lib/server/authz';
+import { handleRouteError } from '@/lib/server/route-error';
 import type { AgentBalance } from '@/types';
 
 export async function GET(request: NextRequest) {
@@ -16,11 +17,6 @@ export async function GET(request: NextRequest) {
     if (error) return NextResponse.json(null);
     return NextResponse.json((data || null) as AgentBalance | null);
   } catch (err) {
-    console.error('[GET /api/agent-balance]', err);
-    if (err instanceof AuthzError) {
-      return NextResponse.json({ error: err.message }, { status: err.status });
-    }
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return handleRouteError(err, 'GET /api/agent-balance');
   }
 }
-

@@ -7,8 +7,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { DashboardLogo } from '@/components/layout/dashboard-logo';
 import { signInAction } from '@/app/actions/auth';
-import { TrendingUp, Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -39,12 +40,16 @@ export default function LoginPage() {
       <div className="bg-white/40 dark:bg-[#10121B]/40 border border-white/18 shadow-xl hover:shadow-2xl hover:border-white/30 dark:hover:shadow-[0_0_20px_rgba(255,255,255,0.15)] transition-all duration-500 rounded-[10px] backdrop-blur-[2px] overflow-hidden text-card-foreground dark:text-white">
         <CardHeader className="space-y-2 text-center pb-4 md:pb-2">
           <div className="flex justify-center mb-2">
-            <div className="p-3 rounded-2xl bg-linear-to-br from-pink-500 to-rose-600 text-white shadow-lg">
-              <TrendingUp className="h-8 w-8" />
-            </div>
+            <DashboardLogo
+              size="lg"
+              priority
+              className="justify-center"
+              iconClassName="h-14 w-14 rounded-full"
+              labelClassName="text-2xl md:text-3xl"
+            />
           </div>
-          <CardTitle className="text-2xl md:text-3xl font-black tracking-tighter bg-brand-gradient bg-clip-text text-transparent">
-            SendDirect
+          <CardTitle className="text-2xl md:text-3xl font-black tracking-tighter text-foreground">
+            Inicia sesión
           </CardTitle>
           <CardDescription className="text-muted-foreground dark:text-white/60 text-sm">
             Ingresa tus credenciales

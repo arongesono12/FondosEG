@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { AuthzError, requireProfile, requireRole } from '@/lib/server/authz';
+import { requireProfile, requireRole } from '@/lib/server/authz';
+import { handleRouteError } from '@/lib/server/route-error';
 
 type Kind = 'agent' | 'client' | 'admin';
 
@@ -52,11 +53,6 @@ export async function GET(request: NextRequest) {
     if (error) throw error;
     return NextResponse.json({ count: count || 0 });
   } catch (err) {
-    console.error('[GET /api/me/notifications/unread-count]', err);
-    if (err instanceof AuthzError) {
-      return NextResponse.json({ error: err.message }, { status: err.status });
-    }
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return handleRouteError(err, 'GET /api/me/notifications/unread-count');
   }
 }
-

@@ -106,7 +106,7 @@ export async function POST(request: NextRequest) {
 
     if (requestType === 'balance_topup') {
       const typeLabel = 'SOLICITUD DE RECARGA';
-      const adminMessage = `SendDirect - ${typeLabel}\n\nDe: ${profile.name}\n\nMensaje:\n${data.message}\n\nEste mensaje fue enviado desde la app.`;
+      const adminMessage = `FondosEG - ${typeLabel}\n\nDe: ${profile.name}\n\nMensaje:\n${data.message}\n\nEste mensaje fue enviado desde la app.`;
 
       if (targetUser?.phone) {
         const smsSid = await sendSMS(targetUser.phone, adminMessage);

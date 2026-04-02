@@ -2,8 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { useAppStore } from '@/lib/store';
-import { getAgentDashboardStats, getRecentTransfers, getDailyTransferStats } from '@/services/dashboard';
+import { getDashboardStats, getRecentTransfers, getDailyTransferStats } from '@/services/dashboard';
+import type { DashboardStats, DailyTransferStats, Transfer } from '@/types';
 import { formatCurrency, convertCurrency, getInitials } from '@/lib/utils';
+import { HttpError } from '@/services/http';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -19,13 +21,8 @@ import {
   Users,
   BarChart3,
   MessageSquare,
-  X,
-  Search,
-  Filter,
-  Calendar,
   Wallet,
   QrCode,
-  ArrowRightLeft,
   Send,
 } from 'lucide-react';
 import { SupportModal } from '@/components/layout/support-modal';
@@ -33,17 +30,11 @@ import { WalletTransferModal } from '@/components/wallet-transfer-modal';
 import { VerifyTransferModal } from '@/components/verify-transfer-modal';
 import { AgentTransferModal } from '@/components/agent-transfer-modal';
 
-interface DailyStats {
-  date: string;
-  transfer_count: number;
-  total_amount: number;
-}
-
 export default function TransfersPage() {
   const { user, preferredCurrency } = useAppStore();
-  const [stats, setStats] = useState<any>(null);
-  const [recentTransfers, setRecentTransfers] = useState<any[]>([]);
-  const [dailyStats, setDailyStats] = useState<DailyStats[]>([]);
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [recentTransfers, setRecentTransfers] = useState<Transfer[]>([]);
+  const [dailyStats, setDailyStats] = useState<DailyTransferStats[]>([]);
   const [loading, setLoading] = useState(true);
   
   const [showDailyModal, setShowDailyModal] = useState(false);
@@ -67,7 +58,7 @@ export default function TransfersPage() {
         const [statsData, transfersData, dailyData] = await Promise.all([
           user?.role === 'admin' 
             ? Promise.resolve(null) 
-            : getAgentDashboardStats(user?.id || ''),
+            : getDashboardStats(),
           getRecentTransfers(20),
           user?.role === 'admin' ? getDailyTransferStats(30) : Promise.resolve([]),
         ]);
@@ -76,7 +67,9 @@ export default function TransfersPage() {
         setRecentTransfers(transfersData || []);
         setDailyStats(dailyData || []);
       } catch (error) {
-        console.error('Error loading data:', error);
+        if (!(error instanceof HttpError && error.status === 401)) {
+          console.error('Error loading data:', error);
+        }
       } finally {
         setLoading(false);
       }
@@ -92,7 +85,7 @@ export default function TransfersPage() {
         const [statsData, transfersData, dailyData] = await Promise.all([
           user?.role === 'admin' 
             ? Promise.resolve(null) 
-            : getAgentDashboardStats(user?.id || ''),
+            : getDashboardStats(),
           getRecentTransfers(20),
           user?.role === 'admin' ? getDailyTransferStats(30) : Promise.resolve([]),
         ]);
@@ -101,7 +94,9 @@ export default function TransfersPage() {
       setRecentTransfers(transfersData || []);
       setDailyStats(dailyData || []);
     } catch (error) {
-      console.error('Error refreshing data:', error);
+      if (!(error instanceof HttpError && error.status === 401)) {
+        console.error('Error refreshing data:', error);
+      }
     }
   };
 
@@ -276,7 +271,7 @@ export default function TransfersPage() {
                 </tr>
               </thead>
               <tbody>
-                {recentTransfers.slice(0, 10).map((transfer: any) => (
+                {recentTransfers.slice(0, 10).map((transfer) => (
                   <tr key={transfer.id} className="border-b border-border/5 hover:bg-muted/30">
                     <td className="py-3 px-4 text-sm font-bold">{transfer.transfer_code || 'N/A'}</td>
                     <td className="py-3 px-4 text-sm">{transfer.sender_name || 'N/A'}</td>
@@ -334,7 +329,7 @@ export default function TransfersPage() {
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
-            {recentTransfers.map((transfer: any) => (
+            {recentTransfers.map((transfer) => (
               <div key={transfer.id} className="flex items-center justify-between p-3 bg-muted/30 rounded-xl">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full bg-brand-gradient flex items-center justify-center text-white font-bold text-xs">

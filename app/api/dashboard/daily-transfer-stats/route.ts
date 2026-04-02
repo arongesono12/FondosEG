@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { AuthzError, requireProfile, requireRole } from '@/lib/server/authz';
+import { requireProfile, requireRole } from '@/lib/server/authz';
+import { handleRouteError } from '@/lib/server/route-error';
 import type { DailyTransferStats } from '@/types';
 
 export async function GET(request: NextRequest) {
@@ -50,11 +51,6 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(result);
   } catch (err) {
-    console.error('[GET /api/dashboard/daily-transfer-stats]', err);
-    if (err instanceof AuthzError) {
-      return NextResponse.json({ error: err.message }, { status: err.status });
-    }
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return handleRouteError(err, 'GET /api/dashboard/daily-transfer-stats');
   }
 }
-

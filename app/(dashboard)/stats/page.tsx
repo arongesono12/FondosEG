@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { getDailyTransferStats, getAgentTransferStats, getRecentTransfers } from '@/services/dashboard';
 import type { DailyTransferStats, AgentTransferStats, Transfer } from '@/types';
 import { formatCurrency, formatDate, getStatusColor } from '@/lib/utils';
+import { HttpError } from '@/services/http';
 import { 
   XAxis, 
   YAxis, 
@@ -46,7 +47,9 @@ export default function StatsPage() {
         setAgentStats(agents);
         setRecentTransfers(recent);
       } catch (error) {
-        console.error('Error loading stats:', error);
+        if (!(error instanceof HttpError && error.status === 401)) {
+          console.error('Error loading stats:', error);
+        }
       } finally {
         setLoading(false);
       }

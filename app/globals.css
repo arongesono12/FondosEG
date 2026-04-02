@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@variant dark (&:where(.dark, .dark *));
 
 /* Glassmorphism Theme (Default) */
 :root {
@@ -189,8 +190,8 @@ body {
 
 /* Theme transition - optimized for performance */
 *, *::before, *::after {
-  transition-property: background-color, border-color, color, fill, stroke;
-  transition-duration: 0.15s;
+  transition-property: background-color, border-color, color, fill, stroke, box-shadow;
+  transition-duration: 0.3s;
   transition-timing-function: ease;
 }
 

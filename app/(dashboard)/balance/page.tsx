@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAppStore } from '@/lib/store';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -50,30 +50,6 @@ export default function BalancePage() {
     if (user) loadData();
   }, [user]);
 
-  const handleTopUp = async () => {
-    if (!topUpAmount || parseFloat(topUpAmount) <= 0) return;
-    setTopUpLoading(true);
-    setErrorMessage('');
-    try {
-      const result = await topUpAgentBalance(user?.id || '', parseFloat(topUpAmount));
-      if (result.success) {
-        const balanceData = await getAgentBalance(user?.id || '');
-        setBalance(balanceData);
-        const transactionsData = await getAgentTransactions(user?.id || '', 50);
-        setTransactions(transactionsData);
-        setSuccessAmount(parseFloat(topUpAmount));
-        setSuccessOpen(true);
-        setTopUpAmount('');
-      } else {
-        setErrorMessage(result.error || 'Error al recargar el saldo');
-      }
-    } catch (error) {
-      console.error('Error topping up:', error);
-      setErrorMessage('Error al conectar con el servidor');
-    } finally {
-      setTopUpLoading(false);
-    }
-  };
 
   if (loading) {
     return (
@@ -260,7 +236,7 @@ export default function BalancePage() {
             </div>
             
             <p className="text-center text-sm font-bold text-muted-foreground leading-relaxed">
-              El saldo se ha actualizado correctamente en tu billetera SendDirect.
+              El saldo se ha actualizado correctamente en tu billetera <span className="text-brand-gradient">FondosEG</span>.
             </p>
 
             <Button className="w-full h-14 bg-primary text-white rounded-2xl font-black text-lg shadow-xl shadow-primary/20" onClick={() => setSuccessOpen(false)}>
@@ -355,6 +331,12 @@ export default function BalancePage() {
                 Esta acción no se puede deshacer. El saldo será añadido inmediatamente a la cuenta del gestor.
               </p>
             </div>
+            {errorMessage && (
+              <div className="flex items-center gap-2 p-3 text-sm text-red-500 bg-red-50 dark:bg-red-950/30 rounded-xl border border-red-100 dark:border-red-900/20">
+                <AlertCircle className="h-4 w-4" />
+                <span className="font-bold">{errorMessage}</span>
+              </div>
+            )}
           </div>
           <DialogFooter className="flex gap-3 sm:justify-end pt-4">
             <Button

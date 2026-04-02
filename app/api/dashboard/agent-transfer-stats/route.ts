@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { AuthzError, requireProfile, requireRole } from '@/lib/server/authz';
+import { requireProfile, requireRole } from '@/lib/server/authz';
+import { handleRouteError } from '@/lib/server/route-error';
 import type { AgentTransferStats } from '@/types';
 
 export async function GET() {
@@ -41,11 +42,6 @@ export async function GET() {
     const result = Array.from(agentMap.values()).sort((a, b) => b.total_sent - a.total_sent);
     return NextResponse.json(result);
   } catch (err) {
-    console.error('[GET /api/dashboard/agent-transfer-stats]', err);
-    if (err instanceof AuthzError) {
-      return NextResponse.json({ error: err.message }, { status: err.status });
-    }
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return handleRouteError(err, 'GET /api/dashboard/agent-transfer-stats');
   }
 }
-

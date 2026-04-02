@@ -1,19 +1,13 @@
-import type { DashboardStats, DailyTransferStats, AgentTransferStats, Transfer } from '@/types';
+import type {
+  DashboardStats,
+  DailyTransferStats,
+  AgentTransferStats,
+  Transfer,
+  AgentsCommissionStats,
+} from '@/types';
+import { fetchJSON } from '@/services/http';
 
-async function fetchJSON<T>(input: RequestInfo | URL, init?: RequestInit): Promise<T> {
-  const res = await fetch(input, init);
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    throw new Error((data as any)?.error || `Request failed: ${res.status}`);
-  }
-  return data as T;
-}
-
-export async function getAgentDashboardStats(_agentId: string): Promise<DashboardStats> {
-  return fetchJSON<DashboardStats>('/api/dashboard/stats');
-}
-
-export async function getAdminDashboardStats(): Promise<DashboardStats> {
+export async function getDashboardStats(): Promise<DashboardStats> {
   return fetchJSON<DashboardStats>('/api/dashboard/stats');
 }
 
@@ -29,7 +23,6 @@ export async function getRecentTransfers(limit: number = 10): Promise<Transfer[]
   return fetchJSON<Transfer[]>(`/api/dashboard/recent-transfers?limit=${encodeURIComponent(String(limit))}`);
 }
 
-export async function getAgentsCommissionStats(): Promise<any> {
-  return fetchJSON<any>('/api/dashboard/agents-commission');
+export async function getAgentsCommissionStats(): Promise<AgentsCommissionStats> {
+  return fetchJSON<AgentsCommissionStats>('/api/dashboard/agents-commission');
 }
-

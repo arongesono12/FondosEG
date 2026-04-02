@@ -42,13 +42,13 @@ export function SupportModal({ open, onOpenChange, requestType = 'general', defa
   };
 
   const descMap = {
-    balance_topup: 'Contacta con un administrador de SendDirect para recargar tu cuenta',
+    balance_topup: 'Contacta con un administrador de FondosEG para recargar tu cuenta',
     report_error: isClient 
       ? 'Reporta el error de tu transferencia al gestor que te envió los fondos' 
       : 'Describe el problema con la transferencia para que un administrador pueda ayudarte',
     general: isClient 
       ? 'Contacta al gestor que te envió una transferencia' 
-      : 'Envía un mensaje al equipo de administración de SendDirect',
+      : 'Envía un mensaje al equipo de administración de FondosEG',
   };
 
   // Load admins when modal opens

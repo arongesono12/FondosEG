@@ -1,14 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { AuthzError, requireAuthUser } from '@/lib/server/authz';
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const user = await requireAuthUser();
 
     const adminClient = await import('@/lib/supabase/admin').then(m => m.createAdminClient());
     
@@ -26,6 +21,9 @@ export async function GET(request: NextRequest) {
 
   } catch (error) {
     console.error('API Keys GET Error:', error);
+    if (error instanceof AuthzError) {
+      return NextResponse.json({ error: error.message }, { status: error.status });
+    }
     return NextResponse.json(
       { error: 'Error interno del servidor' },
       { status: 500 }
@@ -35,12 +33,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const user = await requireAuthUser();
 
     const body = await request.json();
     const { app_name, app_description, role_access = 'cliente', permissions } = body;
@@ -104,6 +97,9 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('API Keys POST Error:', error);
+    if (error instanceof AuthzError) {
+      return NextResponse.json({ error: error.message }, { status: error.status });
+    }
     return NextResponse.json(
       { error: 'Error interno del servidor' },
       { status: 500 }
@@ -113,12 +109,7 @@ export async function POST(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const user = await requireAuthUser();
 
     const { searchParams } = new URL(request.url);
     const keyId = searchParams.get('id');
@@ -146,6 +137,9 @@ export async function DELETE(request: NextRequest) {
 
   } catch (error) {
     console.error('API Keys DELETE Error:', error);
+    if (error instanceof AuthzError) {
+      return NextResponse.json({ error: error.message }, { status: error.status });
+    }
     return NextResponse.json(
       { error: 'Error interno del servidor' },
       { status: 500 }

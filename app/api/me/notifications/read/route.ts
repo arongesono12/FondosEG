@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { AuthzError, requireProfile } from '@/lib/server/authz';
+import { requireProfile } from '@/lib/server/authz';
+import { handleRouteError } from '@/lib/server/route-error';
 
 export async function POST(request: NextRequest) {
   try {
@@ -47,11 +48,6 @@ export async function POST(request: NextRequest) {
     if (error) return NextResponse.json({ success: false, error: error.message }, { status: 500 });
     return NextResponse.json({ success: true });
   } catch (err) {
-    console.error('[POST /api/me/notifications/read]', err);
-    if (err instanceof AuthzError) {
-      return NextResponse.json({ success: false, error: err.message }, { status: err.status });
-    }
-    return NextResponse.json({ success: false, error: 'Internal server error' }, { status: 500 });
+    return handleRouteError(err, 'POST /api/me/notifications/read', { mutation: true });
   }
 }
-

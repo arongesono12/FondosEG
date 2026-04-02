@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
-import { createClient } from '@/lib/supabase/server';
+import { ServiceUnavailableScreen } from '@/components/layout/service-unavailable-screen';
+import { getOptionalAuthState } from '@/lib/server/authz';
 import { ThemeToggle } from "@/components/theme-toggle";
 
 export default async function AuthLayout({
@@ -7,8 +8,11 @@ export default async function AuthLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const { user, serviceUnavailable } = await getOptionalAuthState();
+
+  if (serviceUnavailable) {
+    return <ServiceUnavailableScreen retryHref="/login" />;
+  }
 
   if (user) {
     redirect('/dashboard');

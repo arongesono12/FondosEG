@@ -1,4 +1,4 @@
--- SendDirect Database Schema
+-- FondosEG Database Schema
 -- Run this SQL in your Supabase SQL Editor
 
 -- Enable UUID extension

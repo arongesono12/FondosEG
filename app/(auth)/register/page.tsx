@@ -8,8 +8,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { DashboardLogo } from '@/components/layout/dashboard-logo';
 import { signUpAction } from '@/app/actions/auth';
-import { TrendingUp, CheckCircle2, Eye, EyeOff, AlertCircle } from 'lucide-react';
+import { CheckCircle2, Eye, EyeOff, AlertCircle } from 'lucide-react';
 import type { UserRole } from '@/types';
 import {
   Dialog,
@@ -163,7 +164,9 @@ export default function RegisterPage() {
 
     const result = await signUpAction(formData);
     
-    if (result.success) {
+    if (result.success && result.requiresVerification) {
+      router.push(`/verify-email?userId=${result.user?.id}&email=${encodeURIComponent(result.email || '')}&name=${encodeURIComponent(result.name || '')}`);
+    } else if (result.success) {
       setShowSuccessModal(true);
     } else {
       setError(result.error || 'Error al registrar usuario');
@@ -176,15 +179,19 @@ export default function RegisterPage() {
       <div className="bg-white/40 dark:bg-[#10121B]/40 border border-white/18 shadow-xl hover:shadow-2xl hover:border-white/30 dark:hover:shadow-[0_0_20px_rgba(255,255,255,0.15)] transition-all duration-500 rounded-[10px] backdrop-blur-[2px] overflow-hidden text-card-foreground dark:text-white">
         <CardHeader className="space-y-2 text-center">
           <div className="flex justify-center mb-2">
-            <div className="p-3 rounded-2xl bg-linear-to-br from-pink-500 to-rose-600 text-white shadow-lg">
-              <TrendingUp className="h-8 w-8" />
-            </div>
+            <DashboardLogo
+              size="lg"
+              priority
+              className="justify-center"
+              iconClassName="h-14 w-14 rounded-full"
+              labelClassName="text-2xl md:text-3xl"
+            />
           </div>
-          <CardTitle className="text-3xl font-black tracking-tighter bg-brand-gradient bg-clip-text text-transparent">
+          <CardTitle className="text-3xl font-black tracking-tighter text-foreground">
             Crear cuenta
           </CardTitle>
           <CardDescription className="text-muted-foreground dark:text-white/80">
-            Únete a SendDirect y comienza a gestionar envíos
+            Únete a <span className="text-brand-gradient">FondosEG</span> y comienza a gestionar envíos
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>

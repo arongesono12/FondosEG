@@ -69,9 +69,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    const senderMessage = `SendDirect: Su transferencia de ${transfer.amount} ${transfer.currency} ha sido registrada correctamente.\n\nRemitente: ${transfer.sender_name}\nDestinatario: ${transfer.receiver_name}\nMonto: ${transfer.amount} ${transfer.currency}\nCódigo: ${transfer.transfer_code}\n\nGracias por confiar en SendDirect.`;
+    const senderMessage = `FondosEG: Su transferencia de ${transfer.amount} ${transfer.currency} ha sido registrada correctamente.\n\nRemitente: ${transfer.sender_name}\nDestinatario: ${transfer.receiver_name}\nMonto: ${transfer.amount} ${transfer.currency}\nCódigo: ${transfer.transfer_code}\n\nGracias por confiar en FondosEG.`;
 
-    const receiverMessage = `SendDirect: Tiene una transferencia disponible de ${transfer.amount} ${transfer.currency} de ${transfer.sender_name}.\n\nCiudad: ${transfer.destination_city || 'N/A'}\nCódigo de retiro: ${transfer.transfer_code}\n\nAcuda a cualquier agente SendDirect para retirar su dinero.`;
+    const receiverMessage = `FondosEG: Tiene una transferencia disponible de ${transfer.amount} ${transfer.currency} de ${transfer.sender_name}.\n\nCiudad: ${transfer.destination_city || 'N/A'}\nCódigo de retiro: ${transfer.transfer_code}\n\nAcuda a cualquier agente FondosEG para retirar su dinero.`;
 
     if (!accountSid || !authToken || !twilioPhoneNumber) {
       await Promise.all([
