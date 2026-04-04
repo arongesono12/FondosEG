@@ -86,7 +86,6 @@ export function Sidebar({ isCollapsed, toggleCollapse }: SidebarProps) {
               showLabel={!isCollapsed}
               size="lg"
               className={cn(isCollapsed && "justify-center")}
-              iconClassName="h-12 w-12 rounded-full"
               labelClassName="text-brand-gradient text-2xl"
             />
           </Link>

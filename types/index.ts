@@ -43,6 +43,7 @@ export interface Transfer {
   transfer_type?: 'agent' | 'client';
   agent_id?: string;
   sender_id?: string;
+  receiver_user_id?: string;
   sender_name: string;
   sender_phone: string;
   sender_document_type?: string;
@@ -59,6 +60,8 @@ export interface Transfer {
   pricing_rule_code?: string;
   available_at?: string;
   paid_out_at?: string;
+  wallet_credited_at?: string;
+  wallet_debited_at?: string;
   created_at: string;
   completed_at?: string;
   cancelled_at?: string;

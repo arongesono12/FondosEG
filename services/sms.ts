@@ -4,6 +4,8 @@ import { createAdminClient } from '@/lib/supabase/admin';
 const accountSid = process.env.TWILIO_ACCOUNT_SID;
 const authToken = process.env.TWILIO_AUTH_TOKEN;
 const twilioPhoneNumber = process.env.TWILIO_PHONE_NUMBER;
+const twilioMessagingServiceSid = process.env.TWILIO_MESSAGING_SERVICE_SID;
+const twilioAlphanumericSenderId = process.env.TWILIO_ALPHANUMERIC_SENDER_ID;
 
 const client = accountSid && authToken ? twilio(accountSid, authToken) : null;
 
@@ -18,18 +20,32 @@ interface SMSData {
 }
 
 export async function sendSMS(to: string, message: string): Promise<{ success: boolean; sid?: string; error?: string }> {
-  if (!client || !twilioPhoneNumber) {
+  if (!client || (!twilioPhoneNumber && !twilioMessagingServiceSid && !twilioAlphanumericSenderId)) {
     console.log('Twilio not configured, skipping SMS');
     await logNotification(to, message, 'failed', 'Twilio not configured');
     return { success: false, error: 'Twilio no configurado' };
   }
 
   try {
-    const result = await client.messages.create({
+    const payload: {
+      body: string;
+      to: string;
+      from?: string;
+      messagingServiceSid?: string;
+    } = {
       body: message,
-      from: twilioPhoneNumber,
       to: to,
-    });
+    };
+
+    if (twilioMessagingServiceSid) {
+      payload.messagingServiceSid = twilioMessagingServiceSid;
+    } else if (twilioAlphanumericSenderId) {
+      payload.from = twilioAlphanumericSenderId;
+    } else if (twilioPhoneNumber) {
+      payload.from = twilioPhoneNumber;
+    }
+
+    const result = await client.messages.create(payload);
 
     await logNotification(to, message, 'sent', result.sid);
     return { success: true, sid: result.sid };

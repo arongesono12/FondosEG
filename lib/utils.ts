@@ -43,15 +43,6 @@ export function convertCurrency(amount: number, fromCurrency: string, toCurrency
 }
 
 export function formatCurrency(amount: number, currency: string = 'XAF'): string {
-  const currencySymbols: Record<string, string> = {
-    'XAF': 'XAF',
-    'EUR': '€',
-    'USD': '$',
-    'GBP': '£',
-  };
-  
-  const symbol = currencySymbols[currency] || currency;
-  
   if (currency === 'XAF') {
     return new Intl.NumberFormat('es-ES').format(amount) + ' XAF';
   }
@@ -119,6 +110,23 @@ export function getStatusColor(status: string): string {
   }
 }
 
+export function getStatusText(status: string): string {
+  switch (normalizeTransferStatus(status)) {
+    case 'available_for_pickup':
+      return 'Disponible';
+    case 'paid_out':
+      return 'Pagado';
+    case 'completed':
+      return 'Completado';
+    case 'created':
+      return 'Pendiente';
+    case 'cancelled':
+      return 'Cancelado';
+    default:
+      return status;
+  }
+}
+
 export function validatePhone(phone: string): boolean {
   const phoneRegex = /^\+?[1-9]\d{1,14}$/;
   return phoneRegex.test(phone.replace(/[\s-]/g, ''));
@@ -126,6 +134,28 @@ export function validatePhone(phone: string): boolean {
 
 export function formatPhone(phone: string): string {
   return phone.replace(/[\s-]/g, '');
+}
+
+export function normalizePhoneDigits(phone: string): string {
+  return phone.replace(/\D/g, '');
+}
+
+export function getPhoneLookupCandidates(phone: string): string[] {
+  const trimmed = phone.trim();
+  const compact = formatPhone(phone).trim();
+  const digits = normalizePhoneDigits(phone);
+
+  return Array.from(
+    new Set(
+      [
+        trimmed,
+        compact,
+        digits,
+        digits ? `+${digits}` : '',
+        digits.startsWith('00') ? `+${digits.slice(2)}` : '',
+      ].filter(Boolean)
+    )
+  );
 }
 
 export function calculateFee(amount: number): number {

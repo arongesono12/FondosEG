@@ -41,6 +41,7 @@ function VerifyEmailContent() {
       setError('Parámetros de verificación inválidos');
       setLoading(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
 
   useEffect(() => {
@@ -117,7 +118,6 @@ function VerifyEmailContent() {
             <DashboardLogo
               size="md"
               className="justify-center"
-              iconClassName="h-10 w-12 rounded-[1.15rem]"
               labelClassName="text-xl"
             />
           </div>
@@ -155,7 +155,6 @@ function VerifyEmailContent() {
           <DashboardLogo
             size="md"
             className="justify-center"
-            iconClassName="h-10 w-12 rounded-[1.15rem]"
             labelClassName="text-xl"
           />
         </div>
@@ -218,7 +217,7 @@ function VerifyEmailContent() {
 
           {attempts >= 3 && (
             <div className="p-3 text-sm text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/30 rounded-xl">
-              Demasiados intentos fallidos. Usa el botón "Reenviar código" para obtener uno nuevo.
+              Demasiados intentos fallidos. Usa el botón &quot;Reenviar código&quot; para obtener uno nuevo.
             </div>
           )}
         </CardContent>
@@ -254,7 +253,7 @@ function VerifyEmailContent() {
 
 export default function VerifyEmailPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-pink-50 via-white to-rose-50 dark:from-pink-950/20 dark:via-slate-950 dark:to-rose-950/20 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-linear-to-br from-pink-50 via-white to-rose-50 dark:from-pink-950/20 dark:via-slate-950 dark:to-rose-950/20 flex items-center justify-center p-4">
       <Suspense fallback={
         <Card className="backdrop-blur-xl bg-card/80 border-border/50 shadow-xl rounded-3xl p-8">
           <div className="flex flex-col items-center gap-4">

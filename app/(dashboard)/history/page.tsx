@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Skeleton } from '@/components/ui/skeleton';
 import { getAllTransfers, getTransfers } from '@/services/transfer';
-import { formatCurrency, formatDate, getStatusColor } from '@/lib/utils';
+import { formatCurrency, formatDate, getStatusColor, getStatusText } from '@/lib/utils';
 import type { Transfer } from '@/types';
 import { Download, History, Search, TrendingUp, Wallet, XCircle } from 'lucide-react';
 import * as XLSX from 'xlsx';
@@ -103,7 +103,7 @@ export default function HistoryPage() {
         Destino: transfer.destination_city,
         Monto: transfer.amount,
         Moneda: transfer.currency,
-        Estado: transfer.status,
+        Estado: getStatusText(transfer.status),
         Fecha: formatDate(transfer.created_at),
       }))
     );
@@ -115,7 +115,7 @@ export default function HistoryPage() {
   if (loading) {
     return (
       <div className="space-y-6">
-        <Skeleton className="h-32 w-full rounded-[2rem]" />
+        <Skeleton className="h-32 w-full rounded-4xl" />
         <div className="grid gap-4 md:grid-cols-3">
           <Skeleton className="h-24" />
           <Skeleton className="h-24" />
@@ -128,7 +128,7 @@ export default function HistoryPage() {
 
   return (
     <div className="space-y-8">
-      <section className="rounded-[2rem] border border-border/10 bg-card/50 p-6 shadow-xl shadow-black/5 backdrop-blur-xl md:p-8">
+      <section className="rounded-4xl border border-border/10 bg-card/50 p-6 shadow-xl shadow-black/5 backdrop-blur-xl md:p-8">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <Badge className="rounded-full border border-white/20 bg-white/70 px-3 py-1 text-[10px] font-black uppercase tracking-[0.24em] text-slate-700 dark:border-white/10 dark:bg-white/10 dark:text-slate-200">
@@ -241,7 +241,7 @@ export default function HistoryPage() {
                       </TableCell>
                       <TableCell>
                         <Badge className={`rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] ${getStatusColor(transfer.status)}`}>
-                          {transfer.status}
+                          {getStatusText(transfer.status)}
                         </Badge>
                       </TableCell>
                       <TableCell className="pr-8 text-xs font-semibold text-muted-foreground">{formatDate(transfer.created_at)}</TableCell>

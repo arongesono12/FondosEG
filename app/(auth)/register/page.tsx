@@ -183,7 +183,6 @@ export default function RegisterPage() {
               size="lg"
               priority
               className="justify-center"
-              iconClassName="h-14 w-14 rounded-full"
               labelClassName="text-2xl md:text-3xl"
             />
           </div>

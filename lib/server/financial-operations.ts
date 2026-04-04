@@ -17,6 +17,7 @@ interface AgentTransferPayload {
   amount: number;
   currency: string;
   notes?: string;
+  receiverUserId?: string | null;
 }
 
 interface WalletTransferPayload {
@@ -57,6 +58,7 @@ export async function createAgentTransferOperation(payload: AgentTransferPayload
     p_amount: payload.amount,
     p_currency: payload.currency,
     p_notes: payload.notes ?? null,
+    p_receiver_user_id: payload.receiverUserId ?? null,
   });
 
   if (error) {

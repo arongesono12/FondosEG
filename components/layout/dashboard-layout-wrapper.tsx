@@ -186,7 +186,6 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
               <DashboardLogo
                 priority
                 size="md"
-                iconClassName="h-11 w-11 rounded-full"
                 labelClassName="text-lg md:text-xl"
               />
             </Link>

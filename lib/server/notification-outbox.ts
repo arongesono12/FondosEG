@@ -3,6 +3,8 @@ import { createAdminClient } from '@/lib/supabase/admin';
 const accountSid = process.env.TWILIO_ACCOUNT_SID;
 const authToken = process.env.TWILIO_AUTH_TOKEN;
 const twilioPhoneNumber = process.env.TWILIO_PHONE_NUMBER;
+const twilioMessagingServiceSid = process.env.TWILIO_MESSAGING_SERVICE_SID;
+const twilioAlphanumericSenderId = process.env.TWILIO_ALPHANUMERIC_SENDER_ID;
 
 type NotificationPriority = 'low' | 'normal' | 'high';
 
@@ -18,6 +20,7 @@ interface QueueNotificationInput {
 
 interface QueueTransferNotificationsInput {
   transferId: string;
+  transferCode: string;
   senderPhone: string;
   receiverPhone: string;
   senderName: string;
@@ -25,6 +28,8 @@ interface QueueTransferNotificationsInput {
   amount: number;
   currency: string;
   destinationCity?: string | null;
+  receiverUserId?: string | null;
+  creditedToWallet?: boolean;
 }
 
 function formatPhoneNumber(phone: string): string {
@@ -81,8 +86,10 @@ export async function queueNotification(input: QueueNotificationInput): Promise<
 }
 
 export async function queueTransferNotifications(input: QueueTransferNotificationsInput): Promise<void> {
-  const senderMessage = `FondosEG: Su transferencia de ${input.amount} ${input.currency} ha sido registrada correctamente.\n\nRemitente: ${input.senderName}\nDestinatario: ${input.receiverName}\nMonto: ${input.amount} ${input.currency}\n\nGracias por confiar en FondosEG.`;
-  const receiverMessage = `FondosEG: Tiene una transferencia disponible de ${input.amount} ${input.currency} de ${input.senderName}.\n\nCiudad: ${input.destinationCity || 'N/A'}\nDestinatario: ${input.receiverName}\n\nAcuda a un agente FondosEG para retirar su dinero.`;
+  const senderMessage = `FondosEG: Su transferencia de ${input.amount} ${input.currency} ha sido registrada correctamente.\n\nCodigo: ${input.transferCode}\nDestinatario: ${input.receiverName}\nMonto: ${input.amount} ${input.currency}\n\nGracias por confiar en FondosEG.`;
+  const receiverMessage = input.creditedToWallet
+    ? `FondosEG: Ha recibido ${input.amount} ${input.currency} de ${input.senderName}.\n\nSu saldo ya esta disponible en la billetera del dashboard.\nCodigo de retiro: ${input.transferCode}\n\nPuede usar el saldo desde su cuenta o retirarlo en efectivo con un gestor FondosEG.`
+    : `FondosEG: Tiene una transferencia disponible de ${input.amount} ${input.currency} de ${input.senderName}.\n\nCodigo de retiro: ${input.transferCode}\nCiudad: ${input.destinationCity || 'N/A'}\n\nAcuda a un agente FondosEG para retirar su dinero.`;
 
   await Promise.all([
     queueNotification({
@@ -93,6 +100,7 @@ export async function queueTransferNotifications(input: QueueTransferNotificatio
     }),
     queueNotification({
       transferId: input.transferId,
+      userId: input.receiverUserId ?? null,
       phone: input.receiverPhone,
       message: receiverMessage,
       priority: 'high',
@@ -158,7 +166,7 @@ export async function processNotificationOutbox(limit: number = 20): Promise<{
     return { processed: 0, sent: 0, failed: 0 };
   }
 
-  if (!accountSid || !authToken || !twilioPhoneNumber) {
+  if (!accountSid || !authToken || (!twilioPhoneNumber && !twilioMessagingServiceSid && !twilioAlphanumericSenderId)) {
     const nowIso = new Date().toISOString();
     for (const job of jobs) {
       await adminClient
@@ -192,11 +200,25 @@ export async function processNotificationOutbox(limit: number = 20): Promise<{
 
   for (const job of jobs) {
     try {
-      const result = await client.messages.create({
+      const messagePayload: {
+        body: string;
+        to: string;
+        from?: string;
+        messagingServiceSid?: string;
+      } = {
         body: job.message,
-        from: twilioPhoneNumber,
         to: formatPhoneNumber(job.to_phone),
-      });
+      };
+
+      if (twilioMessagingServiceSid) {
+        messagePayload.messagingServiceSid = twilioMessagingServiceSid;
+      } else if (twilioAlphanumericSenderId) {
+        messagePayload.from = twilioAlphanumericSenderId;
+      } else if (twilioPhoneNumber) {
+        messagePayload.from = twilioPhoneNumber;
+      }
+
+      const result = await client.messages.create(messagePayload);
 
       await adminClient
         .from('notification_outbox')
@@ -248,4 +270,3 @@ export async function processNotificationOutbox(limit: number = 20): Promise<{
     failed,
   };
 }
-

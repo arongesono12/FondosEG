@@ -34,14 +34,13 @@ export async function GET(request: NextRequest) {
       return NextResponse.json((data || []) as Transfer[]);
     }
 
-    // cliente: search in own transfers (transfers.sender_id) and wallet_transfers
+    // cliente: search in own outgoing transfers + incoming credited agent transfers + wallet transfers
     const { data: transfers } = await adminClient
       .from('transfers')
       .select('*')
-      .eq('sender_id', profile.id)
-      .or(`transfer_code.ilike.%${query}%,receiver_name.ilike.%${query}%`)
+      .or(`sender_id.eq.${profile.id},receiver_user_id.eq.${profile.id}`)
       .order('created_at', { ascending: false })
-      .limit(limit);
+      .limit(limit * 3);
 
     const { data: walletTransfers } = await adminClient
       .from('wallet_transfers')
@@ -81,7 +80,18 @@ export async function GET(request: NextRequest) {
         cancelled_at: t.cancelled_at || undefined,
       }));
 
-    const all = ([...(transfers || []), ...mappedWallet] as Transfer[]).sort((a, b) => {
+    const filteredTransfers = (transfers || []).filter((t: any) => {
+      const token = query.toLowerCase();
+      return (
+        String(t.transfer_code || '').toLowerCase().includes(token) ||
+        String(t.sender_name || '').toLowerCase().includes(token) ||
+        String(t.receiver_name || '').toLowerCase().includes(token) ||
+        String(t.receiver_phone || '').includes(query) ||
+        String(t.destination_city || '').toLowerCase().includes(token)
+      );
+    });
+
+    const all = ([...filteredTransfers, ...mappedWallet] as Transfer[]).sort((a, b) => {
       return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
     });
 

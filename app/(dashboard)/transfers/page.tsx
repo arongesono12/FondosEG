@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useAppStore } from '@/lib/store';
 import { getDashboardStats, getRecentTransfers, getDailyTransferStats } from '@/services/dashboard';
 import type { DashboardStats, DailyTransferStats, Transfer } from '@/types';
-import { formatCurrency, convertCurrency, getInitials } from '@/lib/utils';
+import { formatCurrency, convertCurrency, getInitials, getStatusText, getStatusColor } from '@/lib/utils';
 import { HttpError } from '@/services/http';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -302,8 +302,8 @@ export default function TransfersPage() {
                     <td className="py-3 px-4 text-sm">{transfer.receiver_name || 'N/A'}</td>
                     <td className="py-3 px-4 text-sm font-bold">{formatBalance(transfer.amount)}</td>
                     <td className="py-3 px-4">
-                      <Badge className={`text-xs font-bold ${transfer.status === 'completed' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
-                        {transfer.status}
+                      <Badge className={getStatusColor(transfer.status)}>
+                        {getStatusText(transfer.status)}
                       </Badge>
                     </td>
                     <td className="py-3 px-4 text-xs text-muted-foreground">
@@ -366,7 +366,9 @@ export default function TransfersPage() {
                 </div>
                 <div className="text-right">
                   <p className="text-sm font-bold">{formatBalance(transfer.amount)}</p>
-                  <Badge className="text-xs">{transfer.status}</Badge>
+                  <Badge className={getStatusColor(transfer.status)}>
+                    {getStatusText(transfer.status)}
+                  </Badge>
                 </div>
               </div>
             ))}

@@ -3,10 +3,40 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { AuthzError, requireProfile, requireRole } from '@/lib/server/authz';
 import { createAgentTransferOperation } from '@/lib/server/financial-operations';
 import type { Transfer, TransferFormData } from '@/types';
-import { generateTransferCode } from '@/lib/utils';
+import { generateTransferCode, getPhoneLookupCandidates, normalizePhoneDigits } from '@/lib/utils';
 import { queueTransferNotifications, processNotificationOutbox } from '@/lib/server/notification-outbox';
 
 // Unified notification helper replaced by lib/server/notification-outbox.ts
+
+async function findRegisteredClientByPhone(adminClient: ReturnType<typeof createAdminClient>, phone: string) {
+  const lookupCandidates = getPhoneLookupCandidates(phone);
+  const normalizedInput = normalizePhoneDigits(phone);
+
+  if (lookupCandidates.length > 0) {
+    const { data } = await adminClient
+      .from('users')
+      .select('id, name, phone')
+      .eq('role', 'cliente')
+      .in('phone', lookupCandidates)
+      .limit(10);
+
+    const exactMatch = (data || []).find((user) => normalizePhoneDigits(user.phone || '') === normalizedInput);
+    if (exactMatch) {
+      return exactMatch;
+    }
+
+    if ((data || []).length > 0) {
+      return data![0];
+    }
+  }
+
+  const { data: fallbackUsers } = await adminClient
+    .from('users')
+    .select('id, name, phone')
+    .eq('role', 'cliente');
+
+  return (fallbackUsers || []).find((user) => normalizePhoneDigits(user.phone || '') === normalizedInput) ?? null;
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -41,7 +71,7 @@ export async function GET(request: NextRequest) {
     const { data: clientTransfers } = await adminClient
       .from('transfers')
       .select('*')
-      .eq('sender_id', profile.id)
+      .or(`sender_id.eq.${profile.id},receiver_user_id.eq.${profile.id}`)
       .order('created_at', { ascending: false })
       .limit(limit);
 
@@ -110,6 +140,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Faltan campos requeridos' }, { status: 400 });
     }
 
+    const adminClient = createAdminClient();
+    const registeredReceiver = await findRegisteredClientByPhone(adminClient, body.receiver_phone);
     const transferCode = generateTransferCode();
     const { transfer } = await createAgentTransferOperation({
       agentId: profile.id,
@@ -128,6 +160,7 @@ export async function POST(request: NextRequest) {
       amount: Number(body.amount),
       currency: body.currency,
       notes: body.notes,
+      receiverUserId: registeredReceiver?.id ?? null,
     });
 
     const typedTransfer = (transfer as unknown) as Transfer;
@@ -136,6 +169,7 @@ export async function POST(request: NextRequest) {
     try {
       await queueTransferNotifications({
         transferId: typedTransfer.id,
+        transferCode: typedTransfer.transfer_code,
         senderPhone: typedTransfer.sender_phone,
         receiverPhone: typedTransfer.receiver_phone,
         senderName: typedTransfer.sender_name,
@@ -143,6 +177,8 @@ export async function POST(request: NextRequest) {
         amount: typedTransfer.amount,
         currency: typedTransfer.currency,
         destinationCity: typedTransfer.destination_city,
+        receiverUserId: typedTransfer.receiver_user_id ?? registeredReceiver?.id ?? null,
+        creditedToWallet: Boolean(typedTransfer.receiver_user_id && typedTransfer.wallet_credited_at),
       });
 
       // Background process the outbox immediately.

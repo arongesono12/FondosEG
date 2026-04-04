@@ -36,22 +36,24 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="w-full">
-      <div className="bg-white/40 dark:bg-[#10121B]/40 border border-white/18 shadow-xl hover:shadow-2xl hover:border-white/30 dark:hover:shadow-[0_0_20px_rgba(255,255,255,0.15)] transition-all duration-500 rounded-[10px] backdrop-blur-[2px] overflow-hidden text-card-foreground dark:text-white">
+    <div className="w-full relative group perspective-1000">
+      {/* Ambient Glow */}
+      <div className="absolute -inset-1 bg-brand-gradient rounded-[24px] blur-3xl opacity-20 group-hover:opacity-30 transition duration-1000 group-hover:duration-500" />
+      
+      <div className="relative bg-white/70 dark:bg-slate-950/50 border border-white/40 dark:border-white/10 shadow-2xl transition-all duration-500 rounded-[20px] backdrop-blur-2xl overflow-hidden text-card-foreground dark:text-white">
         <CardHeader className="space-y-2 text-center pb-4 md:pb-2">
           <div className="flex justify-center mb-2">
             <DashboardLogo
               size="lg"
               priority
               className="justify-center"
-              iconClassName="h-14 w-14 rounded-full"
-              labelClassName="text-2xl md:text-3xl"
+              labelClassName="text-3xl md:text-4xl"
             />
           </div>
-          <CardTitle className="text-2xl md:text-3xl font-black tracking-tighter text-foreground">
+          <CardTitle className="text-3xl font-bold tracking-tight text-foreground">
             Inicia sesión
           </CardTitle>
-          <CardDescription className="text-muted-foreground dark:text-white/60 text-sm">
+          <CardDescription className="text-muted-foreground/80 dark:text-white/50 text-sm font-medium">
             Ingresa tus credenciales
           </CardDescription>
         </CardHeader>
@@ -63,25 +65,25 @@ export default function LoginPage() {
               </div>
             )}
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-sm font-medium text-foreground/80 dark:text-white/80">Correo electrónico</Label>
+              <Label htmlFor="email" className="text-sm font-semibold tracking-wide text-foreground/70 dark:text-white/60">Correo electrónico</Label>
               <Input
                 id="email"
                 type="email"
                 placeholder="correo@ejemplo.com"
-                className="bg-white dark:bg-[#1a1a1a] border border-border/50 dark:border-white/10 focus:ring-2 focus:ring-pink-500/50 focus:border-primary/50 dark:focus:border-white/20 transition-all h-11 px-4 rounded-xl text-foreground dark:text-white placeholder:text-muted-foreground dark:placeholder:text-white/50"
+                className="bg-white/50 dark:bg-white/5 border border-border/50 dark:border-white/10 focus:bg-white dark:focus:bg-white/10 focus:ring-2 focus:ring-pink-500/30 focus:border-pink-500/50 transition-all duration-300 h-12 px-4 rounded-xl text-foreground dark:text-white placeholder:text-muted-foreground dark:placeholder:text-white/40 shadow-inner"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password" className="text-sm font-medium text-foreground/80 dark:text-white/80">Contraseña</Label>
+              <Label htmlFor="password" className="text-sm font-semibold tracking-wide text-foreground/70 dark:text-white/60">Contraseña</Label>
               <div className="relative">
                 <Input
                   id="password"
                   type={showPassword ? "text" : "password"}
                   placeholder="••••••••"
-                  className="bg-white dark:bg-[#1a1a1a] border border-border/50 dark:border-white/10 focus:ring-2 focus:ring-pink-500/50 focus:border-primary/50 dark:focus:border-white/20 transition-all h-11 px-4 pr-10 rounded-xl text-foreground dark:text-white placeholder:text-muted-foreground dark:placeholder:text-white/50"
+                  className="bg-white/50 dark:bg-white/5 border border-border/50 dark:border-white/10 focus:bg-white dark:focus:bg-white/10 focus:ring-2 focus:ring-pink-500/30 focus:border-pink-500/50 transition-all duration-300 h-12 px-4 pr-10 rounded-xl text-foreground dark:text-white placeholder:text-muted-foreground dark:placeholder:text-white/40 shadow-inner"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
@@ -103,7 +105,7 @@ export default function LoginPage() {
           <CardFooter className="flex flex-col space-y-4 pt-2">
             <Button 
               type="submit" 
-              className="w-full h-12 rounded-2xl text-base font-black uppercase tracking-widest bg-brand-gradient hover:opacity-90 text-white shadow-lg hover:shadow-primary/25 transition-all duration-300" 
+              className="w-full h-12 mt-2 rounded-2xl text-base font-bold uppercase tracking-widest bg-brand-gradient text-white shadow-[0_0_20px_rgba(236,72,153,0.3)] hover:shadow-[0_0_30px_rgba(236,72,153,0.5)] hover:scale-[1.02] active:scale-[0.98] transition-all duration-300" 
               disabled={loading}
             >
               {loading ? 'Iniciando...' : 'Iniciar sesión'}

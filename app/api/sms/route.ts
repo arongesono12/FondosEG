@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
 
     const { data: transfer, error: transferError } = await supabaseAdmin
       .from('transfers')
-      .select('id, transfer_code, agent_id, sender_name, sender_phone, receiver_name, receiver_phone, destination_city, amount, currency')
+      .select('id, transfer_code, agent_id, sender_name, sender_phone, receiver_name, receiver_phone, destination_city, amount, currency, receiver_user_id, wallet_credited_at')
       .eq('id', body.transferId)
       .single();
 
@@ -40,6 +40,7 @@ export async function POST(request: NextRequest) {
     try {
       await queueTransferNotifications({
         transferId: transfer.id,
+        transferCode: transfer.transfer_code,
         senderPhone: transfer.sender_phone,
         receiverPhone: transfer.receiver_phone,
         senderName: transfer.sender_name,
@@ -47,6 +48,8 @@ export async function POST(request: NextRequest) {
         amount: Number(transfer.amount),
         currency: transfer.currency,
         destinationCity: transfer.destination_city,
+        receiverUserId: transfer.receiver_user_id,
+        creditedToWallet: Boolean(transfer.receiver_user_id && transfer.wallet_credited_at),
       });
 
       const stats = await processNotificationOutbox(5);
@@ -70,4 +73,3 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: false, error: errorMessage }, { status: 500 });
   }
 }
-

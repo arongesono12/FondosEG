@@ -2,11 +2,10 @@ import Image from 'next/image';
 
 import { cn } from '@/lib/utils';
 
-type DashboardLogoSize = 'sm' | 'md' | 'lg';
+type DashboardLogoSize = 'sm' | 'md' | 'lg' | 'xl';
 
 interface DashboardLogoProps {
   className?: string;
-  iconClassName?: string;
   labelClassName?: string;
   priority?: boolean;
   showLabel?: boolean;
@@ -16,34 +15,35 @@ interface DashboardLogoProps {
 const iconSizeClasses: Record<DashboardLogoSize, string> = {
   sm: 'h-10 w-10',
   md: 'h-12 w-12',
-  lg: 'h-14 w-14',
+  lg: 'h-20 w-20',
+  xl: 'h-24 w-24',
 };
 
 const labelSizeClasses: Record<DashboardLogoSize, string> = {
   sm: 'text-base',
   md: 'text-lg',
   lg: 'text-2xl',
+  xl: 'text-4xl',
 };
 
 export function DashboardLogo({
   className,
-  iconClassName,
   labelClassName,
   priority = false,
   showLabel = true,
   size = 'md',
 }: DashboardLogoProps) {
   return (
-    <div className={cn('flex items-center gap-3', className)}>
-      <div className={cn('relative bg-brand-gradient p-1.5 shadow-inner flex items-center justify-center rounded-full', iconSizeClasses[size], iconClassName)}>
+    <div className={cn('flex items-center gap-1.5', className)}>
+      <div className={cn('relative flex items-center justify-center', iconSizeClasses[size])}>
         <div className="relative w-full h-full">
           <Image
             src="/logo fondosEG/FondosEG-logo.png"
             alt="FondosEG"
-            fill
+            width={144}
+            height={144}
             priority={priority}
-            sizes="(max-width: 768px) 48px, 64px"
-            className="object-contain"
+            className="object-contain w-full h-full"
           />
         </div>
       </div>
