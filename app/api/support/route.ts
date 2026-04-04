@@ -2,9 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { AuthzError, requireProfile, requireRole } from '@/lib/server/authz';
 
-const accountSid = process.env.TWILIO_ACCOUNT_SID;
-const authToken = process.env.TWILIO_AUTH_TOKEN;
-const twilioPhoneNumber = process.env.TWILIO_PHONE_NUMBER;
+import { queueNotification, processNotificationOutbox } from '@/lib/server/notification-outbox';
 
 interface SupportMessageBody {
   message: string;
@@ -13,26 +11,7 @@ interface SupportMessageBody {
   requestType?: 'balance_topup' | 'report_error' | 'general' | string;
 }
 
-async function sendSMS(to: string, body: string) {
-  if (!accountSid || !authToken || !twilioPhoneNumber) {
-    console.log('Twilio not configured, skipping SMS');
-    return null;
-  }
-
-  try {
-    const twilio = await import('twilio');
-    const client = twilio.default(accountSid, authToken);
-    const result = await client.messages.create({
-      body,
-      from: twilioPhoneNumber,
-      to,
-    });
-    return result.sid;
-  } catch (error) {
-    console.error('Error sending SMS:', error);
-    return null;
-  }
-}
+// Twilio and sendSMS replaced by lib/server/notification-outbox.ts
 
 export async function POST(request: NextRequest) {
   try {
@@ -79,7 +58,7 @@ export async function POST(request: NextRequest) {
         .select('agent_id')
         .eq('sender_id', profile.id)
         .in('status', ['completed', 'paid_out']);
-      const allowedAgentIds = new Set((transfers || []).map((t: any) => t.agent_id).filter(Boolean));
+      const allowedAgentIds = new Set((transfers || []).map((t: { agent_id: string }) => t.agent_id).filter(Boolean));
       if (!targetUser || !allowedAgentIds.has(targetUser.id)) {
         return NextResponse.json({ error: 'Gestor no autorizado' }, { status: 403 });
       }
@@ -109,18 +88,16 @@ export async function POST(request: NextRequest) {
       const adminMessage = `FondosEG - ${typeLabel}\n\nDe: ${profile.name}\n\nMensaje:\n${data.message}\n\nEste mensaje fue enviado desde la app.`;
 
       if (targetUser?.phone) {
-        const smsSid = await sendSMS(targetUser.phone, adminMessage);
-
-        if (smsSid) {
-          await supabaseAdmin.from('notifications').insert({
+        try {
+          await queueNotification({
+            userId: targetUser.id,
             phone: targetUser.phone,
             message: adminMessage,
-            status: 'sent',
-            twilio_sid: smsSid,
-            is_admin_notification: true,
             priority: 'high',
-            user_id: targetUser.id,
           });
+          await processNotificationOutbox(5);
+        } catch (notifErr) {
+          console.error('Failed to queue/process support SMS:', notifErr);
         }
       }
 

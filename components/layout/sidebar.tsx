@@ -109,7 +109,7 @@ export function Sidebar({ isCollapsed, toggleCollapse }: SidebarProps) {
                 )}
               >
                 <Icon className={cn("h-5 w-5", isActive ? "text-white" : "text-muted-foreground group-hover:text-pink-600 dark:group-hover:text-pink-400")} />
-                {!isCollapsed && <span className="font-semibold">{route.label}</span>}
+                {!isCollapsed && <span className="font-medium">{route.label}</span>}
                 {isActive && !isCollapsed && (
                   <div className="absolute right-4 h-1.5 w-1.5 rounded-full bg-white" />
                 )}
@@ -128,7 +128,7 @@ export function Sidebar({ isCollapsed, toggleCollapse }: SidebarProps) {
               )}
             >
               <UsersRound className="h-5 w-5 text-muted-foreground group-hover:text-pink-600 dark:group-hover:text-pink-400" />
-              {!isCollapsed && <span className="font-semibold">Usuarios</span>}
+              {!isCollapsed && <span className="font-medium">Usuarios</span>}
             </button>
           )}
         </nav>
@@ -160,8 +160,8 @@ export function Sidebar({ isCollapsed, toggleCollapse }: SidebarProps) {
             </Avatar>
             {!isCollapsed && (
               <div className="flex-1 overflow-hidden hidden lg:block">
-                <p className="text-sm font-bold text-primary truncate">{user?.name}</p>
-                <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-black">{user?.role}</p>
+                <p className="text-sm font-semibold text-primary truncate">{user?.name}</p>
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">{user?.role}</p>
               </div>
             )}
           </div>
@@ -176,7 +176,7 @@ export function Sidebar({ isCollapsed, toggleCollapse }: SidebarProps) {
             onClick={handleSignOut}
           >
             <LogOut className="h-5 w-5" />
-            {!isCollapsed && <span className="font-semibold">Cerrar sesión</span>}
+            {!isCollapsed && <span className="font-medium">Cerrar sesión</span>}
           </Button>
         </div>
       </aside>

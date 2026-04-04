@@ -4,42 +4,9 @@ import { AuthzError, requireProfile, requireRole } from '@/lib/server/authz';
 import { createAgentTransferOperation } from '@/lib/server/financial-operations';
 import type { Transfer, TransferFormData } from '@/types';
 import { generateTransferCode } from '@/lib/utils';
+import { queueTransferNotifications, processNotificationOutbox } from '@/lib/server/notification-outbox';
 
-const accountSid = process.env.TWILIO_ACCOUNT_SID;
-const authToken = process.env.TWILIO_AUTH_TOKEN;
-const twilioPhoneNumber = process.env.TWILIO_PHONE_NUMBER;
-
-function formatPhoneNumber(phone: string): string {
-  const cleaned = phone.replace(/\D/g, '');
-  if (cleaned.startsWith('237')) return `+${cleaned}`;
-  if (cleaned.startsWith('6') && cleaned.length === 9) return `+237${cleaned}`;
-  if (phone.trim().startsWith('+')) return phone.trim();
-  return `+${cleaned}`;
-}
-
-async function saveNotification(
-  supabaseAdmin: any,
-  transferId: string,
-  phone: string,
-  message: string,
-  status: 'sent' | 'failed',
-  twilioSid?: string,
-  errorMessage?: string
-) {
-  try {
-    await supabaseAdmin.from('notifications').insert({
-      transfer_id: transferId,
-      phone,
-      message,
-      status,
-      twilio_sid: twilioSid || null,
-      error_message: errorMessage || null,
-      sent_at: status === 'sent' ? new Date().toISOString() : null,
-    });
-  } catch (err) {
-    console.error('Error saving notification:', err);
-  }
-}
+// Unified notification helper replaced by lib/server/notification-outbox.ts
 
 export async function GET(request: NextRequest) {
   try {
@@ -85,7 +52,21 @@ export async function GET(request: NextRequest) {
       .order('created_at', { ascending: false })
       .limit(limit);
 
-    const mappedWallet: Transfer[] = (walletTransfers || []).map((t: any) => ({
+    const mappedWallet: Transfer[] = (walletTransfers || []).map((t: {
+      id: string;
+      sender_id: string;
+      sender_name: string;
+      sender_phone: string;
+      receiver_name: string;
+      receiver_phone: string;
+      amount: number | string;
+      currency?: string;
+      status: string;
+      notes?: string;
+      created_at: string;
+      confirmed_at?: string;
+      cancelled_at?: string;
+    }) => ({
       id: t.id,
       transfer_code: `WT-${String(t.id).slice(0, 8)}`,
       transfer_type: 'client',
@@ -120,8 +101,6 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const adminClient = createAdminClient();
-
   try {
     const profile = await requireProfile();
     requireRole(profile, 'gestor');
@@ -151,57 +130,27 @@ export async function POST(request: NextRequest) {
       notes: body.notes,
     });
 
-    const typedTransfer = transfer as Transfer;
+    const typedTransfer = (transfer as unknown) as Transfer;
 
-    // Send SMS from the server (never from the browser).
-    const senderMessage = `FondosEG: Su transferencia de ${typedTransfer.amount} ${typedTransfer.currency} ha sido registrada correctamente.\n\nRemitente: ${typedTransfer.sender_name}\nDestinatario: ${typedTransfer.receiver_name}\nMonto: ${typedTransfer.amount} ${typedTransfer.currency}\nCódigo: ${typedTransfer.transfer_code}\n\nGracias por confiar en FondosEG.`;
-    const receiverMessage = `FondosEG: Tiene una transferencia disponible de ${typedTransfer.amount} ${typedTransfer.currency} de ${typedTransfer.sender_name}.\n\nCiudad: ${typedTransfer.destination_city || 'N/A'}\nCódigo de retiro: ${typedTransfer.transfer_code}\n\nAcuda a cualquier agente FondosEG para retirar su dinero.`;
+    // Enqueue notifications using the unified system.
+    try {
+      await queueTransferNotifications({
+        transferId: typedTransfer.id,
+        senderPhone: typedTransfer.sender_phone,
+        receiverPhone: typedTransfer.receiver_phone,
+        senderName: typedTransfer.sender_name,
+        receiverName: typedTransfer.receiver_name,
+        amount: typedTransfer.amount,
+        currency: typedTransfer.currency,
+        destinationCity: typedTransfer.destination_city,
+      });
 
-    if (!accountSid || !authToken || !twilioPhoneNumber) {
-      await Promise.all([
-        saveNotification(adminClient, typedTransfer.id, typedTransfer.sender_phone, 'SMS no enviado - Twilio no configurado', 'failed'),
-        saveNotification(adminClient, typedTransfer.id, typedTransfer.receiver_phone, 'SMS no enviado - Twilio no configurado', 'failed'),
-      ]);
-    } else {
-      const twilio = await import('twilio');
-      const client = twilio.default(accountSid, authToken);
-
-      const formattedSenderPhone = formatPhoneNumber(typedTransfer.sender_phone);
-      const formattedReceiverPhone = formatPhoneNumber(typedTransfer.receiver_phone);
-
-      let senderSid: string | null = null;
-      let receiverSid: string | null = null;
-      let senderError: string | null = null;
-      let receiverError: string | null = null;
-
-      try {
-        const senderResult = await client.messages.create({
-          body: senderMessage,
-          from: twilioPhoneNumber,
-          to: formattedSenderPhone,
-        });
-        senderSid = senderResult.sid;
-      } catch (error: any) {
-        senderError = error?.message || 'Error sending to sender';
-        console.error('Error sending SMS to sender:', senderError);
-      }
-
-      try {
-        const receiverResult = await client.messages.create({
-          body: receiverMessage,
-          from: twilioPhoneNumber,
-          to: formattedReceiverPhone,
-        });
-        receiverSid = receiverResult.sid;
-      } catch (error: any) {
-        receiverError = error?.message || 'Error sending to receiver';
-        console.error('Error sending SMS to receiver:', receiverError);
-      }
-
-      await Promise.all([
-        saveNotification(adminClient, typedTransfer.id, typedTransfer.sender_phone, senderMessage, senderSid ? 'sent' : 'failed', senderSid || undefined, senderError || undefined),
-        saveNotification(adminClient, typedTransfer.id, typedTransfer.receiver_phone, receiverMessage, receiverSid ? 'sent' : 'failed', receiverSid || undefined, receiverError || undefined),
-      ]);
+      // Background process the outbox immediately.
+      // In Next.js App Router, we just await it to ensure it finishes or use a background pattern.
+      // For simplicity and immediate fix, we'll await it here since it's just 2 messages.
+      await processNotificationOutbox(5);
+    } catch (notifErr) {
+      console.error('Notification queuing/processing failed but transfer is created:', notifErr);
     }
 
     return NextResponse.json({ success: true, transfer: typedTransfer });

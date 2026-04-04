@@ -14,58 +14,62 @@ export class AuthzError extends Error {
 }
 
 export class AuthServiceError extends AuthzError {
-  constructor(message = 'Authentication service unavailable') {
+  constructor(message = 'El servicio de autenticación no está disponible temporalmente. Intenta de nuevo en unos segundos.') {
     super(message, 503);
     this.name = 'AuthServiceError';
   }
 }
 
+async function withRetry<T>(
+  operation: () => Promise<T>,
+  maxAttempts: number = 3,
+  initialDelayMs: number = 200
+): Promise<T> {
+  let lastError: unknown;
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      return await operation();
+    } catch (error) {
+      lastError = error;
+      if (isAuthServiceUnavailableError(error) && attempt < maxAttempts) {
+        const delay = initialDelayMs * Math.pow(2, attempt - 1);
+        console.warn(`Auth retry attempt ${attempt}/${maxAttempts} after error:`, error instanceof Error ? error.message : 'Unknown');
+        await new Promise((resolve) => setTimeout(resolve, delay));
+        continue;
+      }
+      throw error;
+    }
+  }
+  throw lastError;
+}
+
 async function resolveAuthUser(): Promise<{ user: SupabaseUser | null; authError: unknown | null }> {
   const supabase = await createClient();
+  
   try {
-    const {
-      data: { user },
-      error,
-    } = await supabase.auth.getUser();
-
-    if (user) {
-      return { user, authError: null };
-    }
-
-    if (error && isAuthServiceUnavailableError(error)) {
-      try {
-        const {
-          data: { session },
-        } = await supabase.auth.getSession();
-
-        if (session?.user) {
-          console.warn('Falling back to session user after getUser() network failure:', error);
-          return { user: session.user, authError: null };
-        }
-      } catch (sessionError) {
-        return { user: null, authError: sessionError };
+    const { data: { user }, error } = await withRetry(async () => {
+      const result = await supabase.auth.getUser();
+      if (result.error && isAuthServiceUnavailableError(result.error)) {
+        throw result.error; // Trigger retry
       }
+      return result;
+    });
 
-      return { user: null, authError: error };
-    }
-
+    if (user) return { user, authError: null };
     return { user: null, authError: error };
   } catch (error) {
+    // Final fallback to session if getUser still failing
     if (isAuthServiceUnavailableError(error)) {
       try {
-        const {
-          data: { session },
-        } = await supabase.auth.getSession();
-
+        const { data: { session } } = await supabase.auth.getSession();
         if (session?.user) {
-          console.warn('Falling back to session user after thrown getUser() network failure:', error);
+          console.warn('Falling back to session user after failed getUser() retries:', error);
           return { user: session.user, authError: null };
         }
       } catch (sessionError) {
         return { user: null, authError: sessionError };
       }
     }
-
     return { user: null, authError: error };
   }
 }
@@ -123,7 +127,13 @@ export async function requireProfile(): Promise<User> {
   let error: unknown = null;
 
   try {
-    const result = await adminClient.from('users').select('*').eq('id', userId).single();
+    const result = await withRetry(async () => {
+      const res = await adminClient.from('users').select('*').eq('id', userId).single();
+      if (res.error && isAuthServiceUnavailableError(res.error)) {
+        throw res.error; // Trigger retry
+      }
+      return res;
+    });
     profile = (result.data as User | null) ?? null;
     error = result.error;
   } catch (queryError) {

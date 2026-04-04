@@ -126,8 +126,8 @@ export default function TransfersPage() {
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-black text-foreground">Envíos</h1>
-          <p className="text-muted-foreground font-semibold text-sm">Panel de control de transferencias</p>
+          <h1 className="text-2xl md:text-3xl font-bold text-foreground">Envíos</h1>
+          <p className="text-muted-foreground font-medium text-sm">Panel de control de transferencias</p>
         </div>
       </div>
 
@@ -142,7 +142,7 @@ export default function TransfersPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-black">Enviar dinero</p>
+              <p className="text-2xl font-bold">Enviar dinero</p>
               <p className="text-xs text-white/70 mt-1">A clientes y beneficiarios</p>
               <Button variant="ghost" className="text-xs font-bold text-white mt-2 p-0 h-auto">
                 Iniciar <ArrowUpRight className="h-3 w-3 ml-1" />
@@ -160,7 +160,7 @@ export default function TransfersPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-black text-green-600 dark:text-green-400">Sin comisión</p>
+              <p className="text-2xl font-bold text-green-600 dark:text-green-400">Sin comisión</p>
               <p className="text-xs text-green-500 mt-1">Envía dinero a otro cliente</p>
               <Button variant="ghost" className="text-xs font-bold text-green-600 mt-2 p-0 h-auto">
                 Iniciar <ArrowUpRight className="h-3 w-3 ml-1" />
@@ -178,7 +178,7 @@ export default function TransfersPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-black text-blue-600 dark:text-blue-400">QR + Código</p>
+              <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">QR + Código</p>
               <p className="text-xs text-blue-500 mt-1">Confirma transferencias recibidas</p>
               <Button variant="ghost" className="text-xs font-bold text-blue-600 mt-2 p-0 h-auto">
                 Ver pendientes <ArrowUpRight className="h-3 w-3 ml-1" />
@@ -196,7 +196,7 @@ export default function TransfersPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-black text-emerald-600 dark:text-emerald-400">Código de retiro</p>
+              <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">Código de retiro</p>
               <p className="text-xs text-emerald-500 mt-1">Valida la transferencia y registra el pago</p>
               <Button variant="ghost" className="text-xs font-bold text-emerald-600 mt-2 p-0 h-auto">
                 Ver disponibles <ArrowUpRight className="h-3 w-3 ml-1" />
@@ -213,7 +213,7 @@ export default function TransfersPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-black">{formatBalance(stats?.todayTransfers || 0)}</p>
+            <p className="text-2xl font-bold">{formatBalance(stats?.todayTransfers || 0)}</p>
             <p className="text-xs text-muted-foreground mt-1">transacciones hoy</p>
             <Button variant="ghost" className="text-xs font-bold text-primary mt-2 p-0 h-auto">
               Ver todo <ArrowUpRight className="h-3 w-3 ml-1" />
@@ -232,7 +232,7 @@ export default function TransfersPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-black">{recentTransfers.length}</p>
+            <p className="text-2xl font-bold">{recentTransfers.length}</p>
             <p className="text-xs text-muted-foreground mt-1">transferencias totales</p>
             <Button variant="ghost" className="text-xs font-bold text-primary mt-2 p-0 h-auto">
               Ver todo <ArrowUpRight className="h-3 w-3 ml-1" />
@@ -250,7 +250,7 @@ export default function TransfersPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-black">{formatBalance(totalWeekly)}</p>
+            <p className="text-2xl font-bold">{formatBalance(totalWeekly)}</p>
             <p className="text-xs text-muted-foreground mt-1">últimos 7 días</p>
             <Button variant="ghost" className="text-xs font-bold text-primary mt-2 p-0 h-auto">
               Ver todo <ArrowUpRight className="h-3 w-3 ml-1" />
@@ -267,7 +267,7 @@ export default function TransfersPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-black">24/7</p>
+            <p className="text-2xl font-bold">24/7</p>
             <p className="text-xs text-muted-foreground mt-1">asistencia disponible</p>
             <Button variant="ghost" className="text-xs font-bold text-primary mt-2 p-0 h-auto">
               Contactar <ArrowUpRight className="h-3 w-3 ml-1" />
@@ -279,7 +279,7 @@ export default function TransfersPage() {
       {/* Recent Transfers Table */}
       <Card className="bg-card border-border/50 rounded-3xl">
         <CardHeader>
-          <CardTitle className="text-lg font-black">Últimas Transferencias</CardTitle>
+          <CardTitle className="text-lg font-bold">Últimas Transferencias</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
@@ -300,7 +300,7 @@ export default function TransfersPage() {
                     <td className="py-3 px-4 text-sm font-bold">{transfer.transfer_code || 'N/A'}</td>
                     <td className="py-3 px-4 text-sm">{transfer.sender_name || 'N/A'}</td>
                     <td className="py-3 px-4 text-sm">{transfer.receiver_name || 'N/A'}</td>
-                    <td className="py-3 px-4 text-sm font-black">{formatBalance(transfer.amount)}</td>
+                    <td className="py-3 px-4 text-sm font-bold">{formatBalance(transfer.amount)}</td>
                     <td className="py-3 px-4">
                       <Badge className={`text-xs font-bold ${transfer.status === 'completed' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
                         {transfer.status}
@@ -321,7 +321,7 @@ export default function TransfersPage() {
       <Dialog open={showDailyModal} onOpenChange={setShowDailyModal}>
         <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-xl font-black flex items-center gap-2">
+            <DialogTitle className="text-xl font-bold flex items-center gap-2">
               <TrendingUp className="h-5 w-5" /> Flujo del Día
             </DialogTitle>
           </DialogHeader>
@@ -329,15 +329,15 @@ export default function TransfersPage() {
             <div className="grid grid-cols-3 gap-4">
               <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-2xl">
                 <p className="text-xs font-bold text-muted-foreground uppercase">Transacciones Hoy</p>
-                <p className="text-2xl font-black">{stats?.todayTransfers || 0}</p>
+                <p className="text-2xl font-bold">{stats?.todayTransfers || 0}</p>
               </div>
               <div className="p-4 bg-purple-50 dark:bg-purple-900/20 rounded-2xl">
                 <p className="text-xs font-bold text-muted-foreground uppercase">Monto Enviado</p>
-                <p className="text-2xl font-black">{formatBalance(stats?.totalSent || 0)}</p>
+                <p className="text-2xl font-bold">{formatBalance(stats?.totalSent || 0)}</p>
               </div>
               <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-2xl">
                 <p className="text-xs font-bold text-muted-foreground uppercase">Comisión Hoy</p>
-                <p className="text-2xl font-black">{formatBalance(stats?.todayCommission || 0)}</p>
+                <p className="text-2xl font-bold">{formatBalance(stats?.todayCommission || 0)}</p>
               </div>
             </div>
           </div>
@@ -348,7 +348,7 @@ export default function TransfersPage() {
       <Dialog open={showAgentsModal} onOpenChange={setShowAgentsModal}>
         <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-xl font-black flex items-center gap-2">
+            <DialogTitle className="text-xl font-bold flex items-center gap-2">
               <Users className="h-5 w-5" /> Envíos de Gestores
             </DialogTitle>
           </DialogHeader>
@@ -365,7 +365,7 @@ export default function TransfersPage() {
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="text-sm font-black">{formatBalance(transfer.amount)}</p>
+                  <p className="text-sm font-bold">{formatBalance(transfer.amount)}</p>
                   <Badge className="text-xs">{transfer.status}</Badge>
                 </div>
               </div>
@@ -378,7 +378,7 @@ export default function TransfersPage() {
       <Dialog open={showWeeklyModal} onOpenChange={setShowWeeklyModal}>
         <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-xl font-black flex items-center gap-2">
+            <DialogTitle className="text-xl font-bold flex items-center gap-2">
               <BarChart3 className="h-5 w-5" /> Volumen Semanal
             </DialogTitle>
           </DialogHeader>
@@ -386,15 +386,15 @@ export default function TransfersPage() {
             <div className="grid grid-cols-3 gap-4">
               <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-2xl">
                 <p className="text-xs font-bold text-muted-foreground uppercase">Esta Semana</p>
-                <p className="text-2xl font-black">{formatBalance(totalWeekly)}</p>
+                <p className="text-2xl font-bold">{formatBalance(totalWeekly)}</p>
               </div>
               <div className="p-4 bg-purple-50 dark:bg-purple-900/20 rounded-2xl">
                 <p className="text-xs font-bold text-muted-foreground uppercase">Este Mes</p>
-                <p className="text-2xl font-black">{formatBalance(totalMonthly)}</p>
+                <p className="text-2xl font-bold">{formatBalance(totalMonthly)}</p>
               </div>
               <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-2xl">
                 <p className="text-xs font-bold text-muted-foreground uppercase">Promedio Diario</p>
-                <p className="text-2xl font-black">{formatBalance(avgDaily)}</p>
+                <p className="text-2xl font-bold">{formatBalance(avgDaily)}</p>
               </div>
             </div>
             

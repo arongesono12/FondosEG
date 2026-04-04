@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { 
   Dialog, 
   DialogContent, 
@@ -15,7 +15,6 @@ import {
   Loader2, 
   CheckCircle2, 
   AlertCircle,
-  Camera,
   ArrowRightLeft,
 } from 'lucide-react';
 import { useAppStore } from '@/lib/store';
@@ -61,13 +60,7 @@ export function VerifyTransferModal({ open, onOpenChange, onSuccess }: VerifyTra
     fetchPendingTransfers();
   }, [user, open]);
 
-  useEffect(() => {
-    if (verificationCode.length === 6 && !transfer) {
-      handleVerify();
-    }
-  }, [verificationCode]);
-
-  const handleVerify = async () => {
+  const handleVerify = useCallback(async () => {
     if (verificationCode.length !== 6) {
       setError('El código debe tener 6 dígitos');
       return;
@@ -96,12 +89,18 @@ export function VerifyTransferModal({ open, onOpenChange, onSuccess }: VerifyTra
 
       setSuccess(true);
       onSuccess?.();
-    } catch (err) {
+    } catch {
       setError('Error de conexión');
     } finally {
       setLoading(false);
     }
-  };
+  }, [verificationCode, transfer, onSuccess]);
+
+  useEffect(() => {
+    if (verificationCode.length === 6 && !transfer) {
+      handleVerify();
+    }
+  }, [verificationCode, transfer, handleVerify]);
 
   const handleSelectTransfer = (t: WalletTransfer) => {
     setTransfer(t);
@@ -116,7 +115,7 @@ export function VerifyTransferModal({ open, onOpenChange, onSuccess }: VerifyTra
         {!transfer && !success && (
           <>
             <DialogHeader className="p-6 border-b border-border/10">
-              <DialogTitle className="flex items-center gap-2 text-xl font-black text-foreground">
+              <DialogTitle className="flex items-center gap-2 text-xl font-bold text-foreground">
                 <ArrowRightLeft className="h-5 w-5 text-primary" />
                 Transferencias Pendientes
               </DialogTitle>
@@ -142,10 +141,10 @@ export function VerifyTransferModal({ open, onOpenChange, onSuccess }: VerifyTra
                   >
                     <div className="flex justify-between items-start">
                       <div>
-                        <p className="font-bold">{t.sender_name}</p>
+                        <p className="font-semibold">{t.sender_name}</p>
                         <p className="text-xs text-muted-foreground">{t.sender_phone}</p>
                       </div>
-                      <p className="text-lg font-black text-green-600">
+                      <p className="text-lg font-bold text-green-600">
                         +{formatCurrency(t.amount, t.currency)}
                       </p>
                     </div>
@@ -159,7 +158,7 @@ export function VerifyTransferModal({ open, onOpenChange, onSuccess }: VerifyTra
         {transfer && !success && (
           <>
             <DialogHeader className="p-6 border-b border-border/10">
-              <DialogTitle className="flex items-center gap-2 text-xl font-black text-foreground">
+              <DialogTitle className="flex items-center gap-2 text-xl font-bold text-foreground">
                 <QrCode className="h-5 w-5 text-primary" />
                 Confirmar Transferencia
               </DialogTitle>
@@ -170,10 +169,10 @@ export function VerifyTransferModal({ open, onOpenChange, onSuccess }: VerifyTra
             
             <div className="p-6 space-y-4">
               <div className="p-4 rounded-xl bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-center">
-                <p className="text-xs font-bold text-green-600 dark:text-green-400 uppercase">
+                <p className="text-xs font-semibold text-green-600 dark:text-green-400 uppercase">
                   Recibirás
                 </p>
-                <p className="text-3xl font-black text-green-600 mt-1">
+                <p className="text-3xl font-bold text-green-600 mt-1">
                   {formatCurrency(transfer.amount, transfer.currency)}
                 </p>
                 <p className="text-xs text-green-500 mt-2">
@@ -188,7 +187,7 @@ export function VerifyTransferModal({ open, onOpenChange, onSuccess }: VerifyTra
                   value={verificationCode}
                   onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
                   placeholder="Ingresa los 6 dígitos"
-                  className="text-center text-2xl font-black tracking-[0.5em] h-14"
+                  className="text-center text-2xl font-bold tracking-[0.5em] h-14"
                   maxLength={6}
                   autoFocus
                 />
@@ -215,7 +214,7 @@ export function VerifyTransferModal({ open, onOpenChange, onSuccess }: VerifyTra
                 <Button 
                   onClick={handleVerify}
                   disabled={loading || verificationCode.length !== 6}
-                  className="flex-1 bg-brand-gradient text-white font-black"
+                  className="flex-1 bg-brand-gradient text-white font-bold"
                 >
                   {loading ? (
                     <Loader2 className="h-5 w-5 animate-spin" />
@@ -234,14 +233,14 @@ export function VerifyTransferModal({ open, onOpenChange, onSuccess }: VerifyTra
               <CheckCircle2 className="h-8 w-8 text-green-600" />
             </div>
             <div>
-              <p className="text-lg font-black">¡Transferencia confirmada!</p>
+              <p className="text-lg font-bold">¡Transferencia confirmada!</p>
               <p className="text-sm text-muted-foreground mt-1">
                 Los fondos han sido añadidos a tu billetera
               </p>
             </div>
             <Button 
               onClick={() => onOpenChange(false)}
-              className="w-full bg-brand-gradient text-white font-black"
+              className="w-full bg-brand-gradient text-white font-bold"
             >
               Cerrar
             </Button>
@@ -254,7 +253,7 @@ export function VerifyTransferModal({ open, onOpenChange, onSuccess }: VerifyTra
 
 function Label({ children }: { children: React.ReactNode }) {
   return (
-    <label className="text-sm font-bold text-foreground">
+    <label className="text-sm font-semibold text-foreground">
       {children}
     </label>
   );

@@ -11,6 +11,7 @@ interface QueueNotificationInput {
   userId?: string | null;
   phone: string;
   message: string;
+  status?: 'pending' | 'sent' | 'failed';
   priority?: NotificationPriority;
   kind?: 'sms';
 }
@@ -28,13 +29,17 @@ interface QueueTransferNotificationsInput {
 
 function formatPhoneNumber(phone: string): string {
   const cleaned = phone.replace(/\D/g, '');
+  // Special handling for Cameroon (+237)
   if (cleaned.startsWith('237')) return `+${cleaned}`;
   if (cleaned.startsWith('6') && cleaned.length === 9) return `+237${cleaned}`;
+  if (cleaned.startsWith('00237')) return `+${cleaned.substring(2)}`;
+  
+  // For other numbers, ensure it has a +
   if (phone.trim().startsWith('+')) return phone.trim();
   return `+${cleaned}`;
 }
 
-export async function queueNotification(input: QueueNotificationInput): Promise<void> {
+export async function saveInternalNotification(input: QueueNotificationInput): Promise<string> {
   const adminClient = createAdminClient();
 
   const { data: notification, error: notificationError } = await adminClient
@@ -44,7 +49,7 @@ export async function queueNotification(input: QueueNotificationInput): Promise<
       user_id: input.userId ?? null,
       phone: input.phone,
       message: input.message,
-      status: 'pending',
+      status: input.status ?? 'sent', // Internal notifications default to 'sent'
       priority: input.priority ?? 'normal',
       is_admin_notification: false,
     })
@@ -52,11 +57,18 @@ export async function queueNotification(input: QueueNotificationInput): Promise<
     .single();
 
   if (notificationError || !notification) {
-    throw new Error(notificationError?.message || 'No se pudo crear la notificación');
+    throw new Error(notificationError?.message || 'No se pudo crear la notificación interna');
   }
 
+  return notification.id;
+}
+
+export async function queueNotification(input: QueueNotificationInput): Promise<void> {
+  const adminClient = createAdminClient();
+  const notificationId = await saveInternalNotification({ ...input, status: 'pending' });
+
   const { error: outboxError } = await adminClient.from('notification_outbox').insert({
-    notification_id: notification.id,
+    notification_id: notificationId,
     kind: input.kind ?? 'sms',
     to_phone: input.phone,
     message: input.message,
@@ -86,6 +98,43 @@ export async function queueTransferNotifications(input: QueueTransferNotificatio
       priority: 'high',
     }),
   ]);
+}
+
+export async function queueWalletVerificationInternal(input: {
+  transferId: string;
+  phone: string;
+  senderName: string;
+  receiverName: string;
+  amount: number;
+  currency: string;
+  code: string;
+}): Promise<void> {
+  const message = `FondosEG: Su código de verificación para el envío de ${input.amount} ${input.currency} de ${input.senderName} es: ${input.code}.\n\nNo comparta este código con nadie.`;
+  
+  await saveInternalNotification({
+    transferId: input.transferId,
+    phone: input.phone,
+    message,
+    priority: 'high',
+  });
+}
+
+export async function queueWalletConfirmationInternal(input: {
+  transferId: string;
+  phone: string;
+  senderName: string;
+  receiverName: string;
+  amount: number;
+  currency: string;
+}): Promise<void> {
+  const message = `FondosEG: ¡Envío completado! Ha recibido ${input.amount} ${input.currency} de ${input.senderName} en su billetera digital.`;
+  
+  await saveInternalNotification({
+    transferId: input.transferId,
+    phone: input.phone,
+    message,
+    priority: 'high',
+  });
 }
 
 export async function processNotificationOutbox(limit: number = 20): Promise<{

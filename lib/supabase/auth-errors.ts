@@ -1,40 +1,8 @@
 import { isAuthRetryableFetchError } from '@supabase/supabase-js';
-
-function getErrorCode(error: unknown): string | undefined {
-  if (!error || typeof error !== 'object') return undefined;
-
-  if ('code' in error && typeof (error as { code?: unknown }).code === 'string') {
-    return (error as { code: string }).code;
-  }
-
-  if ('cause' in error) {
-    return getErrorCode((error as { cause?: unknown }).cause);
-  }
-
-  return undefined;
-}
-
-function hasMessage(error: unknown, pattern: string): boolean {
-  if (!(error instanceof Error)) return false;
-
-  if (error.message.toLowerCase().includes(pattern.toLowerCase())) {
-    return true;
-  }
-
-  if ('cause' in error) {
-    return hasMessage((error as { cause?: unknown }).cause, pattern);
-  }
-
-  return false;
-}
+import { isTransientNetworkError } from '@/lib/network-errors';
 
 export function isAuthServiceUnavailableError(error: unknown): boolean {
-  return (
-    isAuthRetryableFetchError(error) ||
-    getErrorCode(error) === 'UND_ERR_CONNECT_TIMEOUT' ||
-    hasMessage(error, 'fetch failed') ||
-    hasMessage(error, 'connect timeout')
-  );
+  return isAuthRetryableFetchError(error) || isTransientNetworkError(error);
 }
 
 export function getAuthErrorMessage(

@@ -258,7 +258,7 @@ export function AgentTransferModal({ open, onOpenChange, onSuccess }: AgentTrans
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="max-w-lg p-0 overflow-hidden outline-none max-h-[90vh] overflow-y-auto">
         <DialogHeader className="p-6 border-b border-border/10">
-          <DialogTitle className="flex items-center gap-2 text-xl font-black text-foreground">
+          <DialogTitle className="flex items-center gap-2 text-xl font-bold text-foreground">
             <Send className="h-5 w-5 text-primary" /> Nueva Transferencia
           </DialogTitle>
           <DialogDescription className="text-sm text-muted-foreground">
@@ -272,7 +272,7 @@ export function AgentTransferModal({ open, onOpenChange, onSuccess }: AgentTrans
               <div className="w-16 h-16 bg-green-100 dark:bg-green-900/20 rounded-full flex items-center justify-center mx-auto mb-4">
                 <CheckCircle2 className="h-8 w-8 text-green-600" />
               </div>
-              <p className="text-lg font-black text-foreground">Transferencia registrada</p>
+              <p className="text-lg font-bold text-foreground">Transferencia registrada</p>
               <p className="text-sm text-muted-foreground">El dinero queda disponible para retiro en otro gestor</p>
             </div>
           ) : (
@@ -282,14 +282,14 @@ export function AgentTransferModal({ open, onOpenChange, onSuccess }: AgentTrans
                 <div className="flex items-center gap-3">
                   <Wallet className="h-5 w-5 text-primary" />
                   <div>
-                    <p className="text-xs font-bold text-muted-foreground uppercase">Saldo disponible</p>
-                    <p className="text-lg font-black text-foreground">{formatCurrency(balance)}</p>
+                    <p className="text-xs font-semibold text-muted-foreground uppercase">Saldo disponible</p>
+                    <p className="text-lg font-bold text-foreground">{formatCurrency(balance)}</p>
                   </div>
                 </div>
               </div>
 
               {error && (
-                <div className="flex items-center gap-2 p-3 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 text-sm font-bold">
+                <div className="flex items-center gap-2 p-3 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 text-sm font-semibold">
                   <AlertCircle className="h-4 w-4 shrink-0" />
                   {error}
                 </div>
@@ -298,10 +298,10 @@ export function AgentTransferModal({ open, onOpenChange, onSuccess }: AgentTrans
               <form onSubmit={handleSubmit} className="space-y-4">
                 {/* Datos del remitente (solo lectura) */}
                 <div className="space-y-3">
-                  <p className="text-xs font-black text-muted-foreground uppercase tracking-wide">Datos del Remitente</p>
+                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-wide">Datos del Remitente</p>
                   <div className="grid grid-cols-2 gap-3">
                     <div className="col-span-2">
-                      <Label htmlFor="sender_name" className="text-xs font-bold text-muted-foreground">Nombre</Label>
+                      <Label htmlFor="sender_name" className="text-xs font-semibold text-muted-foreground">Nombre</Label>
                       <Input
                         id="sender_name"
                         name="sender_name"
@@ -312,7 +312,7 @@ export function AgentTransferModal({ open, onOpenChange, onSuccess }: AgentTrans
                       />
                     </div>
                     <div className="col-span-2">
-                      <Label htmlFor="sender_phone" className="text-xs font-bold text-muted-foreground">Teléfono</Label>
+                      <Label htmlFor="sender_phone" className="text-xs font-semibold text-muted-foreground">Teléfono</Label>
                       <Input
                         id="sender_phone"
                         name="sender_phone"
@@ -323,7 +323,7 @@ export function AgentTransferModal({ open, onOpenChange, onSuccess }: AgentTrans
                       />
                     </div>
                     <div>
-                      <Label htmlFor="sender_document_type" className="text-xs font-bold text-muted-foreground">Tipo de Documento</Label>
+                      <Label htmlFor="sender_document_type" className="text-xs font-semibold text-muted-foreground">Tipo de Documento</Label>
                       <select
                         id="sender_document_type"
                         name="sender_document_type"
@@ -338,7 +338,7 @@ export function AgentTransferModal({ open, onOpenChange, onSuccess }: AgentTrans
                       </select>
                     </div>
                     <div>
-                      <Label htmlFor="sender_document_number" className="text-xs font-bold text-muted-foreground">N° Documento</Label>
+                      <Label htmlFor="sender_document_number" className="text-xs font-semibold text-muted-foreground">N° Documento</Label>
                       <Input
                         id="sender_document_number"
                         name="sender_document_number"
@@ -354,10 +354,10 @@ export function AgentTransferModal({ open, onOpenChange, onSuccess }: AgentTrans
 
                 {/* Datos del destinatario */}
                 <div className="space-y-3">
-                  <p className="text-xs font-black text-muted-foreground uppercase tracking-wide">Datos del Destinatario</p>
+                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-wide">Datos del Destinatario</p>
                   <div className="grid grid-cols-2 gap-3">
                     <div className="col-span-2">
-                      <Label htmlFor="receiver_name" className="text-xs font-bold text-muted-foreground">Nombre completo</Label>
+                      <Label htmlFor="receiver_name" className="text-xs font-semibold text-muted-foreground">Nombre completo</Label>
                       <div className="relative mt-1">
                         <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                         <Input
@@ -372,7 +372,7 @@ export function AgentTransferModal({ open, onOpenChange, onSuccess }: AgentTrans
                       </div>
                     </div>
                     <div className="col-span-2">
-                      <Label htmlFor="receiver_phone" className="text-xs font-bold text-muted-foreground">Teléfono</Label>
+                      <Label htmlFor="receiver_phone" className="text-xs font-semibold text-muted-foreground">Teléfono</Label>
                       <div className="relative mt-1">
                         <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                         <Input
@@ -387,7 +387,7 @@ export function AgentTransferModal({ open, onOpenChange, onSuccess }: AgentTrans
                       </div>
                     </div>
                     <div>
-                      <Label htmlFor="receiver_document_type" className="text-xs font-bold text-muted-foreground">Tipo de Documento</Label>
+                      <Label htmlFor="receiver_document_type" className="text-xs font-semibold text-muted-foreground">Tipo de Documento</Label>
                       <select
                         id="receiver_document_type"
                         name="receiver_document_type"
@@ -402,7 +402,7 @@ export function AgentTransferModal({ open, onOpenChange, onSuccess }: AgentTrans
                       </select>
                     </div>
                     <div>
-                      <Label htmlFor="receiver_document_number" className="text-xs font-bold text-muted-foreground">N° Documento</Label>
+                      <Label htmlFor="receiver_document_number" className="text-xs font-semibold text-muted-foreground">N° Documento</Label>
                       <Input
                         id="receiver_document_number"
                         name="receiver_document_number"
@@ -414,7 +414,7 @@ export function AgentTransferModal({ open, onOpenChange, onSuccess }: AgentTrans
                       />
                     </div>
                     <div>
-                      <Label htmlFor="destination_city" className="text-xs font-bold text-muted-foreground">Ciudad</Label>
+                      <Label htmlFor="destination_city" className="text-xs font-semibold text-muted-foreground">Ciudad</Label>
                       <div className="relative mt-1">
                         <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                         <select
@@ -454,7 +454,7 @@ export function AgentTransferModal({ open, onOpenChange, onSuccess }: AgentTrans
                       </div>
                     )}
                     <div>
-                      <Label htmlFor="destination_country" className="text-xs font-bold text-muted-foreground">País</Label>
+                      <Label htmlFor="destination_country" className="text-xs font-semibold text-muted-foreground">País</Label>
                       {!customCountry ? (
                         <>
                           <select
@@ -466,7 +466,7 @@ export function AgentTransferModal({ open, onOpenChange, onSuccess }: AgentTrans
                             required
                           >
                             <option value="">Seleccionar país</option>
-                            {COUNTRIES.map((country: string) => (
+                            {Array.from(new Set(COUNTRIES)).map((country: string) => (
                               <option key={country} value={country}>{country}</option>
                             ))}
                           </select>
@@ -505,9 +505,9 @@ export function AgentTransferModal({ open, onOpenChange, onSuccess }: AgentTrans
 
                 {/* Monto */}
                 <div className="space-y-3">
-                  <p className="text-xs font-black text-muted-foreground uppercase tracking-wide">Monto a Enviar</p>
+                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-wide">Monto a Enviar</p>
                   <div>
-                    <Label htmlFor="amount" className="text-xs font-bold text-muted-foreground">Monto (XAF)</Label>
+                    <Label htmlFor="amount" className="text-xs font-semibold text-muted-foreground">Monto (XAF)</Label>
                     <Input
                       id="amount"
                       name="amount"
@@ -517,18 +517,18 @@ export function AgentTransferModal({ open, onOpenChange, onSuccess }: AgentTrans
                       value={formData.amount}
                       onChange={handleChange}
                       placeholder="0"
-                      className="h-12 text-lg font-black rounded-xl mt-1"
+                      className="h-12 text-lg font-bold rounded-xl mt-1"
                       required
                     />
                     {formData.amount && parseFloat(formData.amount) > balance && (
-                      <p className="text-xs text-red-500 mt-1 font-bold">Monto excede el saldo disponible</p>
+                      <p className="text-xs text-red-500 mt-1 font-semibold">Monto excede el saldo disponible</p>
                     )}
                   </div>
                 </div>
 
                 {/* Notas */}
                 <div>
-                  <Label htmlFor="notes" className="text-xs font-bold text-muted-foreground">Notas (opcional)</Label>
+                   <Label htmlFor="notes" className="text-xs font-semibold text-muted-foreground">Notas (opcional)</Label>
                   <Textarea
                     id="notes"
                     name="notes"
@@ -543,7 +543,7 @@ export function AgentTransferModal({ open, onOpenChange, onSuccess }: AgentTrans
                 <Button 
                   type="submit"
                   disabled={loading || !formData.amount || parseFloat(formData.amount) > balance || !formData.receiver_name || !formData.receiver_phone || !formData.destination_city || !formData.sender_document_number || !formData.receiver_document_number}
-                  className="w-full h-12 rounded-xl bg-brand-gradient text-white font-black shadow-lg shadow-pink-500/20 hover:opacity-90 transition-all"
+                   className="w-full h-12 rounded-xl bg-brand-gradient text-white font-bold shadow-lg shadow-pink-500/20 hover:opacity-90 transition-all"
                 >
                   <>
                     <Send className="h-4 w-4 mr-2" />
@@ -559,7 +559,7 @@ export function AgentTransferModal({ open, onOpenChange, onSuccess }: AgentTrans
         <Dialog open={showConfirm} onOpenChange={(open) => { if (!open) setShowConfirm(false); }}>
           <DialogContent className="max-w-md p-0 overflow-hidden outline-none">
             <DialogHeader className="p-6 border-b border-border/10">
-              <DialogTitle className="flex items-center gap-2 text-xl font-black text-foreground">
+              <DialogTitle className="flex items-center gap-2 text-xl font-bold text-foreground">
                 <CheckCircle2 className="h-5 w-5 text-green-500" /> Confirmar Transferencia
               </DialogTitle>
               <DialogDescription className="text-sm text-muted-foreground">
@@ -569,7 +569,7 @@ export function AgentTransferModal({ open, onOpenChange, onSuccess }: AgentTrans
             
             <div className="p-6 space-y-4">
               <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800">
-                <p className="text-xs font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wide mb-2">
+                 <p className="text-xs font-semibold text-amber-600 dark:text-amber-400 uppercase tracking-wide mb-2">
                   ⚠️ Revise los datos antes de confirmar
                 </p>
                 <p className="text-sm text-amber-600 dark:text-amber-400">
@@ -579,37 +579,37 @@ export function AgentTransferModal({ open, onOpenChange, onSuccess }: AgentTrans
 
               <div className="space-y-3">
                 <div className="flex justify-between items-center py-2 border-b border-border/10">
-                  <span className="text-xs font-bold text-muted-foreground">Remitente</span>
-                  <span className="text-sm font-black text-foreground">{formData.sender_name}</span>
+                  <span className="text-xs font-semibold text-muted-foreground">Remitente</span>
+                  <span className="text-sm font-bold text-foreground">{formData.sender_name}</span>
                 </div>
                 <div className="flex justify-between items-center py-2 border-b border-border/10">
-                  <span className="text-xs font-bold text-muted-foreground">Teléfono Remitente</span>
-                  <span className="text-sm font-black text-foreground">{formData.sender_phone}</span>
+                  <span className="text-xs font-semibold text-muted-foreground">Teléfono Remitente</span>
+                  <span className="text-sm font-bold text-foreground">{formData.sender_phone}</span>
                 </div>
                 <div className="flex justify-between items-center py-2 border-b border-border/10">
-                  <span className="text-xs font-bold text-muted-foreground">Destinatario</span>
-                  <span className="text-sm font-black text-foreground">{formData.receiver_name}</span>
+                  <span className="text-xs font-semibold text-muted-foreground">Destinatario</span>
+                  <span className="text-sm font-bold text-foreground">{formData.receiver_name}</span>
                 </div>
                 <div className="flex justify-between items-center py-2 border-b border-border/10">
-                  <span className="text-xs font-bold text-muted-foreground">Teléfono Destinatario</span>
-                  <span className="text-sm font-black text-foreground">{formData.receiver_phone}</span>
+                  <span className="text-xs font-semibold text-muted-foreground">Teléfono Destinatario</span>
+                  <span className="text-sm font-bold text-foreground">{formData.receiver_phone}</span>
                 </div>
                 <div className="flex justify-between items-center py-2 border-b border-border/10">
-                  <span className="text-xs font-bold text-muted-foreground">Ciudad</span>
-                  <span className="text-sm font-black text-foreground">{formData.destination_city}</span>
+                  <span className="text-xs font-semibold text-muted-foreground">Ciudad</span>
+                  <span className="text-sm font-bold text-foreground">{formData.destination_city}</span>
                 </div>
                 <div className="flex justify-between items-center py-2 border-b border-border/10">
-                  <span className="text-xs font-bold text-muted-foreground">País</span>
-                  <span className="text-sm font-black text-foreground">{formData.destination_country}</span>
+                  <span className="text-xs font-semibold text-muted-foreground">País</span>
+                  <span className="text-sm font-bold text-foreground">{formData.destination_country}</span>
                 </div>
                 <div className="flex justify-between items-center py-2 border-b border-border/10">
-                  <span className="text-xs font-bold text-muted-foreground">Monto</span>
-                  <span className="text-lg font-black text-green-600">{formData.amount ? formatCurrency(parseFloat(formData.amount)) : ''}</span>
+                  <span className="text-xs font-semibold text-muted-foreground">Monto</span>
+                  <span className="text-lg font-semibold text-green-600">{formData.amount ? formatCurrency(parseFloat(formData.amount)) : ''}</span>
                 </div>
                 {formData.notes && (
                   <div className="flex justify-between items-center py-2">
-                    <span className="text-xs font-bold text-muted-foreground">Notas</span>
-                    <span className="text-sm font-bold text-foreground text-right max-w-[200px]">{formData.notes}</span>
+                    <span className="text-xs font-semibold text-muted-foreground">Notas</span>
+                    <span className="text-sm font-semibold text-foreground text-right max-w-[200px]">{formData.notes}</span>
                   </div>
                 )}
               </div>
@@ -627,7 +627,7 @@ export function AgentTransferModal({ open, onOpenChange, onSuccess }: AgentTrans
                 <Button 
                   onClick={handleConfirmTransfer}
                   disabled={loading}
-                  className="flex-1 h-12 rounded-xl bg-brand-gradient text-white font-black shadow-lg shadow-pink-500/20 hover:opacity-90 transition-all"
+                    className="flex-1 h-12 rounded-xl bg-brand-gradient text-white font-bold shadow-lg shadow-pink-500/20 hover:opacity-90 transition-all"
                 >
                   {loading ? (
                     <>

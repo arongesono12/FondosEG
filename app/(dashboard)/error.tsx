@@ -3,11 +3,7 @@
 import { useEffect } from 'react';
 import { ErrorScreen } from '@/components/layout/error-screen';
 import { ServiceUnavailableScreen } from '@/components/layout/service-unavailable-screen';
-
-function isConnectionError(message: string) {
-  const token = message.toLowerCase();
-  return token.includes('fetch failed') || token.includes('timeout') || token.includes('service unavailable');
-}
+import { isTransientNetworkMessage } from '@/lib/network-errors';
 
 export default function DashboardError({ error }: { error: Error & { digest?: string } }) {
   useEffect(() => {
@@ -16,7 +12,7 @@ export default function DashboardError({ error }: { error: Error & { digest?: st
 
   const message = error?.message || '';
 
-  if (isConnectionError(message)) {
+  if (isTransientNetworkMessage(message)) {
     return <ServiceUnavailableScreen retryHref="/dashboard" />;
   }
 

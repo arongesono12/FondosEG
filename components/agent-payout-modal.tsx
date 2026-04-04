@@ -52,7 +52,7 @@ export function AgentPayoutModal({ open, onOpenChange, onSuccess }: AgentPayoutM
         return;
       }
       setTransfer(data);
-    } catch (err) {
+    } catch {
       setError('Error de conexión');
     } finally {
       setLoading(false);
@@ -76,7 +76,7 @@ export function AgentPayoutModal({ open, onOpenChange, onSuccess }: AgentPayoutM
       }
       setSuccess(true);
       onSuccess?.();
-    } catch (err) {
+    } catch {
       setError('Error de conexión');
     } finally {
       setConfirming(false);
@@ -89,7 +89,7 @@ export function AgentPayoutModal({ open, onOpenChange, onSuccess }: AgentPayoutM
         {!success ? (
           <>
             <DialogHeader className="p-6 border-b border-border/10">
-              <DialogTitle className="flex items-center gap-2 text-xl font-black text-foreground">
+              <DialogTitle className="flex items-center gap-2 text-xl font-bold text-foreground">
                 <HandCoins className="h-5 w-5 text-primary" />
                 Pagar transferencia
               </DialogTitle>
@@ -99,15 +99,15 @@ export function AgentPayoutModal({ open, onOpenChange, onSuccess }: AgentPayoutM
             </DialogHeader>
             <div className="p-6 space-y-4">
               <div className="space-y-2">
-                <label className="text-xs font-bold text-muted-foreground">Código de retiro</label>
+                <label className="text-xs font-semibold text-muted-foreground">Código de retiro</label>
                 <div className="flex gap-2">
                   <Input
                     value={code}
                     onChange={(e) => setCode(e.target.value.toUpperCase())}
                     placeholder="TRX-2026-000000"
-                    className="h-12 rounded-xl font-black tracking-[0.22em]"
+                    className="h-12 rounded-xl font-bold tracking-[0.22em]"
                   />
-                  <Button variant="outline" className="rounded-xl font-black" onClick={handleLookup} disabled={loading}>
+                  <Button variant="outline" className="rounded-xl font-bold" onClick={handleLookup} disabled={loading}>
                     {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
                   </Button>
                 </div>
@@ -117,30 +117,30 @@ export function AgentPayoutModal({ open, onOpenChange, onSuccess }: AgentPayoutM
                 <div className="rounded-2xl border border-border/10 bg-background/70 p-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-black text-foreground">{transfer.receiver_name}</p>
+                      <p className="text-sm font-bold text-foreground">{transfer.receiver_name}</p>
                       <p className="text-xs font-semibold text-muted-foreground">
                         {transfer.sender_name} · {transfer.destination_city}
                       </p>
                     </div>
-                    <Badge className="rounded-full bg-emerald-100 px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-emerald-700">
+                    <Badge className="rounded-full bg-emerald-100 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-700">
                       Disponible
                     </Badge>
                   </div>
-                  <p className="mt-3 text-2xl font-black text-foreground">
+                  <p className="mt-3 text-2xl font-bold text-foreground">
                     {formatCurrency(transfer.amount, transfer.currency)}
                   </p>
                 </div>
               )}
 
               {error && (
-                <div className="flex items-center gap-2 rounded-xl bg-rose-50 px-3 py-2 text-sm font-bold text-rose-600">
+                <div className="flex items-center gap-2 rounded-xl bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-600">
                   <AlertCircle className="h-4 w-4 shrink-0" />
                   {error}
                 </div>
               )}
 
               <Button
-                className="w-full rounded-xl bg-brand-gradient text-white font-black"
+                className="w-full rounded-xl bg-brand-gradient text-white font-bold"
                 onClick={handlePayout}
                 disabled={!transfer || confirming}
               >
@@ -154,12 +154,12 @@ export function AgentPayoutModal({ open, onOpenChange, onSuccess }: AgentPayoutM
               <CheckCircle2 className="h-8 w-8 text-emerald-600" />
             </div>
             <div>
-              <p className="text-lg font-black">Pago confirmado</p>
+               <p className="text-lg font-bold">Pago confirmado</p>
               <p className="text-sm text-muted-foreground mt-1">
                 La transferencia fue pagada y tu saldo digital ha sido actualizado.
               </p>
             </div>
-            <Button className="w-full rounded-xl bg-brand-gradient text-white font-black" onClick={() => onOpenChange(false)}>
+            <Button className="w-full rounded-xl bg-brand-gradient text-white font-bold" onClick={() => onOpenChange(false)}>
               Cerrar
             </Button>
           </div>

@@ -1,12 +1,9 @@
 import { createAdminClient } from '@/lib/supabase/admin';
-import type { WalletTransfer, CreateWalletTransferData, ConfirmWalletTransferData, User } from '@/types';
+import type { WalletTransfer, CreateWalletTransferData, ConfirmWalletTransferData } from '@/types';
+import { queueWalletVerificationInternal, queueWalletConfirmationInternal } from '@/lib/server/notification-outbox';
 
 function generateVerificationCode(): string {
   return Math.floor(100000 + Math.random() * 900000).toString();
-}
-
-function generateTransferCode(): string {
-  return 'WT-' + Date.now().toString(36).toUpperCase() + Math.random().toString(36).substring(2, 6).toUpperCase();
 }
 
 export async function createWalletTransfer(
@@ -44,7 +41,7 @@ export async function createWalletTransfer(
     return { success: false, error: 'Cannot transfer to yourself' };
   }
 
-  const senderBalance = sender.client_balances?.find((b: any) => b.currency === (data.currency || 'XAF'));
+  const senderBalance = sender.client_balances?.find((b: { currency: string; balance: number }) => b.currency === (data.currency || 'XAF'));
   const currentBalance = senderBalance?.balance || 0;
 
   if (currentBalance < data.amount) {
@@ -73,6 +70,21 @@ export async function createWalletTransfer(
 
   if (transferError) {
     return { success: false, error: transferError.message };
+  }
+
+  // Queue Verification Notification (Internal only, no SMS)
+  try {
+    await queueWalletVerificationInternal({
+      transferId: transfer.id,
+      phone: receiver.phone,
+      senderName: sender.name,
+      receiverName: data.receiver_name,
+      amount: data.amount,
+      currency: data.currency || 'XAF',
+      code: verificationCode,
+    });
+  } catch (notifErr) {
+    console.error('Failed to queue wallet verification notification:', notifErr);
   }
 
   return { success: true, transfer };
@@ -128,7 +140,7 @@ export async function confirmWalletTransfer(
     return { success: false, error: 'Insufficient sender balance' };
   }
 
-  const { data: receiverBalance, error: receiverBalanceError } = await adminClient
+  const { data: receiverBalance } = await adminClient
     .from('client_balances')
     .select('*')
     .eq('client_id', transfer.receiver_id)
@@ -167,6 +179,20 @@ export async function confirmWalletTransfer(
 
   if (confirmError) {
     return { success: false, error: confirmError.message };
+  }
+
+  // Queue Confirmation Notification (Internal only, no SMS)
+  try {
+    await queueWalletConfirmationInternal({
+      transferId: confirmedTransfer.id,
+      phone: confirmedTransfer.receiver.phone,
+      senderName: confirmedTransfer.sender.name,
+      receiverName: confirmedTransfer.receiver_name,
+      amount: confirmedTransfer.amount,
+      currency: confirmedTransfer.currency,
+    });
+  } catch (notifErr) {
+    console.error('Failed to queue wallet confirmation notification:', notifErr);
   }
 
   return { success: true, transfer: confirmedTransfer };

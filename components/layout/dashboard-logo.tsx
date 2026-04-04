@@ -51,7 +51,7 @@ export function DashboardLogo({
       {showLabel && (
         <span
           className={cn(
-            'font-black tracking-tighter text-brand-gradient leading-none transition-all duration-300',
+            'font-bold tracking-tighter text-brand-gradient leading-none transition-all duration-300',
             labelSizeClasses[size],
             labelClassName
           )}

@@ -3,20 +3,16 @@
 import { useEffect } from 'react';
 import { ErrorScreen } from '@/components/layout/error-screen';
 import { ServiceUnavailableScreen } from '@/components/layout/service-unavailable-screen';
+import { isTransientNetworkMessage } from '@/lib/network-errors';
 
-function isConnectionError(message: string) {
-  const token = message.toLowerCase();
-  return token.includes('fetch failed') || token.includes('timeout') || token.includes('service unavailable');
-}
-
-export default function GlobalError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
+export default function GlobalError({ error }: { error: Error & { digest?: string } }) {
   useEffect(() => {
     console.error('Global error boundary:', error);
   }, [error]);
 
   const message = error?.message || '';
 
-  if (isConnectionError(message)) {
+  if (isTransientNetworkMessage(message)) {
     return <ServiceUnavailableScreen retryHref="/" />;
   }
 

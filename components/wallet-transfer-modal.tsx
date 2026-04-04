@@ -66,7 +66,7 @@ export function WalletTransferModal({ open, onOpenChange, onSuccess }: WalletTra
       try {
         const res = await fetch(`/api/balance?userId=${user.id}`);
         const data = await res.json();
-        const bal = data.balances?.find((b: any) => b.currency === currency);
+        const bal = data.balances?.find((b: { currency: string; balance: number }) => b.currency === currency);
         setBalance(bal?.balance || 0);
       } catch (err) {
         console.error('Error fetching balance:', err);
@@ -118,7 +118,7 @@ export function WalletTransferModal({ open, onOpenChange, onSuccess }: WalletTra
 
       setTransfer(data.transfer);
       setStep('qr');
-    } catch (err) {
+    } catch {
       setError('Error de conexión');
     } finally {
       setLoading(false);
@@ -167,7 +167,7 @@ export function WalletTransferModal({ open, onOpenChange, onSuccess }: WalletTra
         {step === 'form' && (
           <>
             <DialogHeader className="p-6 border-b border-border/10">
-              <DialogTitle className="flex items-center gap-2 text-xl font-black text-foreground">
+              <DialogTitle className="flex items-center gap-2 text-xl font-bold text-foreground">
                 <Wallet className="h-5 w-5 text-primary" />
                 Transferir a Cliente
               </DialogTitle>
@@ -178,7 +178,7 @@ export function WalletTransferModal({ open, onOpenChange, onSuccess }: WalletTra
             
             <div className="p-6 space-y-4">
               <div className="p-3 rounded-xl bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800">
-                <p className="text-xs font-bold text-green-600 dark:text-green-400">
+                <p className="text-xs font-semibold text-green-600 dark:text-green-400">
                   Saldo disponible: {formatCurrency(balance, currency)}
                 </p>
                 <p className="text-[10px] text-green-500 mt-1">
@@ -238,7 +238,7 @@ export function WalletTransferModal({ open, onOpenChange, onSuccess }: WalletTra
               <Button 
                 onClick={handleSubmit}
                 disabled={loading || !receiverPhone || !receiverName || !amount}
-                className="w-full h-12 rounded-xl bg-brand-gradient text-white font-black shadow-lg shadow-pink-500/20"
+                className="w-full h-12 rounded-xl bg-brand-gradient text-white font-bold shadow-lg shadow-pink-500/20"
               >
                 {loading ? (
                   <Loader2 className="h-5 w-5 animate-spin" />
@@ -255,7 +255,7 @@ export function WalletTransferModal({ open, onOpenChange, onSuccess }: WalletTra
         {step === 'qr' && transfer && (
           <>
             <DialogHeader className="p-6 border-b border-border/10">
-              <DialogTitle className="flex items-center gap-2 text-xl font-black text-foreground">
+               <DialogTitle className="flex items-center gap-2 text-xl font-bold text-foreground">
                 <QrCode className="h-5 w-5 text-primary" />
                 Comparte el QR
               </DialogTitle>
@@ -266,10 +266,10 @@ export function WalletTransferModal({ open, onOpenChange, onSuccess }: WalletTra
             
             <div className="p-6 space-y-4">
               <div className="text-center space-y-2">
-                <p className="text-sm font-bold text-muted-foreground">
+                <p className="text-sm font-semibold text-muted-foreground">
                   Monto a recibir
                 </p>
-                <p className="text-3xl font-black text-green-600">
+                <p className="text-3xl font-bold text-green-600">
                   {formatCurrency(transfer.amount, transfer.currency)}
                 </p>
               </div>
@@ -277,11 +277,11 @@ export function WalletTransferModal({ open, onOpenChange, onSuccess }: WalletTra
               <QRGenerator data={qrData} size={200} />
 
               <div className="flex flex-col items-center gap-2 p-4 rounded-xl bg-muted/50">
-                <p className="text-xs font-bold text-muted-foreground uppercase">
+                <p className="text-xs font-semibold text-muted-foreground uppercase">
                   Código de verificación
                 </p>
                 <div className="flex items-center gap-2">
-                  <p className="text-2xl font-black tracking-[0.5em]">
+                  <p className="text-2xl font-bold tracking-[0.5em]">
                     {transfer.verification_code}
                   </p>
                   <Button variant="ghost" size="icon" onClick={copyCode}>
@@ -307,7 +307,7 @@ export function WalletTransferModal({ open, onOpenChange, onSuccess }: WalletTra
                     setStep('success');
                     onSuccess?.();
                   }}
-                  className="flex-1 bg-brand-gradient text-white font-black"
+                   className="flex-1 bg-brand-gradient text-white font-bold"
                 >
                   Listo
                 </Button>
@@ -322,7 +322,7 @@ export function WalletTransferModal({ open, onOpenChange, onSuccess }: WalletTra
               <CheckCircle2 className="h-8 w-8 text-green-600" />
             </div>
             <div>
-              <p className="text-lg font-black">Transferencia creada</p>
+               <p className="text-lg font-bold">Transferencia creada</p>
               <p className="text-sm text-muted-foreground mt-1">
                 El destinatario recibirá un QR para confirmar la transferencia
               </p>
@@ -330,20 +330,20 @@ export function WalletTransferModal({ open, onOpenChange, onSuccess }: WalletTra
             <div className="p-4 rounded-xl bg-muted/50 space-y-2">
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Monto:</span>
-                <span className="font-bold">{formatCurrency(transfer.amount, transfer.currency)}</span>
+                <span className="font-semibold">{formatCurrency(transfer.amount, transfer.currency)}</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Para:</span>
-                <span className="font-bold">{transfer.receiver_name}</span>
+                <span className="font-semibold">{transfer.receiver_name}</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Estado:</span>
-                <span className="font-bold text-amber-600">Pendiente de confirmación</span>
+                <span className="font-semibold text-amber-600">Pendiente de confirmación</span>
               </div>
             </div>
             <Button 
               onClick={() => onOpenChange(false)}
-              className="w-full bg-brand-gradient text-white font-black"
+                className="w-full bg-brand-gradient text-white font-bold"
             >
               Cerrar
             </Button>
