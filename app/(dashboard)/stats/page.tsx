@@ -121,13 +121,13 @@ export default function StatsPage() {
     agents: item.agent_count,
   }));
 
-  const statusData = [
+  const statusData: { name: string; value: number; ops?: number }[] = [
     { name: 'Completadas', value: stats?.completedTransfers ?? 0 },
     { name: 'Pendientes', value: stats?.pendingTransfers ?? 0 },
     { name: 'Canceladas', value: stats?.cancelledTransfers ?? 0 },
   ].filter((item) => item.value > 0);
 
-  const concentrationData = (isAdmin ? agentStats : []).slice(0, 5).map((agent) => ({
+  const concentrationData: { name: string; value: number; ops?: number }[] = (isAdmin ? agentStats : []).slice(0, 5).map((agent) => ({
     name: agent.agent_name,
     value: Math.round(convertCurrency(agent.total_sent, 'XAF', currency)),
     ops: agent.transfer_count,
@@ -147,7 +147,7 @@ export default function StatsPage() {
   if (loading) {
     return (
       <div className="space-y-6">
-        <Skeleton className="h-36 w-full rounded-[2rem]" />
+        <Skeleton className="h-36 w-full rounded-4xl" />
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           <Skeleton className="h-28" />
           <Skeleton className="h-28" />
@@ -165,7 +165,7 @@ export default function StatsPage() {
   if (!isAdmin && !isGestor) {
     return (
       <div className="space-y-6">
-        <section className="rounded-[2rem] border border-border/10 bg-card/50 p-8 shadow-xl shadow-black/5 backdrop-blur-xl">
+        <section className="rounded-4xl border border-border/10 bg-card/50 p-8 shadow-xl shadow-black/5 backdrop-blur-xl">
           <Badge className="rounded-full border border-white/20 bg-white/70 px-3 py-1 text-[10px] font-black uppercase tracking-[0.24em] text-slate-700 dark:border-white/10 dark:bg-white/10 dark:text-slate-200">
             Analítica disponible para operación
           </Badge>
@@ -188,7 +188,7 @@ export default function StatsPage() {
 
   return (
     <div className="space-y-8">
-      <section className="rounded-[2rem] border border-border/10 bg-[radial-gradient(circle_at_top_left,rgba(14,165,233,0.14),transparent_30%),radial-gradient(circle_at_bottom_right,rgba(16,185,129,0.12),transparent_32%),linear-gradient(135deg,rgba(255,255,255,0.86),rgba(248,250,252,0.72))] p-6 shadow-2xl shadow-slate-200/40 backdrop-blur-xl dark:bg-[radial-gradient(circle_at_top_left,rgba(14,165,233,0.12),transparent_30%),radial-gradient(circle_at_bottom_right,rgba(16,185,129,0.10),transparent_34%),linear-gradient(135deg,rgba(15,23,42,0.88),rgba(2,6,23,0.82))] dark:shadow-black/20 md:p-8">
+      <section className="rounded-4xl border border-border/10 bg-[radial-gradient(circle_at_top_left,rgba(14,165,233,0.14),transparent_30%),radial-gradient(circle_at_bottom_right,rgba(16,185,129,0.12),transparent_32%),linear-gradient(135deg,rgba(255,255,255,0.86),rgba(248,250,252,0.72))] p-6 shadow-2xl shadow-slate-200/40 backdrop-blur-xl dark:bg-[radial-gradient(circle_at_top_left,rgba(14,165,233,0.12),transparent_30%),radial-gradient(circle_at_bottom_right,rgba(16,185,129,0.10),transparent_34%),linear-gradient(135deg,rgba(15,23,42,0.88),rgba(2,6,23,0.82))] dark:shadow-black/20 md:p-8">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div className="max-w-3xl">
             <Badge className="rounded-full border border-white/30 bg-white/70 px-3 py-1 text-[10px] font-black uppercase tracking-[0.24em] text-slate-700 shadow-sm dark:border-white/10 dark:bg-white/10 dark:text-slate-200">
@@ -315,7 +315,7 @@ export default function StatsPage() {
                     <div className="h-3 w-3 rounded-full" style={{ backgroundColor: CHART_COLORS[index % CHART_COLORS.length] }} />
                     <div>
                       <p className="text-sm font-black text-foreground">{item.name}</p>
-                      {'ops' in item && <p className="text-[10px] font-semibold text-muted-foreground">{item.ops} operaciones</p>}
+                      {item.ops !== undefined && <p className="text-[10px] font-semibold text-muted-foreground">{item.ops} operaciones</p>}
                     </div>
                   </div>
                   <p className="text-sm font-black text-foreground">{isAdmin ? fmt(item.value) : item.value}</p>
@@ -388,7 +388,7 @@ export default function StatsPage() {
                 </div>
               ) : (
                 commissionLeaders.map((agent) => (
-                  <div key={agent.agent_id} className="rounded-[1.5rem] border border-border/10 bg-background/70 p-4">
+                  <div key={agent.agent_id} className="rounded-3xl border border-border/10 bg-background/70 p-4">
                     <div className="flex items-start justify-between gap-4">
                       <div>
                         <p className="text-sm font-black text-foreground">{agent.agent_name}</p>
@@ -412,7 +412,7 @@ export default function StatsPage() {
               )
             ) : (
               recentTransfers.map((transfer) => (
-                <div key={transfer.id} className="rounded-[1.5rem] border border-border/10 bg-background/70 p-4">
+                <div key={transfer.id} className="rounded-3xl border border-border/10 bg-background/70 p-4">
                   <div className="flex items-start justify-between gap-4">
                     <div>
                       <p className="text-sm font-black text-foreground">{transfer.transfer_code}</p>
@@ -458,7 +458,7 @@ export default function StatsPage() {
                 </div>
               ) : (
                 reconciliationPeriods.slice(0, 4).map((period) => (
-                  <div key={period.period} className="rounded-[1.5rem] border border-border/10 bg-background/70 p-4">
+                  <div key={period.period} className="rounded-3xl border border-border/10 bg-background/70 p-4">
                     <div className="flex items-start justify-between gap-4">
                       <div>
                         <p className="text-sm font-black text-foreground">{formatPeriodLabel(period.period)}</p>

@@ -95,8 +95,9 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
           setNotificationCount(count);
         }
       } catch (error) {
+        if (error instanceof Error && error.message?.includes('Failed to fetch')) return;
         if (!(error instanceof HttpError && error.status === 401)) {
-          console.error('Error loading notification count:', error);
+          console.warn('Error loading notification count:', error);
         }
       }
     }
@@ -116,8 +117,9 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
         const balance = balanceData?.balance || 0;
         setLowBalance(balance < 25000);
       } catch (error) {
+        if (error instanceof Error && error.message?.includes('Failed to fetch')) return;
         if (!(error instanceof HttpError && error.status === 401)) {
-          console.error('Error checking balance:', error);
+          console.warn('Error checking balance:', error);
         }
       }
     }
