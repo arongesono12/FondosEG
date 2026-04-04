@@ -58,15 +58,6 @@ export async function GET(request: NextRequest) {
     }
 
     // agent (gestor): notifications linked to transfers where agent_id = profile.id
-    const { data: transfers, error: transfersError } = await adminClient
-      .from('transfers')
-      .select('id')
-      .eq('agent_id', profile.id);
-    if (transfersError) throw transfersError;
-
-    const transferIds = (transfers || []).map((t: any) => t.id);
-    if (transferIds.length === 0) return NextResponse.json([]);
-
     const { data, error } = await adminClient
       .from('notifications')
       .select(
@@ -80,11 +71,12 @@ export async function GET(request: NextRequest) {
           amount,
           currency,
           destination_city,
-          created_at
+          created_at,
+          agent_id
         )
       `
       )
-      .in('transfer_id', transferIds)
+      .eq('transfer.agent_id', profile.id)
       .order('created_at', { ascending: false })
       .limit(limit);
 

@@ -15,7 +15,7 @@ export async function GET() {
       .select(
         `
         *,
-        agent_balances (balance, currency)
+        agent_balances (balance, cash_balance, currency)
       `
       )
       .eq('role', 'gestor')
@@ -23,14 +23,52 @@ export async function GET() {
 
     if (error) throw error;
 
+    const agentIds = (data || []).map((user: any) => user.id);
+    const topupMap = new Map<string, { total: number; lastTopup?: string }>();
+    if (agentIds.length > 0) {
+      const { data: topups, error: topupError } = await adminClient
+        .from('balance_transactions')
+        .select('agent_id, amount, created_at')
+        .in('agent_id', agentIds)
+        .eq('type', 'topup');
+      if (topupError) throw topupError;
+
+      (topups || []).forEach((row: any) => {
+        const agentId = row.agent_id as string;
+        const amount = Number(row.amount || 0);
+        const existing = topupMap.get(agentId);
+        if (!existing) {
+          topupMap.set(agentId, { total: amount, lastTopup: row.created_at });
+          return;
+        }
+        existing.total += amount;
+        if (!existing.lastTopup || new Date(row.created_at) > new Date(existing.lastTopup)) {
+          existing.lastTopup = row.created_at;
+        }
+      });
+    }
+
     const result: AgentWithBalance[] = (data || []).map((user: any) => {
       const balanceRecord = user.agent_balances;
       let balance = 0;
+      let cashBalance = 0;
       if (balanceRecord) {
-        if (Array.isArray(balanceRecord)) balance = balanceRecord[0]?.balance || 0;
-        else balance = balanceRecord.balance || 0;
+        if (Array.isArray(balanceRecord)) {
+          balance = balanceRecord[0]?.balance || 0;
+          cashBalance = balanceRecord[0]?.cash_balance || 0;
+        } else {
+          balance = balanceRecord.balance || 0;
+          cashBalance = balanceRecord.cash_balance || 0;
+        }
       }
-      return { ...user, balance };
+      const topupInfo = topupMap.get(user.id);
+      return {
+        ...user,
+        balance,
+        cash_balance: cashBalance,
+        topup_total: topupInfo?.total || 0,
+        last_topup_at: topupInfo?.lastTopup,
+      };
     });
 
     return NextResponse.json(result);

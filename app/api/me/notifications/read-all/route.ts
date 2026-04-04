@@ -41,19 +41,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: true });
     }
 
-    const { data: transfers, error: transfersError } = await adminClient
-      .from('transfers')
-      .select('id')
-      .eq('agent_id', profile.id);
-    if (transfersError) throw transfersError;
+    const { data: notifications, error: notifError } = await adminClient
+      .from('notifications')
+      .select('id, transfer:transfers!notifications_transfer_id_fkey(id, agent_id)')
+      .eq('transfer.agent_id', profile.id)
+      .eq('is_read', false);
+    if (notifError) throw notifError;
 
-    const transferIds = (transfers || []).map((t: any) => t.id);
-    if (transferIds.length === 0) return NextResponse.json({ success: true });
+    const ids = (notifications || []).map((n: any) => n.id);
+    if (ids.length === 0) return NextResponse.json({ success: true });
 
     const { error } = await adminClient
       .from('notifications')
       .update({ is_read: true, read_at: nowIso })
-      .in('transfer_id', transferIds)
+      .in('id', ids)
       .eq('is_read', false);
 
     if (error) return NextResponse.json({ success: false, error: error.message }, { status: 500 });

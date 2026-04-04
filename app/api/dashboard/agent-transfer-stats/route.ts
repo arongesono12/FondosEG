@@ -14,7 +14,7 @@ export async function GET() {
     const { data, error } = await adminClient
       .from('transfers')
       .select('agent_id, amount, created_at, users!transfers_agent_id_fkey(name)')
-      .eq('status', 'completed');
+      .in('status', ['completed', 'paid_out']);
 
     if (error) throw error;
 

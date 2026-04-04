@@ -37,6 +37,7 @@ export async function GET(request: NextRequest) {
           name: a.user?.name,
           phone: a.user?.phone,
           balance: a.balance,
+          cash_balance: a.cash_balance || 0,
         })) || [],
       };
     } else if (role_access === 'gestor') {
@@ -49,6 +50,7 @@ export async function GET(request: NextRequest) {
       balanceData = {
         role: 'gestor',
         balance: balance?.balance || 0,
+        cash_balance: balance?.cash_balance || 0,
         currency: balance?.currency || 'XAF',
         formatted: formatCurrency(balance?.balance || 0),
       };

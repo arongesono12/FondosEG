@@ -21,6 +21,7 @@ export interface AgentBalance {
   id: string;
   agent_id: string;
   balance: number;
+  cash_balance?: number;
   currency: string;
   created_at: string;
   updated_at: string;
@@ -115,6 +116,9 @@ export interface Notification {
 
 export interface AgentWithBalance extends User {
   balance: number;
+  cash_balance?: number;
+  topup_total?: number;
+  last_topup_at?: string;
 }
 
 export interface DailyTransferStats {
@@ -138,12 +142,33 @@ export interface AgentCommissionStat {
   total_commission: number;
   today_commission: number;
   transfer_count: number;
+  estimated_cost: number;
+  net_profit: number;
+  net_margin: number;
 }
 
 export interface AgentsCommissionStats {
   agents: AgentCommissionStat[];
   totalCommission: number;
   todayCommission: number;
+  totalEstimatedCost: number;
+  totalNetProfit: number;
+  averageNetMargin: number;
+}
+
+export interface ReconciliationPeriodSummary {
+  period: string;
+  topups: number;
+  transfersOutflow: number;
+  refunds: number;
+  resets: number;
+  netFlow: number;
+  transactionCount: number;
+}
+
+export interface ReconciliationSummary {
+  periods: ReconciliationPeriodSummary[];
+  totalNetFlow: number;
 }
 
 export interface TransferFormData {
@@ -193,6 +218,7 @@ export interface DashboardStats {
   totalBalance: number;
   availableBalance?: number;
   reservedBalance?: number;
+  pendingExposure?: number;
   todayTransfers: number;
   totalSent: number;
   totalClients: number;
@@ -201,12 +227,17 @@ export interface DashboardStats {
   todayCommission: number;
   commissionPerTransfer: number;
   averageTicket?: number;
+  todayVolume?: number;
+  weeklyVolume?: number;
+  monthlyVolume?: number;
+  settlementRate?: number;
   activeAgents?: number;
   agentsBelowThreshold?: number;
   projectedTopups24h?: number;
   liquidityCoverageDays?: number;
   floatUtilization?: number;
   pickupReadyTransfers?: number;
+  pickupReadyAmount?: number;
   completedTransfers: number;
   pendingTransfers: number;
   cancelledTransfers: number;

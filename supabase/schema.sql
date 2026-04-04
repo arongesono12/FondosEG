@@ -34,6 +34,7 @@ CREATE TABLE public.agent_balances (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   agent_id UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE UNIQUE,
   balance DECIMAL(15, 2) NOT NULL DEFAULT 0,
+  cash_balance DECIMAL(15, 2) NOT NULL DEFAULT 0,
   currency TEXT NOT NULL DEFAULT 'XAF',
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()

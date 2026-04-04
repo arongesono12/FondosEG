@@ -33,6 +33,9 @@ import {
   Moon,
   Sun,
   AlertTriangle,
+  FileText,
+  ShieldCheck,
+  Cookie,
 } from 'lucide-react';
 import { signOutAction } from '@/app/actions/auth';
 import { SearchModal } from './search-modal';
@@ -146,7 +149,7 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
       ];
 
   return (
-    <div className="main-container min-h-screen font-sans bg-white dark:bg-black">
+    <div suppressHydrationWarning className="main-container min-h-screen font-sans bg-white dark:bg-black">
       {/* Background decoration - hidden on mobile */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none hidden md:block">
         <div className="absolute top-0 left-0 w-full h-full">
@@ -316,6 +319,19 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
                   <DropdownMenuItem onClick={() => router.push('/profile')}>
                     <UserCog className="mr-2 h-4 w-4" />
                     <span>Mi Perfil</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => router.push('/privacy')}>
+                    <ShieldCheck className="mr-2 h-4 w-4" />
+                    <span>Privacidad</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => router.push('/policies')}>
+                    <FileText className="mr-2 h-4 w-4" />
+                    <span>Políticas</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => router.push('/cookies')}>
+                    <Cookie className="mr-2 h-4 w-4" />
+                    <span>Cookies</span>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleSignOut} className="text-rose-500 focus:text-rose-500 focus:bg-rose-500/10">

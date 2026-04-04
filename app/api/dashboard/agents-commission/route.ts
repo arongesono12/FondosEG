@@ -3,6 +3,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { requireProfile, requireRole } from '@/lib/server/authz';
 import { handleRouteError } from '@/lib/server/route-error';
 import { calculateCommission } from '@/lib/tariffs';
+import { estimateOperatingCost } from '@/lib/financial';
 
 export async function GET() {
   try {
@@ -12,8 +13,8 @@ export async function GET() {
     const adminClient = createAdminClient();
     const { data: transfers, error } = await adminClient
       .from('transfers')
-      .select('agent_id, amount, created_at, users!transfers_agent_id_fkey(name)')
-      .eq('status', 'completed');
+      .select('agent_id, amount, commission_amount, created_at, users!transfers_agent_id_fkey(name)')
+      .in('status', ['completed', 'paid_out']);
 
     if (error) throw error;
 
@@ -22,12 +23,18 @@ export async function GET() {
 
     const agentMap = new Map<
       string,
-      { agent_id: string; agent_name: string; total_commission: number; today_commission: number; transfer_count: number }
+      {
+        agent_id: string;
+        agent_name: string;
+        total_commission: number;
+        today_commission: number;
+        transfer_count: number;
+      }
     >();
 
     (transfers || []).forEach((transfer: any) => {
       const agentId = transfer.agent_id;
-      const commission = calculateCommission(Number(transfer.amount));
+      const commission = Number(transfer.commission_amount ?? calculateCommission(Number(transfer.amount)));
       const isToday = new Date(transfer.created_at) >= today;
       const agentName = transfer?.users?.name || 'Unknown';
 
@@ -47,11 +54,25 @@ export async function GET() {
       }
     });
 
-    const agents = Array.from(agentMap.values()).sort((a, b) => b.total_commission - a.total_commission);
+    const agents = Array.from(agentMap.values()).map((agent) => {
+      const estimatedCost = estimateOperatingCost(agent.transfer_count);
+      const netProfit = agent.total_commission - estimatedCost;
+      const netMargin = agent.total_commission > 0 ? Math.round((netProfit / agent.total_commission) * 100) : 0;
+      return {
+        ...agent,
+        estimated_cost: estimatedCost,
+        net_profit: netProfit,
+        net_margin: netMargin,
+      };
+    }).sort((a, b) => b.net_profit - a.net_profit);
+
     const totalCommission = agents.reduce((sum, a) => sum + a.total_commission, 0);
     const todayCommission = agents.reduce((sum, a) => sum + a.today_commission, 0);
+    const totalEstimatedCost = agents.reduce((sum, a) => sum + a.estimated_cost, 0);
+    const totalNetProfit = agents.reduce((sum, a) => sum + a.net_profit, 0);
+    const averageNetMargin = totalCommission > 0 ? Math.round((totalNetProfit / totalCommission) * 100) : 0;
 
-    return NextResponse.json({ agents, totalCommission, todayCommission });
+    return NextResponse.json({ agents, totalCommission, todayCommission, totalEstimatedCost, totalNetProfit, averageNetMargin });
   } catch (err) {
     return handleRouteError(err, 'GET /api/dashboard/agents-commission');
   }

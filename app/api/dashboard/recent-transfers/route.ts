@@ -19,11 +19,9 @@ export async function GET(request: NextRequest) {
     const limit = Math.min(Math.max(parseInt(searchParams.get('limit') || '10', 10) || 10, 1), 50);
 
     if (profile.role === 'admin') {
-      // Admin ve todas las transferencias
       const { data, error } = await adminClient
         .from('transfers')
         .select('*, agent:users!transfers_agent_id_fkey(name)')
-        .eq('status', 'completed')
         .order('created_at', { ascending: false })
         .limit(limit);
       if (error) throw error;
@@ -31,11 +29,10 @@ export async function GET(request: NextRequest) {
     }
 
     if (profile.role === 'gestor') {
-      // Gestor ve TODAS las transferencias de todos los gestores
       const { data, error } = await adminClient
         .from('transfers')
         .select('*, agent:users!transfers_agent_id_fkey(name)')
-        .eq('status', 'completed')
+        .or(`agent_id.eq.${profile.id},paid_out_by.eq.${profile.id}`)
         .order('created_at', { ascending: false })
         .limit(limit);
       if (error) throw error;

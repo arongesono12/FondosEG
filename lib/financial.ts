@@ -15,6 +15,7 @@ export interface TariffRange {
 
 export const BASE_CURRENCY = 'XAF';
 export const NATIONAL_TARIFF_VERSION = '2026-default';
+export const ESTIMATED_OPERATING_COST_PER_TRANSFER = 200;
 
 export const nationalTariffs: TariffRange[] = [
   { min: 1000, max: 20000, commission: 500, ruleCode: 'agent-transfer-001', version: NATIONAL_TARIFF_VERSION },
@@ -128,5 +129,9 @@ export function estimateFloatUtilization(totalReserved: number, totalAvailable: 
   const denominator = Math.max(Number(totalReserved || 0) + Number(totalAvailable || 0), 0);
   if (!denominator) return 0;
   return Math.round((Math.max(Number(totalReserved || 0), 0) / denominator) * 100);
+}
+
+export function estimateOperatingCost(transferCount: number, perTransfer: number = ESTIMATED_OPERATING_COST_PER_TRANSFER): number {
+  return Math.max(Number(transferCount || 0), 0) * Math.max(Number(perTransfer || 0), 0);
 }
 

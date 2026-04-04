@@ -1,79 +1,107 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { useAppStore } from '@/lib/store';
-import { getDashboardStats, getRecentTransfers, getAgentsCommissionStats } from '@/services/dashboard';
-import type { AgentsCommissionStats, DashboardStats, Transfer } from '@/types';
-import { formatCurrency, cn, getInitials, convertCurrency } from '@/lib/utils';
+import { getAgentTransferStats, getDashboardStats, getDailyTransferStats, getRecentTransfers } from '@/services/dashboard';
+import type { AgentTransferStats, DashboardStats, DailyTransferStats, Transfer } from '@/types';
+import { cn, convertCurrency, formatCurrency, formatDateShort, getInitials, getStatusColor } from '@/lib/utils';
 import { HttpError } from '@/services/http';
-import { 
-  ArrowUpRight,
-  TrendingUp,
-  Plus,
-  ShieldAlert,
-  Info,
-} from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import Link from 'next/link';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 import { SupportModal } from '@/components/layout/support-modal';
 import {
-  FlujoDiaModal,
-  GestoresModal,
-  VolumenSemanalModal,
-  SoporteModal,
-  ComisionesModal,
-} from '@/components/layout/dashboard-detail-modals';
+  AlertTriangle,
+  ArrowUpRight,
+  BarChart3,
+  Clock3,
+  CreditCard,
+  Gauge,
+  History,
+  Landmark,
+  LifeBuoy,
+  Send,
+  ShieldCheck,
+  Sparkles,
+  Target,
+  TrendingUp,
+  Users,
+  Wallet,
+} from 'lucide-react';
+
+type SupportRequestType = 'balance_topup' | 'report_error' | 'general';
+
+function MetricCard({
+  title,
+  value,
+  hint,
+  icon: Icon,
+  tone,
+}: {
+  title: string;
+  value: string;
+  hint: string;
+  icon: React.ElementType;
+  tone: string;
+}) {
+  return (
+    <Card className="glass-premium overflow-hidden border-border/10 bg-card/40 shadow-xl shadow-black/5">
+      <CardContent className="p-5">
+        <div className="flex items-start justify-between gap-4">
+          <div className="space-y-2">
+            <p className="text-[10px] font-black uppercase tracking-[0.22em] text-muted-foreground">{title}</p>
+            <p className="text-2xl font-black text-foreground">{value}</p>
+            <p className="text-xs font-semibold text-muted-foreground">{hint}</p>
+          </div>
+          <div className={cn('flex h-11 w-11 items-center justify-center rounded-2xl border text-white shadow-lg', tone)}>
+            <Icon className="h-5 w-5" />
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function statusLabel(status: Transfer['status']) {
+  switch (status) {
+    case 'available_for_pickup': return 'Disponible';
+    case 'paid_out': return 'Pagada';
+    case 'completed': return 'Completada';
+    case 'cancelled': return 'Cancelada';
+    default: return 'Creada';
+  }
+}
 
 export default function DashboardPage() {
   const { user, preferredCurrency } = useAppStore();
   const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [dailyStats, setDailyStats] = useState<DailyTransferStats[]>([]);
   const [recentTransfers, setRecentTransfers] = useState<Transfer[]>([]);
+  const [agentStats, setAgentStats] = useState<AgentTransferStats[]>([]);
   const [loading, setLoading] = useState(true);
   const [supportModalOpen, setSupportModalOpen] = useState(false);
-  const [supportRequestType, setSupportRequestType] = useState<'balance_topup' | 'report_error' | 'general'>('general');
-  const [commissionStats, setCommissionStats] = useState<AgentsCommissionStats | null>(null);
+  const [supportRequestType, setSupportRequestType] = useState<SupportRequestType>('general');
 
-  // Detail modal states
-  const [flujoDiaOpen, setFlujoDiaOpen] = useState(false);
-  const [gestoresOpen, setGestoresOpen] = useState(false);
-  const [volumenOpen, setVolumenOpen] = useState(false);
-  const [comisionesOpen, setComisionesOpen] = useState(false);
-  const [soporteOpen, setSoporteOpen] = useState(false);
-
-  const displayCurrency = preferredCurrency || 'XAF';
-  const dashboardCardClass =
-    'glass-premium bg-card/30 dark:bg-card/20 relative border-border/10 overflow-hidden shadow-2xl';
-  const dashboardSubCardClass =
-    'p-5 rounded-3xl bg-muted/20 dark:bg-slate-900/40 border border-border/5 flex flex-col gap-3 transition-all duration-300 hover:bg-muted/30 dark:hover:bg-slate-900/50';
-  const dashboardSubCardSmClass =
-    'p-4 rounded-[1.25rem] bg-muted/20 dark:bg-slate-900/40 border border-border/5 transition-colors hover:bg-muted/30 dark:hover:bg-slate-900/50';
-
-  const formatBalance = (amount: number) => {
-    const converted = convertCurrency(amount, 'XAF', displayCurrency);
-    return formatCurrency(converted, displayCurrency);
-  };
-
-  const totalTransfersCount = (stats?.completedTransfers || 0) + (stats?.pendingTransfers || 0) + (stats?.cancelledTransfers || 0);
-  const completedPercent = totalTransfersCount > 0 ? Math.round(((stats?.completedTransfers || 0) / totalTransfersCount) * 100) : 0;
-  const pendingPercent = totalTransfersCount > 0 ? Math.round(((stats?.pendingTransfers || 0) / totalTransfersCount) * 100) : 0;
-  const cancelledPercent = totalTransfersCount > 0 ? Math.round(((stats?.cancelledTransfers || 0) / totalTransfersCount) * 100) : 0;
-
-  const balanceProgress = Math.min(((stats?.totalBalance || 0) / 1000000) * 100, 100);
-  const sentProgress = stats?.totalBalance ? Math.min(((stats?.totalSent || 0) / stats.totalBalance) * 100, 100) : 0;
-  const operationsProgress = Math.min(((stats?.todayTransfers || 0) / 20) * 100, 100);
+  const currency = preferredCurrency || 'XAF';
+  const isAdmin = user?.role === 'admin';
+  const isGestor = user?.role === 'gestor';
+  const isClient = user?.role === 'cliente';
 
   useEffect(() => {
     async function loadData() {
       try {
-        const [statsData, transfersData, commissionData] = await Promise.all([
+        const [statsData, transfersData, dailyData, agentsData] = await Promise.all([
           getDashboardStats(),
-          getRecentTransfers(5),
-          user?.role === 'admin' ? getAgentsCommissionStats() : Promise.resolve(null)
+          getRecentTransfers(8),
+          isClient ? Promise.resolve([]) : getDailyTransferStats(14),
+          isAdmin ? getAgentTransferStats() : Promise.resolve([]),
         ]);
         setStats(statsData);
         setRecentTransfers(transfersData);
-        setCommissionStats(commissionData);
+        setDailyStats(dailyData);
+        setAgentStats(agentsData);
       } catch (error) {
         if (!(error instanceof HttpError && error.status === 401)) {
           console.error('Error loading dashboard data:', error);
@@ -83,520 +111,242 @@ export default function DashboardPage() {
       }
     }
     if (user) loadData();
-  }, [user]);
+  }, [user, isAdmin, isClient]);
+
+  const fmt = (amount: number) => formatCurrency(convertCurrency(amount, 'XAF', currency), currency);
+  const availableBalance = stats?.availableBalance ?? stats?.totalBalance ?? 0;
+  const reservedBalance = stats?.reservedBalance ?? stats?.pendingExposure ?? 0;
+  const totalStates = (stats?.completedTransfers ?? 0) + (stats?.pendingTransfers ?? 0) + (stats?.cancelledTransfers ?? 0);
+  const settlementRate = stats?.settlementRate ?? 0;
+  const pendingRate = totalStates ? Math.round(((stats?.pendingTransfers ?? 0) / totalStates) * 100) : 0;
+  const cancelledRate = totalStates ? Math.round(((stats?.cancelledTransfers ?? 0) / totalStates) * 100) : 0;
+  const trend = dailyStats.slice(-7);
+  const maxTrend = Math.max(...trend.map((item) => item.total_amount), 1);
+  const primaryAction = isGestor ? { href: '/transfers', label: 'Nuevo envío', icon: Send } : isAdmin ? { href: '/balance', label: 'Gestionar tesorería', icon: Landmark } : { href: '/balance', label: 'Ver billetera', icon: Wallet };
+  const PrimaryIcon = primaryAction.icon;
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="flex items-center gap-2">
-          <div className="h-6 w-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-          <span className="text-muted-foreground font-semibold">Cargando tablero...</span>
+      <div className="space-y-6">
+        <Skeleton className="h-40 w-full rounded-[2rem]" />
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <Skeleton className="h-28" />
+          <Skeleton className="h-28" />
+          <Skeleton className="h-28" />
+          <Skeleton className="h-28" />
+        </div>
+        <div className="grid gap-6 xl:grid-cols-[1.4fr_1fr]">
+          <Skeleton className="h-80" />
+          <Skeleton className="h-80" />
         </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-4 md:space-y-8">
-      {/* 1. Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 md:gap-6">
-        <div className="space-y-1">
-          <h1 className="text-2xl md:text-3xl font-black text-foreground tracking-tighter">Panel</h1>
-          <div className="flex items-center gap-2 text-muted-foreground font-bold text-xs md:text-sm">
-            <span className="hidden sm:inline">
-              <span className="text-brand-gradient">FondosEG</span> x {user?.name || 'Equipo Directo'}
-            </span>
-            <span className="sm:hidden">{user?.name || 'Usuario'}</span>
-            <span className="w-1.5 h-1.5 rounded-full bg-slate-200 dark:bg-slate-700 hidden md:inline" />
-            <span className="items-center gap-1 cursor-pointer hover:text-foreground transition-colors uppercase tracking-widest text-[10px] hidden md:flex">
-              ID S-DIRECT-08PX <ArrowUpRight className="h-3 w-3" />
-            </span>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <div className="hidden md:flex items-center gap-4 px-4 py-2 bg-card/50 backdrop-blur-sm rounded-full border border-border/30">
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-bold text-muted-foreground">Comisiones</span>
-              <span className="text-sm font-black text-green-500">{formatBalance((stats?.totalSent || 0) * 0.02)}</span>
+    <div className="space-y-6 md:space-y-8">
+      <section className="rounded-[2rem] border border-border/10 bg-[radial-gradient(circle_at_top_left,rgba(236,72,153,0.16),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(14,165,233,0.14),transparent_32%),linear-gradient(135deg,rgba(255,255,255,0.86),rgba(248,250,252,0.72))] p-6 shadow-2xl shadow-slate-200/40 backdrop-blur-xl dark:bg-[radial-gradient(circle_at_top_left,rgba(236,72,153,0.12),transparent_30%),radial-gradient(circle_at_bottom_right,rgba(14,165,233,0.12),transparent_34%),linear-gradient(135deg,rgba(15,23,42,0.88),rgba(2,6,23,0.82))] dark:shadow-black/20 md:p-8">
+        <div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
+          <div className="max-w-3xl space-y-4">
+            <Badge className="w-fit rounded-full border border-white/30 bg-white/70 px-3 py-1 text-[10px] font-black uppercase tracking-[0.24em] text-slate-700 shadow-sm dark:border-white/10 dark:bg-white/10 dark:text-slate-200">
+              {isAdmin ? 'Dirección' : isGestor ? 'Gestor' : 'Cliente'} x FondosEG
+            </Badge>
+            <div>
+              <h1 className="text-3xl font-black tracking-tight text-foreground md:text-4xl">Dashboard financiero y operativo</h1>
+              <p className="mt-2 max-w-2xl text-sm font-semibold leading-6 text-muted-foreground md:text-base">
+                {isAdmin ? 'Liquidez, exposición, red y rentabilidad en una sola lectura.' : isGestor ? 'Control diario de float, volumen, cierres y ritmo operativo.' : 'Seguimiento claro de saldo, operaciones y confirmaciones de tu billetera.'}
+              </p>
             </div>
-            <div className="w-px h-4 bg-border/50" />
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-bold text-muted-foreground">Promedio</span>
-              <span className="text-sm font-black text-foreground">{formatBalance((stats?.totalSent || 0) / Math.max(stats?.todayTransfers || 1, 1))}</span>
-            </div>
-            <div className="w-px h-4 bg-border/50" />
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-bold text-muted-foreground">Tasa</span>
-              <span className="text-sm font-black text-pink-500">98.5%</span>
+            <div className="flex flex-wrap gap-3">
+              <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3">
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-700 dark:text-emerald-300">Volumen hoy</p>
+                <p className="mt-1 text-lg font-black text-foreground">{fmt(stats?.todayVolume ?? 0)}</p>
+              </div>
+              <div className="rounded-2xl border border-sky-500/20 bg-sky-500/10 px-4 py-3">
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-sky-700 dark:text-sky-300">Cobertura</p>
+                <p className="mt-1 text-lg font-black text-foreground">{(stats?.liquidityCoverageDays ?? 0).toFixed(1)} días</p>
+              </div>
+              <div className="rounded-2xl border border-amber-500/20 bg-amber-500/10 px-4 py-3">
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-700 dark:text-amber-300">Utilización</p>
+                <p className="mt-1 text-lg font-black text-foreground">{stats?.floatUtilization ?? 0}%</p>
+              </div>
             </div>
           </div>
-        </div>
 
-        {user?.role === 'admin' ? (
-          <div className="flex flex-col items-end gap-1.5">
-            <div className="flex items-center gap-2 h-14 px-5 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400 font-black text-sm">
-              <ShieldAlert className="h-4 w-4 shrink-0" />
-              <span>Envíos Deshabilitados</span>
-            </div>
-            <span className="text-[10px] font-bold text-muted-foreground flex items-center gap-1">
-              <Info className="h-3 w-3" /> Los administradores no realizan envíos directamente
-            </span>
-          </div>
-        ) : user?.role === 'gestor' ? (
-          <Link href="/transfers">
-            <Button className="h-12 md:h-14 px-6 md:px-8 rounded-xl md:rounded-2xl bg-brand-gradient text-white font-black text-base md:text-lg shadow-lg md:shadow-xl shadow-pink-500/20 hover:scale-[1.02] active:scale-95 transition-all gap-2 md:gap-3">
-              <Plus className="h-4 md:h-5 w-4 md:w-5" /> Nuevo Envío
-            </Button>
-          </Link>
-        ) : null}
-      </div>
-
-      {/* 2 & 3: Today Stats & Radial Progress */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
-        {/* FLUJO DEL DÍA */}
-        <div
-          className={cn(
-            'lg:col-span-2 space-y-4 p-5 md:p-8 rounded-[10px] transition-all duration-500 text-card-foreground',
-            dashboardCardClass
-          )}
-        >
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg md:text-xl font-bold">Flujo del Día</h2>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Link href={primaryAction.href}>
+              <Button className="h-14 w-full rounded-2xl bg-brand-gradient px-6 text-base font-black text-white shadow-xl shadow-pink-500/20 hover:scale-[1.01]">
+                <PrimaryIcon className="mr-2 h-5 w-5" />
+                {primaryAction.label}
+              </Button>
+            </Link>
             <Button
-              variant="ghost"
-              className="text-sm font-medium text-muted-foreground hover:text-foreground"
-              onClick={() => setFlujoDiaOpen(true)}
+              variant="outline"
+              className="h-14 rounded-2xl border-border/20 bg-white/60 px-6 text-base font-black backdrop-blur-md dark:bg-white/5"
+              onClick={() => {
+                setSupportRequestType(isGestor ? 'balance_topup' : 'general');
+                setSupportModalOpen(true);
+              }}
             >
-              Ver todo
+              <LifeBuoy className="mr-2 h-5 w-5" />
+              Soporte
             </Button>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <div className={dashboardSubCardClass}>
-              <div className="flex items-center gap-2">
-                <div className="h-8 w-8 rounded-xl bg-blue-500 flex items-center justify-center">
-                  <svg className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-                <Badge className="bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 shadow-none text-[10px] font-bold uppercase">
-                  Capital Total
-                </Badge>
-              </div>
-              <div className="space-y-1">
-                <p className="text-xl md:text-2xl font-bold">{formatBalance(stats?.totalBalance || 0)}</p>
-                <p className="text-xs font-medium text-muted-foreground">Saldo disponible</p>
-              </div>
-              <div className="mt-auto h-1.5 w-full bg-muted/40 dark:bg-muted/20 rounded-full overflow-hidden">
-                <div className="h-full bg-linear-to-r from-blue-400 to-blue-500 rounded-full" style={{ width: `${balanceProgress}%` }} />
-              </div>
-            </div>
-            <div className={dashboardSubCardClass}>
-              <div className="flex items-center gap-2">
-                <div className="h-8 w-8 rounded-xl bg-purple-500 flex items-center justify-center">
-                  <svg className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                  </svg>
-                </div>
-                <Badge className="bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20 shadow-none text-[10px] font-bold uppercase">
-                  Enviado Hoy
-                </Badge>
-              </div>
-              <div className="space-y-1">
-                <p className="text-xl md:text-2xl font-bold">{formatBalance(stats?.totalSent || 0)}</p>
-                <p className="text-xs font-medium text-muted-foreground">Volumen procesado</p>
-              </div>
-              <div className="mt-auto h-1.5 w-full bg-muted/40 dark:bg-muted/20 rounded-full overflow-hidden">
-                <div className="h-full bg-linear-to-r from-purple-400 to-purple-500 rounded-full" style={{ width: `${sentProgress}%` }} />
-              </div>
-            </div>
-            <div className={dashboardSubCardClass}>
-              <div className="flex items-center gap-2">
-                <div className="h-8 w-8 rounded-xl bg-orange-500 flex items-center justify-center">
-                  <svg className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                  </svg>
-                </div>
-                <Badge className="bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-500/20 shadow-none text-[10px] font-bold uppercase">
-                  Operaciones
-                </Badge>
-              </div>
-              <div className="space-y-1">
-                <p className="text-xl md:text-2xl font-bold">{stats?.todayTransfers || 0}</p>
-                <p className="text-xs font-medium text-muted-foreground">Total transacciones</p>
-              </div>
-              <div className="mt-auto h-1.5 w-full bg-muted/40 dark:bg-muted/20 rounded-full overflow-hidden">
-                <div className="h-full bg-linear-to-r from-orange-400 to-orange-500 rounded-full" style={{ width: `${operationsProgress}%` }} />
-              </div>
-            </div>
-          </div>
         </div>
+      </section>
 
-        {/* Radial Distribution */}
-        <div
-          className={cn(
-            'p-5 md:p-8 rounded-[10px] transition-all duration-500 flex flex-col gap-4 md:gap-6 text-card-foreground',
-            dashboardCardClass
-          )}
-        >
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg md:text-xl font-bold">Distribución</h2>
-            <p className="text-xs font-medium text-muted-foreground">{totalTransfersCount} total</p>
-          </div>
-          <div className="flex-1 flex items-center justify-center relative">
-            <div className="relative w-48 h-48">
-              <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">
-                <circle cx="50" cy="50" r="40" fill="transparent" className="stroke-muted/30" strokeWidth="8" />
-                <circle cx="50" cy="50" r="40" fill="transparent" stroke="#8b5cf6" strokeWidth="10" strokeDasharray="251" strokeDashoffset={251 * (1 - completedPercent / 100)} strokeLinecap="round" />
-                <circle cx="50" cy="50" r="30" fill="transparent" className="stroke-muted/30" strokeWidth="8" />
-                <circle cx="50" cy="50" r="30" fill="transparent" stroke="#f97316" strokeWidth="10" strokeDasharray="188" strokeDashoffset={188 * (1 - pendingPercent / 100)} strokeLinecap="round" />
-                <circle cx="50" cy="50" r="20" fill="transparent" className="stroke-muted/30" strokeWidth="8" />
-                <circle cx="50" cy="50" r="20" fill="transparent" stroke="#3b82f6" strokeWidth="10" strokeDasharray="125" strokeDashoffset={125 * (1 - cancelledPercent / 100)} strokeLinecap="round" />
-              </svg>
-            </div>
-          </div>
-          <div className="space-y-3">
-            <div className="flex items-center justify-between py-2 border-b border-border/5">
-              <div className="flex items-center gap-2">
-                <div className="w-2.5 h-2.5 rounded-full bg-purple-500" />
-                <span className="text-xs font-medium text-muted-foreground">Completadas</span>
+      <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <MetricCard title={isClient ? 'Saldo disponible' : 'Float disponible'} value={fmt(availableBalance)} hint={isClient ? 'Fondos listos para usar' : 'Liquidez inmediata para operar'} icon={Wallet} tone="border-emerald-500/20 bg-emerald-500 shadow-emerald-500/20" />
+        <MetricCard title={isClient ? 'Saldo retenido' : 'Exposición en tránsito'} value={fmt(reservedBalance)} hint={isClient ? 'Importe reservado por operaciones pendientes' : 'Capital comprometido en envíos no liquidados'} icon={Clock3} tone="border-amber-500/20 bg-amber-500 shadow-amber-500/20" />
+        <MetricCard title="Volumen 7 días" value={fmt(stats?.weeklyVolume ?? 0)} hint={`${stats?.todayTransfers ?? 0} operaciones registradas hoy`} icon={TrendingUp} tone="border-sky-500/20 bg-sky-500 shadow-sky-500/20" />
+        <MetricCard title={isClient ? 'Tasa de cierre' : 'Ingreso por comisiones'} value={isClient ? `${settlementRate}%` : fmt(stats?.totalCommission ?? 0)} hint={isClient ? 'Operaciones confirmadas frente al total' : `${fmt(stats?.todayCommission ?? 0)} generadas hoy`} icon={CreditCard} tone="border-fuchsia-500/20 bg-fuchsia-500 shadow-fuchsia-500/20" />
+      </section>
+
+      <section className="grid grid-cols-1 gap-6 xl:grid-cols-[1.45fr_0.95fr]">
+        <Card className="glass-premium overflow-hidden border-border/10 bg-card/40 shadow-xl shadow-black/5">
+          <CardHeader className="border-b border-border/5 pb-5">
+            <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2 text-xl font-black text-foreground"><Gauge className="h-5 w-5 text-primary" /> Tesorería y rendimiento</CardTitle>
+                <p className="mt-2 text-sm font-semibold text-muted-foreground">Liquidez, capital comprometido y pulso de volumen reciente.</p>
               </div>
-              <span className="text-sm font-bold">{completedPercent}%</span>
-            </div>
-            <div className="flex items-center justify-between py-2 border-b border-border/5">
-              <div className="flex items-center gap-2">
-                <div className="w-2.5 h-2.5 rounded-full bg-orange-500" />
-                <span className="text-xs font-medium text-muted-foreground">En Tránsito</span>
+              <div className="rounded-2xl border border-border/10 bg-background/70 px-4 py-3 text-right backdrop-blur">
+                <p className="text-[10px] font-black uppercase tracking-[0.22em] text-muted-foreground">Promedio ticket</p>
+                <p className="mt-1 text-xl font-black text-foreground">{fmt(stats?.averageTicket ?? 0)}</p>
               </div>
-              <span className="text-sm font-bold">{pendingPercent}%</span>
             </div>
-            <div className="flex items-center justify-between py-2">
-              <div className="flex items-center gap-2">
-                <div className="w-2.5 h-2.5 rounded-full bg-blue-500" />
-                <span className="text-xs font-medium text-muted-foreground">Pendientes</span>
-              </div>
-              <span className="text-sm font-bold">{cancelledPercent}%</span>
-            </div>
-            </div>
-          </div>
-        </div>
-
-        {/* COMISIONES - Only Admin and Gestor */}
-        {user?.role !== 'cliente' && (
-        <div
-          className={cn(
-            'p-5 md:p-8 rounded-[10px] transition-all duration-500 text-card-foreground',
-            dashboardCardClass
-          )}
-        >
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg md:text-xl font-bold">Comisiones</h2>
-            <Button
-              variant="ghost"
-              className="text-sm font-medium text-muted-foreground hover:text-foreground"
-              onClick={() => setComisionesOpen(true)}
-            >
-              Ver todo
-            </Button>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            {user?.role === 'admin' ? (
-              <>
-                <div className={dashboardSubCardSmClass}>
-                  <Badge className="bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/20 shadow-none text-[10px] font-bold uppercase mb-2">
-                    Comisión Total
-                  </Badge>
-                  <p className="text-2xl font-bold text-green-600 dark:text-green-400">{formatBalance(commissionStats?.totalCommission || 0)}</p>
-                  <p className="text-xs font-medium text-muted-foreground mt-1">Todos los gestores</p>
-                </div>
-                <div className={dashboardSubCardSmClass}>
-                  <Badge className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 shadow-none text-[10px] font-bold uppercase mb-2">
-                    Comisión Hoy
-                  </Badge>
-                  <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{formatBalance(commissionStats?.todayCommission || 0)}</p>
-                  <p className="text-xs font-medium text-muted-foreground mt-1">Ganado hoy</p>
-                </div>
-                <div className={dashboardSubCardSmClass}>
-                  <Badge className="bg-teal-500/10 text-teal-600 dark:text-teal-400 border border-teal-500/20 shadow-none text-[10px] font-bold uppercase mb-2">
-                    Gestores
-                  </Badge>
-                  <p className="text-2xl font-bold text-teal-600 dark:text-teal-400">{commissionStats?.agents?.length || 0}</p>
-                  <p className="text-xs font-medium text-muted-foreground mt-1">Activos</p>
-                </div>
-              </>
-            ) : (
-              <>
-                <div className={dashboardSubCardSmClass}>
-                  <Badge className="bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/20 shadow-none text-[10px] font-bold uppercase mb-2">
-                    Mi Comisión Total
-                  </Badge>
-                  <p className="text-2xl font-bold text-green-600 dark:text-green-400">{formatBalance(stats?.totalCommission || 0)}</p>
-                  <p className="text-xs font-medium text-muted-foreground mt-1">Ganancias por envíos</p>
-                </div>
-                <div className={dashboardSubCardSmClass}>
-                  <Badge className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 shadow-none text-[10px] font-bold uppercase mb-2">
-                    Comisión Hoy
-                  </Badge>
-                  <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{formatBalance(stats?.todayCommission || 0)}</p>
-                  <p className="text-xs font-medium text-muted-foreground mt-1">Ganado hoy</p>
-                </div>
-                <div className={dashboardSubCardSmClass}>
-                  <Badge className="bg-teal-500/10 text-teal-600 dark:text-teal-400 border border-teal-500/20 shadow-none text-[10px] font-bold uppercase mb-2">
-                    Promedio
-                  </Badge>
-                  <p className="text-2xl font-bold text-teal-600 dark:text-teal-400">{formatBalance(stats?.commissionPerTransfer || 0)}</p>
-                  <p className="text-xs font-medium text-muted-foreground mt-1">Por transacción</p>
-                </div>
-              </>
-            )}
-          </div>
-        </div>
-        )}
-
-      {stats?.balancesByCurrency && Object.keys(stats.balancesByCurrency).length > 0 && (
-        <div
-          className={cn(
-            'p-5 md:p-8 rounded-[10px] transition-all duration-500 text-card-foreground',
-            dashboardCardClass
-          )}
-        >
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg md:text-xl font-bold">Saldo por Moneda</h2>
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {(() => {
-              const currencyToShow = preferredCurrency || 'XAF';
-              const amount = stats.balancesByCurrency![currencyToShow] || stats.balancesByCurrency!['XAF'] || 0;
-              return (
-                <div key={currencyToShow} className={cn(dashboardSubCardSmClass, 'flex flex-col items-start')}>
-                  <span className="text-xs font-bold text-muted-foreground uppercase">{currencyToShow}</span>
-                  <span className="text-lg font-bold mt-1">{formatCurrency(amount, currencyToShow)}</span>
-                </div>
-              );
-            })()}
-          </div>
-        </div>
-      )}
-
-      {/* 4, 5 & 6: Ranking, Tracker & Chat - Only for Admin and Gestor */}
-      {user?.role !== 'cliente' && (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-
-        {/* ENVÍOS DE GESTORES */}
-        <div
-          className={cn(
-            'space-y-4 p-5 md:p-8 rounded-[10px] transition-all duration-500 text-card-foreground',
-            dashboardCardClass
-          )}
-        >
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg md:text-xl font-bold">
-              {user?.role === 'admin' ? 'Envíos de Gestores' : user?.role === 'gestor' ? 'Actividad Top' : 'Mi Actividad'}
-            </h2>
-            <Button
-              variant="ghost"
-              className="text-sm font-medium text-muted-foreground hover:text-foreground"
-              onClick={() => setGestoresOpen(true)}
-            >
-              Ver todo
-            </Button>
-          </div>
-
-          {user?.role === 'admin' && (
-            <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-100 dark:border-amber-800/20 text-amber-600 dark:text-amber-400">
-              <ShieldAlert className="h-3.5 w-3.5 shrink-0" />
-              <span className="text-[10px] font-bold uppercase tracking-wide">
-                Únete a <span className="text-brand-gradient">FondosEG</span> y comienza a gestionar envíos directamente
-              </span>
-            </div>
-          )}
-
-          <div className="space-y-5">
-            {recentTransfers.slice(0, 3).map((item, idx) => (
-              <div key={item.id} className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className={cn(
-                    "w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-white text-xs",
-                    idx === 0 ? "bg-linear-to-br from-orange-400 to-orange-500" : idx === 1 ? "bg-linear-to-br from-blue-400 to-blue-500" : "bg-linear-to-br from-purple-400 to-purple-500"
-                  )}>
-                    {getInitials(item.receiver_name)}
-                  </div>
-                  <div>
-                    <p className="text-sm font-bold leading-none">{item.receiver_name}</p>
-                    {user?.role === 'admin' && (item as Transfer & { agent?: { name: string } }).agent?.name && (
-                      <p className="text-[10px] font-medium text-primary uppercase tracking-tighter">
-                        Gestor: {(item as Transfer & { agent?: { name: string } }).agent?.name}
-                      </p>
-                    )}
-                    <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-tighter mt-0.5">{item.destination_city}</p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm font-bold">{formatBalance(item.amount)}</p>
-                  <p className="text-[10px] font-bold text-rose-500 uppercase">Monto</p>
-                </div>
-              </div>
-            ))}
-            {recentTransfers.length === 0 && (
-              <p className="text-sm text-muted-foreground text-center py-4">No hay transferencias recientes</p>
-            )}
-          </div>
-        </div>
-
-        {/* VOLUMEN SEMANAL */}
-        <div
-          className={cn(
-            'space-y-4 p-5 md:p-8 rounded-[10px] transition-all duration-500 text-card-foreground',
-            dashboardCardClass
-          )}
-        >
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg md:text-xl font-bold">Volumen Semanal</h2>
-            <Button
-              variant="ghost"
-              className="text-sm font-medium text-muted-foreground hover:text-foreground"
-              onClick={() => setVolumenOpen(true)}
-            >
-              Ver todo
-            </Button>
-          </div>
-          <div className="h-32 md:h-40 flex items-end justify-between gap-2 px-2">
-            {[40, 70, 50, 90, 60, 80].map((h, i) => (
-              <div key={i} className="flex-1 flex flex-col items-center gap-2">
-                <div className="w-full relative group">
-                  <div className="absolute inset-x-0 bottom-0 bg-muted rounded-full h-40 opacity-20" />
-                  <div
-                    className={cn(
-                      "w-full rounded-full transition-all duration-700",
-                      i % 2 === 0 ? "bg-linear-to-b from-rose-400 to-rose-500" : "bg-linear-to-b from-blue-400 to-blue-500"
-                    )}
-                    style={{ height: `${h}%` }}
-                    title={`${h}%`}
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-          <div className="flex items-center gap-4 justify-center">
-            <div className="flex items-center gap-2">
-              <div className="w-2.5 h-2.5 rounded-full bg-rose-500" />
-              <span className="text-[10px] font-medium text-muted-foreground uppercase">Envíos</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-2.5 h-2.5 rounded-full bg-blue-500" />
-              <span className="text-[10px] font-medium text-muted-foreground uppercase">Cobros</span>
-            </div>
-          </div>
-        </div>
-
-        {/* SOPORTE */}
-        <div
-          className={cn(
-            'space-y-4 p-5 md:p-8 rounded-[10px] transition-all duration-500 text-card-foreground',
-            dashboardCardClass
-          )}
-        >
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg md:text-xl font-bold">Soporte</h2>
-            <Button
-              variant="ghost"
-              className="text-sm font-medium text-muted-foreground hover:text-foreground"
-              onClick={() => setSoporteOpen(true)}
-            >
-              Ver todo
-            </Button>
-          </div>
-
-          <div className="space-y-4">
-            <div className="flex flex-col items-end gap-1">
-              <div className="bg-muted/80 dark:bg-muted/50 p-3 rounded-2xl rounded-tr-none text-xs font-medium text-muted-foreground max-w-[80%]">
-                Hola {user?.name.split(' ')[0]}, ¿necesitas ayuda con alguna transferencia hoy?
-              </div>
-              <span className="text-[9px] font-medium text-muted-foreground/60 uppercase">Admin - 10:25</span>
+          </CardHeader>
+          <CardContent className="space-y-5 p-6">
+            <div className={cn('grid gap-4', isClient ? 'md:grid-cols-3' : 'md:grid-cols-4')}>
+              <div className="rounded-3xl border border-border/10 bg-background/70 p-5"><p className="text-[10px] font-black uppercase tracking-[0.22em] text-muted-foreground">Capital operativo</p><p className="mt-2 text-2xl font-black text-foreground">{fmt(stats?.totalBalance ?? 0)}</p></div>
+              <div className="rounded-3xl border border-border/10 bg-background/70 p-5"><p className="text-[10px] font-black uppercase tracking-[0.22em] text-muted-foreground">{isClient ? 'Volumen 30 días' : 'Recarga proyectada 24h'}</p><p className="mt-2 text-2xl font-black text-foreground">{fmt(isClient ? (stats?.monthlyVolume ?? 0) : (stats?.projectedTopups24h ?? 0))}</p></div>
+              <div className="rounded-3xl border border-border/10 bg-background/70 p-5"><p className="text-[10px] font-black uppercase tracking-[0.22em] text-muted-foreground">{isClient ? 'Confirmación' : 'Cobertura de float'}</p><p className="mt-2 text-2xl font-black text-foreground">{isClient ? `${settlementRate}%` : `${(stats?.liquidityCoverageDays ?? 0).toFixed(1)} días`}</p></div>
+              {!isClient && <div className="rounded-3xl border border-border/10 bg-background/70 p-5"><p className="text-[10px] font-black uppercase tracking-[0.22em] text-muted-foreground">Utilización del float</p><p className="mt-2 text-2xl font-black text-foreground">{stats?.floatUtilization ?? 0}%</p></div>}
             </div>
 
-            <div className="flex items-center gap-3 bg-linear-to-br from-primary/5 to-primary/10 dark:from-primary/10 dark:to-primary/5 p-4 rounded-2xl border border-primary/10">
-              <div className="h-10 w-10 shrink-0 bg-brand-gradient flex items-center justify-center rounded-xl text-white shadow-lg shadow-pink-500/20">
-                <TrendingUp className="h-4 w-4" />
-              </div>
-              <div className="flex-1 space-y-1">
-                <div className="flex gap-0.5 items-center">
-                  {[2, 5, 3, 8, 4, 3, 6, 2, 4, 7].map((h, i) => (
-                    <div key={i} className="flex-1 bg-primary/30 rounded-full" style={{ height: `${h * 2}px` }} />
+            {!isClient && trend.length > 0 && (
+              <div className="rounded-[1.75rem] border border-border/10 bg-background/70 p-5">
+                <div className="mb-4 flex items-center justify-between">
+                  <div><p className="text-sm font-black text-foreground">Pulso de volumen</p><p className="text-xs font-semibold text-muted-foreground">Últimos 7 días cerrados</p></div>
+                  <div className="text-right"><p className="text-[10px] font-black uppercase tracking-[0.22em] text-muted-foreground">Volumen 30 días</p><p className="text-lg font-black text-foreground">{fmt(stats?.monthlyVolume ?? 0)}</p></div>
+                </div>
+                <div className="grid grid-cols-7 gap-3">
+                  {trend.map((item) => (
+                    <div key={item.date} className="flex flex-col items-center gap-3">
+                      <div className="flex h-40 w-full items-end rounded-3xl bg-muted/30 p-2">
+                        <div className="w-full rounded-2xl bg-linear-to-t from-sky-500 via-cyan-400 to-emerald-400 shadow-lg shadow-sky-500/20" style={{ height: `${Math.max(Math.round((item.total_amount / maxTrend) * 100), item.total_amount > 0 ? 12 : 4)}%` }} title={fmt(item.total_amount)} />
+                      </div>
+                      <div className="text-center"><p className="text-[10px] font-black uppercase tracking-[0.16em] text-muted-foreground">{formatDateShort(item.date).slice(0, 5)}</p><p className="mt-1 text-xs font-bold text-foreground">{item.transfer_count}</p></div>
+                    </div>
                   ))}
                 </div>
-                <div className="flex justify-between items-center text-[9px] font-medium text-primary/60 uppercase tracking-widest">
-                  <span>Grabación ID-88</span>
-                  <span>0:12</span>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="glass-premium overflow-hidden border-border/10 bg-card/40 shadow-xl shadow-black/5">
+          <CardHeader className="border-b border-border/5 pb-5">
+            <CardTitle className="flex items-center gap-2 text-xl font-black text-foreground"><ShieldCheck className="h-5 w-5 text-primary" /> Salud operativa</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-5 p-6">
+            <div className="rounded-3xl border border-border/10 bg-background/70 p-5">
+              <div className="flex items-center justify-between"><p className="text-[10px] font-black uppercase tracking-[0.22em] text-muted-foreground">Tasa de liquidación</p><p className="text-2xl font-black text-foreground">{settlementRate}%</p></div>
+              <div className="mt-4 h-3 overflow-hidden rounded-full bg-muted/30"><div className="h-full rounded-full bg-linear-to-r from-emerald-500 to-sky-500" style={{ width: `${Math.min(settlementRate, 100)}%` }} /></div>
+            </div>
+            <div className="space-y-4 rounded-3xl border border-border/10 bg-background/70 p-5">
+              <div><div className="mb-2 flex items-center justify-between"><span className="text-xs font-black text-foreground">Pendientes</span><span className="text-xs font-black text-amber-600 dark:text-amber-400">{pendingRate}%</span></div><div className="h-2 overflow-hidden rounded-full bg-muted/30"><div className="h-full rounded-full bg-amber-500" style={{ width: `${Math.min(pendingRate, 100)}%` }} /></div></div>
+              <div><div className="mb-2 flex items-center justify-between"><span className="text-xs font-black text-foreground">Canceladas</span><span className="text-xs font-black text-rose-600 dark:text-rose-400">{cancelledRate}%</span></div><div className="h-2 overflow-hidden rounded-full bg-muted/30"><div className="h-full rounded-full bg-rose-500" style={{ width: `${Math.min(cancelledRate, 100)}%` }} /></div></div>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="rounded-3xl border border-border/10 bg-background/70 p-4"><p className="text-[10px] font-black uppercase tracking-[0.18em] text-muted-foreground">{isAdmin ? 'Gestores activos' : isGestor ? 'Clientes atendidos' : 'Confirmadas'}</p><p className="mt-2 text-2xl font-black text-foreground">{isAdmin ? stats?.activeAgents ?? 0 : isGestor ? stats?.totalClients ?? 0 : stats?.completedTransfers ?? 0}</p></div>
+              <div className="rounded-3xl border border-border/10 bg-background/70 p-4"><p className="text-[10px] font-black uppercase tracking-[0.18em] text-muted-foreground">{isClient ? 'Saldo retenido' : 'Bajo umbral'}</p><p className="mt-2 text-2xl font-black text-foreground">{isClient ? fmt(reservedBalance) : stats?.agentsBelowThreshold ?? 0}</p></div>
+              <div className="rounded-3xl border border-border/10 bg-background/70 p-4"><p className="text-[10px] font-black uppercase tracking-[0.18em] text-muted-foreground">{isClient ? 'Pendientes' : 'Disponibles para pago'}</p><p className="mt-2 text-2xl font-black text-foreground">{isClient ? stats?.pendingTransfers ?? 0 : stats?.pickupReadyTransfers ?? 0}</p></div>
+              <div className="rounded-3xl border border-border/10 bg-background/70 p-4"><p className="text-[10px] font-black uppercase tracking-[0.18em] text-muted-foreground">{isClient ? 'Ticket medio' : 'Clientes únicos'}</p><p className="mt-2 text-2xl font-black text-foreground">{isClient ? fmt(stats?.averageTicket ?? 0) : stats?.totalClients ?? 0}</p></div>
+            </div>
+            {!isClient && (stats?.agentsBelowThreshold ?? 0) > 0 && (
+              <div className="rounded-3xl border border-amber-500/20 bg-amber-500/10 p-4 text-amber-700 dark:text-amber-300">
+                <div className="flex items-start gap-3"><AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" /><div><p className="text-xs font-black uppercase tracking-[0.2em]">Atención de liquidez</p><p className="mt-1 text-sm font-semibold">Hay {stats?.agentsBelowThreshold} gestor(es) por debajo del umbral operativo de 25.000 XAF.</p></div></div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </section>
+
+      <section className="grid grid-cols-1 gap-6 xl:grid-cols-[1.2fr_0.8fr]">
+        <Card className="glass-premium overflow-hidden border-border/10 bg-card/40 shadow-xl shadow-black/5">
+          <CardHeader className="border-b border-border/5 pb-5">
+            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+              <CardTitle className="flex items-center gap-2 text-xl font-black text-foreground"><History className="h-5 w-5 text-primary" /> Operaciones recientes</CardTitle>
+              <Link href="/history"><Button variant="ghost" className="rounded-xl font-bold text-muted-foreground hover:text-foreground">Ver historial completo<ArrowUpRight className="ml-2 h-4 w-4" /></Button></Link>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-3 p-6">
+            {recentTransfers.length === 0 ? (
+              <div className="rounded-3xl border border-dashed border-border/20 bg-background/50 px-6 py-10 text-center"><p className="text-sm font-bold text-muted-foreground">Todavía no hay operaciones para mostrar.</p></div>
+            ) : recentTransfers.map((transfer) => (
+              <div key={transfer.id} className="flex flex-col gap-4 rounded-[1.75rem] border border-border/10 bg-background/70 p-4 hover:bg-background">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-gradient text-xs font-black text-white shadow-lg shadow-pink-500/20">{getInitials(transfer.receiver_name || transfer.sender_name)}</div>
+                    <div>
+                      <p className="text-sm font-black text-foreground">{transfer.receiver_name}</p>
+                      <p className="text-xs font-semibold text-muted-foreground">{transfer.sender_name} · {transfer.destination_city}</p>
+                      {isAdmin && transfer.agent?.name && <p className="mt-1 text-[10px] font-black uppercase tracking-[0.18em] text-primary">Gestor {transfer.agent.name}</p>}
+                    </div>
+                  </div>
+                  <Badge className={cn('rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em]', getStatusColor(transfer.status))}>{statusLabel(transfer.status)}</Badge>
+                </div>
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div><p className="text-[10px] font-black uppercase tracking-[0.18em] text-muted-foreground">Código</p><p className="text-sm font-black text-foreground">{transfer.transfer_code}</p></div>
+                  <div><p className="text-[10px] font-black uppercase tracking-[0.18em] text-muted-foreground">Fecha</p><p className="text-sm font-black text-foreground">{formatDateShort(transfer.created_at)}</p></div>
+                  <div className="text-right"><p className="text-[10px] font-black uppercase tracking-[0.18em] text-muted-foreground">Monto</p><p className="text-lg font-black text-foreground">{fmt(transfer.amount)}</p></div>
                 </div>
               </div>
-            </div>
-          </div>
+            ))}
+          </CardContent>
+        </Card>
 
-          <Button
-            variant="link"
-            className="w-full text-rose-500 font-bold text-sm p-0 underline mt-4"
-            onClick={() => { 
-              if (user?.role === 'gestor') {
-                setSupportRequestType('balance_topup');
-                setSupportModalOpen(true);
-              } else {
-                setSoporteOpen(true);
-              }
-            }}
-          >
-            Hablar con Administración
-          </Button>
+        <div className="space-y-6">
+          <Card className="glass-premium overflow-hidden border-border/10 bg-card/40 shadow-xl shadow-black/5">
+            <CardHeader className="border-b border-border/5 pb-5">
+              <CardTitle className="flex items-center gap-2 text-xl font-black text-foreground">{isAdmin ? <Users className="h-5 w-5 text-primary" /> : <Sparkles className="h-5 w-5 text-primary" />}{isAdmin ? ' Top gestores por volumen' : ' Resumen ejecutivo'}</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4 p-6">
+              {isAdmin ? agentStats.slice(0, 5).map((agent, index) => (
+                <div key={agent.agent_id} className="flex items-center justify-between rounded-3xl border border-border/10 bg-background/70 p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-900 text-xs font-black text-white dark:bg-white dark:text-slate-900">#{index + 1}</div>
+                    <div><p className="text-sm font-black text-foreground">{agent.agent_name}</p><p className="text-xs font-semibold text-muted-foreground">{agent.transfer_count} operaciones</p></div>
+                  </div>
+                  <div className="text-right"><p className="text-sm font-black text-foreground">{fmt(agent.total_sent)}</p><p className="text-[10px] font-semibold text-muted-foreground">{formatDateShort(agent.last_transfer)}</p></div>
+                </div>
+              )) : (
+                <>
+                  <div className="rounded-3xl border border-border/10 bg-background/70 p-5"><p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Volumen del mes</p><p className="mt-2 text-2xl font-black text-foreground">{fmt(stats?.monthlyVolume ?? 0)}</p></div>
+                  <div className="rounded-3xl border border-border/10 bg-background/70 p-5"><p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Meta de consistencia</p><div className="mt-3 flex items-center justify-between"><p className="text-2xl font-black text-foreground">{settlementRate}%</p><Target className="h-5 w-5 text-emerald-500" /></div></div>
+                </>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card className="glass-premium overflow-hidden border-border/10 bg-card/40 shadow-xl shadow-black/5">
+            <CardHeader className="border-b border-border/5 pb-5">
+              <CardTitle className="flex items-center gap-2 text-xl font-black text-foreground"><BarChart3 className="h-5 w-5 text-primary" /> Acciones rápidas</CardTitle>
+            </CardHeader>
+            <CardContent className="grid gap-3 p-6">
+              <Link href={isAdmin ? '/stats' : '/history'}><div className="rounded-3xl border border-border/10 bg-background/70 p-4 hover:bg-background"><p className="text-sm font-black text-foreground">{isAdmin ? 'Analítica avanzada' : 'Historial operativo'}</p><p className="mt-1 text-xs font-semibold text-muted-foreground">{isAdmin ? 'Explora tendencia, red y concentración por gestor.' : 'Revisa operaciones, estados y fechas clave.'}</p></div></Link>
+              <Link href="/balance"><div className="rounded-3xl border border-border/10 bg-background/70 p-4 hover:bg-background"><p className="text-sm font-black text-foreground">{isAdmin ? 'Tesorería de red' : 'Mi liquidez'}</p><p className="mt-1 text-xs font-semibold text-muted-foreground">{isAdmin ? 'Recarga saldos y controla disponibilidad por gestor.' : 'Consulta movimientos y saldo operativo en tiempo real.'}</p></div></Link>
+              <button type="button" className="rounded-3xl border border-border/10 bg-background/70 p-4 text-left hover:bg-background" onClick={() => { setSupportRequestType(isGestor ? 'balance_topup' : 'general'); setSupportModalOpen(true); }}>
+                <p className="text-sm font-black text-foreground">Escalar incidencia</p>
+                <p className="mt-1 text-xs font-semibold text-muted-foreground">Contacta con administración para recargas, errores o seguimiento.</p>
+              </button>
+            </CardContent>
+          </Card>
         </div>
-      </div>
-      )}
+      </section>
 
-      {/* ─── MODALES / DRAWERS ──────────────────────────────────────── */}
-      <SoporteModal
-        open={soporteOpen}
-        onClose={() => setSoporteOpen(false)}
-        onContactAdmin={() => { setSoporteOpen(false); setSupportRequestType('general'); setSupportModalOpen(true); }}
-        userName={user?.name}
-        userRole={user?.role}
-        onRequestTopup={() => { setSoporteOpen(false); setSupportRequestType('balance_topup'); setSupportModalOpen(true); }}
-        onReportError={() => { setSoporteOpen(false); setSupportRequestType('report_error'); setSupportModalOpen(true); }}
-        onCheckOrder={() => { setSoporteOpen(false); setGestoresOpen(true); }}
-      />
-
-      <SupportModal
-        open={supportModalOpen}
-        onOpenChange={setSupportModalOpen}
-        requestType={supportRequestType}
-      />
-
-      <ComisionesModal
-        open={comisionesOpen}
-        onClose={() => setComisionesOpen(false)}
-        userRole={user?.role}
-        stats={stats}
-        commissionStats={commissionStats}
-        preferredCurrency={displayCurrency}
-      />
-
-      <FlujoDiaModal
-        open={flujoDiaOpen}
-        onClose={() => setFlujoDiaOpen(false)}
-        stats={stats}
-        preferredCurrency={displayCurrency}
-      />
-
-      <GestoresModal
-        open={gestoresOpen}
-        onClose={() => setGestoresOpen(false)}
-        userRole={user?.role}
-        preferredCurrency={displayCurrency}
-      />
-
-      <VolumenSemanalModal
-        open={volumenOpen}
-        onClose={() => setVolumenOpen(false)}
-        preferredCurrency={displayCurrency}
-      />
+      <SupportModal open={supportModalOpen} onOpenChange={setSupportModalOpen} requestType={supportRequestType} />
     </div>
   );
 }

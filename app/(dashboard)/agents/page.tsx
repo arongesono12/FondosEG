@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { getAgents, toggleAgentStatus, topUpAgentBalance, resetAgentBalance, createAgent } from '@/services/agent';
@@ -158,7 +159,12 @@ export default function AgentsPage() {
   }
 
   if (loading) {
-    return <div className="flex items-center justify-center h-64">Cargando...</div>;
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-20 w-full rounded-2xl" />
+        <Skeleton className="h-72" />
+      </div>
+    );
   }
 
   return (
@@ -275,6 +281,7 @@ export default function AgentsPage() {
                 <TableHead>Contacto</TableHead>
                 <TableHead>Estado</TableHead>
                 <TableHead className="text-right">Saldo</TableHead>
+                <TableHead className="text-right">Efectivo</TableHead>
                 <TableHead>Registro</TableHead>
                 <TableHead className="text-right">Acciones</TableHead>
               </TableRow>
@@ -282,7 +289,7 @@ export default function AgentsPage() {
             <TableBody>
               {filteredAgents.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                     No se encontraron gestores
                   </TableCell>
                 </TableRow>
@@ -323,6 +330,9 @@ export default function AgentsPage() {
                     </TableCell>
                     <TableCell className="text-right font-medium">
                       {formatCurrency(agent.balance)}
+                    </TableCell>
+                    <TableCell className="text-right font-medium">
+                      {formatCurrency(agent.cash_balance || 0)}
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">
                       {formatDate(agent.created_at)}

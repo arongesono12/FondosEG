@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
       .from('transfers')
       .select('agent_id, agent:users!transfers_agent_id_fkey(id, name, phone, email)')
       .eq('sender_id', user.id)
-      .eq('status', 'completed');
+      .in('status', ['completed', 'paid_out']);
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });

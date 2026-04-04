@@ -11,12 +11,39 @@ function defaultKind(role: string): Kind {
   return 'agent';
 }
 
+type CacheEntry = { count: number; expiresAt: number };
+const COUNT_CACHE = new Map<string, CacheEntry>();
+const CACHE_TTL_MS = 15000;
+
+function getCacheKey(kind: Kind, profileId: string) {
+  return `${kind}:${profileId}`;
+}
+
+function readCache(key: string): number | null {
+  const entry = COUNT_CACHE.get(key);
+  if (!entry) return null;
+  if (Date.now() > entry.expiresAt) {
+    COUNT_CACHE.delete(key);
+    return null;
+  }
+  return entry.count;
+}
+
+function writeCache(key: string, count: number) {
+  COUNT_CACHE.set(key, { count, expiresAt: Date.now() + CACHE_TTL_MS });
+}
+
 export async function GET(request: NextRequest) {
   try {
     const profile = await requireProfile();
     const adminClient = createAdminClient();
     const { searchParams } = new URL(request.url);
     const kind = ((searchParams.get('kind') || defaultKind(profile.role)) as Kind) || defaultKind(profile.role);
+    const cacheKey = getCacheKey(kind, profile.id);
+    const cached = readCache(cacheKey);
+    if (cached !== null) {
+      return NextResponse.json({ count: cached });
+    }
 
     if (kind === 'admin') {
       requireRole(profile, 'admin');
@@ -26,7 +53,9 @@ export async function GET(request: NextRequest) {
         .eq('is_admin_notification', true)
         .eq('is_read', false);
       if (error) throw error;
-      return NextResponse.json({ count: count || 0 });
+      const total = count || 0;
+      writeCache(cacheKey, total);
+      return NextResponse.json({ count: total });
     }
 
     if (kind === 'client') {
@@ -36,22 +65,22 @@ export async function GET(request: NextRequest) {
         .eq('user_id', profile.id)
         .eq('is_read', false);
       if (error) throw error;
-      return NextResponse.json({ count: count || 0 });
+      const total = count || 0;
+      writeCache(cacheKey, total);
+      return NextResponse.json({ count: total });
     }
 
-    // agent
-    const { data: transfers } = await adminClient.from('transfers').select('id').eq('agent_id', profile.id);
-    const transferIds = (transfers || []).map((t: any) => t.id);
-    if (transferIds.length === 0) return NextResponse.json({ count: 0 });
-
+    // agent: filter by transfer relation to avoid large IN payloads
     const { count, error } = await adminClient
       .from('notifications')
-      .select('*', { count: 'exact', head: true })
-      .in('transfer_id', transferIds)
+      .select('id, transfer:transfers!notifications_transfer_id_fkey(id, agent_id)', { count: 'exact', head: true })
+      .eq('transfer.agent_id', profile.id)
       .eq('is_read', false);
 
     if (error) throw error;
-    return NextResponse.json({ count: count || 0 });
+    const total = count || 0;
+    writeCache(cacheKey, total);
+    return NextResponse.json({ count: total });
   } catch (err) {
     return handleRouteError(err, 'GET /api/me/notifications/unread-count');
   }

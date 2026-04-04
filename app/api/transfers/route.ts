@@ -1,18 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { AuthzError, requireProfile, requireRole } from '@/lib/server/authz';
+import { createAgentTransferOperation } from '@/lib/server/financial-operations';
 import type { Transfer, TransferFormData } from '@/types';
 import { generateTransferCode } from '@/lib/utils';
 
 const accountSid = process.env.TWILIO_ACCOUNT_SID;
 const authToken = process.env.TWILIO_AUTH_TOKEN;
 const twilioPhoneNumber = process.env.TWILIO_PHONE_NUMBER;
-
-function getClientIp(request: NextRequest): string | null {
-  const forwarded = request.headers.get('x-forwarded-for');
-  if (forwarded) return forwarded.split(',')[0]?.trim() || null;
-  return request.headers.get('x-real-ip');
-}
 
 function formatPhoneNumber(phone: string): string {
   const cleaned = phone.replace(/\D/g, '');
@@ -68,7 +63,7 @@ export async function GET(request: NextRequest) {
       const { data, error } = await adminClient
         .from('transfers')
         .select('*')
-        .eq('agent_id', profile.id)
+        .or(`agent_id.eq.${profile.id},paid_out_by.eq.${profile.id}`)
         .order('created_at', { ascending: false })
         .limit(limit);
       if (error) throw error;
@@ -136,96 +131,43 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Faltan campos requeridos' }, { status: 400 });
     }
 
-    const { data: balance, error: balanceError } = await adminClient
-      .from('agent_balances')
-      .select('balance')
-      .eq('agent_id', profile.id)
-      .single();
-
-    if (balanceError || !balance) {
-      return NextResponse.json({ success: false, error: 'No se encontró el saldo del gestor' }, { status: 400 });
-    }
-
-    if (Number(balance.balance) < Number(body.amount)) {
-      return NextResponse.json({ success: false, error: 'Saldo insuficiente para realizar la transferencia' }, { status: 400 });
-    }
-
     const transferCode = generateTransferCode();
-    const nowIso = new Date().toISOString();
-
-    const { data: transfer, error: transferError } = await adminClient
-      .from('transfers')
-      .insert({
-        transfer_code: transferCode,
-        transfer_type: 'agent',
-        agent_id: profile.id,
-        sender_name: body.sender_name,
-        sender_phone: body.sender_phone,
-        sender_document_type: body.sender_document_type,
-        sender_document_number: body.sender_document_number,
-        receiver_name: body.receiver_name,
-        receiver_phone: body.receiver_phone,
-        receiver_document_type: body.receiver_document_type,
-        receiver_document_number: body.receiver_document_number,
-        destination_city: body.destination_city,
-        destination_country: body.destination_country,
-        amount: body.amount,
-        currency: body.currency,
-        status: 'completed',
-        notes: body.notes,
-        completed_at: nowIso,
-      })
-      .select()
-      .single();
-
-    if (transferError || !transfer) {
-      return NextResponse.json({ success: false, error: transferError?.message || 'Error creando transferencia' }, { status: 500 });
-    }
-
-    const previousBalance = Number(balance.balance) || 0;
-    const newBalance = previousBalance - Number(body.amount);
-
-    await adminClient
-      .from('agent_balances')
-      .update({ balance: newBalance, updated_at: nowIso })
-      .eq('agent_id', profile.id);
-
-    await adminClient.from('balance_transactions').insert({
-      agent_id: profile.id,
-      type: 'transfer',
-      amount: -Number(body.amount),
-      previous_balance: previousBalance,
-      new_balance: newBalance,
-      reference_id: transfer.id,
-      reference_type: 'transfer',
-      description: `Transferencia: ${transferCode}`,
+    const { transfer } = await createAgentTransferOperation({
+      agentId: profile.id,
+      actorUserId: profile.id,
+      transferCode,
+      senderName: body.sender_name,
+      senderPhone: body.sender_phone,
+      senderDocumentType: body.sender_document_type,
+      senderDocumentNumber: body.sender_document_number,
+      receiverName: body.receiver_name,
+      receiverPhone: body.receiver_phone,
+      receiverDocumentType: body.receiver_document_type,
+      receiverDocumentNumber: body.receiver_document_number,
+      destinationCity: body.destination_city,
+      destinationCountry: body.destination_country,
+      amount: Number(body.amount),
+      currency: body.currency,
+      notes: body.notes,
     });
 
-    await adminClient.from('activity_logs').insert({
-      user_id: profile.id,
-      action: 'create_transfer',
-      entity_type: 'transfer',
-      entity_id: transfer.id,
-      metadata: { transfer_code: transferCode, amount: body.amount },
-      ip_address: getClientIp(request),
-      user_agent: request.headers.get('user-agent'),
-    });
+    const typedTransfer = transfer as Transfer;
 
     // Send SMS from the server (never from the browser).
-    const senderMessage = `FondosEG: Su transferencia de ${transfer.amount} ${transfer.currency} ha sido registrada correctamente.\n\nRemitente: ${transfer.sender_name}\nDestinatario: ${transfer.receiver_name}\nMonto: ${transfer.amount} ${transfer.currency}\nCódigo: ${transfer.transfer_code}\n\nGracias por confiar en FondosEG.`;
-    const receiverMessage = `FondosEG: Tiene una transferencia disponible de ${transfer.amount} ${transfer.currency} de ${transfer.sender_name}.\n\nCiudad: ${transfer.destination_city || 'N/A'}\nCódigo de retiro: ${transfer.transfer_code}\n\nAcuda a cualquier agente FondosEG para retirar su dinero.`;
+    const senderMessage = `FondosEG: Su transferencia de ${typedTransfer.amount} ${typedTransfer.currency} ha sido registrada correctamente.\n\nRemitente: ${typedTransfer.sender_name}\nDestinatario: ${typedTransfer.receiver_name}\nMonto: ${typedTransfer.amount} ${typedTransfer.currency}\nCódigo: ${typedTransfer.transfer_code}\n\nGracias por confiar en FondosEG.`;
+    const receiverMessage = `FondosEG: Tiene una transferencia disponible de ${typedTransfer.amount} ${typedTransfer.currency} de ${typedTransfer.sender_name}.\n\nCiudad: ${typedTransfer.destination_city || 'N/A'}\nCódigo de retiro: ${typedTransfer.transfer_code}\n\nAcuda a cualquier agente FondosEG para retirar su dinero.`;
 
     if (!accountSid || !authToken || !twilioPhoneNumber) {
       await Promise.all([
-        saveNotification(adminClient, transfer.id, transfer.sender_phone, 'SMS no enviado - Twilio no configurado', 'failed'),
-        saveNotification(adminClient, transfer.id, transfer.receiver_phone, 'SMS no enviado - Twilio no configurado', 'failed'),
+        saveNotification(adminClient, typedTransfer.id, typedTransfer.sender_phone, 'SMS no enviado - Twilio no configurado', 'failed'),
+        saveNotification(adminClient, typedTransfer.id, typedTransfer.receiver_phone, 'SMS no enviado - Twilio no configurado', 'failed'),
       ]);
     } else {
       const twilio = await import('twilio');
       const client = twilio.default(accountSid, authToken);
 
-      const formattedSenderPhone = formatPhoneNumber(transfer.sender_phone);
-      const formattedReceiverPhone = formatPhoneNumber(transfer.receiver_phone);
+      const formattedSenderPhone = formatPhoneNumber(typedTransfer.sender_phone);
+      const formattedReceiverPhone = formatPhoneNumber(typedTransfer.receiver_phone);
 
       let senderSid: string | null = null;
       let receiverSid: string | null = null;
@@ -257,16 +199,19 @@ export async function POST(request: NextRequest) {
       }
 
       await Promise.all([
-        saveNotification(adminClient, transfer.id, transfer.sender_phone, senderMessage, senderSid ? 'sent' : 'failed', senderSid || undefined, senderError || undefined),
-        saveNotification(adminClient, transfer.id, transfer.receiver_phone, receiverMessage, receiverSid ? 'sent' : 'failed', receiverSid || undefined, receiverError || undefined),
+        saveNotification(adminClient, typedTransfer.id, typedTransfer.sender_phone, senderMessage, senderSid ? 'sent' : 'failed', senderSid || undefined, senderError || undefined),
+        saveNotification(adminClient, typedTransfer.id, typedTransfer.receiver_phone, receiverMessage, receiverSid ? 'sent' : 'failed', receiverSid || undefined, receiverError || undefined),
       ]);
     }
 
-    return NextResponse.json({ success: true, transfer });
+    return NextResponse.json({ success: true, transfer: typedTransfer });
   } catch (err) {
     console.error('[POST /api/transfers]', err);
     if (err instanceof AuthzError) {
       return NextResponse.json({ success: false, error: err.message }, { status: err.status });
+    }
+    if (err instanceof Error && err.message) {
+      return NextResponse.json({ success: false, error: err.message }, { status: 400 });
     }
     return NextResponse.json({ success: false, error: 'Internal server error' }, { status: 500 });
   }

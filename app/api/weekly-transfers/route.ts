@@ -15,7 +15,7 @@ export async function GET() {
     const { data, error } = await adminClient
       .from('transfers')
       .select('created_at, amount')
-      .eq('status', 'completed')
+      .in('status', ['completed', 'paid_out'])
       .gte('created_at', startDate.toISOString())
       .order('created_at', { ascending: true });
 

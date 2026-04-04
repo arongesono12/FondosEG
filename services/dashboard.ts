@@ -4,6 +4,7 @@ import type {
   AgentTransferStats,
   Transfer,
   AgentsCommissionStats,
+  ReconciliationSummary,
 } from '@/types';
 import { fetchJSON } from '@/services/http';
 
@@ -25,4 +26,8 @@ export async function getRecentTransfers(limit: number = 10): Promise<Transfer[]
 
 export async function getAgentsCommissionStats(): Promise<AgentsCommissionStats> {
   return fetchJSON<AgentsCommissionStats>('/api/dashboard/agents-commission');
+}
+
+export async function getDashboardReconciliation(months: number = 6): Promise<ReconciliationSummary> {
+  return fetchJSON<ReconciliationSummary>(`/api/dashboard/reconciliation?months=${encodeURIComponent(String(months))}`);
 }

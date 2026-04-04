@@ -9,6 +9,7 @@ import { HttpError } from '@/services/http';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 import { 
   Dialog, 
   DialogContent, 
@@ -28,6 +29,7 @@ import {
 import { SupportModal } from '@/components/layout/support-modal';
 import { WalletTransferModal } from '@/components/wallet-transfer-modal';
 import { VerifyTransferModal } from '@/components/verify-transfer-modal';
+import { AgentPayoutModal } from '@/components/agent-payout-modal';
 import { AgentTransferModal } from '@/components/agent-transfer-modal';
 
 export default function TransfersPage() {
@@ -44,6 +46,7 @@ export default function TransfersPage() {
   const [walletTransferOpen, setWalletTransferOpen] = useState(false);
   const [verifyTransferOpen, setVerifyTransferOpen] = useState(false);
   const [agentTransferOpen, setAgentTransferOpen] = useState(false);
+  const [agentPayoutOpen, setAgentPayoutOpen] = useState(false);
   
   const displayCurrency = preferredCurrency || 'XAF';
 
@@ -102,11 +105,14 @@ export default function TransfersPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-[60vh]">
-        <div className="flex flex-col items-center gap-3">
-          <div className="h-8 w-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-          <span className="text-muted-foreground font-semibold">Cargando...</span>
+      <div className="space-y-6">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <Skeleton className="h-28" />
+          <Skeleton className="h-28" />
+          <Skeleton className="h-28" />
+          <Skeleton className="h-28" />
         </div>
+        <Skeleton className="h-72" />
       </div>
     );
   }
@@ -176,6 +182,24 @@ export default function TransfersPage() {
               <p className="text-xs text-blue-500 mt-1">Confirma transferencias recibidas</p>
               <Button variant="ghost" className="text-xs font-bold text-blue-600 mt-2 p-0 h-auto">
                 Ver pendientes <ArrowUpRight className="h-3 w-3 ml-1" />
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Card: Pagar Transferencia (Solo gestores) */}
+        {user?.role === 'gestor' && (
+          <Card className="bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800 rounded-3xl p-6 cursor-pointer hover:shadow-lg transition-all" onClick={() => setAgentPayoutOpen(true)}>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-2">
+                <QrCode className="h-4 w-4" /> Pagar transferencia
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-black text-emerald-600 dark:text-emerald-400">Código de retiro</p>
+              <p className="text-xs text-emerald-500 mt-1">Valida la transferencia y registra el pago</p>
+              <Button variant="ghost" className="text-xs font-bold text-emerald-600 mt-2 p-0 h-auto">
+                Ver disponibles <ArrowUpRight className="h-3 w-3 ml-1" />
               </Button>
             </CardContent>
           </Card>
@@ -400,7 +424,7 @@ export default function TransfersPage() {
         open={walletTransferOpen} 
         onOpenChange={setWalletTransferOpen}
         onSuccess={() => {
-          // Refresh data after successful transfer
+          refreshData();
         }}
       />
 
@@ -409,7 +433,16 @@ export default function TransfersPage() {
         open={verifyTransferOpen} 
         onOpenChange={setVerifyTransferOpen}
         onSuccess={() => {
-          // Refresh data after successful confirmation
+          refreshData();
+        }}
+      />
+
+      {/* Agent Payout Modal (para gestores) */}
+      <AgentPayoutModal
+        open={agentPayoutOpen}
+        onOpenChange={setAgentPayoutOpen}
+        onSuccess={() => {
+          refreshData();
         }}
       />
 

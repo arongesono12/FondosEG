@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
       let baseQuery = adminClient.from('transfers').select('*, agent:users!transfers_agent_id_fkey(name)');
 
       if (profile.role === 'gestor') {
-        baseQuery = baseQuery.eq('agent_id', profile.id);
+        baseQuery = baseQuery.or(`agent_id.eq.${profile.id},paid_out_by.eq.${profile.id}`);
       }
 
       const { data, error } = await baseQuery

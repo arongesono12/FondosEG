@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
         .from('transfers')
         .select('agent_id')
         .eq('sender_id', profile.id)
-        .eq('status', 'completed');
+        .in('status', ['completed', 'paid_out']);
       const allowedAgentIds = new Set((transfers || []).map((t: any) => t.agent_id).filter(Boolean));
       if (!targetUser || !allowedAgentIds.has(targetUser.id)) {
         return NextResponse.json({ error: 'Gestor no autorizado' }, { status: 403 });

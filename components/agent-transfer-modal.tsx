@@ -272,8 +272,8 @@ export function AgentTransferModal({ open, onOpenChange, onSuccess }: AgentTrans
               <div className="w-16 h-16 bg-green-100 dark:bg-green-900/20 rounded-full flex items-center justify-center mx-auto mb-4">
                 <CheckCircle2 className="h-8 w-8 text-green-600" />
               </div>
-              <p className="text-lg font-black text-foreground">¡Transferencia realizada!</p>
-              <p className="text-sm text-muted-foreground">El dinero ha sido enviado exitosamente</p>
+              <p className="text-lg font-black text-foreground">Transferencia registrada</p>
+              <p className="text-sm text-muted-foreground">El dinero queda disponible para retiro en otro gestor</p>
             </div>
           ) : (
             <>
