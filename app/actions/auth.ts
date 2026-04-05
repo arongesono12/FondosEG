@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/server';
 import { getAuthErrorMessage, isAuthServiceUnavailableError } from '@/lib/supabase/auth-errors';
 import type { RegisterFormData } from '@/types';
 import { isValidEmailDomain, isValidEmailFormat, validatePassword } from '@/lib/email-validation';
+import { generateAndSendOTP, verifyOTP } from '@/lib/server/otp-service';
 
 export async function signUpAction(data: RegisterFormData) {
   const adminClient = createAdminClient();
@@ -61,52 +62,28 @@ export async function signUpAction(data: RegisterFormData) {
   };
 }
 
+/**
+ * Send the initial OTP after registration.
+ * Calls the OTP service directly — no self-fetch HTTP round-trip.
+ */
 export async function sendVerificationEmail(userId: string, email: string, name: string) {
-  try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/otp`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId, email, name, action: 'initial' }),
-    });
-
-    const result = await response.json();
-    return result;
-  } catch (error) {
-    console.error('Error sending verification email:', error);
-    return { success: false, error: 'Error al enviar el correo de verificación' };
-  }
+  return generateAndSendOTP(userId, email, name, false);
 }
 
+/**
+ * Verify a submitted OTP code.
+ * Calls the OTP service directly — no self-fetch HTTP round-trip.
+ */
 export async function verifyEmailCode(userId: string, email: string, code: string) {
-  try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/otp`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId, email, code }),
-    });
-
-    const result = await response.json();
-    return result;
-  } catch (error) {
-    console.error('Error verifying code:', error);
-    return { success: false, error: 'Error al verificar el código' };
-  }
+  return verifyOTP(userId, email, code);
 }
 
+/**
+ * Resend an OTP (blocked while a valid code still exists).
+ * Calls the OTP service directly — no self-fetch HTTP round-trip.
+ */
 export async function resendVerificationEmail(userId: string, email: string, name: string) {
-  try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/otp`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId, email, name, action: 'resend' }),
-    });
-
-    const result = await response.json();
-    return result;
-  } catch (error) {
-    console.error('Error resending verification email:', error);
-    return { success: false, error: 'Error al reenviar el código' };
-  }
+  return generateAndSendOTP(userId, email, name, true);
 }
 
 export async function signInAction(email: string, password: string) {

@@ -1,8 +1,28 @@
 import { Resend } from 'resend';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// ---------------------------------------------------------------------------
+// Startup validation — fail loudly so misconfiguration is obvious in logs.
+// ---------------------------------------------------------------------------
+const RESEND_API_KEY = process.env.RESEND_API_KEY;
+const FROM_EMAIL     = process.env.RESEND_FROM_EMAIL;
 
-const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'FondosEG <noreply@FondosEG.com>';
+if (!RESEND_API_KEY) {
+  console.error(
+    '[email-service] RESEND_API_KEY is not set. ' +
+    'Emails will NOT be sent. Set it in .env.local'
+  );
+}
+
+if (!FROM_EMAIL) {
+  console.error(
+    '[email-service] RESEND_FROM_EMAIL is not set. ' +
+    'Emails will NOT be sent. ' +
+    'Set it to e.g. "FondosEG <noreply@fondoseg.com>" after verifying the domain in resend.com'
+  );
+}
+
+const resend        = new Resend(RESEND_API_KEY);
+const SENDER_EMAIL  = FROM_EMAIL ?? 'onboarding@resend.dev';
 
 export interface SendOTPEmailParams {
   to: string;
@@ -12,8 +32,12 @@ export interface SendOTPEmailParams {
 
 export async function sendOTPEmail({ to, name, code }: SendOTPEmailParams): Promise<{ success: boolean; error?: string }> {
   try {
+    if (!RESEND_API_KEY || !FROM_EMAIL) {
+      return { success: false, error: 'Servicio de email no configurado (ver logs del servidor)' };
+    }
+
     const { data, error } = await resend.emails.send({
-      from: FROM_EMAIL,
+      from: SENDER_EMAIL,
       to: [to],
       subject: 'Código de verificación - FondosEG',
       html: `
@@ -77,7 +101,7 @@ export async function sendOTPEmail({ to, name, code }: SendOTPEmailParams): Prom
     });
 
     if (error) {
-      console.error('Resend error:', error);
+      console.error('[email-service] Resend OTP error:', JSON.stringify(error));
       return { success: false, error: error.message };
     }
 
@@ -100,8 +124,12 @@ export async function sendWelcomeEmail({ to, name, role }: SendWelcomeEmailParam
   try {
     const roleText = role === 'gestor' ? 'Gestor' : 'Cliente';
     
+    if (!RESEND_API_KEY || !FROM_EMAIL) {
+      return { success: false, error: 'Servicio de email no configurado (ver logs del servidor)' };
+    }
+
     const { data, error } = await resend.emails.send({
-      from: FROM_EMAIL,
+      from: SENDER_EMAIL,
       to: [to],
       subject: '¡Bienvenido a FondosEG!',
       html: `
@@ -152,7 +180,7 @@ export async function sendWelcomeEmail({ to, name, role }: SendWelcomeEmailParam
     });
 
     if (error) {
-      console.error('Resend welcome email error:', error);
+      console.error('[email-service] Resend welcome email error:', JSON.stringify(error));
       return { success: false, error: error.message };
     }
 

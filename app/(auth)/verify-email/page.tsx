@@ -29,14 +29,16 @@ function VerifyEmailContent() {
 
   useEffect(() => {
     const uid = searchParams.get('userId');
-    const em = searchParams.get('email');
-    const nm = searchParams.get('name');
+    const em  = searchParams.get('email');
+    const nm  = searchParams.get('name');
     
     if (uid && em) {
       setUserId(uid);
       setEmail(em);
       setName(nm || 'Usuario');
-      sendOTP();
+      // Pass values directly — do NOT read from state here because setState is async.
+      // Reading `userId` / `email` from state at this point would return '' (stale closure).
+      sendOTP(uid, em, nm || 'Usuario');
     } else {
       setError('Parámetros de verificación inválidos');
       setLoading(false);
@@ -51,11 +53,12 @@ function VerifyEmailContent() {
     }
   }, [timeLeft]);
 
-  const sendOTP = async () => {
+  // Accept explicit params to avoid stale-closure bugs with React state.
+  const sendOTP = async (uid = userId, em = email, nm = name) => {
     setLoading(true);
     setError('');
     
-    const result = await sendVerificationEmail(userId, email, name);
+    const result = await sendVerificationEmail(uid, em, nm);
     
     if (result.success) {
       setTimeLeft(result.expiresIn || 900);
@@ -93,6 +96,7 @@ function VerifyEmailContent() {
     setError('');
     setAttempts(0);
 
+    // Use state values here — by this point they're already set from the initial effect.
     const result = await resendVerificationEmail(userId, email, name);
 
     if (result.success) {

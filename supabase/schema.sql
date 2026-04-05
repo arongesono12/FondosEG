@@ -18,6 +18,7 @@ CREATE TABLE public.users (
   country TEXT,
   city TEXT,
   is_active BOOLEAN DEFAULT true,
+  is_verified BOOLEAN DEFAULT false,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -147,6 +148,24 @@ CREATE INDEX idx_notifications_transfer_id ON public.notifications(transfer_id);
 CREATE INDEX idx_notifications_status ON public.notifications(status);
 
 -- ============================================
+-- EMAIL VERIFICATION TABLE
+-- ============================================
+CREATE TABLE public.email_verification (
+  id          UUID        PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id     UUID        NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  email       TEXT        NOT NULL,
+  code        TEXT        NOT NULL,
+  attempts    INTEGER     NOT NULL DEFAULT 0,
+  expires_at  TIMESTAMPTZ NOT NULL,
+  verified_at TIMESTAMPTZ,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX idx_email_verification_user_id ON public.email_verification(user_id);
+CREATE INDEX idx_email_verification_email ON public.email_verification(email);
+CREATE INDEX idx_email_verification_expires_at ON public.email_verification(expires_at);
+
+-- ============================================
 -- SETUP ROW LEVEL SECURITY (RLS)
 -- ============================================
 
@@ -157,6 +176,7 @@ ALTER TABLE public.transfers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.balance_transactions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.activity_logs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.email_verification ENABLE ROW LEVEL SECURITY;
 
 -- ============================================
 -- RLS POLICIES FOR USERS
@@ -339,6 +359,25 @@ CREATE POLICY "Users can read own notifications"
       WHERE t.id = transfer_id AND t.agent_id = auth.uid()
     )
     OR EXISTS (
+      SELECT 1 FROM public.users
+      WHERE id = auth.uid() AND role = 'admin'
+    )
+  );
+
+-- ============================================
+-- RLS POLICIES FOR EMAIL VERIFICATION
+-- ============================================
+
+-- Users read their own verifications
+CREATE POLICY "Users read own verifications"
+  ON public.email_verification FOR SELECT
+  USING (user_id = auth.uid());
+
+-- Admins read all verifications
+CREATE POLICY "Admins read all verifications"
+  ON public.email_verification FOR ALL
+  USING (
+    EXISTS (
       SELECT 1 FROM public.users
       WHERE id = auth.uid() AND role = 'admin'
     )

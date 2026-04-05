@@ -1,5 +1,6 @@
 import twilio from 'twilio';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { buildTransferNotificationMessages } from '@/lib/transfer-notification-messages';
 
 const accountSid = process.env.TWILIO_ACCOUNT_SID;
 const authToken = process.env.TWILIO_AUTH_TOKEN;
@@ -72,9 +73,13 @@ async function logNotification(phone: string, message: string, status: string, t
 }
 
 export async function sendTransferSMS(data: SMSData): Promise<void> {
-  const senderMessage = `FondosEG: Su transferencia de ${data.amount}${data.currency} ha sido registrada correctamente. Código: ${data.transferCode}`;
-  
-  const receiverMessage = `FondosEG: Tiene una transferencia disponible de ${data.amount}${data.currency} de ${data.senderName}. Código de retiro: ${data.transferCode}`;
+  const { senderMessage, receiverMessage } = buildTransferNotificationMessages({
+    transferCode: data.transferCode,
+    senderName: data.senderName,
+    receiverName: data.receiverName,
+    amount: data.amount,
+    currency: data.currency,
+  });
 
   await sendSMS(data.senderPhone, senderMessage);
   await sendSMS(data.receiverPhone, receiverMessage);

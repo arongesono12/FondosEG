@@ -1,4 +1,5 @@
 import { createAdminClient } from '@/lib/supabase/admin';
+import { buildTransferNotificationMessages } from '@/lib/transfer-notification-messages';
 
 const accountSid = process.env.TWILIO_ACCOUNT_SID;
 const authToken = process.env.TWILIO_AUTH_TOKEN;
@@ -86,10 +87,15 @@ export async function queueNotification(input: QueueNotificationInput): Promise<
 }
 
 export async function queueTransferNotifications(input: QueueTransferNotificationsInput): Promise<void> {
-  const senderMessage = `FondosEG: Su transferencia de ${input.amount} ${input.currency} ha sido registrada correctamente.\n\nCodigo: ${input.transferCode}\nDestinatario: ${input.receiverName}\nMonto: ${input.amount} ${input.currency}\n\nGracias por confiar en FondosEG.`;
-  const receiverMessage = input.creditedToWallet
-    ? `FondosEG: Ha recibido ${input.amount} ${input.currency} de ${input.senderName}.\n\nSu saldo ya esta disponible en la billetera del dashboard.\nCodigo de retiro: ${input.transferCode}\n\nPuede usar el saldo desde su cuenta o retirarlo en efectivo con un gestor FondosEG.`
-    : `FondosEG: Tiene una transferencia disponible de ${input.amount} ${input.currency} de ${input.senderName}.\n\nCodigo de retiro: ${input.transferCode}\nCiudad: ${input.destinationCity || 'N/A'}\n\nAcuda a un agente FondosEG para retirar su dinero.`;
+  const { senderMessage, receiverMessage } = buildTransferNotificationMessages({
+    transferCode: input.transferCode,
+    senderName: input.senderName,
+    receiverName: input.receiverName,
+    amount: input.amount,
+    currency: input.currency,
+    destinationCity: input.destinationCity,
+    creditedToWallet: input.creditedToWallet,
+  });
 
   await Promise.all([
     queueNotification({

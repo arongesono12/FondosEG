@@ -1,0 +1,4 @@
+components/layout/error-screen.tsx(24,11): error TS2322: Type '{ size: "lg"; className: string; iconClassName: string; }' is not assignable to type 'IntrinsicAttributes & DashboardLogoProps'.
+  Property 'iconClassName' does not exist on type 'IntrinsicAttributes & DashboardLogoProps'. Did you mean 'className'?
+components/layout/service-unavailable-screen.tsx(21,11): error TS2322: Type '{ size: "lg"; className: string; iconClassName: string; }' is not assignable to type 'IntrinsicAttributes & DashboardLogoProps'.
+  Property 'iconClassName' does not exist on type 'IntrinsicAttributes & DashboardLogoProps'. Did you mean 'className'?

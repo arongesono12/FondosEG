@@ -30,7 +30,7 @@ export default function RegisterPage() {
     phone: '',
     password: '',
     role: 'gestor' as UserRole,
-    document_type: 'dni',
+    document_type: 'dip',
     document_number: '',
     country: '',
     city: '',
@@ -347,7 +347,7 @@ export default function RegisterPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="bg-white dark:bg-[#1a1a1a] border border-border/50 dark:border-white/10 text-foreground dark:text-white">
-                    <SelectItem value="dni">DNI</SelectItem>
+                    <SelectItem value="dip">DIP</SelectItem>
                     <SelectItem value="nie">NIE</SelectItem>
                     <SelectItem value="pasaporte">Pasaporte</SelectItem>
                   </SelectContent>
