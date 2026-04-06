@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useAppStore } from '@/lib/store';
 import { createTransfer } from '@/services/transfer';
 import { formatCurrency } from '@/lib/utils';
+import { calculateCommission } from '@/lib/financial';
 import { 
   Dialog, 
   DialogContent, 
@@ -136,6 +137,9 @@ export function AgentTransferModal({ open, onOpenChange, onSuccess }: AgentTrans
   });
 
   const allCities = [...CITIES_CAMEROON, ...CITIES_EQUATORIAL_GUINEA].sort();
+  const parsedAmount = parseFloat(formData.amount);
+  const transferAmount = Number.isFinite(parsedAmount) ? parsedAmount : 0;
+  const estimatedCommission = transferAmount > 0 ? calculateCommission(transferAmount) : 0;
 
   useEffect(() => {
     async function loadBalance() {
@@ -524,6 +528,31 @@ export function AgentTransferModal({ open, onOpenChange, onSuccess }: AgentTrans
                       <p className="text-xs text-red-500 mt-1 font-semibold">Monto excede el saldo disponible</p>
                     )}
                   </div>
+                  {transferAmount > 0 && (
+                    <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 p-4">
+                      <div className="flex items-center justify-between gap-3">
+                        <div>
+                          <p className="text-[10px] font-bold uppercase tracking-wide text-emerald-700 dark:text-emerald-300">
+                            Comisión estimada
+                          </p>
+                          <p className="mt-1 text-lg font-bold text-foreground">
+                            {formatCurrency(estimatedCommission)}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                            Monto del envío
+                          </p>
+                          <p className="mt-1 text-sm font-bold text-foreground">
+                            {formatCurrency(transferAmount)}
+                          </p>
+                        </div>
+                      </div>
+                      <p className="mt-2 text-xs font-medium text-muted-foreground">
+                        Esta es la comisión que se generará para el gestor al registrar este envío.
+                      </p>
+                    </div>
+                  )}
                 </div>
 
                 {/* Notas */}
@@ -605,6 +634,12 @@ export function AgentTransferModal({ open, onOpenChange, onSuccess }: AgentTrans
                 <div className="flex justify-between items-center py-2 border-b border-border/10">
                   <span className="text-xs font-semibold text-muted-foreground">Monto</span>
                   <span className="text-lg font-semibold text-green-600">{formData.amount ? formatCurrency(parseFloat(formData.amount)) : ''}</span>
+                </div>
+                <div className="flex justify-between items-center py-2 border-b border-border/10">
+                  <span className="text-xs font-semibold text-muted-foreground">Comisión generada</span>
+                  <span className="text-base font-bold text-emerald-600">
+                    {formatCurrency(estimatedCommission)}
+                  </span>
                 </div>
                 {formData.notes && (
                   <div className="flex justify-between items-center py-2">

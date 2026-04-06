@@ -547,6 +547,14 @@ export function ComisionesModal({ open, onClose, userRole, stats, commissionStat
               <p className="text-[10px] font-black uppercase text-emerald-500">Hoy</p>
               <p className="text-xl font-black text-foreground">{fmt(commissionStats?.todayCommission || 0)}</p>
             </div>
+            <div className="p-4 rounded-2xl bg-sky-500/10 border border-sky-500/20">
+              <p className="text-[10px] font-black uppercase text-sky-500">Mes actual</p>
+              <p className="text-xl font-black text-foreground">{fmt(commissionStats?.monthCommission || 0)}</p>
+            </div>
+            <div className="p-4 rounded-2xl bg-violet-500/10 border border-violet-500/20">
+              <p className="text-[10px] font-black uppercase text-violet-500">Anual</p>
+              <p className="text-xl font-black text-foreground">{fmt(commissionStats?.yearCommission || 0)}</p>
+            </div>
           </div>
 
           <p className="text-[10px] font-black text-muted-foreground uppercase tracking-wide mb-2">Comisiones por gestor</p>
@@ -565,6 +573,7 @@ export function ComisionesModal({ open, onClose, userRole, stats, commissionStat
                 <div className="text-right">
                   <p className="text-sm font-black text-green-600">{fmt(agent.total_commission)}</p>
                   <p className="text-[10px] text-muted-foreground">hoy: {fmt(agent.today_commission)}</p>
+                  <p className="text-[10px] text-muted-foreground">mes: {fmt(agent.month_commission)} | anual: {fmt(agent.year_commission)}</p>
                 </div>
               </div>
             ))}
@@ -583,6 +592,16 @@ export function ComisionesModal({ open, onClose, userRole, stats, commissionStat
               <p className="text-[10px] font-black uppercase text-emerald-500">Comisión Hoy</p>
               <p className="text-2xl font-black text-foreground">{fmt(stats?.todayCommission || 0)}</p>
               <p className="text-[10px] text-muted-foreground mt-1">Ganado el día de hoy</p>
+            </div>
+            <div className="p-5 rounded-2xl bg-sky-500/10 border border-sky-500/20">
+              <p className="text-[10px] font-black uppercase text-sky-500">Mes actual</p>
+              <p className="text-2xl font-black text-foreground">{fmt(stats?.monthlyCommission || 0)}</p>
+              <p className="text-[10px] text-muted-foreground mt-1">ComisiÃ³n acumulada del mes en curso</p>
+            </div>
+            <div className="p-5 rounded-2xl bg-violet-500/10 border border-violet-500/20">
+              <p className="text-[10px] font-black uppercase text-violet-500">Anual</p>
+              <p className="text-2xl font-black text-foreground">{fmt(stats?.yearlyCommission || 0)}</p>
+              <p className="text-[10px] text-muted-foreground mt-1">Comision acumulada del ano en curso</p>
             </div>
             <div className="p-5 rounded-2xl bg-teal-500/10 border border-teal-500/20">
               <p className="text-[10px] font-black uppercase text-teal-500">Promedio por Envío</p>

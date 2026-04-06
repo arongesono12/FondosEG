@@ -27,6 +27,7 @@ export default function AgentsPage() {
   const [selectedAgent, setSelectedAgent] = useState<AgentWithBalance | null>(null);
   const [topUpAmount, setTopUpAmount] = useState('');
   const [creating, setCreating] = useState(false);
+  const [createError, setCreateError] = useState('');
   const [topUpLoading, setTopUpLoading] = useState(false);
   const [successOpen, setSuccessOpen] = useState(false);
   const [successAmount, setSuccessAmount] = useState(0);
@@ -62,6 +63,7 @@ export default function AgentsPage() {
   const handleCreateAgent = async (e: React.FormEvent) => {
     e.preventDefault();
     setCreating(true);
+    setCreateError('');
     try {
       const result = await createAgent({
         ...newAgent,
@@ -73,9 +75,12 @@ export default function AgentsPage() {
         await loadAgents();
         setIsCreateOpen(false);
         setNewAgent({ name: '', email: '', phone: '', password: '', document_type: 'dni', document_number: '' });
+      } else {
+        setCreateError(result.error || 'No se pudo crear el gestor');
       }
     } catch (error) {
       console.error('Error creating agent:', error);
+      setCreateError(error instanceof Error ? error.message : 'No se pudo crear el gestor');
     } finally {
       setCreating(false);
     }
@@ -177,7 +182,12 @@ export default function AgentsPage() {
             Administra los gestores del sistema
           </p>
         </div>
-        <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+        <Dialog open={isCreateOpen} onOpenChange={(open) => {
+          setIsCreateOpen(open);
+          if (!open) {
+            setCreateError('');
+          }
+        }}>
           <DialogTrigger asChild>
             <Button className="gap-2 bg-linear-to-r from-pink-500 to-rose-600 hover:from-pink-600 hover:to-rose-700 text-white shadow-lg shadow-pink-500/25">
               <Plus className="h-4 w-4" />
@@ -254,6 +264,9 @@ export default function AgentsPage() {
                   />
                 </div>
               </div>
+              {createError && (
+                <p className="text-sm font-semibold text-rose-500">{createError}</p>
+              )}
               <Button type="submit" className="w-full bg-linear-to-r from-pink-500 to-rose-600 hover:from-pink-600 hover:to-rose-700 text-white shadow-lg shadow-pink-500/25" disabled={creating}>
                 {creating ? 'Creando...' : 'Crear gestor'}
               </Button>

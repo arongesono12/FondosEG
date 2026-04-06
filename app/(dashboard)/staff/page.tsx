@@ -159,7 +159,7 @@ export default function StaffPage() {
       await loadData();
     } catch (err) {
       console.error('Error creating admin:', err);
-      setError('No se pudo crear el administrador');
+      setError(err instanceof Error ? err.message : 'No se pudo crear el administrador');
     } finally {
       setSubmitting(false);
     }
@@ -334,7 +334,12 @@ export default function StaffPage() {
           </p>
         </div>
 
-        <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+        <Dialog open={createOpen} onOpenChange={(open) => {
+          setCreateOpen(open);
+          if (!open) {
+            setError('');
+          }
+        }}>
           <DialogTrigger asChild>
             <Button className="rounded-2xl font-black">
               <UserPlus className="mr-2 h-4 w-4" />

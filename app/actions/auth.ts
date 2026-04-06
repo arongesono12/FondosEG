@@ -6,6 +6,7 @@ import { getAuthErrorMessage, isAuthServiceUnavailableError } from '@/lib/supaba
 import type { RegisterFormData } from '@/types';
 import { isValidEmailDomain, isValidEmailFormat, validatePassword } from '@/lib/email-validation';
 import { generateAndSendOTP, verifyOTP } from '@/lib/server/otp-service';
+import { provisionUserAccount } from '@/lib/server/user-provisioning';
 
 export async function signUpAction(data: RegisterFormData) {
   const adminClient = createAdminClient();
@@ -35,65 +36,22 @@ export async function signUpAction(data: RegisterFormData) {
     return { success: false, error: 'El correo electrónico ya está registrado' };
   }
 
-  const { data: authData, error } = await adminClient.auth.admin.createUser({
-    email: normalizedEmail,
-    password: data.password,
-    email_confirm: true,
-    user_metadata: {
+  let authUser;
+  try {
+    const provisionResult = await provisionUserAccount(adminClient, {
+      email: normalizedEmail,
+      password: data.password,
       name: data.name,
       phone: data.phone,
       role: data.role,
-      document_type: data.document_type,
-      document_number: data.document_number,
+      documentType: data.document_type,
+      documentNumber: data.document_number,
       country: data.country,
       city: data.city,
-    },
-  });
-
-  if (error) {
-    return { success: false, error: error.message };
-  }
-
-  const createdUserId = authData.user?.id;
-  if (createdUserId) {
-    // 1. Try to fetch existing profile (maybe trigger worked)
-    const { data: profile } = await adminClient
-      .from('users')
-      .select('id')
-      .eq('id', createdUserId)
-      .single();
-
-    if (!profile) {
-      console.log('Trigger handle_new_user likely failed or slow. Manually inserting profile for:', createdUserId);
-      const { error: insertError } = await adminClient
-        .from('users')
-        .insert({
-          id: createdUserId,
-          name: data.name,
-          email: normalizedEmail,
-          phone: data.phone,
-          role: data.role,
-          document_type: data.document_type || null,
-          document_number: data.document_number || null,
-          country: data.country || null,
-          city: data.city || null,
-          is_verified: true,
-        });
-
-      if (insertError) {
-        console.error('CRITICAL: Manual profile insertion failed:', insertError.message);
-      }
-    } else {
-      // 2. Profile exists, just ensure it is marked as verified
-      const { error: verifyError } = await adminClient
-        .from('users')
-        .update({ is_verified: true, updated_at: new Date().toISOString() })
-        .eq('id', createdUserId);
-
-      if (verifyError) {
-        console.warn('Unable to mark new user as verified:', verifyError.message);
-      }
-    }
+    });
+    authUser = provisionResult.user;
+  } catch (error) {
+    return { success: false, error: getAuthErrorMessage(error) };
   }
 
   const supabase = await createClient();
@@ -112,7 +70,7 @@ export async function signUpAction(data: RegisterFormData) {
 
   return { 
     success: true, 
-    user: authData.user,
+    user: authUser,
     session: sessionData.session,
     email: normalizedEmail,
     name: data.name,

@@ -144,6 +144,8 @@ export interface AgentCommissionStat {
   agent_name: string;
   total_commission: number;
   today_commission: number;
+  month_commission: number;
+  year_commission: number;
   transfer_count: number;
   estimated_cost: number;
   net_profit: number;
@@ -154,6 +156,8 @@ export interface AgentsCommissionStats {
   agents: AgentCommissionStat[];
   totalCommission: number;
   todayCommission: number;
+  monthCommission: number;
+  yearCommission: number;
   totalEstimatedCost: number;
   totalNetProfit: number;
   averageNetMargin: number;
@@ -228,6 +232,8 @@ export interface DashboardStats {
   balancesByCurrency?: Record<string, number>;
   totalCommission: number;
   todayCommission: number;
+  monthlyCommission?: number;
+  yearlyCommission?: number;
   commissionPerTransfer: number;
   averageTicket?: number;
   todayVolume?: number;

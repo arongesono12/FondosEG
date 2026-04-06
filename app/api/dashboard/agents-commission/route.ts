@@ -21,6 +21,14 @@ export async function GET() {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
+    const monthStart = new Date();
+    monthStart.setDate(1);
+    monthStart.setHours(0, 0, 0, 0);
+
+    const yearStart = new Date();
+    yearStart.setMonth(0, 1);
+    yearStart.setHours(0, 0, 0, 0);
+
     const agentMap = new Map<
       string,
       {
@@ -28,6 +36,8 @@ export async function GET() {
         agent_name: string;
         total_commission: number;
         today_commission: number;
+        month_commission: number;
+        year_commission: number;
         transfer_count: number;
       }
     >();
@@ -37,6 +47,8 @@ export async function GET() {
       const agentId = transfer.agent_id;
       const commission = Number(transfer.commission_amount ?? calculateCommission(Number(transfer.amount)));
       const isToday = new Date(transfer.created_at) >= today;
+      const isCurrentMonth = new Date(transfer.created_at) >= monthStart;
+      const isCurrentYear = new Date(transfer.created_at) >= yearStart;
       const agentName = transfer?.users?.name || 'Unknown';
 
       const existing = agentMap.get(agentId);
@@ -44,12 +56,16 @@ export async function GET() {
         existing.total_commission += commission;
         existing.transfer_count += 1;
         if (isToday) existing.today_commission += commission;
+        if (isCurrentMonth) existing.month_commission += commission;
+        if (isCurrentYear) existing.year_commission += commission;
       } else {
         agentMap.set(agentId, {
           agent_id: agentId,
           agent_name: agentName,
           total_commission: commission,
           today_commission: isToday ? commission : 0,
+          month_commission: isCurrentMonth ? commission : 0,
+          year_commission: isCurrentYear ? commission : 0,
           transfer_count: 1,
         });
       }
@@ -69,11 +85,13 @@ export async function GET() {
 
     const totalCommission = agents.reduce((sum, a) => sum + a.total_commission, 0);
     const todayCommission = agents.reduce((sum, a) => sum + a.today_commission, 0);
+    const monthCommission = agents.reduce((sum, a) => sum + a.month_commission, 0);
+    const yearCommission = agents.reduce((sum, a) => sum + a.year_commission, 0);
     const totalEstimatedCost = agents.reduce((sum, a) => sum + a.estimated_cost, 0);
     const totalNetProfit = agents.reduce((sum, a) => sum + a.net_profit, 0);
     const averageNetMargin = totalCommission > 0 ? Math.round((totalNetProfit / totalCommission) * 100) : 0;
 
-    return NextResponse.json({ agents, totalCommission, todayCommission, totalEstimatedCost, totalNetProfit, averageNetMargin });
+    return NextResponse.json({ agents, totalCommission, todayCommission, monthCommission, yearCommission, totalEstimatedCost, totalNetProfit, averageNetMargin });
   } catch (err) {
     return handleRouteError(err, 'GET /api/dashboard/agents-commission');
   }

@@ -12,13 +12,17 @@ export async function updateProfileAction(formData: FormData) {
   const phone = formData.get('phone') as string;
   const userId = formData.get('userId') as string;
 
+  if (!name?.trim() || !userId) {
+    return { success: false, error: 'Completa los datos requeridos para guardar el perfil.' };
+  }
+
   const { error } = await supabase
     .from('users')
-    .update({ name, phone })
+    .update({ name: name.trim(), phone: phone?.trim() || null, updated_at: new Date().toISOString() })
     .eq('id', userId);
 
   if (error) {
-    return { success: false, error: error.message };
+    return { success: false, error: 'No se pudo guardar el perfil.' };
   }
 
   revalidatePath('/profile');
@@ -61,7 +65,7 @@ export async function uploadAvatarAction(formData: FormData) {
     .upload(filePath, file);
 
   if (uploadError) {
-    return { success: false, error: uploadError.message };
+    return { success: false, error: 'No se pudo subir el avatar.' };
   }
 
   // Get public URL
@@ -72,11 +76,11 @@ export async function uploadAvatarAction(formData: FormData) {
   // Update user record with new avatar URL
   const { error: updateError } = await supabase
     .from('users')
-    .update({ avatar_url: publicUrl })
+    .update({ avatar_url: publicUrl, updated_at: new Date().toISOString() })
     .eq('id', userId);
 
   if (updateError) {
-    return { success: false, error: updateError.message };
+    return { success: false, error: 'No se pudo guardar el avatar en el perfil.' };
   }
 
   revalidatePath('/profile');
