@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { AuthzError, requireAuthUser } from '@/lib/server/authz';
 import { createAdminClient } from '@/lib/supabase/admin';
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const user = await requireAuthUser();
 
@@ -19,13 +19,15 @@ export async function GET(request: NextRequest) {
     }
 
     const agentMap = new Map();
-    (transfers || []).forEach((t: any) => {
+    interface Agent { id: string; name: string; phone: string; email: string }
+    
+    (transfers as unknown as { agent: Agent }[] || []).forEach((t) => {
       if (t.agent && !agentMap.has(t.agent.id)) {
         agentMap.set(t.agent.id, t.agent);
       }
     });
 
-    const agents = Array.from(agentMap.values()).map((agent: any) => ({
+    const agents = Array.from(agentMap.values()).map((agent: any /* eslint-disable-line @typescript-eslint/no-explicit-any */) => ({
       id: agent.id,
       name: agent.name,
       phone: agent.phone,
@@ -33,11 +35,13 @@ export async function GET(request: NextRequest) {
     }));
 
     return NextResponse.json(agents);
-  } catch (error) {
-    console.error('Gestors API error:', error);
-    if (error instanceof AuthzError) {
-      return NextResponse.json({ error: error.message }, { status: error.status });
+  } catch (err) {
+    console.error('Gestors API error:', err);
+    if (err instanceof AuthzError) {
+      return NextResponse.json({ error: err.message }, { status: err.status });
     }
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
+
+

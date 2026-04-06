@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
       .eq('is_read', false);
     if (notifError) throw notifError;
 
-    const ids = (notifications || []).map((n: any) => n.id);
+    const ids = (notifications as unknown as { id: string }[] || []).map((n) => n.id);
     if (ids.length === 0) return NextResponse.json({ success: true });
 
     const { error } = await adminClient

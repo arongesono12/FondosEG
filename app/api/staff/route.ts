@@ -28,7 +28,7 @@ export async function GET() {
           .in('user_id', staffIds)
           .order('created_at', { ascending: false })
           .limit(500)
-      : { data: [], error: null };
+      : { data: [] };
 
     const activitySummary = new Map<string, { count: number; lastActionAt?: string; lastAction?: string }>();
     for (const log of activity || []) {

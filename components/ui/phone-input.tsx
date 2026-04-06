@@ -2,8 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { COUNTRIES } from '@/lib/countries';
-import { ChevronDown, Search, X } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { ChevronDown, Search } from 'lucide-react';
 
 interface PhoneInputProps {
   value: string;
@@ -49,7 +48,7 @@ export function PhoneInput({ value, onChange, placeholder = 'Número de teléfon
   };
 
   const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let number = e.target.value.replace(/[^\d\s]/g, '');
+    const number = e.target.value.replace(/[^\d\s]/g, '');
     onChange(`${currentPrefix} ${number}`.trim());
   };
 

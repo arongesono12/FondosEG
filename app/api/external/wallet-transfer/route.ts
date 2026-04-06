@@ -94,8 +94,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const senderBalance = sender.client_balances?.find((b: any) => b.currency === currency);
-    const currentBalance = senderBalance?.balance || 0;
+    const senderBalance = (
+      sender.client_balances as { id: string; currency: string; balance: number }[] | undefined
+    )?.find((b) => b.currency === currency);
+
+    if (!senderBalance) {
+      return NextResponse.json(
+        { error: 'Saldo insuficiente', current_balance: 0 },
+        { status: 400 }
+      );
+    }
+
+    const currentBalance = senderBalance.balance;
 
     if (currentBalance < amount) {
       return NextResponse.json(
@@ -198,3 +208,4 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+

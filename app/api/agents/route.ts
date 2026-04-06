@@ -23,7 +23,7 @@ export async function GET() {
 
     if (error) throw error;
 
-    const agentIds = (data || []).map((user: any) => user.id);
+    const agentIds = (data as { id: string }[] || []).map((user) => user.id);
     const topupMap = new Map<string, { total: number; lastTopup?: string }>();
     if (agentIds.length > 0) {
       const { data: topups, error: topupError } = await adminClient
@@ -33,7 +33,7 @@ export async function GET() {
         .eq('type', 'topup');
       if (topupError) throw topupError;
 
-      (topups || []).forEach((row: any) => {
+      (topups as { agent_id: string; amount: number; created_at: string }[] || []).forEach((row) => {
         const agentId = row.agent_id as string;
         const amount = Number(row.amount || 0);
         const existing = topupMap.get(agentId);
@@ -48,7 +48,7 @@ export async function GET() {
       });
     }
 
-    const result: AgentWithBalance[] = (data || []).map((user: any) => {
+    const result: AgentWithBalance[] = (data as any[] || []).map((user: any) => {
       const balanceRecord = user.agent_balances;
       let balance = 0;
       let cashBalance = 0;

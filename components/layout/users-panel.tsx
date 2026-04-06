@@ -16,7 +16,6 @@ import {
   Loader2,
   RefreshCw,
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 
 interface UserPresence {
   id: string;
@@ -37,28 +36,6 @@ interface UserPresence {
 interface UsersPanelProps {
   open: boolean;
   onClose: () => void;
-}
-
-function parseUserAgent(ua: string): { device: UserPresence['device']; browser: string; os: string } {
-  const isMobile = /Mobile|Android|iPhone|iPad/i.test(ua);
-  const isTablet = /iPad|Tablet/i.test(ua);
-  const device: UserPresence['device'] = isTablet ? 'tablet' : isMobile ? 'mobile' : 'desktop';
-
-  let browser = 'Desconocido';
-  if (/Edg\//i.test(ua)) browser = 'Edge';
-  else if (/Chrome\//i.test(ua) && !/Chromium/i.test(ua)) browser = 'Chrome';
-  else if (/Firefox\//i.test(ua)) browser = 'Firefox';
-  else if (/Safari\//i.test(ua) && !/Chrome/i.test(ua)) browser = 'Safari';
-  else if (/OPR\//i.test(ua)) browser = 'Opera';
-
-  let os = 'Desconocido';
-  if (/Windows/i.test(ua)) os = 'Windows';
-  else if (/Mac OS/i.test(ua)) os = 'macOS';
-  else if (/Android/i.test(ua)) os = 'Android';
-  else if (/iPhone|iPad/i.test(ua)) os = 'iOS';
-  else if (/Linux/i.test(ua)) os = 'Linux';
-
-  return { device, browser, os };
 }
 
 function timeAgo(dateStr: string): string {
@@ -282,3 +259,4 @@ export function UsersPanel({ open, onClose }: UsersPanelProps) {
     </>
   );
 }
+

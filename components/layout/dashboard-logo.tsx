@@ -6,6 +6,7 @@ type DashboardLogoSize = 'sm' | 'md' | 'lg' | 'xl';
 
 interface DashboardLogoProps {
   className?: string;
+  iconClassName?: string;
   labelClassName?: string;
   priority?: boolean;
   showLabel?: boolean;
@@ -28,6 +29,7 @@ const labelSizeClasses: Record<DashboardLogoSize, string> = {
 
 export function DashboardLogo({
   className,
+  iconClassName,
   labelClassName,
   priority = false,
   showLabel = true,
@@ -35,7 +37,7 @@ export function DashboardLogo({
 }: DashboardLogoProps) {
   return (
     <div className={cn('flex items-center gap-1.5', className)}>
-      <div className={cn('relative flex items-center justify-center', iconSizeClasses[size])}>
+      <div className={cn('relative flex items-center justify-center', iconSizeClasses[size], iconClassName)}>
         <div className="relative w-full h-full">
           <Image
             src="/logo fondosEG/FondosEG-logo.png"

@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       data: {
-        transfer_id: (transfer as any).id,
+        transfer_id: (transfer as { id: string }).id,
         transfer_code: transferCode,
         amount,
         currency,
@@ -80,7 +80,7 @@ export async function POST(request: NextRequest) {
         receiver_phone,
         destination_city,
         status: 'available_for_pickup',
-        created_at: (transfer as any).created_at,
+        created_at: (transfer as { created_at: string }).created_at,
       },
     });
 
@@ -98,3 +98,4 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+

@@ -35,7 +35,8 @@ export async function GET() {
       });
     }
 
-    (data || []).forEach((t: any) => {
+    interface Transfer { created_at: string; amount: number }
+    (data as Transfer[] || []).forEach((t) => {
       const day = new Date(t.created_at).toISOString().split('T')[0];
       const bucket = result.find((r) => r.date === day);
       if (bucket) {

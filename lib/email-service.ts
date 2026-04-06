@@ -194,7 +194,7 @@ export async function sendWelcomeEmail({ to, name, role }: SendWelcomeEmailParam
       return { success: false, error: configError };
     }
 
-    const { data, error } = await resend.emails.send({
+    const { error } = await resend.emails.send({
       from: SENDER_EMAIL,
       to: [to],
       subject: '¡Bienvenido a FondosEG!',

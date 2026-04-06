@@ -55,15 +55,31 @@ export async function GET(request: NextRequest) {
       .order('created_at', { ascending: false })
       .limit(limit);
 
-    const mappedWallet: Transfer[] = (walletTransfers || []).map((t: any) => ({
-      id: t.id,
+    interface WalletRecord { 
+      id: string | number; 
+      sender_id: string; 
+      sender_name: string; 
+      sender_phone: string; 
+      receiver_name: string; 
+      receiver_phone: string; 
+      amount: number; 
+      currency: string; 
+      status: string; 
+      notes?: string; 
+      created_at: string; 
+      confirmed_at?: string; 
+      cancelled_at?: string; 
+    }
+
+    const mappedWallet: Transfer[] = (walletTransfers as unknown as WalletRecord[] || []).map((t) => ({
+      id: String(t.id),
       transfer_code: `WT-${String(t.id).slice(0, 8)}`,
       transfer_type: 'client',
       sender_id: t.sender_id,
-      sender_name: t.sender_name,
-      sender_phone: t.sender_phone,
-      receiver_name: t.receiver_name,
-      receiver_phone: t.receiver_phone,
+      sender_name: t.sender_name || 'Desconocido',
+      sender_phone: t.sender_phone || '',
+      receiver_name: t.receiver_name || 'Desconocido',
+      receiver_phone: t.receiver_phone || '',
       destination_city: 'Billetera',
       destination_country: '',
       amount: Number(t.amount),

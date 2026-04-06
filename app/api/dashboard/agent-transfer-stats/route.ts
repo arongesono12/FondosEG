@@ -19,7 +19,8 @@ export async function GET() {
     if (error) throw error;
 
     const agentMap = new Map<string, AgentTransferStats>();
-    (data || []).forEach((transfer: any) => {
+    interface TInfo { agent_id: string; amount: number; created_at: string; users?: { name: string } }
+    (data as unknown as TInfo[] || []).forEach((transfer) => {
       const existing = agentMap.get(transfer.agent_id);
       const agentName = transfer?.users?.name || 'Unknown';
       if (existing) {
@@ -45,3 +46,4 @@ export async function GET() {
     return handleRouteError(err, 'GET /api/dashboard/agent-transfer-stats');
   }
 }
+

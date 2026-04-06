@@ -32,7 +32,8 @@ export async function GET() {
       }
     >();
 
-    (transfers || []).forEach((transfer: any) => {
+    interface TComm { agent_id: string; amount: number; commission_amount?: number; created_at: string; users?: { name: string } }
+    (transfers as unknown as TComm[] || []).forEach((transfer) => {
       const agentId = transfer.agent_id;
       const commission = Number(transfer.commission_amount ?? calculateCommission(Number(transfer.amount)));
       const isToday = new Date(transfer.created_at) >= today;
@@ -77,3 +78,4 @@ export async function GET() {
     return handleRouteError(err, 'GET /api/dashboard/agents-commission');
   }
 }
+

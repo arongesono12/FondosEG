@@ -57,10 +57,7 @@ export async function POST(request: NextRequest) {
     const { 
       userId, 
       userPhone,
-      userName, 
-      userEmail, 
       message, 
-      type, 
       transferId,
       isAdminNotification,
       priority 

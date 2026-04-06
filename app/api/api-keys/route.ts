@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { AuthzError, requireAuthUser } from '@/lib/server/authz';
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const user = await requireAuthUser();
 
@@ -146,3 +146,4 @@ export async function DELETE(request: NextRequest) {
     );
   }
 }
+

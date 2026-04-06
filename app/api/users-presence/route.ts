@@ -68,7 +68,8 @@ export async function GET() {
 
     // Build a map of most recent log per user
     const latestLogByUser = new Map<string, { created_at: string; user_agent?: string; ip_address?: string }>();
-    (logsData || []).forEach((log: any) => {
+    interface ActivityLog { user_id: string; created_at: string; user_agent?: string; ip_address?: string }
+    (logsData as ActivityLog[] || []).forEach((log) => {
       if (!latestLogByUser.has(log.user_id)) {
         latestLogByUser.set(log.user_id, {
           created_at: log.created_at,
@@ -78,7 +79,8 @@ export async function GET() {
       }
     });
 
-    const result: UserPresence[] = (usersData || []).map((u: any) => {
+    interface PublicUser { id: string; name: string; email: string; role: string; avatar_url?: string; is_active: boolean }
+    const result: UserPresence[] = (usersData as PublicUser[] || []).map((u) => {
       const log = latestLogByUser.get(u.id);
       const isOnline = log ? new Date(log.created_at) >= new Date(onlineThreshold) : false;
       const ua = log?.user_agent || '';
