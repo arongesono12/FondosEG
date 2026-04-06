@@ -21,6 +21,8 @@ import {
 } from "@/components/ui/dialog";
 import { PhoneInput } from '@/components/ui/phone-input';
 import { isValidEmailDomain, isValidEmailFormat, validatePassword } from '@/lib/email-validation';
+import { REGISTER_COUNTRIES } from '@/lib/countries';
+import { getRoleLabel } from '@/lib/roles';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -42,6 +44,8 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [registeredName, setRegisteredName] = useState('');
+  const [registeredRole, setRegisteredRole] = useState<UserRole>('gestor');
 
   const validateField = (field: string, value: string) => {
     switch (field) {
@@ -154,6 +158,11 @@ export default function RegisterPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
+    if (!formData.country) {
+      setError('Selecciona un país para continuar');
+      return;
+    }
     
     if (emailError || passwordError) {
       setError('Por favor, corrige los errores antes de continuar');
@@ -164,9 +173,9 @@ export default function RegisterPage() {
 
     const result = await signUpAction(formData);
     
-    if (result.success && result.requiresVerification) {
-      router.push(`/verify-email?userId=${result.user?.id}&email=${encodeURIComponent(result.email || '')}&name=${encodeURIComponent(result.name || '')}`);
-    } else if (result.success) {
+    if (result.success) {
+      setRegisteredName(result.name || formData.name);
+      setRegisteredRole((result.role as UserRole) || formData.role);
       setShowSuccessModal(true);
     } else {
       setError(result.error || 'Error al registrar usuario');
@@ -376,19 +385,27 @@ export default function RegisterPage() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="country" className="text-foreground/80 dark:text-white/80">País</Label>
-                <Input
-                  id="country"
-                  placeholder="Su país"
-                  className="bg-white dark:bg-[#1a1a1a] border border-border/50 dark:border-white/10 focus:ring-2 focus:ring-pink-500/50 focus:border-primary/50 dark:focus:border-white/20 transition-all h-11 px-4 rounded-xl text-foreground dark:text-white placeholder:text-muted-foreground dark:placeholder:text-white/50"
+                <Select
                   value={formData.country}
-                  onChange={(e) => setFormData({ ...formData, country: e.target.value })}
-                />
+                  onValueChange={(value) => setFormData({ ...formData, country: value })}
+                >
+                  <SelectTrigger className="bg-white dark:bg-[#1a1a1a] border border-border/50 dark:border-white/10 focus:ring-2 focus:ring-pink-500/50 focus:border-primary/50 dark:focus:border-white/20 transition-all h-11 px-4 rounded-xl text-foreground dark:text-white">
+                    <SelectValue placeholder="Selecciona un país" />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-72 bg-white dark:bg-[#1a1a1a] border border-border/50 dark:border-white/10 text-foreground dark:text-white">
+                    {REGISTER_COUNTRIES.map((country) => (
+                      <SelectItem key={country} value={country}>
+                        {country}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="city" className="text-foreground/80 dark:text-white/80">Ciudad</Label>
                 <Input
                   id="city"
-                  placeholder="Su ciudadd"
+                  placeholder="Su ciudad"
                   className="bg-white dark:bg-[#1a1a1a] border border-border/50 dark:border-white/10 focus:ring-2 focus:ring-pink-500/50 focus:border-primary/50 dark:focus:border-white/20 transition-all h-11 px-4 rounded-xl text-foreground dark:text-white placeholder:text-muted-foreground dark:placeholder:text-white/50"
                   value={formData.city}
                   onChange={(e) => setFormData({ ...formData, city: e.target.value })}
@@ -417,18 +434,18 @@ export default function RegisterPage() {
               <CheckCircle2 className="h-16 w-16" />
             </div>
             <DialogTitle className="text-2xl font-bold dark:text-white">
-              ¡Registro Completado!
+              ¡Bienvenido a FondosEG!
             </DialogTitle>
             <DialogDescription className="text-muted-foreground text-lg">
-              Tu cuenta ha sido creada exitosamente. Ya puedes iniciar sesión.
+              {registeredName || 'Tu cuenta'} ya está lista. Entrarás al dashboard como {getRoleLabel(registeredRole).toLowerCase()}.
             </DialogDescription>
           </DialogHeader>
           <div className="mt-6">
             <Button 
-              onClick={() => router.push('/login')}
+              onClick={() => router.push('/dashboard')}
               className="w-full h-12 rounded-xl text-base font-semibold bg-linear-to-r from-pink-500 to-rose-600 hover:from-pink-600 hover:to-rose-700 text-white shadow-lg transition-all"
             >
-              Ir al inicio de sesión
+              Ir al dashboard
             </Button>
           </div>
         </DialogContent>

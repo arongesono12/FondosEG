@@ -121,6 +121,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: error.message }, { status: 400 });
     }
 
+    await adminClient.from('activity_logs').insert({
+      user_id: profile.id,
+      action: 'create_agent',
+      entity_type: 'user',
+      entity_id: authData.user?.id ?? null,
+      metadata: {
+        created_role: 'gestor',
+        email: body.email,
+        phone: body.phone,
+      },
+    });
+
     return NextResponse.json({ success: true, user: authData.user });
   } catch (err) {
     console.error('[POST /api/agents]', err);

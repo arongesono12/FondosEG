@@ -5,14 +5,17 @@ import { useAppStore } from '@/lib/store';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Skeleton } from '@/components/ui/skeleton';
-import { getAllTransfers, getTransfers } from '@/services/transfer';
+import { correctTransfer, getAllTransfers, getTransfers } from '@/services/transfer';
 import { formatCurrency, formatDate, getStatusColor, getStatusText } from '@/lib/utils';
 import type { Transfer } from '@/types';
-import { Download, History, Search, TrendingUp, Wallet, XCircle } from 'lucide-react';
+import { Download, History, PencilLine, Search, TrendingUp, Wallet, XCircle } from 'lucide-react';
 import * as XLSX from 'xlsx';
+import { isAdminRole } from '@/lib/roles';
 
 type StatusFilter = 'all' | 'completed' | 'created' | 'available_for_pickup' | 'cancelled';
 
@@ -53,11 +56,24 @@ export default function HistoryPage() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  const [editingTransfer, setEditingTransfer] = useState<Transfer | null>(null);
+  const [correctionError, setCorrectionError] = useState('');
+  const [correcting, setCorrecting] = useState(false);
+  const [correctionForm, setCorrectionForm] = useState({
+    sender_name: '',
+    sender_phone: '',
+    receiver_name: '',
+    receiver_phone: '',
+    destination_city: '',
+    destination_country: '',
+    amount: '',
+    notes: '',
+  });
 
   useEffect(() => {
     async function loadTransfers() {
       try {
-        const data = user?.role === 'admin' ? await getAllTransfers(150) : await getTransfers(150);
+        const data = isAdminRole(user?.role) ? await getAllTransfers(150) : await getTransfers(150);
         setTransfers(data);
       } catch (error) {
         console.error('Error loading transfers:', error);
@@ -91,6 +107,69 @@ export default function HistoryPage() {
   const cancelledTransfers = transfers.filter((transfer) => transfer.status === 'cancelled');
   const totalVolume = completedTransfers.reduce((sum, transfer) => sum + transfer.amount, 0);
   const averageTicket = completedTransfers.length ? totalVolume / completedTransfers.length : 0;
+  const showAdminActions = isAdminRole(user?.role);
+
+  const canCorrectTransfer = (transfer: Transfer) =>
+    showAdminActions &&
+    transfer.transfer_type !== 'client' &&
+    ['created', 'available_for_pickup'].includes(transfer.status);
+
+  const openCorrectionModal = (transfer: Transfer) => {
+    setEditingTransfer(transfer);
+    setCorrectionError('');
+    setCorrectionForm({
+      sender_name: transfer.sender_name || '',
+      sender_phone: transfer.sender_phone || '',
+      receiver_name: transfer.receiver_name || '',
+      receiver_phone: transfer.receiver_phone || '',
+      destination_city: transfer.destination_city || '',
+      destination_country: transfer.destination_country || '',
+      amount: String(transfer.amount || ''),
+      notes: transfer.notes || '',
+    });
+  };
+
+  const handleCorrectionSubmit = async () => {
+    if (!editingTransfer) return;
+
+    const amount = Number(correctionForm.amount);
+    if (!Number.isFinite(amount) || amount <= 0) {
+      setCorrectionError('El monto corregido debe ser mayor que cero');
+      return;
+    }
+
+    setCorrecting(true);
+    setCorrectionError('');
+
+    try {
+      const result = await correctTransfer(editingTransfer.id, {
+        sender_name: correctionForm.sender_name,
+        sender_phone: correctionForm.sender_phone,
+        receiver_name: correctionForm.receiver_name,
+        receiver_phone: correctionForm.receiver_phone,
+        destination_city: correctionForm.destination_city,
+        destination_country: correctionForm.destination_country,
+        amount,
+        currency: editingTransfer.currency,
+        notes: correctionForm.notes,
+      });
+
+      if (!result.success || !result.transfer) {
+        setCorrectionError(result.error || 'No se pudo corregir la transferencia');
+        return;
+      }
+
+      setTransfers((current) =>
+        current.map((transfer) => (transfer.id === editingTransfer.id ? { ...transfer, ...result.transfer } : transfer))
+      );
+      setEditingTransfer(null);
+    } catch (error) {
+      console.error('Error correcting transfer:', error);
+      setCorrectionError(error instanceof Error ? error.message : 'No se pudo corregir la transferencia');
+    } finally {
+      setCorrecting(false);
+    }
+  };
 
   const exportToExcel = () => {
     const worksheet = XLSX.utils.json_to_sheet(
@@ -136,7 +215,7 @@ export default function HistoryPage() {
             </Badge>
             <h1 className="mt-4 text-3xl font-black tracking-tight text-foreground md:text-4xl">Trazabilidad completa de transferencias</h1>
             <p className="mt-3 max-w-2xl text-sm font-semibold leading-6 text-muted-foreground">
-              {user?.role === 'admin'
+              {isAdminRole(user?.role)
                 ? 'Consulta el registro consolidado de la red, filtra por estado y exporta la operación en formato de control.'
                 : 'Revisa tu histórico de operaciones con búsqueda rápida, filtros por estado y exportación.'}
             </p>
@@ -207,13 +286,16 @@ export default function HistoryPage() {
                   <TableHead className="py-4 text-[10px] font-black uppercase tracking-[0.18em] text-muted-foreground">Destino</TableHead>
                   <TableHead className="py-4 text-[10px] font-black uppercase tracking-[0.18em] text-muted-foreground text-right">Monto</TableHead>
                   <TableHead className="py-4 text-[10px] font-black uppercase tracking-[0.18em] text-muted-foreground">Estado</TableHead>
-                  <TableHead className="pr-8 py-4 text-[10px] font-black uppercase tracking-[0.18em] text-muted-foreground">Fecha</TableHead>
+                  <TableHead className="py-4 text-[10px] font-black uppercase tracking-[0.18em] text-muted-foreground">Fecha</TableHead>
+                  {showAdminActions && (
+                    <TableHead className="pr-8 py-4 text-[10px] font-black uppercase tracking-[0.18em] text-muted-foreground text-right">Acciones</TableHead>
+                  )}
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredTransfers.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="py-20 text-center text-sm font-bold text-muted-foreground">
+                    <TableCell colSpan={showAdminActions ? 7 : 6} className="py-20 text-center text-sm font-bold text-muted-foreground">
                       No hay operaciones que coincidan con los filtros actuales.
                     </TableCell>
                   </TableRow>
@@ -244,7 +326,25 @@ export default function HistoryPage() {
                           {getStatusText(transfer.status)}
                         </Badge>
                       </TableCell>
-                      <TableCell className="pr-8 text-xs font-semibold text-muted-foreground">{formatDate(transfer.created_at)}</TableCell>
+                      <TableCell className="text-xs font-semibold text-muted-foreground">{formatDate(transfer.created_at)}</TableCell>
+                      {showAdminActions && (
+                        <TableCell className="pr-8 text-right">
+                          {canCorrectTransfer(transfer) ? (
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              className="rounded-xl font-black"
+                              onClick={() => openCorrectionModal(transfer)}
+                            >
+                              <PencilLine className="mr-2 h-4 w-4" />
+                              Corregir
+                            </Button>
+                          ) : (
+                            <span className="text-xs font-semibold text-muted-foreground">Bloqueada</span>
+                          )}
+                        </TableCell>
+                      )}
                     </TableRow>
                   ))
                 )}
@@ -253,6 +353,100 @@ export default function HistoryPage() {
           </div>
         </CardContent>
       </Card>
+
+      <Dialog open={!!editingTransfer} onOpenChange={(open) => !open && setEditingTransfer(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Corregir envío de gestor</DialogTitle>
+            <DialogDescription>
+              Ajusta los datos de una transferencia pendiente o disponible para retiro. La corrección actualizará el saldo del gestor y, si aplica, la billetera del cliente vinculado.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="correction_sender_name">Remitente</Label>
+              <Input
+                id="correction_sender_name"
+                value={correctionForm.sender_name}
+                onChange={(event) => setCorrectionForm((current) => ({ ...current, sender_name: event.target.value }))}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="correction_sender_phone">Teléfono remitente</Label>
+              <Input
+                id="correction_sender_phone"
+                value={correctionForm.sender_phone}
+                onChange={(event) => setCorrectionForm((current) => ({ ...current, sender_phone: event.target.value }))}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="correction_receiver_name">Destinatario</Label>
+              <Input
+                id="correction_receiver_name"
+                value={correctionForm.receiver_name}
+                onChange={(event) => setCorrectionForm((current) => ({ ...current, receiver_name: event.target.value }))}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="correction_receiver_phone">Teléfono destinatario</Label>
+              <Input
+                id="correction_receiver_phone"
+                value={correctionForm.receiver_phone}
+                onChange={(event) => setCorrectionForm((current) => ({ ...current, receiver_phone: event.target.value }))}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="correction_destination_city">Ciudad destino</Label>
+              <Input
+                id="correction_destination_city"
+                value={correctionForm.destination_city}
+                onChange={(event) => setCorrectionForm((current) => ({ ...current, destination_city: event.target.value }))}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="correction_destination_country">País destino</Label>
+              <Input
+                id="correction_destination_country"
+                value={correctionForm.destination_country}
+                onChange={(event) => setCorrectionForm((current) => ({ ...current, destination_country: event.target.value }))}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="correction_amount">Monto</Label>
+              <Input
+                id="correction_amount"
+                type="number"
+                min="1"
+                step="0.01"
+                value={correctionForm.amount}
+                onChange={(event) => setCorrectionForm((current) => ({ ...current, amount: event.target.value }))}
+              />
+            </div>
+            <div className="space-y-2 md:col-span-2">
+              <Label htmlFor="correction_notes">Notas</Label>
+              <Input
+                id="correction_notes"
+                value={correctionForm.notes}
+                onChange={(event) => setCorrectionForm((current) => ({ ...current, notes: event.target.value }))}
+              />
+            </div>
+          </div>
+
+          {correctionError && (
+            <p className="text-sm font-semibold text-rose-500">{correctionError}</p>
+          )}
+
+          <DialogFooter>
+            <Button type="button" variant="outline" className="rounded-xl font-black" onClick={() => setEditingTransfer(null)}>
+              Cancelar
+            </Button>
+            <Button type="button" className="rounded-xl font-black" onClick={handleCorrectionSubmit} disabled={correcting}>
+              {correcting ? 'Corrigiendo...' : 'Guardar corrección'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

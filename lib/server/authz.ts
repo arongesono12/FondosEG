@@ -3,6 +3,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { getAuthErrorMessage, isAuthServiceUnavailableError } from '@/lib/supabase/auth-errors';
 import type { User, UserRole } from '@/types';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
+import { isAdminRole, isSuperAdminRole } from '@/lib/roles';
 
 export class AuthzError extends Error {
   status: number;
@@ -159,15 +160,24 @@ export async function requireProfile(): Promise<User> {
 }
 
 export function requireRole(profile: User, roles: UserRole | UserRole[]): void {
-  const allowed = Array.isArray(roles) ? roles : [roles];
+  const allowed = Array.isArray(roles) ? [...roles] : [roles];
+  if (allowed.includes('admin') && !allowed.includes('superadmin')) {
+    allowed.push('superadmin');
+  }
   if (!allowed.includes(profile.role)) {
     throw new AuthzError('Forbidden', 403);
   }
 }
 
 export function requireSelfOrAdmin(profile: User, targetUserId: string): void {
-  if (profile.role === 'admin') return;
+  if (isAdminRole(profile.role)) return;
   if (profile.id !== targetUserId) {
+    throw new AuthzError('Forbidden', 403);
+  }
+}
+
+export function requireSuperAdmin(profile: User): void {
+  if (!isSuperAdminRole(profile.role)) {
     throw new AuthzError('Forbidden', 403);
   }
 }

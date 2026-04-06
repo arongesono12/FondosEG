@@ -5,8 +5,9 @@ import Link from 'next/link';
 import { useAppStore } from '@/lib/store';
 import { getAgentTransferStats, getAgentsCommissionStats, getDashboardReconciliation, getDashboardStats, getDailyTransferStats, getRecentTransfers } from '@/services/dashboard';
 import type { AgentTransferStats, AgentsCommissionStats, DashboardStats, DailyTransferStats, ReconciliationSummary, Transfer } from '@/types';
-import { cn, convertCurrency, formatCurrency, formatDateShort, getStatusColor } from '@/lib/utils';
+import { cn, convertCurrency, formatCurrency, formatDateShort, formatMonthYear, getStatusColor } from '@/lib/utils';
 import { HttpError } from '@/services/http';
+import { isAdminRole } from '@/lib/roles';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -76,7 +77,7 @@ export default function StatsPage() {
   const [reconciliation, setReconciliation] = useState<ReconciliationSummary | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const isAdmin = user?.role === 'admin';
+  const isAdmin = isAdminRole(user?.role);
   const isGestor = user?.role === 'gestor';
   const currency = preferredCurrency || 'XAF';
 
@@ -141,7 +142,7 @@ export default function StatsPage() {
   const formatPeriodLabel = (period: string) => {
     const [year, month] = period.split('-').map(Number);
     if (!year || !month) return period;
-    return new Date(year, month - 1, 1).toLocaleString('es-ES', { month: 'short', year: 'numeric' });
+    return formatMonthYear(new Date(Date.UTC(year, month - 1, 1)), 'short');
   };
 
   if (loading) {

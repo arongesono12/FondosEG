@@ -1,4 +1,4 @@
-export type UserRole = 'admin' | 'gestor' | 'cliente';
+export type UserRole = 'admin' | 'superadmin' | 'gestor' | 'cliente';
 export type TransferStatus = 'created' | 'available_for_pickup' | 'paid_out' | 'completed' | 'cancelled';
 
 export interface User {

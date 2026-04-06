@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { AuthzError, requireProfile } from '@/lib/server/authz';
 import type { Transfer } from '@/types';
+import { isAdminRole } from '@/lib/roles';
 
 export async function GET(request: NextRequest) {
   try {
@@ -16,7 +17,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json([]);
     }
 
-    if (profile.role === 'admin' || profile.role === 'gestor') {
+    if (isAdminRole(profile.role) || profile.role === 'gestor') {
       let baseQuery = adminClient.from('transfers').select('*, agent:users!transfers_agent_id_fkey(name)');
 
       if (profile.role === 'gestor') {

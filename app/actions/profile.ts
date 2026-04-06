@@ -2,6 +2,8 @@
 
 import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
+import { getAuthErrorMessage } from '@/lib/supabase/auth-errors';
+import { validatePassword } from '@/lib/email-validation';
 
 export async function updateProfileAction(formData: FormData) {
   const supabase = await createClient();
@@ -79,4 +81,47 @@ export async function uploadAvatarAction(formData: FormData) {
 
   revalidatePath('/profile');
   return { success: true, avatarUrl: publicUrl };
+}
+
+export async function updatePasswordAction(formData: FormData) {
+  const supabase = await createClient();
+
+  const newPassword = (formData.get('newPassword') as string) || '';
+  const confirmPassword = (formData.get('confirmPassword') as string) || '';
+
+  if (!newPassword || !confirmPassword) {
+    return { success: false, error: 'Completa todos los campos de contraseña' };
+  }
+
+  if (newPassword !== confirmPassword) {
+    return { success: false, error: 'La confirmación no coincide con la nueva contraseña' };
+  }
+
+  const passwordValidation = validatePassword(newPassword);
+  if (!passwordValidation.valid) {
+    return { success: false, error: passwordValidation.errors[0] };
+  }
+
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+
+  if (authError || !user) {
+    return {
+      success: false,
+      error: getAuthErrorMessage(authError, 'No se pudo validar la sesión actual. Inicia sesión de nuevo.'),
+    };
+  }
+
+  const { error } = await supabase.auth.updateUser({
+    password: newPassword,
+  });
+
+  if (error) {
+    return { success: false, error: getAuthErrorMessage(error) };
+  }
+
+  revalidatePath('/profile');
+  return { success: true };
 }

@@ -46,6 +46,7 @@ import { getUnreadNotificationCount, getClientUnreadNotificationCount, getAdminU
 import { getAgentBalance } from '@/services/agent';
 import { useTheme } from 'next-themes';
 import { HttpError } from '@/services/http';
+import { getRoleLabel, isAdminRole } from '@/lib/roles';
 
 export function DashboardLayoutWrapper({ children }: { children: React.ReactNode }) {
   const { user, setUser } = useAppStore();
@@ -84,7 +85,7 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
     async function loadNotificationCount() {
       if (!user?.id) return;
       try {
-        if (user.role === 'admin') {
+        if (isAdminRole(user.role)) {
           const count = await getAdminUnreadNotificationCount();
           setNotificationCount(count);
         } else if (user.role === 'gestor') {
@@ -134,7 +135,7 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
     router.push('/login');
   };
   
-  const navItems = user?.role === 'admin' 
+  const navItems = isAdminRole(user?.role)
     ? [
         { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
         { href: '/transfers', label: 'Envíos', icon: Send },
@@ -142,6 +143,7 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
         { href: '/balance', label: 'Saldos', icon: Wallet },
         { href: '/stats', label: 'Estadísticas', icon: BarChart3 },
         { href: '/history', label: 'Historial', icon: History },
+        ...(user?.role === 'superadmin' ? [{ href: '/staff', label: 'Administración', icon: ShieldCheck }] : []),
       ]
     : [
         { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -246,7 +248,7 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
               <div className="text-right hidden md:block">
                 <p className="text-sm font-black text-foreground leading-tight">{user?.name || 'Usuario'}</p>
                 <p className="text-[10px] font-bold text-muted-foreground capitalize">
-                  {user?.role === 'admin' ? 'Administrador' : user?.role === 'gestor' ? 'Gestor' : user?.role === 'cliente' ? 'Cliente' : user?.role || 'Usuario'}
+                  {getRoleLabel(user?.role)}
                 </p>
               </div>
               <DropdownMenu>
@@ -263,7 +265,7 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
                     <div className="flex flex-col space-y-1">
                       <p className="text-sm font-black leading-none">{user?.name}</p>
                       <p className="text-[10px] font-bold text-muted-foreground capitalize">
-                        {user?.role === 'admin' ? 'Administrador' : user?.role === 'gestor' ? 'Gestor' : user?.role === 'cliente' ? 'Cliente' : user?.role || 'Usuario'}
+                        {getRoleLabel(user?.role)}
                       </p>
                     </div>
                   </DropdownMenuLabel>

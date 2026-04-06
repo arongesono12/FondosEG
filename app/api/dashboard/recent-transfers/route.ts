@@ -3,6 +3,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { requireProfile } from '@/lib/server/authz';
 import { handleRouteError } from '@/lib/server/route-error';
 import type { Transfer } from '@/types';
+import { isAdminRole } from '@/lib/roles';
 
 function walletStatusToTransferStatus(status: string): Transfer['status'] {
   if (status === 'confirmed') return 'completed';
@@ -18,7 +19,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const limit = Math.min(Math.max(parseInt(searchParams.get('limit') || '10', 10) || 10, 1), 50);
 
-    if (profile.role === 'admin') {
+    if (isAdminRole(profile.role)) {
       const { data, error } = await adminClient
         .from('transfers')
         .select('*, agent:users!transfers_agent_id_fkey(name)')

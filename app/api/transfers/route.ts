@@ -5,6 +5,7 @@ import { createAgentTransferOperation } from '@/lib/server/financial-operations'
 import type { Transfer, TransferFormData } from '@/types';
 import { generateTransferCode, getPhoneLookupCandidates, normalizePhoneDigits } from '@/lib/utils';
 import { queueTransferNotifications, processNotificationOutbox } from '@/lib/server/notification-outbox';
+import { isAdminRole } from '@/lib/roles';
 
 // Unified notification helper replaced by lib/server/notification-outbox.ts
 
@@ -46,7 +47,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const limit = Math.min(Math.max(parseInt(searchParams.get('limit') || '50', 10) || 50, 1), 200);
 
-    if (profile.role === 'admin') {
+    if (isAdminRole(profile.role)) {
       const { data, error } = await adminClient
         .from('transfers')
         .select('*, agent:users!transfers_agent_id_fkey(name, phone)')

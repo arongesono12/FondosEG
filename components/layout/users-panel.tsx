@@ -77,6 +77,7 @@ const DeviceIcon = ({ device }: { device: UserPresence['device'] }) => {
 };
 
 const roleColors: Record<string, string> = {
+  superadmin: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
   admin: 'bg-rose-500/10 text-rose-600 dark:text-rose-400',
   gestor: 'bg-blue-500/10 text-blue-600 dark:text-blue-400',
   cliente: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',

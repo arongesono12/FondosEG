@@ -15,6 +15,7 @@ import { formatCurrency, formatDate } from '@/lib/utils';
 import type { AgentWithBalance, UserRole } from '@/types';
 import { Users, Plus, Search, Phone, Mail, CreditCard, CheckCircle, AlertCircle, RotateCcw } from 'lucide-react';
 import { useAppStore } from '@/lib/store';
+import { isAdminRole } from '@/lib/roles';
 
 export default function AgentsPage() {
   const { user } = useAppStore();
@@ -143,7 +144,7 @@ export default function AgentsPage() {
     a.phone.includes(searchTerm)
   );
 
-  if (user?.role !== 'admin') {
+  if (!isAdminRole(user?.role)) {
     return (
       <div className="space-y-6">
         <h1 className="text-3xl font-bold">Acceso denegado</h1>

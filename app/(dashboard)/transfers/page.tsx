@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useAppStore } from '@/lib/store';
 import { getDashboardStats, getRecentTransfers, getDailyTransferStats } from '@/services/dashboard';
 import type { DashboardStats, DailyTransferStats, Transfer } from '@/types';
-import { formatCurrency, convertCurrency, getInitials, getStatusText, getStatusColor } from '@/lib/utils';
+import { formatCurrency, convertCurrency, formatDateShort, formatDayOfMonth, getInitials, getStatusText, getStatusColor } from '@/lib/utils';
 import { HttpError } from '@/services/http';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -31,6 +31,7 @@ import { WalletTransferModal } from '@/components/wallet-transfer-modal';
 import { VerifyTransferModal } from '@/components/verify-transfer-modal';
 import { AgentPayoutModal } from '@/components/agent-payout-modal';
 import { AgentTransferModal } from '@/components/agent-transfer-modal';
+import { isAdminRole } from '@/lib/roles';
 
 export default function TransfersPage() {
   const { user, preferredCurrency } = useAppStore();
@@ -59,11 +60,11 @@ export default function TransfersPage() {
     async function loadData() {
       try {
         const [statsData, transfersData, dailyData] = await Promise.all([
-          user?.role === 'admin' 
+          isAdminRole(user?.role)
             ? Promise.resolve(null) 
             : getDashboardStats(),
           getRecentTransfers(20),
-          user?.role === 'admin' ? getDailyTransferStats(30) : Promise.resolve([]),
+          isAdminRole(user?.role) ? getDailyTransferStats(30) : Promise.resolve([]),
         ]);
         
         setStats(statsData);
@@ -86,11 +87,11 @@ export default function TransfersPage() {
   const refreshData = async () => {
     try {
         const [statsData, transfersData, dailyData] = await Promise.all([
-          user?.role === 'admin' 
+          isAdminRole(user?.role)
             ? Promise.resolve(null) 
             : getDashboardStats(),
           getRecentTransfers(20),
-          user?.role === 'admin' ? getDailyTransferStats(30) : Promise.resolve([]),
+          isAdminRole(user?.role) ? getDailyTransferStats(30) : Promise.resolve([]),
         ]);
       
       setStats(statsData);
@@ -307,7 +308,7 @@ export default function TransfersPage() {
                       </Badge>
                     </td>
                     <td className="py-3 px-4 text-xs text-muted-foreground">
-                      {new Date(transfer.created_at).toLocaleDateString('es-ES')}
+                      {formatDateShort(transfer.created_at)}
                     </td>
                   </tr>
                 ))}
@@ -409,7 +410,7 @@ export default function TransfersPage() {
                     style={{ height: `${Math.max((day.total_amount / (avgDaily * 2 || 1)) * 100, 5)}%` }}
                   />
                   <span className="text-[10px] text-muted-foreground">
-                    {new Date(day.date).getDate()}
+                    {formatDayOfMonth(day.date)}
                   </span>
                 </div>
               ))}

@@ -15,6 +15,7 @@ import { getTransfers } from '@/services/transfer';
 import { fetchJSON } from '@/services/http';
 import { formatCurrency, formatDate, getStatusColor } from '@/lib/utils';
 import type { AgentBalance, AgentWithBalance, BalanceTransaction, ClientBalance, Transfer } from '@/types';
+import { isAdminRole } from '@/lib/roles';
 import {
   AlertCircle,
   ArrowDownUp,
@@ -96,7 +97,7 @@ export default function BalancePage() {
   const [clientBalances, setClientBalances] = useState<ClientBalance[]>([]);
   const [clientTransfers, setClientTransfers] = useState<Transfer[]>([]);
 
-  const isAdmin = user?.role === 'admin';
+  const isAdmin = isAdminRole(user?.role);
   const isGestor = user?.role === 'gestor';
   const isClient = user?.role === 'cliente';
 

@@ -3,8 +3,11 @@ import { Resend } from 'resend';
 // ---------------------------------------------------------------------------
 // Startup validation — fail loudly so misconfiguration is obvious in logs.
 // ---------------------------------------------------------------------------
-const RESEND_API_KEY = process.env.RESEND_API_KEY;
-const FROM_EMAIL     = process.env.RESEND_FROM_EMAIL;
+const RESEND_API_KEY       = process.env.RESEND_API_KEY;
+const FROM_EMAIL           = process.env.RESEND_FROM_EMAIL;
+const PRIMARY_EMAIL_DOMAIN = 'fondoseg.com';
+const DEFAULT_FROM_EMAIL   = `FondosEG <no-reply@${PRIMARY_EMAIL_DOMAIN}>`;
+const APP_BASE_URL         = process.env.NEXT_PUBLIC_APP_URL || 'https://fondoseg.com';
 
 if (!RESEND_API_KEY) {
   console.error(
@@ -17,12 +20,70 @@ if (!FROM_EMAIL) {
   console.error(
     '[email-service] RESEND_FROM_EMAIL is not set. ' +
     'Emails will NOT be sent. ' +
-    'Set it to e.g. "FondosEG <noreply@fondoseg.com>" after verifying the domain in resend.com'
+    `Set it to e.g. "${DEFAULT_FROM_EMAIL}" after verifying the domain in resend.com`
   );
 }
 
 const resend        = new Resend(RESEND_API_KEY);
 const SENDER_EMAIL  = FROM_EMAIL ?? 'onboarding@resend.dev';
+
+function extractSenderAddress(value: string): string {
+  const match = value.match(/<([^>]+)>/);
+  return (match?.[1] ?? value).trim().toLowerCase();
+}
+
+function getSenderDomain(value: string): string {
+  return extractSenderAddress(value).split('@')[1] ?? '';
+}
+
+function isFondosEGDomain(domain: string): boolean {
+  return domain === PRIMARY_EMAIL_DOMAIN || domain.endsWith(`.${PRIMARY_EMAIL_DOMAIN}`);
+}
+
+function humanizeResendError(message?: string): string {
+  const normalized = (message || '').toLowerCase();
+
+  if (
+    normalized.includes('you can only send testing emails to your own email address') ||
+    normalized.includes('verify a domain at resend.com/domains')
+  ) {
+    return `El servicio de correo esta en modo de pruebas. Verifica el dominio en Resend y usa RESEND_FROM_EMAIL con una direccion del dominio verificado, por ejemplo: ${DEFAULT_FROM_EMAIL}.`;
+  }
+
+  if (
+    normalized.includes('from address') &&
+    (normalized.includes('verified domain') || normalized.includes('domain'))
+  ) {
+    return 'La direccion remitente no pertenece a un dominio verificado en Resend. Actualiza RESEND_FROM_EMAIL para usar un correo del dominio verificado.';
+  }
+
+  if (normalized.includes('api key')) {
+    return 'La configuracion de Resend no es valida. Revisa RESEND_API_KEY en el servidor.';
+  }
+
+  return message || 'No se pudo enviar el correo de verificacion.';
+}
+
+function getEmailConfigurationError(): string | null {
+  if (!RESEND_API_KEY) {
+    return 'El servicio de correo no esta configurado. Falta RESEND_API_KEY en el servidor.';
+  }
+
+  if (!FROM_EMAIL) {
+    return 'El servicio de correo no esta configurado. Falta RESEND_FROM_EMAIL en el servidor.';
+  }
+
+  const senderDomain = getSenderDomain(SENDER_EMAIL);
+  if (senderDomain === 'resend.dev') {
+    return `El remitente de correo sigue usando onboarding@resend.dev. Configura RESEND_FROM_EMAIL con un correo de tu dominio verificado en Resend, por ejemplo: ${DEFAULT_FROM_EMAIL}.`;
+  }
+
+  if (!isFondosEGDomain(senderDomain)) {
+    return `RESEND_FROM_EMAIL debe usar ${PRIMARY_EMAIL_DOMAIN} o un subdominio suyo. Valor esperado, por ejemplo: ${DEFAULT_FROM_EMAIL}.`;
+  }
+
+  return null;
+}
 
 export interface SendOTPEmailParams {
   to: string;
@@ -32,8 +93,9 @@ export interface SendOTPEmailParams {
 
 export async function sendOTPEmail({ to, name, code }: SendOTPEmailParams): Promise<{ success: boolean; error?: string }> {
   try {
-    if (!RESEND_API_KEY || !FROM_EMAIL) {
-      return { success: false, error: 'Servicio de email no configurado (ver logs del servidor)' };
+    const configError = getEmailConfigurationError();
+    if (configError) {
+      return { success: false, error: configError };
     }
 
     const { data, error } = await resend.emails.send({
@@ -102,7 +164,7 @@ export async function sendOTPEmail({ to, name, code }: SendOTPEmailParams): Prom
 
     if (error) {
       console.error('[email-service] Resend OTP error:', JSON.stringify(error));
-      return { success: false, error: error.message };
+      return { success: false, error: humanizeResendError(error.message) };
     }
 
     console.log('OTP email sent:', data?.id);
@@ -110,7 +172,10 @@ export async function sendOTPEmail({ to, name, code }: SendOTPEmailParams): Prom
 
   } catch (error) {
     console.error('Send OTP email error:', error);
-    return { success: false, error: 'Error al enviar el correo' };
+    return {
+      success: false,
+      error: humanizeResendError(error instanceof Error ? error.message : undefined),
+    };
   }
 }
 
@@ -124,8 +189,9 @@ export async function sendWelcomeEmail({ to, name, role }: SendWelcomeEmailParam
   try {
     const roleText = role === 'gestor' ? 'Gestor' : 'Cliente';
     
-    if (!RESEND_API_KEY || !FROM_EMAIL) {
-      return { success: false, error: 'Servicio de email no configurado (ver logs del servidor)' };
+    const configError = getEmailConfigurationError();
+    if (configError) {
+      return { success: false, error: configError };
     }
 
     const { data, error } = await resend.emails.send({
@@ -161,7 +227,7 @@ export async function sendWelcomeEmail({ to, name, role }: SendWelcomeEmailParam
                   Tu correo ha sido verificado exitosamente. Ahora eres parte de FondosEG como <strong>${roleText}</strong>.
                 </p>
                 
-                <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://FondosEG.com'}" style="display: inline-block; background: linear-gradient(135deg, #ec4899 0%, #f43f5e 100%); color: white; text-decoration: none; padding: 14px 32px; border-radius: 12px; font-weight: 600; font-size: 14px;">
+                <a href="${APP_BASE_URL}" style="display: inline-block; background: linear-gradient(135deg, #ec4899 0%, #f43f5e 100%); color: white; text-decoration: none; padding: 14px 32px; border-radius: 12px; font-weight: 600; font-size: 14px;">
                   Ir a FondosEG
                 </a>
               </div>
@@ -181,13 +247,16 @@ export async function sendWelcomeEmail({ to, name, role }: SendWelcomeEmailParam
 
     if (error) {
       console.error('[email-service] Resend welcome email error:', JSON.stringify(error));
-      return { success: false, error: error.message };
+      return { success: false, error: humanizeResendError(error.message) };
     }
 
     return { success: true };
 
   } catch (error) {
     console.error('Send welcome email error:', error);
-    return { success: false, error: 'Error al enviar el correo' };
+    return {
+      success: false,
+      error: humanizeResendError(error instanceof Error ? error.message : undefined),
+    };
   }
 }

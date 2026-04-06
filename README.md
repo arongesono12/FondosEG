@@ -50,7 +50,9 @@ FondosEG es una aplicación moderna de gestión de transferencias y envíos, dis
    ```
 
 3. **Configurar variables de entorno**:
-   Crear un archivo `.env.local` con las credenciales de Supabase y Twilio.
+   Crear un archivo `.env.local` con las credenciales de Supabase, Resend y Twilio.
+   Para el flujo de verificacion por correo, configura `RESEND_API_KEY` y usa `RESEND_FROM_EMAIL=FondosEG <no-reply@fondoseg.com>`.
+   Antes de enviar correos reales, verifica `fondoseg.com` en Resend y apunta los registros DNS que te indique el proveedor.
 
 4. **Ejecutar en desarrollo**:
    ```bash

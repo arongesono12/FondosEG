@@ -14,6 +14,7 @@ import {
   normalizeTransferStatus,
 } from '@/lib/financial';
 import type { DashboardStats } from '@/types';
+import { isAdminRole } from '@/lib/roles';
 
 type TransferRow = {
   agent_id?: string | null;
@@ -68,8 +69,8 @@ export async function GET() {
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
     thirtyDaysAgo.setHours(0, 0, 0, 0);
 
-    if (profile.role === 'admin' || profile.role === 'gestor') {
-      const isAdmin = profile.role === 'admin';
+    if (isAdminRole(profile.role) || profile.role === 'gestor') {
+      const isAdmin = isAdminRole(profile.role);
 
       const balancesQuery = adminClient
         .from('agent_balances')

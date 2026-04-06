@@ -57,10 +57,16 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     });
 
     await adminClient.from('activity_logs').insert({
-      user_id: id,
-      action: 'topup',
+      user_id: profile.id,
+      action: 'topup_agent_balance',
       entity_type: 'balance',
-      metadata: { amount, previous_balance: previousBalance, new_balance: newBalance },
+      entity_id: id,
+      metadata: {
+        target_user_id: id,
+        amount,
+        previous_balance: previousBalance,
+        new_balance: newBalance,
+      },
     });
 
     return NextResponse.json({ success: true });

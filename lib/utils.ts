@@ -60,6 +60,7 @@ export function formatDate(date: string | Date): string {
     year: 'numeric',
     hour: '2-digit',
     minute: '2-digit',
+    timeZone: 'UTC',
   }).format(new Date(date));
 }
 
@@ -68,6 +69,32 @@ export function formatDateShort(date: string | Date): string {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',
+    timeZone: 'UTC',
+  }).format(new Date(date));
+}
+
+export function formatMonthYear(date: string | Date, month: 'long' | 'short' = 'long'): string {
+  return new Intl.DateTimeFormat('es-ES', {
+    month,
+    year: 'numeric',
+    timeZone: 'UTC',
+  }).format(new Date(date));
+}
+
+export function formatDayOfMonth(date: string | Date): string {
+  return new Intl.DateTimeFormat('es-ES', {
+    day: '2-digit',
+    timeZone: 'UTC',
+  }).format(new Date(date));
+}
+
+export function formatDateWithWeekday(date: string | Date, weekday: 'long' | 'short' = 'long'): string {
+  return new Intl.DateTimeFormat('es-ES', {
+    weekday,
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    timeZone: 'UTC',
   }).format(new Date(date));
 }
 

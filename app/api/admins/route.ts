@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { AuthzError, requireProfile } from '@/lib/server/authz';
+import { ADMIN_ROLES } from '@/lib/roles';
 
 export async function GET() {
   try {
@@ -9,7 +10,7 @@ export async function GET() {
     const { data, error } = await adminClient
       .from('users')
       .select('id, name, email, avatar_url, role')
-      .eq('role', 'admin')
+      .in('role', ADMIN_ROLES)
       .eq('is_active', true)
       .order('name', { ascending: true });
 

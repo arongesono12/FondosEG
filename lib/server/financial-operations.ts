@@ -34,6 +34,25 @@ interface WalletTransferPayload {
   originChannel?: string;
 }
 
+interface CorrectAgentTransferPayload {
+  transferId: string;
+  actorUserId: string;
+  senderName: string;
+  senderPhone: string;
+  senderDocumentType?: string;
+  senderDocumentNumber?: string;
+  receiverName: string;
+  receiverPhone: string;
+  receiverDocumentType?: string;
+  receiverDocumentNumber?: string;
+  destinationCity: string;
+  destinationCountry?: string;
+  amount: number;
+  currency: string;
+  notes?: string;
+  receiverUserId?: string | null;
+}
+
 function extractRpcData<T>(data: unknown): T {
   return data as T;
 }
@@ -84,6 +103,41 @@ export async function markAgentTransferPaidOut(transferId: string, actorUserId: 
   }
 
   return extractRpcData<{ transfer: Record<string, unknown> }>(data);
+}
+
+export async function correctAgentTransferOperation(payload: CorrectAgentTransferPayload) {
+  const adminClient = createAdminClient();
+  const { data, error } = await adminClient.rpc('correct_agent_transfer_operation', {
+    p_transfer_id: payload.transferId,
+    p_actor_user_id: payload.actorUserId,
+    p_sender_name: payload.senderName,
+    p_sender_phone: payload.senderPhone,
+    p_sender_document_type: payload.senderDocumentType ?? null,
+    p_sender_document_number: payload.senderDocumentNumber ?? null,
+    p_receiver_name: payload.receiverName,
+    p_receiver_phone: payload.receiverPhone,
+    p_receiver_document_type: payload.receiverDocumentType ?? null,
+    p_receiver_document_number: payload.receiverDocumentNumber ?? null,
+    p_destination_city: payload.destinationCity,
+    p_destination_country: payload.destinationCountry ?? null,
+    p_amount: payload.amount,
+    p_currency: payload.currency,
+    p_notes: payload.notes ?? null,
+    p_receiver_user_id: payload.receiverUserId ?? null,
+  });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return extractRpcData<{
+    transfer: Record<string, unknown>;
+    previous_amount: number;
+    new_amount: number;
+    amount_delta: number;
+    agent_balance_after: number;
+    agent_cash_after: number;
+  }>(data);
 }
 
 export async function topUpAgentBalanceOperation(

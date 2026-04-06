@@ -19,6 +19,20 @@ export async function createTransfer(
   });
 }
 
+export async function correctTransfer(
+  transferId: string,
+  data: Partial<TransferFormData>
+): Promise<{ success: boolean; transfer?: Transfer; error?: string }> {
+  return fetchJSON<{ success: boolean; transfer?: Transfer; error?: string }>(
+    `/api/transfers/${encodeURIComponent(transferId)}/correct`,
+    {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    }
+  );
+}
+
 export async function searchTransfers(query: string): Promise<Transfer[]> {
   return fetchJSON<Transfer[]>(`/api/transfers/search?q=${encodeURIComponent(query)}&limit=10`);
 }

@@ -106,7 +106,7 @@ export async function generateAndSendOTP(
     console.error('[OTP] Email send error:', emailResult.error);
     return {
       success: false,
-      error: `Error al enviar el correo: ${emailResult.error ?? 'Verifica que el email sea válido.'}`,
+      error: emailResult.error ?? 'No se pudo enviar el correo de verificacion.',
     };
   }
 

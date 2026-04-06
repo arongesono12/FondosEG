@@ -2,11 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { requireProfile, requireRole } from '@/lib/server/authz';
 import { handleRouteError } from '@/lib/server/route-error';
+import { isAdminRole } from '@/lib/roles';
 
 type Kind = 'agent' | 'client' | 'admin';
 
 function defaultKind(role: string): Kind {
-  if (role === 'admin') return 'admin';
+  if (isAdminRole(role)) return 'admin';
   if (role === 'cliente') return 'client';
   return 'agent';
 }
@@ -98,7 +99,7 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'id requerido' }, { status: 400 });
     }
 
-    if (profile.role === 'admin') {
+    if (isAdminRole(profile.role)) {
       const { error } = await adminClient.from('notifications').delete().eq('id', id);
       if (error) return NextResponse.json({ success: false, error: error.message }, { status: 500 });
       return NextResponse.json({ success: true });

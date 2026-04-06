@@ -7,6 +7,7 @@ import { getAgentTransferStats, getDashboardStats, getDailyTransferStats, getRec
 import type { AgentTransferStats, DashboardStats, DailyTransferStats, Transfer } from '@/types';
 import { cn, convertCurrency, formatCurrency, formatDateShort, getInitials, getStatusColor } from '@/lib/utils';
 import { HttpError } from '@/services/http';
+import { isAdminRole } from '@/lib/roles';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -85,7 +86,7 @@ export default function DashboardPage() {
   const [supportRequestType, setSupportRequestType] = useState<SupportRequestType>('general');
 
   const currency = preferredCurrency || 'XAF';
-  const isAdmin = user?.role === 'admin';
+  const isAdmin = isAdminRole(user?.role);
   const isGestor = user?.role === 'gestor';
   const isClient = user?.role === 'cliente';
 

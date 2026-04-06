@@ -2,11 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { requireProfile, requireRole } from '@/lib/server/authz';
 import { handleRouteError } from '@/lib/server/route-error';
+import { isAdminRole } from '@/lib/roles';
 
 type Kind = 'agent' | 'client' | 'admin';
 
 function defaultKind(role: string): Kind {
-  if (role === 'admin') return 'admin';
+  if (isAdminRole(role)) return 'admin';
   if (role === 'cliente') return 'client';
   return 'agent';
 }

@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { updateProfileAction, uploadAvatarAction } from '@/app/actions/profile';
+import { updatePasswordAction, updateProfileAction, uploadAvatarAction } from '@/app/actions/profile';
 import { 
   User as UserIcon, 
   Phone, 
@@ -19,9 +19,13 @@ import {
   CheckCircle, 
   AlertCircle,
   CheckCircle2,
-  Crop
+  Crop,
+  Eye,
+  EyeOff,
+  LockKeyhole
 } from 'lucide-react';
 import { useEffect } from 'react';
+import { getRoleLabel } from '@/lib/roles';
 import {
   Dialog,
   DialogContent,
@@ -31,6 +35,8 @@ import {
 } from "@/components/ui/dialog";
 import Cropper from 'react-easy-crop';
 import { getCroppedImg } from '@/lib/canvas-utils';
+import { formatMonthYear } from '@/lib/utils';
+import { validatePassword } from '@/lib/email-validation';
 
 export default function ProfilePage() {
   const { user, setUser } = useAppStore();
@@ -38,6 +44,8 @@ export default function ProfilePage() {
   const [uploading, setUploading] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
+  const [passwordMessage, setPasswordMessage] = useState({ type: '', text: '' });
+  const [passwordLoading, setPasswordLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // States for cropping
@@ -51,6 +59,12 @@ export default function ProfilePage() {
     name: user?.name || '',
     phone: user?.phone || '',
   });
+  const [passwordForm, setPasswordForm] = useState({
+    newPassword: '',
+    confirmPassword: '',
+  });
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -147,6 +161,29 @@ export default function ProfilePage() {
       .join('')
       .toUpperCase()
       .substring(0, 2);
+  };
+
+  const passwordValidation = validatePassword(passwordForm.newPassword);
+
+  const handleUpdatePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPasswordLoading(true);
+    setPasswordMessage({ type: '', text: '' });
+
+    const data = new FormData();
+    data.append('newPassword', passwordForm.newPassword);
+    data.append('confirmPassword', passwordForm.confirmPassword);
+
+    const result = await updatePasswordAction(data);
+
+    if (result.success) {
+      setPasswordForm({ newPassword: '', confirmPassword: '' });
+      setPasswordMessage({ type: 'success', text: 'Contraseña actualizada correctamente' });
+    } else {
+      setPasswordMessage({ type: 'error', text: result.error || 'No se pudo actualizar la contraseña' });
+    }
+
+    setPasswordLoading(false);
   };
 
   return (
@@ -268,36 +305,130 @@ export default function ProfilePage() {
         </Card>
       </div>
 
-      {/* Account Info Card */}
-      <Card className="glass-premium bg-card/30 dark:bg-card/20 relative border-border/10 overflow-hidden shadow-2xl">
-
-        <CardHeader className="pb-2">
-          <CardTitle className="text-xl font-black text-foreground flex items-center gap-2">
-            <Shield className="h-5 w-5 text-primary" /> Seguridad y Estado
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="grid gap-6 sm:grid-cols-3 pt-4">
-          <div className="p-4 rounded-2xl bg-muted/20 dark:bg-slate-900/40 border border-border/5 space-y-1">
-            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Estado de Cuenta</p>
-            <p className="text-sm font-black text-green-600 flex items-center gap-2 uppercase tracking-tighter">
-              <CheckCircle className="h-4 w-4" /> Verificada
-            </p>
-          </div>
+      <div className="grid gap-8 lg:grid-cols-[0.95fr_1.05fr]">
+        <Card className="glass-premium bg-card/30 dark:bg-card/20 relative border-border/10 overflow-hidden shadow-2xl">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-xl font-black text-foreground flex items-center gap-2">
+              <Shield className="h-5 w-5 text-primary" /> Seguridad y Estado
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="grid gap-6 sm:grid-cols-3 lg:grid-cols-1 pt-4">
             <div className="p-4 rounded-2xl bg-muted/20 dark:bg-slate-900/40 border border-border/5 space-y-1">
-            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Nivel de Acceso</p>
-            <p className="text-sm font-black text-foreground uppercase tracking-tighter">
-              {user?.role === 'admin' ? 'Nivel 3 (Administrador)' : user?.role === 'gestor' ? 'Nivel 2 (Gestor)' : 'Nivel 1 (Cliente)'}
-            </p>
-          </div>
-          <div className="p-4 rounded-2xl bg-muted/20 dark:bg-slate-900/40 border border-border/5 space-y-1">
-            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Miembro desde</p>
-            <p className="text-sm font-black text-foreground uppercase tracking-tighter">
-              {user?.created_at ? new Date(user.created_at).toLocaleDateString('es-ES', { month: 'long', year: 'numeric' }) : 'N/A'}
-            </p>
-          </div>
+              <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Estado de Cuenta</p>
+              <p className="text-sm font-black text-green-600 flex items-center gap-2 uppercase tracking-tighter">
+                <CheckCircle className="h-4 w-4" /> Verificada
+              </p>
+            </div>
+            <div className="p-4 rounded-2xl bg-muted/20 dark:bg-slate-900/40 border border-border/5 space-y-1">
+              <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Nivel de Acceso</p>
+              <p className="text-sm font-black text-foreground uppercase tracking-tighter">
+                {user?.role === 'superadmin' ? 'Nivel 4 (Super administrador)' : user?.role === 'admin' ? 'Nivel 3 (Administrador)' : user?.role === 'gestor' ? 'Nivel 2 (Gestor)' : `Nivel 1 (${getRoleLabel(user?.role)})`}
+              </p>
+            </div>
+            <div className="p-4 rounded-2xl bg-muted/20 dark:bg-slate-900/40 border border-border/5 space-y-1">
+              <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Miembro desde</p>
+              <p className="text-sm font-black text-foreground uppercase tracking-tighter">
+                {user?.created_at ? formatMonthYear(user.created_at) : 'N/A'}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
 
-        </CardContent>
-      </Card>
+        <Card className="glass-premium bg-card/30 dark:bg-card/20 relative border-border/10 shadow-2xl">
+          <CardHeader>
+            <CardTitle className="text-xl font-black text-foreground flex items-center gap-2">
+              <LockKeyhole className="h-5 w-5 text-primary" /> Cambiar Contraseña
+            </CardTitle>
+            <CardDescription className="font-bold text-xs uppercase tracking-tight text-muted-foreground/60">
+              Actualiza tu contraseña para reforzar la seguridad de tu cuenta
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleUpdatePassword} className="space-y-6">
+              <div className="space-y-2">
+                <Label htmlFor="newPassword" className="text-[10px] font-black text-muted-foreground uppercase tracking-wider ml-1">Nueva contraseña</Label>
+                <div className="relative">
+                  <LockKeyhole className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/50" />
+                  <Input
+                    id="newPassword"
+                    type={showNewPassword ? 'text' : 'password'}
+                    value={passwordForm.newPassword}
+                    onChange={(e) => setPasswordForm((current) => ({ ...current, newPassword: e.target.value }))}
+                    autoComplete="new-password"
+                    className="pl-11 pr-12 h-12 rounded-xl focus:ring-2 focus:ring-primary/20 font-bold border-border/20"
+                    placeholder="••••••••"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPassword((current) => !current)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground/70 hover:text-foreground"
+                  >
+                    {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="confirmPassword" className="text-[10px] font-black text-muted-foreground uppercase tracking-wider ml-1">Confirmar contraseña</Label>
+                <div className="relative">
+                  <LockKeyhole className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/50" />
+                  <Input
+                    id="confirmPassword"
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    value={passwordForm.confirmPassword}
+                    onChange={(e) => setPasswordForm((current) => ({ ...current, confirmPassword: e.target.value }))}
+                    autoComplete="new-password"
+                    className="pl-11 pr-12 h-12 rounded-xl focus:ring-2 focus:ring-primary/20 font-bold border-border/20"
+                    placeholder="Repite la nueva contraseña"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword((current) => !current)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground/70 hover:text-foreground"
+                  >
+                    {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+              </div>
+
+              {passwordForm.newPassword && (
+                <div className="rounded-2xl border border-border/10 bg-muted/20 p-4 space-y-2">
+                  <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Requisitos</p>
+                  <div className="grid gap-1 text-xs font-bold text-muted-foreground">
+                    <p className={passwordForm.newPassword.length >= 8 ? 'text-green-600' : ''}>Al menos 8 caracteres</p>
+                    <p className={/[A-Z]/.test(passwordForm.newPassword) ? 'text-green-600' : ''}>Al menos una mayúscula</p>
+                    <p className={/[0-9]/.test(passwordForm.newPassword) ? 'text-green-600' : ''}>Al menos un número</p>
+                    <p className={/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(passwordForm.newPassword) ? 'text-green-600' : ''}>Al menos un carácter especial</p>
+                    {passwordForm.confirmPassword && (
+                      <p className={passwordForm.newPassword === passwordForm.confirmPassword ? 'text-green-600' : 'text-rose-600'}>
+                        La confirmación {passwordForm.newPassword === passwordForm.confirmPassword ? 'coincide' : 'no coincide'}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              <Button
+                type="submit"
+                disabled={passwordLoading || !passwordValidation.valid || passwordForm.newPassword !== passwordForm.confirmPassword}
+                className="w-full sm:w-auto h-12 px-8 bg-primary hover:bg-primary/90 text-white rounded-xl font-black text-sm shadow-xl shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
+              >
+                {passwordLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                Actualizar Contraseña
+              </Button>
+
+              {passwordMessage.text && (
+                <div className={`p-4 rounded-xl flex items-center gap-3 animate-in fade-in zoom-in duration-300 ${
+                  passwordMessage.type === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                }`}>
+                  {passwordMessage.type === 'success' ? <CheckCircle className="h-5 w-5" /> : <AlertCircle className="h-5 w-5" />}
+                  <p className="text-sm font-bold">{passwordMessage.text}</p>
+                </div>
+              )}
+            </form>
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Cropping Dialog */}
       <Dialog open={isCropping} onOpenChange={setIsCropping}>

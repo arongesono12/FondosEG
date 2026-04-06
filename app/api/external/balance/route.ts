@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { authenticateAPIKey, requirePermission } from '@/lib/api-auth';
+import { isAdminRole } from '@/lib/roles';
 import { formatCurrency } from '@/lib/utils';
 
 export async function GET(request: NextRequest) {
@@ -20,7 +21,7 @@ export async function GET(request: NextRequest) {
 
     let balanceData;
 
-    if (role_access === 'admin') {
+    if (isAdminRole(role_access)) {
       const { data: agents } = await adminClient
         .from('agent_balances')
         .select('*, user:users(name, phone)');
@@ -28,7 +29,7 @@ export async function GET(request: NextRequest) {
       const totalBalance = agents?.reduce((sum, a) => sum + (a.balance || 0), 0) || 0;
       
       balanceData = {
-        role: 'admin',
+        role: role_access,
         total_balance: totalBalance,
         currency: 'XAF',
         agents_count: agents?.length || 0,

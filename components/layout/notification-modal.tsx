@@ -33,6 +33,8 @@ import { es } from 'date-fns/locale';
 import { useCallback, useEffect, useState } from 'react';
 import { Notification, Transfer } from '@/types';
 import { HttpError } from '@/services/http';
+import { isAdminRole } from '@/lib/roles';
+import { formatDateShort } from '@/lib/utils';
 
 type NotificationWithTransfer = Notification & {
   transfer?: Pick<Transfer, 'transfer_code' | 'sender_name' | 'receiver_name' | 'receiver_phone' | 'amount' | 'currency' | 'destination_city' | 'created_at'> | null;
@@ -53,13 +55,18 @@ export function NotificationModal({ open, onOpenChange }: NotificationModalProps
   const [loading, setLoading] = useState(false);
   const [deleting, setDeleting] = useState<string | null>(null);
   const [selectedNotification, setSelectedNotification] = useState<NotificationWithTransfer | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const loadNotifications = useCallback(async () => {
     if (!user?.id) return;
     setLoading(true);
     try {
       let data;
-      if (user.role === 'admin') {
+      if (isAdminRole(user.role)) {
         data = await getAdminNotifications();
       } else if (user.role === 'cliente') {
         data = await getClientNotifications();
@@ -123,7 +130,7 @@ export function NotificationModal({ open, onOpenChange }: NotificationModalProps
     if (!user?.id) return;
     try {
       let result;
-      if (user.role === 'admin') {
+      if (isAdminRole(user.role)) {
         result = await markAllAdminNotificationsAsRead();
       } else if (user.role === 'cliente') {
         result = await markAllClientNotificationsAsRead();
@@ -230,7 +237,9 @@ export function NotificationModal({ open, onOpenChange }: NotificationModalProps
                             <span className="w-2 h-2 rounded-full bg-primary shrink-0" />
                           )}
                           <span className="text-[10px] font-medium text-muted-foreground">
-                            {formatDistanceToNow(new Date(notif.created_at), { addSuffix: true, locale: es })}
+                            {mounted
+                              ? formatDistanceToNow(new Date(notif.created_at), { addSuffix: true, locale: es })
+                              : formatDateShort(notif.created_at)}
                           </span>
                         </div>
                       </div>

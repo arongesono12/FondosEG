@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { authenticateAPIKey, requirePermission } from '@/lib/api-auth';
+import { isAdminRole } from '@/lib/roles';
 
 export async function GET(request: NextRequest) {
   try {
@@ -23,7 +24,7 @@ export async function GET(request: NextRequest) {
 
     let transfers = [];
 
-    if (role_access === 'admin') {
+    if (isAdminRole(role_access)) {
       const { data } = await adminClient
         .from('transfers')
         .select('*, agent:users!transfers_agent_id_fkey(name, phone)')

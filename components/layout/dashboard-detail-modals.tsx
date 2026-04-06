@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { cn, getInitials, formatCurrency, convertCurrency } from '@/lib/utils';
+import { cn, getInitials, formatCurrency, convertCurrency, formatDateShort, formatDateWithWeekday } from '@/lib/utils';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
@@ -19,6 +19,7 @@ import {
   XCircle,
 } from 'lucide-react';
 import type { AgentsCommissionStats, Transfer, DashboardStats } from '@/types';
+import { isAdminRole } from '@/lib/roles';
 
 /* -----------------------------------------------------------------
    Shared Drawer Wrapper
@@ -227,13 +228,13 @@ export function GestoresModal({ open, onClose, userRole, preferredCurrency }: Ge
       .finally(() => setLoading(false));
   }, [open]);
 
-  const subtitle = userRole === 'admin'
+  const subtitle = isAdminRole(userRole)
     ? 'Vista de supervisión — todos los envíos de gestores'
     : 'Tus transferencias recientes';
 
   return (
     <Drawer open={open} onClose={onClose} title="Envíos de Gestores" subtitle={subtitle} icon={Send}>
-      {userRole === 'admin' && (
+      {isAdminRole(userRole) && (
         <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400">
           <ShieldAlert className="h-3.5 w-3.5 shrink-0" />
           <span className="text-[10px] font-black uppercase tracking-wide">
@@ -278,7 +279,7 @@ export function GestoresModal({ open, onClose, userRole, preferredCurrency }: Ge
             <div className="flex items-center justify-between mt-3 pt-3 border-t border-border/10">
               <span className="text-[10px] font-bold text-muted-foreground font-mono">#{t.transfer_code}</span>
               <span className="text-[10px] font-bold text-muted-foreground">
-                {new Date(t.created_at).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' })}
+                {formatDateShort(t.created_at)}
               </span>
             </div>
           </div>
@@ -379,7 +380,7 @@ export function VolumenSemanalModal({ open, onClose, preferredCurrency }: Volume
                   </div>
                   <div>
                     <p className="text-sm font-black text-foreground">
-                      {new Date(d.date).toLocaleDateString('es-ES', { weekday: 'long', day: '2-digit', month: 'short' })}
+                      {formatDateWithWeekday(d.date)}
                     </p>
                     <p className="text-[10px] text-muted-foreground">{d.transfer_count} transferencia{d.transfer_count !== 1 ? 's' : ''}</p>
                   </div>
@@ -530,7 +531,7 @@ interface ComisionesModalProps {
 export function ComisionesModal({ open, onClose, userRole, stats, commissionStats, preferredCurrency }: ComisionesModalProps) {
   const fmt = (n: number) => formatCurrency(convertCurrency(n, 'XAF', preferredCurrency), preferredCurrency);
 
-  const isAdmin = userRole === 'admin';
+  const isAdmin = isAdminRole(userRole);
 
   return (
     <Drawer open={open} onClose={onClose} title="Comisiones" subtitle={isAdmin ? 'Resumen de todos los gestores' : 'Tus ganancias por envíos'} icon={TrendingUp}>

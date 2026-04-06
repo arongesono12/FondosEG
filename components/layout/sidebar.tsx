@@ -24,6 +24,7 @@ import { signOutAction } from '@/app/actions/auth';
 import { getInitials } from '@/lib/utils';
 import { useState } from 'react';
 import { UsersPanel } from './users-panel';
+import { isAdminRole } from '@/lib/roles';
 
 const adminRoutes = [
   { href: '/dashboard', label: 'Panel', icon: LayoutDashboard },
@@ -62,8 +63,8 @@ export function Sidebar({ isCollapsed, toggleCollapse }: SidebarProps) {
   const { user, setUser } = useAppStore();
   const [usersPanelOpen, setUsersPanelOpen] = useState(false);
   
-  const routes = user?.role === 'admin' 
-    ? adminRoutes 
+  const routes = isAdminRole(user?.role)
+    ? [...adminRoutes, ...(user?.role === 'superadmin' ? [{ href: '/staff', label: 'Administración', icon: UsersRound }] : [])]
     : user?.role === 'gestor' 
       ? agentRoutes 
       : clientRoutes;
@@ -117,7 +118,7 @@ export function Sidebar({ isCollapsed, toggleCollapse }: SidebarProps) {
           })}
 
           {/* Admin-only: Users Panel Button */}
-          {user?.role === 'admin' && (
+          {isAdminRole(user?.role) && (
             <button
               onClick={() => setUsersPanelOpen(true)}
               className={cn(
@@ -181,7 +182,7 @@ export function Sidebar({ isCollapsed, toggleCollapse }: SidebarProps) {
       </aside>
 
       {/* Feature 3: Admin Users Panel */}
-      {user?.role === 'admin' && (
+      {isAdminRole(user?.role) && (
         <UsersPanel open={usersPanelOpen} onClose={() => setUsersPanelOpen(false)} />
       )}
     </>
