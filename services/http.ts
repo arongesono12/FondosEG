@@ -58,15 +58,15 @@ export async function fetchJSON<T>(input: RequestInfo | URL, init?: RequestInit)
 
         const fallbackMessage =
           res.status === 401
-            ? 'Unauthorized'
+            ? 'No autorizado'
             : res.status === 503
-              ? 'Service unavailable'
-              : `Request failed: ${res.status}`;
+              ? 'Servicio no disponible'
+              : `La solicitud no pudo completarse (${res.status})`;
         const message = getErrorMessage(data) || fallbackMessage;
         if (res.status === 401 && typeof window !== 'undefined' && window.location.pathname !== '/login') {
           window.location.assign('/login');
         }
-        throw new HttpError(`${method} ${url}: ${message}`, res.status, data, url, method);
+        throw new HttpError(message, res.status, data, url, method);
       }
 
       return data as T;

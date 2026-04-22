@@ -42,11 +42,18 @@ import { SearchModal } from './search-modal';
 import { NotificationModal } from './notification-modal';
 import { SettingsModal } from './settings-modal';
 import { SupportModal } from './support-modal';
+import { CookieConsentModal, type CookieConsentPreferences } from './cookie-consent-modal';
 import { getUnreadNotificationCount, getClientUnreadNotificationCount, getAdminUnreadNotificationCount } from '@/services/transfer';
 import { getAgentBalance } from '@/services/agent';
 import { useTheme } from 'next-themes';
 import { HttpError } from '@/services/http';
 import { getRoleLabel, isAdminRole } from '@/lib/roles';
+
+const COOKIE_CONSENT_STORAGE_KEY_PREFIX = 'fondoseg_cookie_consent_v2';
+
+function getCookieConsentStorageKey(userId?: string) {
+  return `${COOKIE_CONSENT_STORAGE_KEY_PREFIX}:${userId || 'guest'}`;
+}
 
 export function DashboardLayoutWrapper({ children }: { children: React.ReactNode }) {
   const { user, setUser } = useAppStore();
@@ -58,6 +65,11 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [supportOpen, setSupportOpen] = useState(false);
+  const [cookieConsentOpen, setCookieConsentOpen] = useState(false);
+  const [cookiePreferences, setCookiePreferences] = useState<CookieConsentPreferences>({
+    essential: true,
+    preferences: true,
+  });
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [notificationCount, setNotificationCount] = useState(0);
@@ -68,6 +80,39 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  useEffect(() => {
+    if (!mounted || !user?.id) return;
+
+    const storageKey = getCookieConsentStorageKey(user.id);
+
+    try {
+      const storedValue = localStorage.getItem(storageKey);
+      if (!storedValue) {
+        setCookieConsentOpen(true);
+        return;
+      }
+
+      const parsed = JSON.parse(storedValue) as {
+        status?: 'accepted' | 'rejected' | 'configured';
+        preferences?: CookieConsentPreferences;
+      } | null;
+
+      if (!parsed?.status || !parsed.preferences) {
+        setCookieConsentOpen(true);
+        return;
+      }
+
+      if (parsed.preferences) {
+        setCookiePreferences({
+          essential: true,
+          preferences: Boolean(parsed.preferences.preferences),
+        });
+      }
+    } catch {
+      setCookieConsentOpen(true);
+    }
+  }, [mounted, user?.id]);
 
   useEffect(() => {
     const mainArea = document.querySelector('main');
@@ -133,6 +178,23 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
     await signOutAction();
     setUser(null);
     router.push('/login');
+  };
+
+  const persistCookieConsent = (status: 'accepted' | 'rejected' | 'configured', preferences: CookieConsentPreferences) => {
+    setCookiePreferences(preferences);
+    setCookieConsentOpen(false);
+
+    if (!mounted || !user?.id) return;
+
+    const storageKey = getCookieConsentStorageKey(user.id);
+    localStorage.setItem(
+      storageKey,
+      JSON.stringify({
+        status,
+        preferences,
+        updatedAt: new Date().toISOString(),
+      })
+    );
   };
   
   const navItems = isAdminRole(user?.role)
@@ -388,6 +450,23 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
         <NotificationModal open={notificationsOpen} onOpenChange={setNotificationsOpen} />
         <SettingsModal open={settingsOpen} onOpenChange={setSettingsOpen} />
         <SupportModal open={supportOpen} onOpenChange={setSupportOpen} requestType="balance_topup" />
+        <CookieConsentModal
+          open={cookieConsentOpen}
+          initialPreferences={cookiePreferences}
+          onAcceptAll={() =>
+            persistCookieConsent('accepted', {
+              essential: true,
+              preferences: true,
+            })
+          }
+          onRejectOptional={() =>
+            persistCookieConsent('rejected', {
+              essential: true,
+              preferences: false,
+            })
+          }
+          onSaveConfiguration={(preferences) => persistCookieConsent('configured', preferences)}
+        />
       </div>
     </div>
   );

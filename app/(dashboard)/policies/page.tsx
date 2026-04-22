@@ -21,8 +21,9 @@ export default function PoliciesPage() {
           <CardTitle className="text-xl font-black text-foreground">Uso permitido</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3 text-sm font-semibold text-muted-foreground">
-          <p>El dashboard debe usarse únicamente para operaciones autorizadas y registradas.</p>
-          <p>Cualquier intento de manipulación o acceso indebido puede suspender la cuenta.</p>
+          <p>El dashboard debe utilizarse exclusivamente para operaciones autorizadas, registradas y vinculadas a la actividad legítima del usuario dentro de FondosEG.</p>
+          <p>Cada cuenta es personal e intransferible en la medida permitida por la operativa del sistema, por lo que no debe compartirse con terceros ni emplearse fuera del alcance del rol asignado.</p>
+          <p>Cualquier uso indebido, intento de manipulación, acceso no autorizado o actuación contraria a los controles internos podrá dar lugar a restricciones de acceso, revisión administrativa o suspensión de la cuenta.</p>
         </CardContent>
       </Card>
 
@@ -31,8 +32,31 @@ export default function PoliciesPage() {
           <CardTitle className="text-xl font-black text-foreground">Seguridad y auditoría</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3 text-sm font-semibold text-muted-foreground">
-          <p>Se registran eventos críticos y movimientos para trazabilidad.</p>
-          <p>Las recargas y pagos requieren validaciones internas y controles de saldo.</p>
+          <p>El sistema registra eventos críticos, movimientos operativos, cambios relevantes y acciones administrativas con el fin de mantener trazabilidad, control interno y capacidad de revisión posterior.</p>
+          <p>Las recargas, pagos, correcciones, confirmaciones y demás operaciones sensibles pueden estar sujetas a validaciones internas, revisión de saldos, comprobaciones documentales y medidas de prevención de fraude.</p>
+          <p>Los usuarios deben colaborar con los procesos de verificación y mantener actualizada la información de perfil cuando ello sea necesario para la continuidad operativa o el cumplimiento de políticas internas.</p>
+        </CardContent>
+      </Card>
+
+      <Card className="glass-premium border-border/10 bg-card/40 shadow-xl shadow-black/5">
+        <CardHeader>
+          <CardTitle className="text-xl font-black text-foreground">Responsabilidades del usuario</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3 text-sm font-semibold text-muted-foreground">
+          <p>El usuario es responsable de custodiar sus credenciales, proteger sus dispositivos de acceso y notificar de inmediato cualquier uso sospechoso, pérdida de acceso o incidencia de seguridad relacionada con su cuenta.</p>
+          <p>También debe revisar cuidadosamente la información introducida antes de confirmar operaciones, especialmente nombres, teléfonos, importes, destinos y cualquier dato que pueda afectar la ejecución del servicio.</p>
+          <p>La plataforma podrá conservar registros de las acciones realizadas por el usuario como evidencia de operación, soporte, conciliación y cumplimiento de controles internos.</p>
+        </CardContent>
+      </Card>
+
+      <Card className="glass-premium border-border/10 bg-card/40 shadow-xl shadow-black/5">
+        <CardHeader>
+          <CardTitle className="text-xl font-black text-foreground">Incumplimientos y medidas internas</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3 text-sm font-semibold text-muted-foreground">
+          <p>Cuando se detecten comportamientos anómalos, inconsistencias operativas o posibles incumplimientos, FondosEG podrá aplicar medidas internas de control como revisión manual, limitación temporal de funciones o bloqueo preventivo de la cuenta.</p>
+          <p>Estas medidas buscan proteger la integridad del sistema, la seguridad de los usuarios y la correcta ejecución de los flujos financieros gestionados desde el dashboard.</p>
+          <p>La continuidad del acceso podrá depender de la colaboración del usuario con el soporte o con el equipo administrativo para aclarar la incidencia y validar la legitimidad de la actividad observada.</p>
         </CardContent>
       </Card>
     </div>

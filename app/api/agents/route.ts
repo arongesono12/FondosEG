@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { AuthzError, requireProfile, requireRole } from '@/lib/server/authz';
+import { getAuthErrorMessage } from '@/lib/supabase/auth-errors';
+import { provisionUserAccount } from '@/lib/server/user-provisioning';
 import type { AgentWithBalance, UserRole } from '@/types';
 
 export async function GET() {
@@ -102,30 +104,23 @@ export async function POST(request: NextRequest) {
     }
 
     const adminClient = createAdminClient();
-    const { data: authData, error } = await adminClient.auth.admin.createUser({
+    const { user: authUser } = await provisionUserAccount(adminClient, {
       email: body.email,
       password: body.password,
-      email_confirm: true,
-      user_metadata: {
-        name: body.name,
-        phone: body.phone,
-        role: 'gestor' as UserRole,
-        document_type: body.document_type,
-        document_number: body.document_number,
-        country: body.country,
-        city: body.city,
-      },
+      name: body.name,
+      phone: body.phone,
+      role: 'gestor' as UserRole,
+      documentType: body.document_type,
+      documentNumber: body.document_number,
+      country: body.country,
+      city: body.city,
     });
-
-    if (error) {
-      return NextResponse.json({ success: false, error: error.message }, { status: 400 });
-    }
 
     await adminClient.from('activity_logs').insert({
       user_id: profile.id,
       action: 'create_agent',
       entity_type: 'user',
-      entity_id: authData.user?.id ?? null,
+      entity_id: authUser.id ?? null,
       metadata: {
         created_role: 'gestor',
         email: body.email,
@@ -133,13 +128,16 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    return NextResponse.json({ success: true, user: authData.user });
+    return NextResponse.json({ success: true, user: authUser });
   } catch (err) {
     console.error('[POST /api/agents]', err);
     if (err instanceof AuthzError) {
       return NextResponse.json({ success: false, error: err.message }, { status: err.status });
     }
-    return NextResponse.json({ success: false, error: 'Internal server error' }, { status: 500 });
+    if (err instanceof Error) {
+      return NextResponse.json({ success: false, error: getAuthErrorMessage(err, 'No se pudo crear el gestor.') }, { status: 400 });
+    }
+    return NextResponse.json({ success: false, error: getAuthErrorMessage(err, 'No se pudo crear el gestor.') }, { status: 500 });
   }
 }
 

@@ -3,8 +3,8 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useAppStore } from '@/lib/store';
-import { getAgentTransferStats, getDashboardStats, getDailyTransferStats, getRecentTransfers } from '@/services/dashboard';
-import type { AgentTransferStats, DashboardStats, DailyTransferStats, Transfer } from '@/types';
+import { getAgentTransferStats, getAgentsCommissionStats, getDashboardStats, getDailyTransferStats, getRecentTransfers } from '@/services/dashboard';
+import type { AgentTransferStats, AgentsCommissionStats, DashboardStats, DailyTransferStats, Transfer } from '@/types';
 import { cn, convertCurrency, formatCurrency, formatDateShort, getInitials, getStatusColor } from '@/lib/utils';
 import { HttpError } from '@/services/http';
 import { isAdminRole } from '@/lib/roles';
@@ -19,6 +19,7 @@ import {
   BarChart3,
   Clock3,
   CreditCard,
+  Coins,
   Gauge,
   History,
   Landmark,
@@ -81,6 +82,7 @@ export default function DashboardPage() {
   const [dailyStats, setDailyStats] = useState<DailyTransferStats[]>([]);
   const [recentTransfers, setRecentTransfers] = useState<Transfer[]>([]);
   const [agentStats, setAgentStats] = useState<AgentTransferStats[]>([]);
+  const [commissionStats, setCommissionStats] = useState<AgentsCommissionStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [supportModalOpen, setSupportModalOpen] = useState(false);
   const [supportRequestType, setSupportRequestType] = useState<SupportRequestType>('general');
@@ -99,10 +101,12 @@ export default function DashboardPage() {
           isClient ? Promise.resolve([]) : getDailyTransferStats(14),
           isAdmin ? getAgentTransferStats() : Promise.resolve([]),
         ]);
+        const commissionData = isAdmin ? await getAgentsCommissionStats() : null;
         setStats(statsData);
         setRecentTransfers(transfersData);
         setDailyStats(dailyData);
         setAgentStats(agentsData);
+        setCommissionStats(commissionData);
       } catch (error) {
         if (!(error instanceof HttpError && error.status === 401)) {
           console.error('Error loading dashboard data:', error);
@@ -202,6 +206,107 @@ export default function DashboardPage() {
         <MetricCard title="Volumen 7 días" value={fmt(stats?.weeklyVolume ?? 0)} hint={`${stats?.todayTransfers ?? 0} operaciones registradas hoy`} icon={TrendingUp} tone="border-sky-500/20 bg-sky-500 shadow-sky-500/20" />
         <MetricCard title={isClient ? 'Tasa de cierre' : 'Ingreso por comisiones'} value={isClient ? `${settlementRate}%` : fmt(stats?.totalCommission ?? 0)} hint={isClient ? 'Operaciones confirmadas frente al total' : `${fmt(stats?.todayCommission ?? 0)} generadas hoy`} icon={CreditCard} tone="border-fuchsia-500/20 bg-fuchsia-500 shadow-fuchsia-500/20" />
       </section>
+
+      {!isClient && (
+        <section className="grid grid-cols-1 gap-6">
+          <Card className="glass-premium overflow-hidden border-border/10 bg-card/40 shadow-xl shadow-black/5">
+            <CardHeader className="border-b border-border/5 pb-5">
+              <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2 text-xl font-bold text-foreground">
+                    <Coins className="h-5 w-5 text-primary" /> Resumen de comisiones
+                  </CardTitle>
+                  <p className="mt-2 text-sm font-medium text-muted-foreground">
+                    {isAdmin
+                      ? 'Seguimiento de comisiones acumuladas por cada gestor.'
+                      : 'Tus comisiones acumuladas por día, mes y año.'}
+                  </p>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4 p-6">
+              {isAdmin ? (
+                <>
+                  <div className="grid gap-4 md:grid-cols-4">
+                    <div className="rounded-3xl border border-emerald-500/20 bg-emerald-500/10 p-5">
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-emerald-700 dark:text-emerald-300">Hoy</p>
+                      <p className="mt-2 text-2xl font-bold text-foreground">{fmt(commissionStats?.todayCommission ?? 0)}</p>
+                    </div>
+                    <div className="rounded-3xl border border-sky-500/20 bg-sky-500/10 p-5">
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-sky-700 dark:text-sky-300">Mes actual</p>
+                      <p className="mt-2 text-2xl font-bold text-foreground">{fmt(commissionStats?.monthCommission ?? 0)}</p>
+                    </div>
+                    <div className="rounded-3xl border border-violet-500/20 bg-violet-500/10 p-5">
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-violet-700 dark:text-violet-300">Año actual</p>
+                      <p className="mt-2 text-2xl font-bold text-foreground">{fmt(commissionStats?.yearCommission ?? 0)}</p>
+                    </div>
+                    <div className="rounded-3xl border border-fuchsia-500/20 bg-fuchsia-500/10 p-5">
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-fuchsia-700 dark:text-fuchsia-300">Acumulado</p>
+                      <p className="mt-2 text-2xl font-bold text-foreground">{fmt(commissionStats?.totalCommission ?? 0)}</p>
+                    </div>
+                  </div>
+
+                  <div className="overflow-hidden rounded-3xl border border-border/10 bg-background/70">
+                    <div className="grid grid-cols-[1.6fr_repeat(4,1fr)] gap-3 border-b border-border/10 px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                      <span>Gestor</span>
+                      <span>Hoy</span>
+                      <span>Mes</span>
+                      <span>Año</span>
+                      <span>Acumulado</span>
+                    </div>
+                    <div className="divide-y divide-border/10">
+                      {(commissionStats?.agents || []).length === 0 ? (
+                        <div className="px-4 py-6 text-sm font-medium text-muted-foreground">
+                          Todavía no hay comisiones registradas para mostrar.
+                        </div>
+                      ) : (
+                        (commissionStats?.agents || []).map((agent) => (
+                          <div
+                            key={agent.agent_id}
+                            className="grid grid-cols-[1.6fr_repeat(4,1fr)] gap-3 px-4 py-4 text-sm"
+                          >
+                            <div>
+                              <p className="font-bold text-foreground">{agent.agent_name}</p>
+                              <p className="text-xs font-medium text-muted-foreground">{agent.transfer_count} envíos completados</p>
+                            </div>
+                            <p className="font-semibold text-foreground">{fmt(agent.today_commission)}</p>
+                            <p className="font-semibold text-foreground">{fmt(agent.month_commission)}</p>
+                            <p className="font-semibold text-foreground">{fmt(agent.year_commission)}</p>
+                            <p className="font-bold text-emerald-600">{fmt(agent.total_commission)}</p>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <div className="grid gap-4 md:grid-cols-4">
+                  <div className="rounded-3xl border border-emerald-500/20 bg-emerald-500/10 p-5">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-emerald-700 dark:text-emerald-300">Hoy</p>
+                    <p className="mt-2 text-2xl font-bold text-foreground">{fmt(stats?.todayCommission ?? 0)}</p>
+                    <p className="mt-1 text-xs font-medium text-muted-foreground">Comisión generada hoy</p>
+                  </div>
+                  <div className="rounded-3xl border border-sky-500/20 bg-sky-500/10 p-5">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-sky-700 dark:text-sky-300">Mes actual</p>
+                    <p className="mt-2 text-2xl font-bold text-foreground">{fmt(stats?.monthlyCommission ?? 0)}</p>
+                    <p className="mt-1 text-xs font-medium text-muted-foreground">Comisión acumulada del mes</p>
+                  </div>
+                  <div className="rounded-3xl border border-violet-500/20 bg-violet-500/10 p-5">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-violet-700 dark:text-violet-300">Año actual</p>
+                    <p className="mt-2 text-2xl font-bold text-foreground">{fmt(stats?.yearlyCommission ?? 0)}</p>
+                    <p className="mt-1 text-xs font-medium text-muted-foreground">Comisión acumulada del año</p>
+                  </div>
+                  <div className="rounded-3xl border border-fuchsia-500/20 bg-fuchsia-500/10 p-5">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-fuchsia-700 dark:text-fuchsia-300">Acumulado</p>
+                    <p className="mt-2 text-2xl font-bold text-foreground">{fmt(stats?.totalCommission ?? 0)}</p>
+                    <p className="mt-1 text-xs font-medium text-muted-foreground">Total histórico generado</p>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </section>
+      )}
 
       <section className="grid grid-cols-1 gap-6 xl:grid-cols-[1.45fr_0.95fr]">
         <Card className="glass-premium overflow-hidden border-border/10 bg-card/40 shadow-xl shadow-black/5">

@@ -69,6 +69,14 @@ export async function GET() {
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
     thirtyDaysAgo.setHours(0, 0, 0, 0);
 
+    const monthStart = new Date();
+    monthStart.setDate(1);
+    monthStart.setHours(0, 0, 0, 0);
+
+    const yearStart = new Date();
+    yearStart.setMonth(0, 1);
+    yearStart.setHours(0, 0, 0, 0);
+
     if (isAdminRole(profile.role) || profile.role === 'gestor') {
       const isAdmin = isAdminRole(profile.role);
 
@@ -126,6 +134,8 @@ export async function GET() {
 
       const todayTransfersRows = safeTransfers.filter((transfer) => isSameOrAfter(transfer.created_at, today));
       const todayCompletedRows = completedTransfersRows.filter((transfer) => isSameOrAfter(transfer.created_at, today));
+      const monthCompletedRows = completedTransfersRows.filter((transfer) => isSameOrAfter(transfer.created_at, monthStart));
+      const yearCompletedRows = completedTransfersRows.filter((transfer) => isSameOrAfter(transfer.created_at, yearStart));
       const recent7dCompletedRows = completedTransfersRows.filter((transfer) => isSameOrAfter(transfer.created_at, sevenDaysAgo));
       const recent30dCompletedRows = completedTransfersRows.filter((transfer) =>
         isSameOrAfter(transfer.created_at, thirtyDaysAgo)
@@ -143,6 +153,14 @@ export async function GET() {
         0
       );
       const todayCommission = todayCompletedRows.reduce(
+        (sum, transfer) => sum + getCommissionAmount(transfer),
+        0
+      );
+      const monthlyCommission = monthCompletedRows.reduce(
+        (sum, transfer) => sum + getCommissionAmount(transfer),
+        0
+      );
+      const yearlyCommission = yearCompletedRows.reduce(
         (sum, transfer) => sum + getCommissionAmount(transfer),
         0
       );
@@ -180,6 +198,8 @@ export async function GET() {
         balancesByCurrency,
         totalCommission,
         todayCommission,
+        monthlyCommission,
+        yearlyCommission,
         commissionPerTransfer,
         averageTicket,
         todayVolume,
@@ -239,6 +259,8 @@ export async function GET() {
     );
     const todayTransfersRows = normalizedWalletTransfers.filter((transfer) => isSameOrAfter(transfer.created_at, today));
     const todayCompletedRows = completedTransfersRows.filter((transfer) => isSameOrAfter(transfer.created_at, today));
+    const monthCompletedRows = completedTransfersRows.filter((transfer) => isSameOrAfter(transfer.created_at, monthStart));
+    const yearCompletedRows = completedTransfersRows.filter((transfer) => isSameOrAfter(transfer.created_at, yearStart));
     const recent7dCompletedRows = completedTransfersRows.filter((transfer) => isSameOrAfter(transfer.created_at, sevenDaysAgo));
     const recent30dCompletedRows = completedTransfersRows.filter((transfer) =>
       isSameOrAfter(transfer.created_at, thirtyDaysAgo)
@@ -265,6 +287,8 @@ export async function GET() {
       balancesByCurrency,
       totalCommission: 0,
       todayCommission: 0,
+      monthlyCommission: 0,
+      yearlyCommission: 0,
       commissionPerTransfer: 0,
       averageTicket,
       todayVolume,

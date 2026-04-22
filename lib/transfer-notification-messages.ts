@@ -27,29 +27,29 @@ export function buildTransferNotificationMessages(input: TransferNotificationMes
   const cityLine = input.destinationCity ? `Ciudad de retiro: ${input.destinationCity}` : null;
 
   const senderMessage = [
-    `FondosEG: Hola ${input.senderName}, su envio de ${formattedAmount} para ${input.receiverName} ha sido registrado correctamente.`,
-    `Codigo de envio: ${input.transferCode}`,
+    `FondosEG: Hola ${input.senderName}. Hemos registrado correctamente su envío de ${formattedAmount} para ${input.receiverName}.`,
+    `Código de envío: ${input.transferCode}`,
     cityLine,
-    'Comparta este codigo unicamente con el destinatario para facilitar el retiro con un gestor.',
+    `Comparta este código únicamente con ${input.receiverName} para que pueda retirar el dinero con un gestor autorizado.`,
     'Gracias por confiar en FondosEG.',
   ]
     .filter(Boolean)
     .join('\n');
 
   const receiverIntro = input.creditedToWallet
-    ? `FondosEG: Hola ${input.receiverName}, ha recibido ${formattedAmount} de ${input.senderName} y ya esta disponible en su billetera FondosEG.`
-    : `FondosEG: Hola ${input.receiverName}, tiene un envio disponible de ${formattedAmount} enviado por ${input.senderName}.`;
+    ? `FondosEG: Hola ${input.receiverName}. Ha recibido ${formattedAmount} de ${input.senderName}. El dinero ya está disponible en su billetera FondosEG.`
+    : `FondosEG: Hola ${input.receiverName}. Tiene disponible un envío de ${formattedAmount} enviado por ${input.senderName}.`;
 
   const receiverWalletLine = input.creditedToWallet
-    ? 'Si desea retirar el dinero en efectivo con un gestor, facilite este codigo de envio.'
-    : 'Cuando vaya a un gestor para retirar los fondos, facilite este codigo de envio.';
+    ? 'Si desea retirarlo en efectivo con un gestor, presente este código de envío.'
+    : 'Cuando acuda a un gestor para retirar los fondos, presente este código de envío.';
 
   const receiverMessage = [
     receiverIntro,
-    `Codigo de envio: ${input.transferCode}`,
+    `Código de envío: ${input.transferCode}`,
     cityLine,
     receiverWalletLine,
-    'Advertencia importante: debe traer su DIP para poder retirar los fondos.',
+    'Importante: debe presentar su DIP para retirar los fondos.',
     'Gracias por usar FondosEG.',
   ]
     .filter(Boolean)
