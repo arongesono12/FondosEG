@@ -1,5 +1,53 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { AuthzError, requireAuthUser } from '@/lib/server/authz';
+import { generateApiKey, generateApiSecret, getApiSecretPreview, hashApiSecret } from '@/lib/server/api-security';
+import { isAdminRole } from '@/lib/roles';
+import type { ApiPermission, UserRole } from '@/types';
+
+const apiKeySelect = [
+  'id',
+  'app_name',
+  'app_description',
+  'api_key',
+  'api_secret_preview',
+  'role_access',
+  'permissions',
+  'is_active',
+  'rate_limit',
+  'rate_limit_window_minutes',
+  'last_used_at',
+  'expires_at',
+  'created_at',
+].join(',');
+
+const permissionKeys: ApiPermission[] = ['balance', 'transfer', 'history'];
+
+function normalizePermissions(input: unknown, role: UserRole) {
+  const values = typeof input === 'object' && input !== null ? input as Record<string, unknown> : {};
+  return permissionKeys.reduce<Record<ApiPermission, boolean>>((acc, key) => {
+    const defaultValue = key === 'transfer' ? role === 'gestor' || role === 'cliente' : true;
+    acc[key] = typeof values[key] === 'boolean' ? Boolean(values[key]) : defaultValue;
+    return acc;
+  }, { balance: true, transfer: false, history: true });
+}
+
+function publicApiKeyRecord(row: Record<string, unknown>) {
+  return {
+    id: row.id,
+    app_name: row.app_name,
+    app_description: row.app_description,
+    api_key: row.api_key,
+    api_secret_preview: row.api_secret_preview,
+    role_access: row.role_access,
+    permissions: row.permissions,
+    is_active: row.is_active,
+    rate_limit: row.rate_limit,
+    rate_limit_window_minutes: row.rate_limit_window_minutes,
+    last_used_at: row.last_used_at,
+    expires_at: row.expires_at,
+    created_at: row.created_at,
+  };
+}
 
 export async function GET() {
   try {
@@ -9,8 +57,9 @@ export async function GET() {
     
     const { data: apiKeys, error } = await adminClient
       .from('api_keys')
-      .select('*')
+      .select(apiKeySelect)
       .eq('user_id', user.id)
+      .eq('is_active', true)
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -46,19 +95,34 @@ export async function POST(request: NextRequest) {
     }
 
     const adminClient = await import('@/lib/supabase/admin').then(m => m.createAdminClient());
-    
-    const { data: keyData, error: keyError } = await adminClient
-      .rpc('generate_api_key');
+    const { data: profile, error: profileError } = await adminClient
+      .from('users')
+      .select('role')
+      .eq('id', user.id)
+      .single();
 
-    const { data: secretData, error: secretError } = await adminClient
-      .rpc('generate_api_secret');
-
-    if (keyError || secretError) {
+    if (profileError || !profile) {
       return NextResponse.json(
-        { error: 'Error al generar credenciales' },
-        { status: 500 }
+        { error: 'No se pudo validar el perfil del usuario' },
+        { status: 401 }
       );
     }
+
+    const requestedRole = String(role_access) as UserRole;
+    const allowedRoles: UserRole[] = isAdminRole(profile.role)
+      ? ['admin', 'superadmin', 'gestor', 'cliente']
+      : [profile.role as UserRole];
+
+    if (!allowedRoles.includes(requestedRole)) {
+      return NextResponse.json(
+        { error: 'No puedes emitir credenciales para ese rol' },
+        { status: 403 }
+      );
+    }
+
+    const keyData = generateApiKey();
+    const secretData = generateApiSecret();
+    const secretHash = hashApiSecret(secretData);
 
     const { data: apiKey, error: insertError } = await adminClient
       .from('api_keys')
@@ -66,16 +130,14 @@ export async function POST(request: NextRequest) {
         app_name,
         app_description,
         api_key: keyData,
-        api_secret: secretData,
+        api_secret: secretHash,
+        api_secret_hash: secretHash,
+        api_secret_preview: getApiSecretPreview(secretData),
         user_id: user.id,
-        role_access,
-        permissions: permissions || {
-          balance: true,
-          transfer: role_access === 'gestor',
-          history: true,
-        },
+        role_access: requestedRole,
+        permissions: normalizePermissions(permissions, requestedRole),
       })
-      .select()
+      .select(apiKeySelect)
       .single();
 
     if (insertError) {
@@ -85,13 +147,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       apiKey: {
-        id: apiKey.id,
-        app_name: apiKey.app_name,
+        ...publicApiKeyRecord(apiKey as unknown as Record<string, unknown>),
         api_key: keyData,
         api_secret: secretData,
-        role_access: apiKey.role_access,
-        permissions: apiKey.permissions,
-        created_at: apiKey.created_at,
       },
     });
 
@@ -125,7 +183,7 @@ export async function DELETE(request: NextRequest) {
     
     const { error } = await adminClient
       .from('api_keys')
-      .delete()
+      .update({ is_active: false, updated_at: new Date().toISOString() })
       .eq('id', keyId)
       .eq('user_id', user.id);
 

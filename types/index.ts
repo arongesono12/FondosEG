@@ -290,3 +290,35 @@ export interface ConfirmWalletTransferData {
   transfer_id: string;
   verification_code: string;
 }
+
+export type ApiPermission = 'balance' | 'transfer' | 'history';
+
+export interface ApiKeyRecord {
+  id: string;
+  app_name: string;
+  app_description?: string;
+  api_key: string;
+  api_secret_preview?: string;
+  role_access: UserRole;
+  permissions: Record<ApiPermission, boolean>;
+  is_active: boolean;
+  rate_limit: number;
+  rate_limit_window_minutes?: number;
+  last_used_at?: string;
+  expires_at?: string;
+  created_at: string;
+}
+
+export interface CreateApiKeyData {
+  app_name: string;
+  app_description?: string;
+  role_access: UserRole;
+  permissions: Record<ApiPermission, boolean>;
+}
+
+export interface CreatedApiKeyResponse {
+  success: boolean;
+  apiKey: ApiKeyRecord & {
+    api_secret: string;
+  };
+}

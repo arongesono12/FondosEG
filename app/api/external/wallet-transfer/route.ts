@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { authenticateAPIKey, requirePermission } from '@/lib/api-auth';
 import { formatCurrency } from '@/lib/utils';
+import { persistIdempotencyResponse, readIdempotencyState } from '@/lib/server/api-idempotency';
 
 function generateVerificationCode(): string {
   return Math.floor(100000 + Math.random() * 900000).toString();
@@ -12,7 +13,7 @@ export async function POST(request: NextRequest) {
     const auth = await authenticateAPIKey(request);
     
     if (!auth.success) {
-      return NextResponse.json({ error: auth.error }, { status: 401 });
+      return NextResponse.json({ error: auth.error }, { status: auth.status || 401 });
     }
 
     if (!await requirePermission(auth, 'transfer')) {
@@ -29,6 +30,22 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
+    const idempotencyState = await readIdempotencyState(
+      auth.apiKey!.id,
+      request.headers.get('idempotency-key'),
+      body
+    );
+
+    if (idempotencyState?.conflictMessage) {
+      return NextResponse.json({ error: idempotencyState.conflictMessage }, { status: 409 });
+    }
+
+    if (idempotencyState?.cachedResponse) {
+      return NextResponse.json(idempotencyState.cachedResponse.body, {
+        status: idempotencyState.cachedResponse.status,
+      });
+    }
+
     const {
       receiver_phone,
       receiver_name,
@@ -183,7 +200,7 @@ export async function POST(request: NextRequest) {
         priority: 'high',
       });
 
-    return NextResponse.json({
+    const responseBody = {
       success: true,
       data: {
         transfer_id: transfer.id,
@@ -198,7 +215,11 @@ export async function POST(request: NextRequest) {
         created_at: transfer.created_at,
         new_balance: currentBalance - amount,
       },
-    });
+    };
+
+    await persistIdempotencyResponse(auth.apiKey!.id, idempotencyState, 200, responseBody);
+
+    return NextResponse.json(responseBody);
 
   } catch (error) {
     console.error('API Wallet Transfer Error:', error);

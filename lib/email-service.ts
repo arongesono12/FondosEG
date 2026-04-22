@@ -260,3 +260,142 @@ export async function sendWelcomeEmail({ to, name, role }: SendWelcomeEmailParam
     };
   }
 }
+
+const DEFAULT_SUPPORT_EMAIL = 'support@fondoseg.com';
+const SUPPORT_EMAIL = (process.env.SUPPORT_EMAIL || DEFAULT_SUPPORT_EMAIL).trim();
+
+function escapeHtml(value: string): string {
+  return value
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;');
+}
+
+function formatSupportRequestType(requestType?: string | null): string {
+  switch (requestType) {
+    case 'balance_topup':
+      return 'Solicitud de recarga';
+    case 'report_error':
+      return 'Reporte de error';
+    case 'general':
+    default:
+      return 'Contacto al equipo';
+  }
+}
+
+export interface SendSupportRequestEmailParams {
+  fromName: string;
+  fromEmail?: string | null;
+  fromPhone?: string | null;
+  fromRole?: string | null;
+  message: string;
+  requestType?: string | null;
+  targetName?: string | null;
+  targetRole?: string | null;
+}
+
+export async function sendSupportRequestEmail({
+  fromName,
+  fromEmail,
+  fromPhone,
+  fromRole,
+  message,
+  requestType,
+  targetName,
+  targetRole,
+}: SendSupportRequestEmailParams): Promise<{ success: boolean; error?: string }> {
+  try {
+    const configError = getEmailConfigurationError();
+    if (configError) {
+      return { success: false, error: configError };
+    }
+
+    const requestTypeLabel = formatSupportRequestType(requestType);
+    const resolvedTarget = targetName
+      ? `${targetName}${targetRole ? ` (${targetRole})` : ''}`
+      : 'Equipo de soporte';
+    const replyTo = fromEmail?.trim() ? fromEmail.trim() : undefined;
+    const safeMessage = escapeHtml(message.trim());
+
+    const { error } = await resend.emails.send({
+      from: SENDER_EMAIL,
+      to: [SUPPORT_EMAIL],
+      replyTo: replyTo ? [replyTo] : undefined,
+      subject: `[FondosEG] ${requestTypeLabel} - ${fromName}`,
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        </head>
+        <body style="margin: 0; padding: 24px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f5f5f5; color: #111827;">
+          <div style="max-width: 680px; margin: 0 auto; background: #ffffff; border-radius: 18px; overflow: hidden; box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);">
+            <div style="background: linear-gradient(135deg, #ec4899 0%, #f43f5e 100%); padding: 28px 32px; color: #ffffff;">
+              <p style="margin: 0 0 6px; font-size: 12px; letter-spacing: 1.2px; text-transform: uppercase; opacity: 0.9;">FondosEG Support</p>
+              <h1 style="margin: 0; font-size: 24px; line-height: 1.2;">${escapeHtml(requestTypeLabel)}</h1>
+            </div>
+            <div style="padding: 32px;">
+              <table style="width: 100%; border-collapse: collapse; margin-bottom: 24px;">
+                <tr>
+                  <td style="padding: 10px 0; color: #6b7280; width: 180px; font-weight: 600;">Nombre</td>
+                  <td style="padding: 10px 0;">${escapeHtml(fromName)}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 10px 0; color: #6b7280; font-weight: 600;">Correo</td>
+                  <td style="padding: 10px 0;">${escapeHtml(fromEmail?.trim() || 'No disponible')}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 10px 0; color: #6b7280; font-weight: 600;">Telefono</td>
+                  <td style="padding: 10px 0;">${escapeHtml(fromPhone?.trim() || 'No disponible')}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 10px 0; color: #6b7280; font-weight: 600;">Rol</td>
+                  <td style="padding: 10px 0;">${escapeHtml(fromRole?.trim() || 'No disponible')}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 10px 0; color: #6b7280; font-weight: 600;">Destino interno</td>
+                  <td style="padding: 10px 0;">${escapeHtml(resolvedTarget)}</td>
+                </tr>
+              </table>
+
+              <div style="border: 1px solid #e5e7eb; border-radius: 14px; padding: 20px; background: #f9fafb;">
+                <p style="margin: 0 0 12px; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: #6b7280; font-weight: 700;">Mensaje</p>
+                <div style="white-space: pre-wrap; line-height: 1.7;">${safeMessage}</div>
+              </div>
+            </div>
+          </div>
+        </body>
+        </html>
+      `,
+      text: [
+        'FondosEG - Nuevo mensaje de soporte',
+        '',
+        `Tipo: ${requestTypeLabel}`,
+        `Nombre: ${fromName}`,
+        `Correo: ${fromEmail?.trim() || 'No disponible'}`,
+        `Telefono: ${fromPhone?.trim() || 'No disponible'}`,
+        `Rol: ${fromRole?.trim() || 'No disponible'}`,
+        `Destino interno: ${resolvedTarget}`,
+        '',
+        'Mensaje:',
+        message.trim(),
+      ].join('\n'),
+    });
+
+    if (error) {
+      console.error('[email-service] Resend support email error:', JSON.stringify(error));
+      return { success: false, error: humanizeResendError(error.message) };
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error('Send support email error:', error);
+    return {
+      success: false,
+      error: humanizeResendError(error instanceof Error ? error.message : undefined),
+    };
+  }
+}

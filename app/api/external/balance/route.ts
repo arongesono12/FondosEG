@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
     const auth = await authenticateAPIKey(request);
     
     if (!auth.success) {
-      return NextResponse.json({ error: auth.error }, { status: 401 });
+      return NextResponse.json({ error: auth.error }, { status: auth.status || 401 });
     }
 
     if (!await requirePermission(auth, 'balance')) {

@@ -3,6 +3,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { AuthzError, requireProfile, requireRole } from '@/lib/server/authz';
 
 import { queueNotification, processNotificationOutbox } from '@/lib/server/notification-outbox';
+import { sendSupportRequestEmail } from '@/lib/email-service';
 
 interface SupportMessageBody {
   message: string;
@@ -51,6 +52,8 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    const requiresAssignedAdmin = !isClient && requestType !== 'general';
+
     if (isClient) {
       // Clients may only contact gestors who have completed transfers to them.
       const { data: transfers } = await supabaseAdmin
@@ -63,8 +66,8 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Gestor no autorizado' }, { status: 403 });
       }
     } else {
-      // Non-clients may only contact admins.
-      if (!targetUser) {
+      // Non-clients may contact the support team directly for general requests.
+      if (requiresAssignedAdmin && !targetUser) {
         return NextResponse.json({ error: 'Administrador no válido' }, { status: 400 });
       }
     }
@@ -81,6 +84,21 @@ export async function POST(request: NextRequest) {
     if (error) {
       console.error('Error saving support message:', error);
       return NextResponse.json({ error: 'Error al guardar el mensaje' }, { status: 500 });
+    }
+
+    const supportEmailResult = await sendSupportRequestEmail({
+      fromName: profile.name || 'Usuario anonimo',
+      fromEmail: profile.email || null,
+      fromPhone: profile.phone || null,
+      fromRole: profile.role || null,
+      message: data.message,
+      requestType,
+      targetName: targetUser?.name ?? null,
+      targetRole: targetUser?.role ?? null,
+    });
+
+    if (!supportEmailResult.success) {
+      console.error('Failed to send support email:', supportEmailResult.error);
     }
 
     if (requestType === 'balance_topup') {

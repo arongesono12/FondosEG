@@ -19,6 +19,7 @@ import {
   LogOut,
   UserCog,
   UsersRound,
+  KeyRound,
 } from 'lucide-react';
 import { signOutAction } from '@/app/actions/auth';
 import { getInitials } from '@/lib/utils';
@@ -33,6 +34,7 @@ const adminRoutes = [
   { href: '/balance', label: 'Saldos', icon: Wallet },
   { href: '/stats', label: 'Estadísticas', icon: BarChart3 },
   { href: '/history', label: 'Historial', icon: History },
+  { href: '/developers', label: 'APIs', icon: KeyRound },
   { href: '/profile', label: 'Perfil', icon: UserCog },
 ];
 
@@ -41,6 +43,7 @@ const agentRoutes = [
   { href: '/transfers', label: 'Nueva transferencia', icon: Send },
   { href: '/history', label: 'Mis transferencias', icon: History },
   { href: '/balance', label: 'Mi saldo', icon: Wallet },
+  { href: '/developers', label: 'Mis APIs', icon: KeyRound },
   { href: '/profile', label: 'Mi perfil', icon: UserCog },
 ];
 
@@ -49,6 +52,7 @@ const clientRoutes = [
   { href: '/transfers', label: 'Enviar dinero', icon: Send },
   { href: '/history', label: 'Mis transferencias', icon: History },
   { href: '/balance', label: 'Mi saldo', icon: Wallet },
+  { href: '/developers', label: 'Mis APIs', icon: KeyRound },
   { href: '/profile', label: 'Mi perfil', icon: UserCog },
 ];
 

@@ -34,11 +34,12 @@ export function SupportModal({ open, onOpenChange, requestType = 'general', defa
   const [loadingAdmins, setLoadingAdmins] = useState(false);
 
   const isClient = user?.role === 'cliente';
+  const requiresAssignee = isClient || requestType !== 'general';
 
   const titleMap = {
     balance_topup: 'Solicitar Recarga de Saldo',
     report_error: 'Reportar Transferencia con Error',
-    general: isClient ? 'Contactar Gestor' : 'Contactar Administración',
+    general: isClient ? 'Contactar Gestor' : 'Contactar al equipo',
   };
 
   const descMap = {
@@ -48,12 +49,18 @@ export function SupportModal({ open, onOpenChange, requestType = 'general', defa
       : 'Describe el problema con la transferencia para que un administrador pueda ayudarte',
     general: isClient 
       ? 'Contacta al gestor que te envió una transferencia' 
-      : 'Envía un mensaje al equipo de administración de FondosEG',
+      : 'Envía un mensaje al equipo de soporte de FondosEG. La solicitud entrará en support@fondoseg.com.',
   };
 
   // Load admins when modal opens
   useEffect(() => {
     if (!open) return;
+    if (!requiresAssignee) {
+      setAdmins([]);
+      setSelectedAdmin(null);
+      setLoadingAdmins(false);
+      return;
+    }
     setLoadingAdmins(true);
     
     const endpoint = isClient ? '/api/gestors-for-client' : '/api/admins';
@@ -65,7 +72,7 @@ export function SupportModal({ open, onOpenChange, requestType = 'general', defa
       })
       .catch(() => {})
       .finally(() => setLoadingAdmins(false));
-  }, [open, isClient]);
+  }, [open, isClient, requiresAssignee]);
 
   const handleSend = async () => {
     if (!message.trim()) return;
@@ -118,91 +125,102 @@ export function SupportModal({ open, onOpenChange, requestType = 'general', defa
         
         <div className="p-6 space-y-5">
           {sent ? (
-            <div className="text-center py-8">
+              <div className="text-center py-8">
               <div className="w-16 h-16 bg-green-100 dark:bg-green-900/20 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Send className="h-8 w-8 text-green-600" />
               </div>
               <p className="text-lg font-black text-foreground">¡Solicitud enviada!</p>
-              <p className="text-sm text-muted-foreground">El administrador te responderá pronto</p>
-            </div>
+              <p className="text-sm text-muted-foreground">
+                {requiresAssignee ? 'El equipo revisará tu solicitud pronto' : 'El equipo de soporte la recibirá en support@fondoseg.com'}
+              </p>
+              </div>
           ) : (
             <>
-              {/* Admin Selector */}
-              <div className="space-y-2">
-                <label className="text-sm font-bold text-foreground flex items-center gap-1.5">
-                  <ShieldCheck className="h-4 w-4 text-primary" />
-                  Seleccionar Administrador
-                </label>
+              {requiresAssignee ? (
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-foreground flex items-center gap-1.5">
+                    <ShieldCheck className="h-4 w-4 text-primary" />
+                    {isClient ? 'Seleccionar gestor' : 'Seleccionar administrador'}
+                  </label>
 
-                {loadingAdmins ? (
-                  <div className="flex items-center gap-2 p-3 rounded-xl border border-border/20 text-muted-foreground text-sm">
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Cargando administradores...
-                  </div>
-                ) : admins.length === 0 ? (
-                  <div className="p-3 rounded-xl border border-border/20 text-muted-foreground text-sm">
-                    No hay administradores disponibles
-                  </div>
-                ) : (
-                  <div className="relative">
-                    <button
-                      type="button"
-                      onClick={() => setDropdownOpen(!dropdownOpen)}
-                      className="w-full flex items-center justify-between gap-3 p-3 rounded-xl border border-border/20 bg-card hover:bg-muted/50 transition-colors text-left"
-                    >
-                      {selectedAdmin ? (
-                        <div className="flex items-center gap-3">
-                          <Avatar className="h-8 w-8 border border-primary/20">
-                            <AvatarImage src={selectedAdmin.avatar_url} />
-                            <AvatarFallback className="bg-brand-gradient text-white text-xs font-bold">
-                              {getInitials(selectedAdmin.name)}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <p className="text-sm font-bold text-foreground">{selectedAdmin.name}</p>
-                            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Administrador</p>
-                          </div>
-                        </div>
-                      ) : (
-                        <span className="text-sm text-muted-foreground">Elige un administrador</span>
-                      )}
-                      <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} />
-                    </button>
-
-                    {dropdownOpen && (
-                      <div className="absolute top-full left-0 right-0 mt-1 z-50 bg-card border border-border/20 rounded-xl shadow-xl overflow-hidden">
-                        {admins.map((admin) => (
-                          <button
-                            key={admin.id}
-                            type="button"
-                            onClick={() => {
-                              setSelectedAdmin(admin);
-                              setDropdownOpen(false);
-                            }}
-                            className={`w-full flex items-center gap-3 p-3 hover:bg-muted/60 transition-colors text-left ${
-                              selectedAdmin?.id === admin.id ? 'bg-primary/5' : ''
-                            }`}
-                          >
+                  {loadingAdmins ? (
+                    <div className="flex items-center gap-2 p-3 rounded-xl border border-border/20 text-muted-foreground text-sm">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      {isClient ? 'Cargando gestores...' : 'Cargando administradores...'}
+                    </div>
+                  ) : admins.length === 0 ? (
+                    <div className="p-3 rounded-xl border border-border/20 text-muted-foreground text-sm">
+                      {isClient ? 'No hay gestores disponibles' : 'No hay administradores disponibles'}
+                    </div>
+                  ) : (
+                    <div className="relative">
+                      <button
+                        type="button"
+                        onClick={() => setDropdownOpen(!dropdownOpen)}
+                        className="w-full flex items-center justify-between gap-3 p-3 rounded-xl border border-border/20 bg-card hover:bg-muted/50 transition-colors text-left"
+                      >
+                        {selectedAdmin ? (
+                          <div className="flex items-center gap-3">
                             <Avatar className="h-8 w-8 border border-primary/20">
-                              <AvatarImage src={admin.avatar_url} />
+                              <AvatarImage src={selectedAdmin.avatar_url} />
                               <AvatarFallback className="bg-brand-gradient text-white text-xs font-bold">
-                                {getInitials(admin.name)}
+                                {getInitials(selectedAdmin.name)}
                               </AvatarFallback>
                             </Avatar>
                             <div>
-                              <p className="text-sm font-bold text-foreground">{admin.name}</p>
-                              <p className="text-[10px] text-muted-foreground">{admin.email}</p>
+                              <p className="text-sm font-bold text-foreground">{selectedAdmin.name}</p>
+                              <p className="text-[10px] text-muted-foreground uppercase tracking-wider">
+                                {isClient ? 'Gestor' : 'Administrador'}
+                              </p>
                             </div>
-                            {selectedAdmin?.id === admin.id && (
-                              <ShieldCheck className="h-4 w-4 text-primary ml-auto" />
-                            )}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
+                          </div>
+                        ) : (
+                          <span className="text-sm text-muted-foreground">
+                            {isClient ? 'Elige un gestor' : 'Elige un administrador'}
+                          </span>
+                        )}
+                        <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} />
+                      </button>
+
+                      {dropdownOpen && (
+                        <div className="absolute top-full left-0 right-0 mt-1 z-50 bg-card border border-border/20 rounded-xl shadow-xl overflow-hidden">
+                          {admins.map((admin) => (
+                            <button
+                              key={admin.id}
+                              type="button"
+                              onClick={() => {
+                                setSelectedAdmin(admin);
+                                setDropdownOpen(false);
+                              }}
+                              className={`w-full flex items-center gap-3 p-3 hover:bg-muted/60 transition-colors text-left ${
+                                selectedAdmin?.id === admin.id ? 'bg-primary/5' : ''
+                              }`}
+                            >
+                              <Avatar className="h-8 w-8 border border-primary/20">
+                                <AvatarImage src={admin.avatar_url} />
+                                <AvatarFallback className="bg-brand-gradient text-white text-xs font-bold">
+                                  {getInitials(admin.name)}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div>
+                                <p className="text-sm font-bold text-foreground">{admin.name}</p>
+                                <p className="text-[10px] text-muted-foreground">{admin.email}</p>
+                              </div>
+                              {selectedAdmin?.id === admin.id && (
+                                <ShieldCheck className="h-4 w-4 text-primary ml-auto" />
+                              )}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="rounded-2xl border border-border/20 bg-primary/5 p-3 text-sm text-muted-foreground">
+                  Este mensaje se enviará directamente al equipo de soporte de FondosEG en <span className="font-bold text-foreground">support@fondoseg.com</span>.
+                </div>
+              )}
 
               {/* Message */}
               <div className="space-y-2">
@@ -221,7 +239,7 @@ export function SupportModal({ open, onOpenChange, requestType = 'general', defa
               
               <Button 
                 onClick={handleSend}
-                disabled={!message.trim() || loading || !selectedAdmin}
+                disabled={!message.trim() || loading || (requiresAssignee && !selectedAdmin)}
                 className="w-full h-12 rounded-xl bg-brand-gradient text-white font-black shadow-lg shadow-pink-500/20 hover:opacity-90 transition-all"
               >
                 {loading ? (

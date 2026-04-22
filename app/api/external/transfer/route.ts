@@ -2,13 +2,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import { authenticateAPIKey, requirePermission } from '@/lib/api-auth';
 import { generateTransferCode } from '@/lib/utils';
 import { createAgentTransferOperation } from '@/lib/server/financial-operations';
+import { persistIdempotencyResponse, readIdempotencyState } from '@/lib/server/api-idempotency';
 
 export async function POST(request: NextRequest) {
   try {
     const auth = await authenticateAPIKey(request);
     
     if (!auth.success) {
-      return NextResponse.json({ error: auth.error }, { status: 401 });
+      return NextResponse.json({ error: auth.error }, { status: auth.status || 401 });
     }
 
     if (!await requirePermission(auth, 'transfer')) {
@@ -25,6 +26,22 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
+    const idempotencyState = await readIdempotencyState(
+      auth.apiKey!.id,
+      request.headers.get('idempotency-key'),
+      body
+    );
+
+    if (idempotencyState?.conflictMessage) {
+      return NextResponse.json({ error: idempotencyState.conflictMessage }, { status: 409 });
+    }
+
+    if (idempotencyState?.cachedResponse) {
+      return NextResponse.json(idempotencyState.cachedResponse.body, {
+        status: idempotencyState.cachedResponse.status,
+      });
+    }
+
     const {
       sender_name,
       sender_phone,
@@ -69,7 +86,7 @@ export async function POST(request: NextRequest) {
       notes,
     });
 
-    return NextResponse.json({
+    const responseBody = {
       success: true,
       data: {
         transfer_id: (transfer as { id: string }).id,
@@ -82,7 +99,11 @@ export async function POST(request: NextRequest) {
         status: 'available_for_pickup',
         created_at: (transfer as { created_at: string }).created_at,
       },
-    });
+    };
+
+    await persistIdempotencyResponse(auth.apiKey!.id, idempotencyState, 200, responseBody);
+
+    return NextResponse.json(responseBody);
 
   } catch (error) {
     console.error('API Transfer Error:', error);
