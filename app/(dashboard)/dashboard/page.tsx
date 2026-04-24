@@ -6,8 +6,8 @@ import { useAppStore } from '@/lib/store';
 import { getAgentTransferStats, getAgentsCommissionStats, getDashboardStats, getDailyTransferStats, getRecentTransfers } from '@/services/dashboard';
 import type { AgentTransferStats, AgentsCommissionStats, DashboardStats, DailyTransferStats, Transfer } from '@/types';
 import { cn, convertCurrency, formatCurrency, formatDateShort, getInitials, getStatusColor } from '@/lib/utils';
-import { HttpError } from '@/services/http';
-import { isAdminRole } from '@/lib/roles';
+import { fetchJSON, HttpError } from '@/services/http';
+import { isAdminRole, isSuperAdminRole } from '@/lib/roles';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -24,6 +24,7 @@ import {
   History,
   Landmark,
   LifeBuoy,
+  MousePointerClick,
   Send,
   ShieldCheck,
   Sparkles,
@@ -76,6 +77,30 @@ function statusLabel(status: Transfer['status']) {
   }
 }
 
+type MarketingStatsResponse = {
+  totals: {
+    total_events: number;
+    events_7d: number;
+    events_30d: number;
+    cta_clicks: number;
+    form_submits: number;
+    audience_switches: number;
+  };
+  byAudience: { label: string; count: number }[];
+  byCta: { label: string; count: number }[];
+  byTarget: { label: string; count: number }[];
+  byTheme: { label: string; count: number }[];
+  audienceSelections: { label: string; count: number }[];
+  recent: {
+    action: string;
+    audience: string | null;
+    cta: string | null;
+    target: string | null;
+    theme: string | null;
+    created_at: string;
+  }[];
+};
+
 export default function DashboardPage() {
   const { user, preferredCurrency } = useAppStore();
   const [stats, setStats] = useState<DashboardStats | null>(null);
@@ -83,23 +108,26 @@ export default function DashboardPage() {
   const [recentTransfers, setRecentTransfers] = useState<Transfer[]>([]);
   const [agentStats, setAgentStats] = useState<AgentTransferStats[]>([]);
   const [commissionStats, setCommissionStats] = useState<AgentsCommissionStats | null>(null);
+  const [marketingStats, setMarketingStats] = useState<MarketingStatsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [supportModalOpen, setSupportModalOpen] = useState(false);
   const [supportRequestType, setSupportRequestType] = useState<SupportRequestType>('general');
 
   const currency = preferredCurrency || 'XAF';
   const isAdmin = isAdminRole(user?.role);
+  const isSuperAdmin = isSuperAdminRole(user?.role);
   const isGestor = user?.role === 'gestor';
   const isClient = user?.role === 'cliente';
 
   useEffect(() => {
     async function loadData() {
       try {
-        const [statsData, transfersData, dailyData, agentsData] = await Promise.all([
+        const [statsData, transfersData, dailyData, agentsData, marketingData] = await Promise.all([
           getDashboardStats(),
           getRecentTransfers(8),
           isClient ? Promise.resolve([]) : getDailyTransferStats(14),
           isAdmin ? getAgentTransferStats() : Promise.resolve([]),
+          isSuperAdmin ? fetchJSON<MarketingStatsResponse>('/api/marketing/stats') : Promise.resolve(null),
         ]);
         const commissionData = isAdmin ? await getAgentsCommissionStats() : null;
         setStats(statsData);
@@ -107,6 +135,7 @@ export default function DashboardPage() {
         setDailyStats(dailyData);
         setAgentStats(agentsData);
         setCommissionStats(commissionData);
+        setMarketingStats(marketingData);
       } catch (error) {
         if (!(error instanceof HttpError && error.status === 401)) {
           console.error('Error loading dashboard data:', error);
@@ -116,7 +145,7 @@ export default function DashboardPage() {
       }
     }
     if (user) loadData();
-  }, [user, isAdmin, isClient]);
+  }, [user, isAdmin, isClient, isSuperAdmin]);
 
   const fmt = (amount: number) => formatCurrency(convertCurrency(amount, 'XAF', currency), currency);
   const availableBalance = stats?.availableBalance ?? stats?.totalBalance ?? 0;
@@ -206,6 +235,149 @@ export default function DashboardPage() {
         <MetricCard title="Volumen 7 días" value={fmt(stats?.weeklyVolume ?? 0)} hint={`${stats?.todayTransfers ?? 0} operaciones registradas hoy`} icon={TrendingUp} tone="border-sky-500/20 bg-sky-500 shadow-sky-500/20" />
         <MetricCard title={isClient ? 'Tasa de cierre' : 'Ingreso por comisiones'} value={isClient ? `${settlementRate}%` : fmt(stats?.totalCommission ?? 0)} hint={isClient ? 'Operaciones confirmadas frente al total' : `${fmt(stats?.todayCommission ?? 0)} generadas hoy`} icon={CreditCard} tone="border-fuchsia-500/20 bg-fuchsia-500 shadow-fuchsia-500/20" />
       </section>
+
+      {isSuperAdmin && marketingStats && (
+        <section className="grid grid-cols-1 gap-6 xl:grid-cols-[1.1fr_0.9fr]">
+          <Card className="glass-premium overflow-hidden border-border/10 bg-card/40 shadow-xl shadow-black/5">
+            <CardHeader className="border-b border-border/5 pb-5">
+              <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2 text-xl font-bold text-foreground">
+                    <MousePointerClick className="h-5 w-5 text-primary" />
+                    Rendimiento de la landing
+                  </CardTitle>
+                  <p className="mt-2 text-sm font-medium text-muted-foreground">
+                    Interacciones por audiencia, CTA y formularios enviados desde la portada comercial.
+                  </p>
+                </div>
+                <Badge className="rounded-full border border-white/20 bg-white/70 px-3 py-1 text-[10px] font-black uppercase tracking-[0.24em] text-slate-700 dark:border-white/10 dark:bg-white/10 dark:text-slate-200">
+                  Solo superadmin
+                </Badge>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-5 p-6">
+              <div className="grid gap-4 md:grid-cols-3 xl:grid-cols-6">
+                <div className="rounded-3xl border border-sky-500/20 bg-sky-500/10 p-4">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-sky-700 dark:text-sky-300">Eventos</p>
+                  <p className="mt-2 text-2xl font-bold text-foreground">{marketingStats.totals.total_events}</p>
+                </div>
+                <div className="rounded-3xl border border-emerald-500/20 bg-emerald-500/10 p-4">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-emerald-700 dark:text-emerald-300">CTA clicks</p>
+                  <p className="mt-2 text-2xl font-bold text-foreground">{marketingStats.totals.cta_clicks}</p>
+                </div>
+                <div className="rounded-3xl border border-fuchsia-500/20 bg-fuchsia-500/10 p-4">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-fuchsia-700 dark:text-fuchsia-300">Form submits</p>
+                  <p className="mt-2 text-2xl font-bold text-foreground">{marketingStats.totals.form_submits}</p>
+                </div>
+                <div className="rounded-3xl border border-amber-500/20 bg-amber-500/10 p-4">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-amber-700 dark:text-amber-300">Cambios audiencia</p>
+                  <p className="mt-2 text-2xl font-bold text-foreground">{marketingStats.totals.audience_switches}</p>
+                </div>
+                <div className="rounded-3xl border border-violet-500/20 bg-violet-500/10 p-4">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-violet-700 dark:text-violet-300">7 días</p>
+                  <p className="mt-2 text-2xl font-bold text-foreground">{marketingStats.totals.events_7d}</p>
+                </div>
+                <div className="rounded-3xl border border-rose-500/20 bg-rose-500/10 p-4">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-rose-700 dark:text-rose-300">30 días</p>
+                  <p className="mt-2 text-2xl font-bold text-foreground">{marketingStats.totals.events_30d}</p>
+                </div>
+              </div>
+
+              <div className="grid gap-5 lg:grid-cols-3">
+                <div className="rounded-3xl border border-border/10 bg-background/70 p-5">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Audiencias</p>
+                  <div className="mt-4 space-y-3">
+                    {(marketingStats.byAudience.length ? marketingStats.byAudience : [{ label: 'Sin datos', count: 0 }]).map((item) => (
+                      <div key={item.label} className="flex items-center justify-between gap-3 text-sm">
+                        <span className="font-semibold text-foreground">{item.label}</span>
+                        <span className="text-muted-foreground">{item.count}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div className="rounded-3xl border border-border/10 bg-background/70 p-5">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Top CTA</p>
+                  <div className="mt-4 space-y-3">
+                    {(marketingStats.byCta.length ? marketingStats.byCta : [{ label: 'Sin datos', count: 0 }]).map((item) => (
+                      <div key={item.label} className="flex items-center justify-between gap-3 text-sm">
+                        <span className="font-semibold text-foreground">{item.label}</span>
+                        <span className="text-muted-foreground">{item.count}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div className="rounded-3xl border border-border/10 bg-background/70 p-5">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Temas usados</p>
+                  <div className="mt-4 space-y-3">
+                    {(marketingStats.byTheme.length ? marketingStats.byTheme : [{ label: 'Sin datos', count: 0 }]).map((item) => (
+                      <div key={item.label} className="flex items-center justify-between gap-3 text-sm">
+                        <span className="font-semibold text-foreground">{item.label}</span>
+                        <span className="text-muted-foreground">{item.count}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="glass-premium overflow-hidden border-border/10 bg-card/40 shadow-xl shadow-black/5">
+            <CardHeader className="border-b border-border/5 pb-5">
+              <CardTitle className="flex items-center gap-2 text-xl font-bold text-foreground">
+                <BarChart3 className="h-5 w-5 text-primary" />
+                Actividad reciente de captación
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4 p-6">
+              <div className="rounded-3xl border border-border/10 bg-background/70 p-4">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Selección de audiencias</p>
+                <div className="mt-3 space-y-2">
+                  {(marketingStats.audienceSelections.length ? marketingStats.audienceSelections : [{ label: 'Sin datos', count: 0 }]).map((item) => (
+                    <div key={item.label} className="flex items-center justify-between gap-3 text-sm">
+                      <span className="font-semibold text-foreground">{item.label}</span>
+                      <span className="text-muted-foreground">{item.count}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="rounded-3xl border border-border/10 bg-background/70 p-4">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Targets más usados</p>
+                <div className="mt-3 space-y-2">
+                  {(marketingStats.byTarget.length ? marketingStats.byTarget : [{ label: 'Sin datos', count: 0 }]).map((item) => (
+                    <div key={item.label} className="flex items-center justify-between gap-3 text-sm">
+                      <span className="truncate font-semibold text-foreground">{item.label}</span>
+                      <span className="shrink-0 text-muted-foreground">{item.count}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                {marketingStats.recent.length === 0 ? (
+                  <div className="rounded-3xl border border-dashed border-border/20 bg-background/50 px-5 py-6 text-center text-sm font-semibold text-muted-foreground">
+                    Aun no hay eventos recientes de marketing.
+                  </div>
+                ) : (
+                  marketingStats.recent.map((event, index) => (
+                    <div key={`${event.created_at}-${event.action}-${index}`} className="rounded-3xl border border-border/10 bg-background/70 p-4">
+                      <div className="flex items-center justify-between gap-3">
+                        <p className="text-sm font-bold text-foreground">{event.cta || event.action}</p>
+                        <Badge className="rounded-full bg-slate-900 px-2 py-1 text-[10px] uppercase tracking-[0.16em] text-white dark:bg-white dark:text-slate-900">
+                          {event.audience || 'landing'}
+                        </Badge>
+                      </div>
+                      <p className="mt-1 text-xs font-medium text-muted-foreground">
+                        {event.target || 'sin target'} · {event.theme || 'theme n/d'} · {formatDateShort(event.created_at)}
+                      </p>
+                    </div>
+                  ))
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </section>
+      )}
 
       {!isClient && (
         <section className="grid grid-cols-1 gap-6">

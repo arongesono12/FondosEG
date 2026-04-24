@@ -1,4 +1,6 @@
 import { redirect } from 'next/navigation';
+
+import { LandingPage } from '@/components/marketing/landing-page';
 import { ServiceUnavailableScreen } from '@/components/layout/service-unavailable-screen';
 import { getOptionalAuthState } from '@/lib/server/authz';
 
@@ -11,7 +13,7 @@ export default async function Home() {
 
   if (user) {
     redirect('/dashboard');
-  } else {
-    redirect('/login');
   }
+
+  return <LandingPage />;
 }

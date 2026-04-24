@@ -410,15 +410,14 @@ export default function DevelopersPage() {
                   <p className="text-sm font-semibold text-muted-foreground">Aún no hay credenciales activas.</p>
                 </div>
               ) : apiKeys.map((key) => (
-                <button
+                <div
                   key={key.id}
-                  type="button"
                   onClick={() => {
                     setSelectedKeyId(key.id);
                     setCreatedCredential(null);
                   }}
                   className={cn(
-                    'w-full rounded-[1.75rem] border p-4 text-left transition-colors',
+                    'w-full cursor-pointer rounded-[1.75rem] border p-4 text-left transition-colors',
                     selectedKey?.id === key.id ? 'border-primary/25 bg-primary/10' : 'border-border/10 bg-background/70 hover:bg-background'
                   )}
                 >
@@ -481,7 +480,7 @@ export default function DevelopersPage() {
                     <span>Creada: {formatDateShort(key.created_at)}</span>
                     <span>Ultimo uso: {key.last_used_at ? formatDateShort(key.last_used_at) : 'sin uso'}</span>
                   </div>
-                </button>
+                </div>
               ))}
             </CardContent>
           </Card>

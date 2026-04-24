@@ -24,7 +24,7 @@ const apiKeySelect = [
 
 const permissionKeys: ApiPermission[] = ['balance', 'transfer', 'history'];
 
-async function withSupabaseRetry<T>(operation: () => Promise<T>, attempts: number = 3): Promise<T> {
+async function withSupabaseRetry<T>(operation: () => PromiseLike<T>, attempts: number = 3): Promise<Awaited<T>> {
   let lastError: unknown;
 
   for (let attempt = 1; attempt <= attempts; attempt += 1) {

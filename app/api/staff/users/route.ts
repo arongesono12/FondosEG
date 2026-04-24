@@ -119,14 +119,14 @@ export async function GET() {
     );
 
     const [
-      { data: transfersByAgent },
-      { data: transfersBySender },
-      { data: transfersByReceiver },
-      { data: walletBySender },
-      { data: walletByReceiver },
-      { data: balanceTransactions },
-      { data: activityLogs },
-      { data: supportMessages },
+      transfersByAgentResult,
+      transfersBySenderResult,
+      transfersByReceiverResult,
+      walletBySenderResult,
+      walletByReceiverResult,
+      balanceTransactionsResult,
+      activityLogsResult,
+      supportMessagesResult,
     ] = await Promise.all([
       adminClient.from('transfers').select('id, agent_id, created_at').in('agent_id', userIds),
       adminClient.from('transfers').select('id, sender_id, created_at').in('sender_id', userIds),
@@ -138,27 +138,41 @@ export async function GET() {
       adminClient.from('support_messages').select('id, user_id, request_type, created_at').in('user_id', userIds),
     ]);
 
-    ((transfersByAgent ?? []) as TransferPointer[]).forEach((item) => {
+    const queryError =
+      transfersByAgentResult.error ||
+      transfersBySenderResult.error ||
+      transfersByReceiverResult.error ||
+      walletBySenderResult.error ||
+      walletByReceiverResult.error ||
+      balanceTransactionsResult.error ||
+      activityLogsResult.error ||
+      supportMessagesResult.error;
+
+    if (queryError) {
+      return NextResponse.json({ error: queryError.message }, { status: 500 });
+    }
+
+    ((transfersByAgentResult.data ?? []) as TransferPointer[]).forEach((item) => {
       updateSummary(summaries, item.agent_id, item.created_at, 'Transferencia gestionada');
     });
 
-    ((transfersBySender ?? []) as TransferPointer[]).forEach((item) => {
+    ((transfersBySenderResult.data ?? []) as TransferPointer[]).forEach((item) => {
       updateSummary(summaries, item.sender_id, item.created_at, 'Transferencia creada');
     });
 
-    ((transfersByReceiver ?? []) as TransferPointer[]).forEach((item) => {
+    ((transfersByReceiverResult.data ?? []) as TransferPointer[]).forEach((item) => {
       updateSummary(summaries, item.receiver_user_id, item.created_at, 'Transferencia recibida');
     });
 
-    ((walletBySender ?? []) as WalletPointer[]).forEach((item) => {
+    ((walletBySenderResult.data ?? []) as WalletPointer[]).forEach((item) => {
       updateSummary(summaries, item.sender_id, item.created_at, 'Billetera enviada');
     });
 
-    ((walletByReceiver ?? []) as WalletPointer[]).forEach((item) => {
+    ((walletByReceiverResult.data ?? []) as WalletPointer[]).forEach((item) => {
       updateSummary(summaries, item.receiver_id, item.created_at, 'Billetera recibida');
     });
 
-    ((balanceTransactions ?? []) as BalancePointer[]).forEach((item) => {
+    ((balanceTransactionsResult.data ?? []) as BalancePointer[]).forEach((item) => {
       updateSummary(
         summaries,
         item.agent_id,
@@ -167,11 +181,11 @@ export async function GET() {
       );
     });
 
-    ((activityLogs ?? []) as ActivityPointer[]).forEach((item) => {
+    ((activityLogsResult.data ?? []) as ActivityPointer[]).forEach((item) => {
       updateSummary(summaries, item.user_id, item.created_at, formatActionLabel(item.action));
     });
 
-    ((supportMessages ?? []) as SupportPointer[]).forEach((item) => {
+    ((supportMessagesResult.data ?? []) as SupportPointer[]).forEach((item) => {
       updateSummary(
         summaries,
         item.user_id,

@@ -1,7 +1,8 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useAppStore } from '@/lib/store';
+import { isTransientNetworkMessage } from '@/lib/network-errors';
 import {
   createAdminAccount,
   getManagedDashboardUsers,
@@ -14,6 +15,7 @@ import {
   type StaffMember,
   type UserMovementItem,
 } from '@/services/staff';
+import { HttpError } from '@/services/http';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -60,12 +62,49 @@ function movementKindTone(kind: UserMovementItem['kind']) {
   }
 }
 
+function getStaffLoadErrorMessage(error: unknown): string {
+  if (error instanceof HttpError && error.message.trim()) {
+    return error.message;
+  }
+
+  if (error instanceof Error) {
+    if (
+      isTransientNetworkMessage(error.message) ||
+      error.message.toLowerCase().includes('failed to fetch')
+    ) {
+      return 'No pudimos conectar con el servidor. Recarga la página e inténtalo de nuevo.';
+    }
+
+    if (error.message.trim()) {
+      return error.message;
+    }
+  }
+
+  return 'No se pudo cargar la información del staff.';
+}
+
+function shouldReportStaffLoadError(error: unknown): boolean {
+  if (error instanceof HttpError) {
+    return error.status >= 500 && error.status !== 503;
+  }
+
+  if (!(error instanceof Error)) {
+    return false;
+  }
+
+  return !(
+    isTransientNetworkMessage(error.message) ||
+    error.message.toLowerCase().includes('failed to fetch')
+  );
+}
+
 export default function StaffPage() {
   const { user } = useAppStore();
   const [staff, setStaff] = useState<StaffMember[]>([]);
   const [activity, setActivity] = useState<StaffActivityItem[]>([]);
   const [managedUsers, setManagedUsers] = useState<ManagedDashboardUser[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [createOpen, setCreateOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -90,22 +129,50 @@ export default function StaffPage() {
     city: '',
   });
 
-  const loadData = async () => {
-    try {
-      const [staffData, activityData, managedUsersData] = await Promise.all([
-        getStaffMembers(),
-        getStaffActivity(),
-        getManagedDashboardUsers(),
-      ]);
-      setStaff(staffData);
-      setActivity(activityData);
-      setManagedUsers(managedUsersData);
-    } catch (err) {
-      console.error('Error loading staff data:', err);
-    } finally {
-      setLoading(false);
+  const loadData = useCallback(async () => {
+    setLoading(true);
+    setLoadError('');
+
+    const [staffResult, activityResult, managedUsersResult] = await Promise.allSettled([
+      getStaffMembers(),
+      getStaffActivity(),
+      getManagedDashboardUsers(),
+    ]);
+
+    if (staffResult.status === 'fulfilled') {
+      setStaff(staffResult.value);
     }
-  };
+
+    if (activityResult.status === 'fulfilled') {
+      setActivity(activityResult.value);
+    }
+
+    if (managedUsersResult.status === 'fulfilled') {
+      setManagedUsers(managedUsersResult.value);
+    }
+
+    const failedResults = [staffResult, activityResult, managedUsersResult].filter(
+      (result): result is PromiseRejectedResult => result.status === 'rejected'
+    );
+
+    if (failedResults.length > 0) {
+      const firstError = failedResults[0].reason;
+      const baseMessage = getStaffLoadErrorMessage(firstError);
+      setLoadError(
+        failedResults.length === 3
+          ? baseMessage
+          : `${baseMessage} Algunas secciones pueden mostrarse incompletas.`
+      );
+
+      failedResults.forEach((result) => {
+        if (shouldReportStaffLoadError(result.reason)) {
+          console.error('Unexpected error loading staff data:', result.reason);
+        }
+      });
+    }
+
+    setLoading(false);
+  }, []);
 
   useEffect(() => {
     if (user && isSuperAdminRole(user.role)) {
@@ -113,7 +180,7 @@ export default function StaffPage() {
     } else {
       setLoading(false);
     }
-  }, [user]);
+  }, [loadData, user]);
 
   if (!user || !isSuperAdminRole(user.role)) {
     return (
@@ -391,6 +458,12 @@ export default function StaffPage() {
           </DialogContent>
         </Dialog>
       </div>
+
+      {loadError && (
+        <div className="rounded-3xl border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-sm font-semibold text-amber-900 dark:text-amber-200">
+          {loadError}
+        </div>
+      )}
 
       <div className="grid gap-4 md:grid-cols-3 xl:grid-cols-6">
         <Card className="rounded-3xl">

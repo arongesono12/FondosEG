@@ -34,6 +34,12 @@ interface RegisterFormProps {
   loginLabel?: string;
   submitLabel?: string;
   defaultRole?: UserRole;
+  prefill?: {
+    name?: string;
+    email?: string;
+    phone?: string;
+    role?: UserRole;
+  };
 }
 
 export function RegisterForm({
@@ -46,14 +52,15 @@ export function RegisterForm({
   loginLabel = 'Inicia sesión',
   submitLabel = 'Crear cuenta',
   defaultRole = 'gestor',
+  prefill,
 }: RegisterFormProps) {
   const router = useRouter();
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    phone: '',
+    name: prefill?.name ?? '',
+    email: prefill?.email ?? '',
+    phone: prefill?.phone ?? '',
     password: '',
-    role: defaultRole,
+    role: prefill?.role ?? defaultRole,
     document_type: 'dip',
     document_number: '',
     country: '',
@@ -67,7 +74,7 @@ export function RegisterForm({
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [registeredName, setRegisteredName] = useState('');
-  const [registeredRole, setRegisteredRole] = useState<UserRole>(defaultRole);
+  const [registeredRole, setRegisteredRole] = useState<UserRole>(prefill?.role ?? defaultRole);
 
   const validateField = (field: string, value: string) => {
     switch (field) {

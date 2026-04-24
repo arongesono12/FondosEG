@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@asteasolutions/zod-to-openapi": "^8.5.0",
     "@hookform/resolvers": "^5.2.2",
     "@radix-ui/react-avatar": "^1.1.11",
     "@radix-ui/react-dialog": "^1.1.15",
@@ -38,6 +39,7 @@
     "react-hook-form": "^7.71.2",
     "recharts": "^3.7.0",
     "resend": "^6.9.4",
+    "swagger-ui-react": "^5.32.4",
     "tailwind-merge": "^3.5.0",
     "twilio": "^5.12.2",
     "xlsx": "^0.18.5",
@@ -52,6 +54,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "15.1.7",
+    "supabase": "^2.87.2",
     "tailwindcss": "^4",
     "typescript": "^5"
   },
