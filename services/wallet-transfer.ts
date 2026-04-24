@@ -1,6 +1,7 @@
 import { createAdminClient } from '@/lib/supabase/admin';
 import type { WalletTransfer, CreateWalletTransferData, ConfirmWalletTransferData } from '@/types';
 import { queueWalletVerificationInternal, queueWalletConfirmationInternal } from '@/lib/server/notification-outbox';
+import { emitWebhookEvent } from '@/lib/server/webhook-outbox';
 
 function generateVerificationCode(): string {
   return Math.floor(100000 + Math.random() * 900000).toString();
@@ -193,6 +194,29 @@ export async function confirmWalletTransfer(
     });
   } catch (notifErr) {
     console.error('Failed to queue wallet confirmation notification:', notifErr);
+  }
+
+  try {
+    await emitWebhookEvent(
+      {
+        eventType: 'wallet_transfer.confirmed',
+        payload: {
+          transfer_id: confirmedTransfer.id,
+          amount: confirmedTransfer.amount,
+          currency: confirmedTransfer.currency,
+          status: confirmedTransfer.status,
+          sender_name: confirmedTransfer.sender?.name ?? null,
+          sender_phone: confirmedTransfer.sender?.phone ?? null,
+          receiver_name: confirmedTransfer.receiver_name,
+          receiver_phone: confirmedTransfer.receiver?.phone ?? null,
+          confirmed_at: confirmedTransfer.confirmed_at ?? null,
+          source: 'wallet_confirmation',
+        },
+      },
+      10
+    );
+  } catch (webhookErr) {
+    console.error('Failed to dispatch wallet confirmation webhook:', webhookErr);
   }
 
   return { success: true, transfer: confirmedTransfer };

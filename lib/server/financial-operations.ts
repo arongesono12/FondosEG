@@ -34,6 +34,16 @@ interface WalletTransferPayload {
   originChannel?: string;
 }
 
+interface DirectWalletTransferPayload {
+  senderId: string;
+  receiverName: string;
+  receiverPhone: string;
+  amount: number;
+  currency: string;
+  notes?: string;
+  originChannel?: string;
+}
+
 interface CorrectAgentTransferPayload {
   transferId: string;
   actorUserId: string;
@@ -206,6 +216,28 @@ export async function createWalletTransferHold(payload: WalletTransferPayload) {
     transfer: Record<string, unknown>;
     available_balance: number;
     reserved_balance: number;
+  }>(data);
+}
+
+export async function createWalletTransferDirectOperation(payload: DirectWalletTransferPayload) {
+  const adminClient = createAdminClient();
+  const { data, error } = await adminClient.rpc('create_wallet_transfer_direct_operation', {
+    p_sender_id: payload.senderId,
+    p_receiver_phone: payload.receiverPhone,
+    p_receiver_name: payload.receiverName,
+    p_amount: payload.amount,
+    p_currency: payload.currency,
+    p_notes: payload.notes ?? null,
+    p_origin_channel: payload.originChannel ?? 'external_api',
+  });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return extractRpcData<{
+    transfer: Record<string, unknown>;
+    new_balance: number;
   }>(data);
 }
 

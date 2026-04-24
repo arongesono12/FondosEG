@@ -328,3 +328,31 @@ export interface CreatedApiKeyResponse {
     api_secret: string;
   };
 }
+
+export interface RotateApiKeyResponse {
+  success: boolean;
+  apiKey: ApiKeyRecord & {
+    api_secret: string;
+  };
+}
+
+export interface ApiRequestLog {
+  id: string;
+  api_key_id: string;
+  request_id: string;
+  method: string;
+  path: string;
+  status_code: number;
+  error_code?: string;
+  latency_ms: number;
+  created_at: string;
+}
+
+export interface ApiUsageResponse {
+  logs: ApiRequestLog[];
+  summary: {
+    total: number;
+    success: number;
+    errors: number;
+  };
+}

@@ -11,6 +11,7 @@ import {
   History,
   KeyRound,
   Plus,
+  RefreshCw,
   Send,
   ShieldCheck,
   Trash2,
@@ -26,8 +27,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useAppStore } from '@/lib/store';
 import { cn, formatDateShort } from '@/lib/utils';
 import { isAdminRole } from '@/lib/roles';
-import { createApiKey, getApiKeys, revokeApiKey } from '@/services/api-keys';
-import type { ApiKeyRecord, ApiPermission, CreateApiKeyData, UserRole } from '@/types';
+import { createApiKey, getApiKeyUsage, getApiKeys, revokeApiKey, rotateApiKey } from '@/services/api-keys';
+import type { ApiKeyRecord, ApiPermission, ApiUsageResponse, CreateApiKeyData, RotateApiKeyResponse, UserRole } from '@/types';
 
 const permissionLabels: Record<ApiPermission, { label: string; icon: ElementType; detail: string }> = {
   balance: { label: 'Saldos', icon: Wallet, detail: 'Lectura de balances disponibles.' },
@@ -103,8 +104,11 @@ export default function DevelopersPage() {
   const [selectedKeyId, setSelectedKeyId] = useState<string | null>(null);
   const [form, setForm] = useState<CreateApiKeyData>(() => createInitialForm(user?.role));
   const [createdCredential, setCreatedCredential] = useState<(ApiKeyRecord & { api_secret: string }) | null>(null);
+  const [usage, setUsage] = useState<ApiUsageResponse | null>(null);
+  const [usageLoading, setUsageLoading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [rotatingKeyId, setRotatingKeyId] = useState<string | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -112,6 +116,7 @@ export default function DevelopersPage() {
   const selectedKey = apiKeys.find((key) => key.id === selectedKeyId) || apiKeys[0] || null;
   const activeCredential = createdCredential || selectedKey;
   const baseUrl = typeof window === 'undefined' ? 'https://fondoseg.com' : window.location.origin;
+  const openApiUrl = `${baseUrl}/api/docs/openapi.json`;
 
   useEffect(() => {
     setForm(createInitialForm(user?.role));
@@ -133,6 +138,27 @@ export default function DevelopersPage() {
 
     loadApiKeys();
   }, []);
+
+  useEffect(() => {
+    async function loadUsage() {
+      if (!selectedKeyId) {
+        setUsage(null);
+        return;
+      }
+
+      setUsageLoading(true);
+      try {
+        const data = await getApiKeyUsage(selectedKeyId);
+        setUsage(data);
+      } catch {
+        setUsage(null);
+      } finally {
+        setUsageLoading(false);
+      }
+    }
+
+    loadUsage();
+  }, [selectedKeyId]);
 
   async function copyText(label: string, value: string) {
     await navigator.clipboard.writeText(value);
@@ -168,6 +194,22 @@ export default function DevelopersPage() {
       if (createdCredential?.id === id) setCreatedCredential(null);
     } catch (revokeError) {
       setError(revokeError instanceof Error ? revokeError.message : 'No se pudo revocar la credencial.');
+    }
+  }
+
+  async function handleRotateKey(id: string) {
+    setRotatingKeyId(id);
+    setError(null);
+
+    try {
+      const response: RotateApiKeyResponse = await rotateApiKey(id);
+      setCreatedCredential(response.apiKey);
+      setApiKeys((current) => current.map((key) => (key.id === id ? response.apiKey : key)));
+      setSelectedKeyId(id);
+    } catch (rotateError) {
+      setError(rotateError instanceof Error ? rotateError.message : 'No se pudo rotar la credencial.');
+    } finally {
+      setRotatingKeyId(null);
     }
   }
 
@@ -399,6 +441,20 @@ export default function DevelopersPage() {
                         className="rounded-xl bg-background/70"
                         onClick={(event) => {
                           event.stopPropagation();
+                          handleRotateKey(key.id);
+                        }}
+                        disabled={rotatingKeyId === key.id}
+                      >
+                        <RefreshCw className={cn('h-4 w-4', rotatingKeyId === key.id && 'animate-spin')} />
+                        {rotatingKeyId === key.id ? 'Rotando' : 'Rotar'}
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="rounded-xl bg-background/70"
+                        onClick={(event) => {
+                          event.stopPropagation();
                           copyText(`key-${key.id}`, key.api_key);
                         }}
                       >
@@ -461,6 +517,66 @@ export default function DevelopersPage() {
               </div>
             </CardContent>
           </Card>
+
+          <Card className="glass-premium overflow-hidden border-border/10 bg-card/40 shadow-xl shadow-black/5">
+            <CardHeader className="border-b border-border/5 pb-5">
+              <CardTitle className="flex items-center gap-2 text-xl font-bold text-foreground">
+                <BookOpen className="h-5 w-5 text-primary" />
+                Contrato y actividad
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4 p-6">
+              <div className="rounded-3xl border border-border/10 bg-background/70 p-4">
+                <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                  <div>
+                    <p className="text-sm font-bold text-foreground">OpenAPI 3.1</p>
+                    <p className="mt-1 break-all font-mono text-xs text-muted-foreground">{openApiUrl}</p>
+                  </div>
+                  <Button type="button" variant="outline" className="rounded-2xl bg-background/80" onClick={() => copyText('openapi', openApiUrl)}>
+                    <Copy className="h-4 w-4" />
+                    {copied === 'openapi' ? 'Copiado' : 'Copiar URL'}
+                  </Button>
+                </div>
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-3">
+                <div className="rounded-3xl border border-border/10 bg-background/70 p-4">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Requests</p>
+                  <p className="mt-2 text-2xl font-bold text-foreground">{usageLoading ? '...' : usage?.summary.total ?? 0}</p>
+                </div>
+                <div className="rounded-3xl border border-border/10 bg-background/70 p-4">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Exitosos</p>
+                  <p className="mt-2 text-2xl font-bold text-emerald-600 dark:text-emerald-300">{usageLoading ? '...' : usage?.summary.success ?? 0}</p>
+                </div>
+                <div className="rounded-3xl border border-border/10 bg-background/70 p-4">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Errores</p>
+                  <p className="mt-2 text-2xl font-bold text-rose-600 dark:text-rose-300">{usageLoading ? '...' : usage?.summary.errors ?? 0}</p>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                {(usage?.logs || []).slice(0, 5).map((log) => (
+                  <div key={log.id} className="flex flex-col gap-2 rounded-3xl border border-border/10 bg-background/70 p-4 md:flex-row md:items-center md:justify-between">
+                    <div>
+                      <p className="font-mono text-xs font-bold text-foreground">{log.method} {log.path}</p>
+                      <p className="mt-1 font-mono text-[10px] text-muted-foreground">{log.request_id}</p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <Badge className={cn('rounded-full px-2 py-1 text-[10px] font-bold', log.status_code < 400 ? 'bg-emerald-500 text-white' : 'bg-rose-500 text-white')}>
+                        {log.status_code}
+                      </Badge>
+                      <span className="text-xs font-semibold text-muted-foreground">{log.latency_ms}ms</span>
+                    </div>
+                  </div>
+                ))}
+                {!usageLoading && (usage?.logs.length ?? 0) === 0 && (
+                  <p className="rounded-3xl border border-dashed border-border/20 bg-background/50 px-5 py-6 text-center text-sm font-semibold text-muted-foreground">
+                    Aun no hay actividad registrada para esta credencial.
+                  </p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </section>
 
@@ -486,7 +602,7 @@ export default function DevelopersPage() {
           <div>
             <p className="font-bold text-foreground">Estado de la plataforma API</p>
             <p className="mt-1 text-sm font-medium leading-6 text-muted-foreground">
-              Las credenciales nuevas usan secret hasheado, rate limit por ventana e idempotencia para operaciones de dinero cuando se envía el header `idempotency-key`.
+              Las credenciales nuevas usan secret hasheado, rate limit por ventana, request IDs, logs de uso e idempotencia para operaciones de dinero cuando se envía el header `idempotency-key`.
             </p>
           </div>
         </div>

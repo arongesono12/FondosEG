@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { AuthzError, requireAuthUser } from '@/lib/server/authz';
 import { generateApiKey, generateApiSecret, getApiSecretPreview, hashApiSecret } from '@/lib/server/api-security';
+import { isTransientNetworkError } from '@/lib/network-errors';
 import { isAdminRole } from '@/lib/roles';
+import { createAdminClient } from '@/lib/supabase/admin';
 import type { ApiPermission, UserRole } from '@/types';
 
 const apiKeySelect = [
@@ -21,6 +23,27 @@ const apiKeySelect = [
 ].join(',');
 
 const permissionKeys: ApiPermission[] = ['balance', 'transfer', 'history'];
+
+async function withSupabaseRetry<T>(operation: () => Promise<T>, attempts: number = 3): Promise<T> {
+  let lastError: unknown;
+
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    try {
+      return await operation();
+    } catch (error) {
+      lastError = error;
+
+      if (isTransientNetworkError(error) && attempt < attempts) {
+        await new Promise((resolve) => setTimeout(resolve, 250 * attempt));
+        continue;
+      }
+
+      throw error;
+    }
+  }
+
+  throw lastError;
+}
 
 function normalizePermissions(input: unknown, role: UserRole) {
   const values = typeof input === 'object' && input !== null ? input as Record<string, unknown> : {};
@@ -52,15 +75,16 @@ function publicApiKeyRecord(row: Record<string, unknown>) {
 export async function GET() {
   try {
     const user = await requireAuthUser();
-
-    const adminClient = await import('@/lib/supabase/admin').then(m => m.createAdminClient());
+    const adminClient = createAdminClient();
     
-    const { data: apiKeys, error } = await adminClient
-      .from('api_keys')
-      .select(apiKeySelect)
-      .eq('user_id', user.id)
-      .eq('is_active', true)
-      .order('created_at', { ascending: false });
+    const { data: apiKeys, error } = await withSupabaseRetry(() =>
+      adminClient
+        .from('api_keys')
+        .select(apiKeySelect)
+        .eq('user_id', user.id)
+        .eq('is_active', true)
+        .order('created_at', { ascending: false })
+    );
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
@@ -70,6 +94,12 @@ export async function GET() {
 
   } catch (error) {
     console.error('API Keys GET Error:', error);
+    if (isTransientNetworkError(error)) {
+      return NextResponse.json(
+        { error: 'No se pudo conectar con Supabase para consultar las credenciales. Intenta de nuevo en unos segundos.' },
+        { status: 503 }
+      );
+    }
     if (error instanceof AuthzError) {
       return NextResponse.json({ error: error.message }, { status: error.status });
     }
@@ -94,12 +124,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const adminClient = await import('@/lib/supabase/admin').then(m => m.createAdminClient());
-    const { data: profile, error: profileError } = await adminClient
-      .from('users')
-      .select('role')
-      .eq('id', user.id)
-      .single();
+    const adminClient = createAdminClient();
+    const { data: profile, error: profileError } = await withSupabaseRetry(() =>
+      adminClient
+        .from('users')
+        .select('role')
+        .eq('id', user.id)
+        .single()
+    );
 
     if (profileError || !profile) {
       return NextResponse.json(
@@ -124,21 +156,23 @@ export async function POST(request: NextRequest) {
     const secretData = generateApiSecret();
     const secretHash = hashApiSecret(secretData);
 
-    const { data: apiKey, error: insertError } = await adminClient
-      .from('api_keys')
-      .insert({
-        app_name,
-        app_description,
-        api_key: keyData,
-        api_secret: secretHash,
-        api_secret_hash: secretHash,
-        api_secret_preview: getApiSecretPreview(secretData),
-        user_id: user.id,
-        role_access: requestedRole,
-        permissions: normalizePermissions(permissions, requestedRole),
-      })
-      .select(apiKeySelect)
-      .single();
+    const { data: apiKey, error: insertError } = await withSupabaseRetry(() =>
+      adminClient
+        .from('api_keys')
+        .insert({
+          app_name,
+          app_description,
+          api_key: keyData,
+          api_secret: secretHash,
+          api_secret_hash: secretHash,
+          api_secret_preview: getApiSecretPreview(secretData),
+          user_id: user.id,
+          role_access: requestedRole,
+          permissions: normalizePermissions(permissions, requestedRole),
+        })
+        .select(apiKeySelect)
+        .single()
+    );
 
     if (insertError) {
       return NextResponse.json({ error: insertError.message }, { status: 500 });
@@ -155,6 +189,12 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('API Keys POST Error:', error);
+    if (isTransientNetworkError(error)) {
+      return NextResponse.json(
+        { error: 'No se pudo conectar con Supabase para crear la credencial. Intenta de nuevo en unos segundos.' },
+        { status: 503 }
+      );
+    }
     if (error instanceof AuthzError) {
       return NextResponse.json({ error: error.message }, { status: error.status });
     }
@@ -179,13 +219,15 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    const adminClient = await import('@/lib/supabase/admin').then(m => m.createAdminClient());
+    const adminClient = createAdminClient();
     
-    const { error } = await adminClient
-      .from('api_keys')
-      .update({ is_active: false, updated_at: new Date().toISOString() })
-      .eq('id', keyId)
-      .eq('user_id', user.id);
+    const { error } = await withSupabaseRetry(() =>
+      adminClient
+        .from('api_keys')
+        .update({ is_active: false, updated_at: new Date().toISOString() })
+        .eq('id', keyId)
+        .eq('user_id', user.id)
+    );
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
@@ -195,6 +237,12 @@ export async function DELETE(request: NextRequest) {
 
   } catch (error) {
     console.error('API Keys DELETE Error:', error);
+    if (isTransientNetworkError(error)) {
+      return NextResponse.json(
+        { error: 'No se pudo conectar con Supabase para revocar la credencial. Intenta de nuevo en unos segundos.' },
+        { status: 503 }
+      );
+    }
     if (error instanceof AuthzError) {
       return NextResponse.json({ error: error.message }, { status: error.status });
     }

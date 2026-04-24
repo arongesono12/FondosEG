@@ -1,4 +1,4 @@
-import { isTransientNetworkMessage } from '@/lib/network-errors';
+import { isTransientNetworkError, isTransientNetworkMessage } from '@/lib/network-errors';
 
 function getErrorMessage(data: unknown): string | undefined {
   if (!data || typeof data !== 'object') return;
@@ -74,6 +74,16 @@ export async function fetchJSON<T>(input: RequestInfo | URL, init?: RequestInit)
       if (attempt < RETRY_DELAYS_MS.length && shouldRetryFetchError(method, error)) {
         await wait(RETRY_DELAYS_MS[attempt]);
         continue;
+      }
+
+      if (isTransientNetworkError(error)) {
+        throw new HttpError(
+          'No se pudo conectar con el servidor en este momento. Intenta de nuevo en unos segundos.',
+          503,
+          null,
+          url,
+          method
+        );
       }
 
       throw error;

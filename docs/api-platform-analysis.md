@@ -1,10 +1,10 @@
 # Analisis de Desarrollo FondosEG y Plataforma API
 
-Fecha: 2026-04-22
+Fecha: 2026-04-23
 
 ## Estado General
 
-Estimacion global de desarrollo de la aplicacion: 68%.
+Estimacion global de desarrollo de la aplicacion: 77%.
 
 La aplicacion ya tiene una base funcional solida para dashboard financiero: autenticacion, roles, gestion de transferencias, saldos, historial, estadisticas, notificaciones, staff y operaciones financieras con Supabase. La parte de APIs externas existe como MVP tecnico, pero todavia necesita madurez de producto, seguridad, contratos publicos y observabilidad para ser usada con confianza desde otro proyecto.
 
@@ -17,10 +17,10 @@ La aplicacion ya tiene una base funcional solida para dashboard financiero: aute
 | Transferencias y saldos | 72% | Hay RPCs financieros, historial y balance. Falta test automatizado de casos contables criticos. |
 | Notificaciones | 60% | Twilio/cola outbox parcialmente presente. Falta worker/reintentos operativos y monitoreo. |
 | Staff/admin | 65% | Gestion administrativa disponible, pero falta trazabilidad y permisos finos. |
-| APIs externas | 45% | Existen endpoints y API keys. Faltaban portal, secret hashing conectado, rate limit e idempotencia. |
-| Portal de desarrolladores | 20% antes / 45% despues | Se agrego una primera pantalla funcional para credenciales y ejemplos. |
+| APIs externas | 78% | Existen endpoints, API keys, secret hashing, rotacion de secrets, rate limit, idempotencia, request IDs, logs, OpenAPI, webhooks firmados y transferencia wallet atomica. |
+| Portal de desarrolladores | 65% | Pantalla funcional para credenciales, rotacion, ejemplos, OpenAPI y actividad reciente por credencial. La gestion visual de webhooks todavia puede crecer. |
 | Calidad/QA | 35% | No hay suite visible de tests. Typecheck/build deben integrarse en CI. |
-| Documentacion publica | 30% | README general existe. Falta OpenAPI, ejemplos por SDK y guia de errores. |
+| Documentacion publica | 45% | Ya hay OpenAPI, guia de integracion y documentacion inicial de webhooks. Falta SDK y ejemplos mas completos por lenguaje. |
 
 ## APIs Existentes
 
@@ -44,6 +44,12 @@ Infraestructura API existente:
 - Tabla `api_key_usage_windows`.
 - Utilidades para generar API key/secret.
 - Permisos por credencial: `balance`, `transfer`, `history`.
+- Endpoint OpenAPI: `GET /api/docs/openapi.json`.
+- Logs de requests: tabla `api_request_logs`.
+- Endpoint de actividad: `GET /api/api-keys/usage`.
+- Endpoint de rotacion de secrets: `POST /api/api-keys/{id}/rotate`.
+- Endpoints de webhooks: `GET /api/webhooks`, `POST /api/webhooks`, `PATCH /api/webhooks/{id}`, `DELETE /api/webhooks/{id}`, `POST /api/webhooks/{id}/rotate`.
+- Endpoint interno de procesamiento: `POST /api/webhooks/process`.
 
 ## Lo Que Faltaba y Se Implemento
 
@@ -56,19 +62,22 @@ Infraestructura API existente:
 - Revocacion suave con `is_active = false`.
 - Rate limit por ventana usando `api_key_usage_windows`.
 - Idempotencia en transferencias externas con header `idempotency-key`.
+- Contrato OpenAPI 3.1 inicial.
+- Respuestas externas estandarizadas con `request_id`.
+- Logging de status, latencia, endpoint y error code por request.
+- Rotacion segura de `api_secret` por credencial.
+- Transferencia wallet externa movida a RPC atomica en SQL.
+- Webhooks firmados con secreto cifrado en base de datos.
+- Cola `webhook_deliveries` con reintentos y backoff.
+- Emision de eventos reales desde creacion/pago de transferencias y confirmacion wallet.
 
 ## Prioridades Pendientes Para Produccion API
 
-1. Publicar contrato OpenAPI 3.1 en `/api/docs/openapi.json`.
-2. Crear documentacion versionada: autenticacion, errores, rate limit, idempotencia y ejemplos.
-3. Unificar respuestas de error con formato estable: `code`, `message`, `request_id`, `details`.
-4. Mover todas las operaciones financieras externas a RPCs atomicas.
-5. Agregar logs de uso por request: endpoint, status, latencia, api_key_id y request_id.
-6. Crear entornos separados sandbox/produccion para credenciales.
-7. Agregar rotacion de secretos sin borrar la credencial.
-8. Implementar webhooks para cambios de estado de transferencias.
-9. Anadir tests de contrato y tests de regresion financiera.
-10. Preparar SDK minimo para el otro proyecto: TypeScript client con retries, idempotencia y tipos.
+1. Crear entornos separados sandbox/produccion para credenciales y webhooks.
+2. Anadir tests de contrato y tests de regresion financiera.
+3. Publicar y versionar el SDK TypeScript en npm o registry privada.
+4. Agregar CI que valide OpenAPI, typecheck, lint y tests.
+5. Exponer en el portal un panel visual de webhooks, entregas y reintentos.
 
 ## Roadmap Recomendado
 

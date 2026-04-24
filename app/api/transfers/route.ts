@@ -5,6 +5,7 @@ import { createAgentTransferOperation } from '@/lib/server/financial-operations'
 import type { Transfer, TransferFormData } from '@/types';
 import { generateTransferCode, getPhoneLookupCandidates, normalizePhoneDigits } from '@/lib/utils';
 import { queueTransferNotifications, processNotificationOutbox } from '@/lib/server/notification-outbox';
+import { emitWebhookEvent } from '@/lib/server/webhook-outbox';
 import { isAdminRole } from '@/lib/roles';
 
 // Unified notification helper replaced by lib/server/notification-outbox.ts
@@ -188,6 +189,31 @@ export async function POST(request: NextRequest) {
       await processNotificationOutbox(5);
     } catch (notifErr) {
       console.error('Notification queuing/processing failed but transfer is created:', notifErr);
+    }
+
+    try {
+      await emitWebhookEvent(
+        {
+          eventType: 'transfer.created',
+          payload: {
+            transfer_id: typedTransfer.id,
+            transfer_code: typedTransfer.transfer_code,
+            amount: typedTransfer.amount,
+            currency: typedTransfer.currency,
+            status: typedTransfer.status,
+            sender_name: typedTransfer.sender_name,
+            sender_phone: typedTransfer.sender_phone,
+            receiver_name: typedTransfer.receiver_name,
+            receiver_phone: typedTransfer.receiver_phone,
+            destination_city: typedTransfer.destination_city,
+            destination_country: typedTransfer.destination_country ?? null,
+            source: 'dashboard',
+          },
+        },
+        10
+      );
+    } catch (webhookErr) {
+      console.error('Webhook dispatch failed but transfer is created:', webhookErr);
     }
 
     return NextResponse.json({ success: true, transfer: typedTransfer });

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { AuthzError, requireProfile, requireRole } from '@/lib/server/authz';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { markAgentTransferPaidOut } from '@/lib/server/financial-operations';
+import { emitWebhookEvent } from '@/lib/server/webhook-outbox';
 
 export async function POST(request: NextRequest) {
   try {
@@ -32,6 +33,34 @@ export async function POST(request: NextRequest) {
     }
 
     const result = await markAgentTransferPaidOut(transfer.id, profile.id);
+
+    try {
+      const paidTransfer = result.transfer as Record<string, unknown>;
+      await emitWebhookEvent(
+        {
+          eventType: 'transfer.paid_out',
+          payload: {
+            transfer_id: String(paidTransfer.id),
+            transfer_code: String(paidTransfer.transfer_code),
+            amount: Number(paidTransfer.amount),
+            currency: String(paidTransfer.currency),
+            status: String(paidTransfer.status),
+            sender_name: paidTransfer.sender_name ?? null,
+            sender_phone: paidTransfer.sender_phone ?? null,
+            receiver_name: paidTransfer.receiver_name ?? null,
+            receiver_phone: paidTransfer.receiver_phone ?? null,
+            destination_city: paidTransfer.destination_city ?? null,
+            paid_out_at: paidTransfer.paid_out_at ?? null,
+            paid_out_by: paidTransfer.paid_out_by ?? profile.id,
+            source: 'dashboard',
+          },
+        },
+        10
+      );
+    } catch (webhookErr) {
+      console.error('Webhook dispatch failed after transfer payout:', webhookErr);
+    }
+
     return NextResponse.json({ success: true, transfer: result.transfer });
   } catch (err) {
     console.error('[POST /api/transfers/payout]', err);
