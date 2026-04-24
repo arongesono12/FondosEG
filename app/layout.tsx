@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import { Poppins, Inter } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 
-import { ThemeProvider } from "@/components/theme-provider";
+import { ThemeProvider, themeScript } from "@/components/theme-provider";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -30,6 +31,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es" suppressHydrationWarning>
+      <head>
+        <Script id="fondoseg-theme-init" strategy="beforeInteractive">
+          {themeScript}
+        </Script>
+      </head>
       <body suppressHydrationWarning className={`${poppins.variable} ${inter.variable} font-sans antialiased`}>
         <ThemeProvider
           attribute="class"

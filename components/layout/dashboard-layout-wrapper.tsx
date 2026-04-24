@@ -45,7 +45,7 @@ import { SupportModal } from './support-modal';
 import { CookieConsentModal, type CookieConsentPreferences } from './cookie-consent-modal';
 import { getUnreadNotificationCount, getClientUnreadNotificationCount, getAdminUnreadNotificationCount } from '@/services/transfer';
 import { getAgentBalance } from '@/services/agent';
-import { useTheme } from 'next-themes';
+import { useTheme } from '@/components/theme-provider';
 import { HttpError } from '@/services/http';
 import { getRoleLabel, isAdminRole } from '@/lib/roles';
 

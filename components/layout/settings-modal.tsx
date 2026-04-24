@@ -10,7 +10,7 @@ import {
 import { Settings, DollarSign, Palette, Bell } from 'lucide-react';
 import { useAppStore } from '@/lib/store';
 import { useState, useEffect } from 'react';
-import { useTheme } from 'next-themes';
+import { useTheme } from '@/components/theme-provider';
 
 interface SettingsModalProps {
   open: boolean;
