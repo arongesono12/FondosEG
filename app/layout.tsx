@@ -4,6 +4,7 @@ import Script from "next/script";
 import "./globals.css";
 
 import { ThemeProvider, themeScript } from "@/components/theme-provider";
+import { Analytics } from "@vercel/analytics/next";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -45,6 +46,7 @@ export default function RootLayout({
         >
           {children}
         </ThemeProvider>
+        <Analytics />
       </body>
     </html>
   );
