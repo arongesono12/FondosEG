@@ -14,10 +14,10 @@ interface DashboardLogoProps {
 }
 
 const iconSizeClasses: Record<DashboardLogoSize, string> = {
-  sm: 'h-10 w-10',
-  md: 'h-12 w-12',
-  lg: 'h-20 w-20',
-  xl: 'h-24 w-24',
+  sm: 'h-7 w-7',
+  md: 'h-8 w-8',
+  lg: 'h-10 w-10',
+  xl: 'h-14 w-14',
 };
 
 const labelSizeClasses: Record<DashboardLogoSize, string> = {

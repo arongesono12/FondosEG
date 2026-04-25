@@ -25,6 +25,7 @@ import { ThemeToggle } from '@/components/theme-toggle';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { cn } from '@/lib/utils';
 
 type AudienceKey = 'gestores' | 'alliances' | 'developers';
 
@@ -275,6 +276,7 @@ const audienceHero = {
 export function LandingPage() {
   const [activeAudience, setActiveAudience] = useState<AudienceKey>('gestores');
   const [sessionId, setSessionId] = useState('');
+  const [scrolled, setScrolled] = useState(false);
   const { resolvedTheme } = useTheme();
   const activeHero = audienceHero[activeAudience];
   const activeThemeLabel = resolvedTheme === 'dark' ? 'Modo oscuro' : 'Modo claro';
@@ -319,65 +321,70 @@ export function LandingPage() {
   }
 
   return (
-    <main className="min-h-screen overflow-hidden bg-[radial-gradient(circle_at_top,rgba(236,72,153,0.18),transparent_28%),linear-gradient(180deg,#fff8fc,#fff4f8_24%,#ffffff_58%,#fff9f6)] text-slate-950 transition-colors duration-500 dark:bg-[#050505] dark:text-white">
-      <div className="relative isolate">
-        <div className="absolute inset-x-0 top-0 h-[560px] bg-[rgba(236,72,153,0.10)] blur-[160px] dark:bg-[rgba(236,72,153,0.08)]" />
-        <div className="absolute -left-24 top-32 h-72 w-72 rounded-full bg-[rgba(236,72,153,0.16)] blur-[120px] dark:bg-[rgba(236,72,153,0.12)]" />
-        <div className="absolute -right-12 top-24 h-80 w-80 rounded-full bg-[rgba(225,29,72,0.14)] blur-[140px] dark:bg-[rgba(225,29,72,0.12)]" />
+    <main suppressHydrationWarning className="main-container min-h-screen bg-white font-sans text-slate-950 dark:bg-black dark:text-white">
+      <div className="fixed inset-0 hidden overflow-hidden pointer-events-none md:block">
+        <div className="absolute top-0 left-0 h-full w-full">
+          <div className="absolute top-20 left-20 h-96 w-96 rounded-full bg-pink-100/60 blur-3xl dark:bg-pink-500/10" />
+          <div className="absolute right-20 bottom-20 h-96 w-96 rounded-full bg-rose-100/60 blur-3xl dark:bg-rose-500/10" />
+          <div className="absolute top-1/2 left-1/2 h-[600px] w-[600px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-pink-50/50 blur-3xl dark:bg-pink-600/5" />
+        </div>
+      </div>
 
-        <header className="relative z-20 mx-auto w-full max-w-7xl px-4 pt-6 sm:px-6 lg:px-8">
-          <div className="flex flex-col gap-4 rounded-[2rem] border border-slate-200/80 bg-white/88 px-4 py-4 shadow-[0_20px_60px_rgba(148,163,184,0.16)] backdrop-blur transition-colors duration-500 sm:px-5 lg:flex-row lg:items-center lg:justify-between dark:border-white/10 dark:bg-white/[0.08] dark:shadow-[0_24px_70px_rgba(0,0,0,0.22)]">
-            <div className="flex items-center justify-between gap-4">
-              <Link
-                href="/"
-                className="inline-flex items-center gap-3"
-                onClick={() => trackMarketingEvent('landing_cta_click', { cta: 'Logo header', target: '/' })}
-              >
-                <DashboardLogo size="md" labelClassName="text-xl sm:text-2xl" />
-              </Link>
+      <div
+        className={cn(
+          'relative mx-auto flex w-full flex-col',
+          'h-screen md:h-[calc(100vh-4rem)]',
+          'md:max-w-[1440px] md:rounded-[2.5rem] md:border md:border-border/10 md:shadow-xl md:shadow-slate-200/20 dark:md:shadow-black/20'
+        )}
+      >
+        <header
+          className={cn(
+            'z-50 flex h-16 shrink-0 items-center justify-between border-b border-border/10 px-4 transition-all duration-300 md:h-20 md:px-10',
+            'bg-linear-to-b from-white to-slate-50 dark:from-slate-900 dark:to-slate-950',
+            'md:rounded-t-[2.5rem]',
+            scrolled && 'h-14 shadow-lg shadow-black/5 md:h-16'
+          )}
+        >
+          <div className="flex min-w-0 items-center gap-2">
+            <Link
+              href="/"
+              className="flex items-center gap-2"
+              onClick={() => trackMarketingEvent('landing_cta_click', { cta: 'Logo header', target: '/' })}
+            >
+              <DashboardLogo priority size="md" labelClassName="text-lg md:text-xl" />
+            </Link>
 
-              <div className="flex items-center gap-3 lg:hidden">
-                <div className="hidden min-w-[104px] sm:block">
-                  <p className="text-[10px] font-black uppercase tracking-[0.24em] text-slate-400 dark:text-white/45">
-                    Tema activo
-                  </p>
-                  <p className="mt-1 text-sm font-semibold text-slate-800 dark:text-white">
-                    {activeThemeLabel}
-                  </p>
-                </div>
-                <ThemeToggle />
-              </div>
-            </div>
-
-            <nav className="flex flex-wrap items-center gap-2 lg:justify-center">
+            <nav className="ml-4 hidden items-center gap-1 lg:flex">
               {landingNav.map((item) => (
                 <a
                   key={item.href}
                   href={item.href}
                   onClick={() => trackMarketingEvent('landing_cta_click', { cta: `Header ${item.label}`, target: item.href })}
-                  className="rounded-full border border-slate-200/80 bg-white/78 px-4 py-2 text-sm font-semibold text-slate-600 shadow-sm shadow-slate-200/60 transition hover:-translate-y-0.5 hover:text-slate-950 dark:border-white/10 dark:bg-white/[0.04] dark:text-white/72 dark:shadow-none dark:hover:bg-white/[0.08] dark:hover:text-white"
+                  className="rounded-full px-5 py-2 text-sm font-bold text-muted-foreground transition-all duration-300 hover:bg-pink-100 hover:text-pink-600 dark:hover:bg-pink-500/20 dark:hover:text-pink-400"
                 >
                   {item.label}
                 </a>
               ))}
             </nav>
+          </div>
 
-            <div className="flex flex-wrap items-center gap-3">
-              <div className="hidden min-w-[112px] lg:block">
-                <p className="text-[10px] font-black uppercase tracking-[0.24em] text-slate-400 dark:text-white/45">
-                  Tema activo
-                </p>
-                <p className="mt-1 text-sm font-semibold text-slate-800 dark:text-white">
-                  {activeThemeLabel}
-                </p>
+          <div className="flex items-center gap-1 md:gap-4">
+            <div className="hidden items-center gap-2 text-muted-foreground md:flex">
+              <ThemeToggle />
+            </div>
+
+            <div className="flex items-center gap-2 border-l border-border/50 pl-2 md:gap-3 md:pl-6">
+              <div className="hidden text-right md:block">
+                <p className="text-sm font-black leading-tight text-foreground">Landing</p>
+                <p className="text-[10px] font-bold text-muted-foreground">{activeThemeLabel}</p>
               </div>
-              <div className="hidden lg:block">
+              <div className="md:hidden">
                 <ThemeToggle />
               </div>
               <Button
                 asChild
-                variant="outline"
-                className="h-11 rounded-2xl border-slate-200/80 bg-white/82 px-5 text-sm font-black uppercase tracking-[0.16em] text-slate-700 hover:bg-white dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:hover:bg-white/[0.08]"
+                variant="ghost"
+                className="hidden rounded-full px-5 py-2 text-sm font-bold text-muted-foreground transition-all duration-300 hover:bg-pink-100 hover:text-pink-600 md:inline-flex dark:hover:bg-pink-500/20 dark:hover:text-pink-400"
               >
                 <Link
                   href="/login"
@@ -388,7 +395,7 @@ export function LandingPage() {
               </Button>
               <Button
                 asChild
-                className="h-11 rounded-2xl bg-brand-gradient px-5 text-sm font-black uppercase tracking-[0.16em] text-white shadow-[0_18px_50px_rgba(236,72,153,0.28)] hover:opacity-95"
+                className="h-10 rounded-full bg-brand-gradient px-4 text-xs font-black uppercase tracking-[0.14em] text-white shadow-lg shadow-pink-500/20 hover:opacity-95 md:h-11 md:px-5 md:text-sm"
               >
                 <a
                   href="#lead-form"
@@ -401,6 +408,11 @@ export function LandingPage() {
           </div>
         </header>
 
+        <main
+          onScroll={(event) => setScrolled(event.currentTarget.scrollTop > 10)}
+          className="h-[calc(100vh-4rem)] flex-1 overflow-y-auto bg-white p-0 md:h-auto md:bg-transparent dark:bg-black"
+        >
+          <div className="relative isolate">
         <section className="relative mx-auto flex min-h-screen w-full max-w-7xl items-center px-4 py-10 sm:px-6 lg:px-8">
           <div className="grid w-full gap-12 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
             <div className="max-w-2xl">
@@ -962,6 +974,8 @@ export function LandingPage() {
             </div>
           </footer>
         </section>
+          </div>
+        </main>
       </div>
     </main>
   );

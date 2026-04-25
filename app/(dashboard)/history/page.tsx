@@ -14,7 +14,6 @@ import { correctTransfer, getAllTransfers, getTransfers } from '@/services/trans
 import { formatCurrency, formatDate, getStatusColor, getStatusText } from '@/lib/utils';
 import type { Transfer } from '@/types';
 import { Download, History, PencilLine, Search, TrendingUp, Wallet, XCircle } from 'lucide-react';
-import * as XLSX from 'xlsx';
 import { isAdminRole } from '@/lib/roles';
 
 type StatusFilter = 'all' | 'completed' | 'created' | 'available_for_pickup' | 'cancelled';
@@ -171,24 +170,40 @@ export default function HistoryPage() {
     }
   };
 
-  const exportToExcel = () => {
-    const worksheet = XLSX.utils.json_to_sheet(
-      filteredTransfers.map((transfer) => ({
-        Codigo: transfer.transfer_code,
-        Remitente: transfer.sender_name,
-        Telefono_remitente: transfer.sender_phone,
-        Destinatario: transfer.receiver_name,
-        Telefono_destinatario: transfer.receiver_phone,
-        Destino: transfer.destination_city,
-        Monto: transfer.amount,
-        Moneda: transfer.currency,
-        Estado: getStatusText(transfer.status),
-        Fecha: formatDate(transfer.created_at),
-      }))
-    );
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Historial');
-    XLSX.writeFile(workbook, `historial_transferencias_${new Date().toISOString().split('T')[0]}.xlsx`);
+  const exportToCsv = () => {
+    if (typeof window === 'undefined') return;
+
+    const escapeCsv = (value: unknown) => {
+      const stringValue = String(value ?? '');
+      return `"${stringValue.replace(/"/g, '""')}"`;
+    };
+
+    const rows = [
+      ['Codigo', 'Remitente', 'Telefono_remitente', 'Destinatario', 'Telefono_destinatario', 'Destino', 'Monto', 'Moneda', 'Estado', 'Fecha'],
+      ...filteredTransfers.map((transfer) => [
+        transfer.transfer_code,
+        transfer.sender_name,
+        transfer.sender_phone,
+        transfer.receiver_name,
+        transfer.receiver_phone,
+        transfer.destination_city,
+        transfer.amount,
+        transfer.currency,
+        getStatusText(transfer.status),
+        formatDate(transfer.created_at),
+      ]),
+    ];
+
+    const csv = rows.map((row) => row.map(escapeCsv).join(',')).join('\n');
+    const blob = new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `historial_transferencias_${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   if (loading) {
@@ -221,9 +236,9 @@ export default function HistoryPage() {
             </p>
           </div>
 
-          <Button onClick={exportToExcel} className="rounded-2xl bg-brand-gradient px-6 font-black text-white shadow-xl shadow-pink-500/20">
+          <Button onClick={exportToCsv} className="rounded-2xl bg-brand-gradient px-6 font-black text-white shadow-xl shadow-pink-500/20">
             <Download className="mr-2 h-4 w-4" />
-            Exportar
+            Exportar CSV
           </Button>
         </div>
       </section>

@@ -351,36 +351,6 @@ export default function StaffPage() {
     URL.revokeObjectURL(url);
   };
 
-  const exportFilteredMovementsToXlsx = async () => {
-    if (!selectedUser || filteredUserMovements.length === 0 || typeof window === 'undefined') {
-      return;
-    }
-
-    try {
-      const XLSX = await import('xlsx');
-      const rows = filteredUserMovements.map((movement) => ({
-        Fecha: formatDate(movement.created_at),
-        Tipo: movement.kind,
-        Titulo: movement.title,
-        Descripcion: movement.description,
-        Estado: movement.status || '',
-        Monto: typeof movement.amount === 'number' ? movement.amount : '',
-        Moneda: movement.currency || '',
-        Referencia: movement.reference_id || '',
-      }));
-
-      const worksheet = XLSX.utils.json_to_sheet(rows);
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, 'Movimientos');
-      XLSX.writeFile(
-        workbook,
-        `movimientos-${selectedUser.name.toLowerCase().replace(/\s+/g, '-')}-${new Date().toISOString().slice(0, 10)}.xlsx`
-      );
-    } catch (error) {
-      console.error('Error exporting XLSX:', error);
-    }
-  };
-
   if (loading) {
     return (
       <div className="space-y-6">
@@ -812,16 +782,6 @@ export default function StaffPage() {
                 >
                   <Download className="mr-2 h-4 w-4" />
                   Exportar CSV
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="rounded-xl font-black"
-                  onClick={exportFilteredMovementsToXlsx}
-                  disabled={filteredUserMovements.length === 0}
-                >
-                  <Download className="mr-2 h-4 w-4" />
-                  Exportar Excel
                 </Button>
               </div>
             </div>
