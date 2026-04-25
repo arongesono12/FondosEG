@@ -8,14 +8,9 @@ import {
   BarChart3,
   BellRing,
   CheckCircle2,
-  Clock3,
-  Code2,
   Globe2,
-  Layers3,
-  LockKeyhole,
   ShieldCheck,
   Wallet,
-  Webhook,
   Waypoints,
 } from 'lucide-react';
 import { useTheme } from '@/components/theme-provider';
@@ -28,6 +23,22 @@ import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 
 type AudienceKey = 'gestores' | 'alliances' | 'developers';
+type TrackMarketingEvent = (action: string, payload?: Record<string, unknown>) => void;
+
+const textStyles = {
+  eyebrow: 'text-xs font-black uppercase tracking-[0.22em] text-pink-400/85 dark:text-pink-300/80',
+  sectionTitle: 'text-3xl font-semibold leading-[1.08] tracking-tight text-slate-950 sm:text-4xl dark:text-white',
+  sectionParagraph: 'text-base leading-7 text-slate-600 dark:text-white/65',
+  cardTitle: 'text-2xl font-semibold leading-tight text-slate-950 dark:text-white',
+  cardParagraph: 'text-sm leading-7 text-slate-600 dark:text-white/68',
+  smallParagraph: 'text-sm leading-6 text-slate-600 dark:text-white/62',
+};
+
+const surfaceCardClass =
+  'rounded-[2rem] border border-slate-200/70 bg-white/82 p-6 text-slate-950 shadow-[0_18px_50px_rgba(15,23,42,0.08)] dark:border-white/10 dark:bg-white/[0.06] dark:text-white dark:shadow-[0_18px_50px_rgba(0,0,0,0.3)]';
+
+const primaryButtonClass =
+  'rounded-2xl bg-brand-gradient text-sm font-black uppercase tracking-[0.16em] text-white shadow-[0_18px_50px_rgba(236,72,153,0.28)] hover:opacity-95';
 
 const benefits = [
   {
@@ -273,13 +284,13 @@ const audienceHero = {
   footer: string;
 }>;
 
+type AudienceHeroContent = (typeof audienceHero)[AudienceKey];
+
 export function LandingPage() {
   const [activeAudience, setActiveAudience] = useState<AudienceKey>('gestores');
   const [sessionId, setSessionId] = useState('');
-  const [scrolled, setScrolled] = useState(false);
   const { resolvedTheme } = useTheme();
   const activeHero = audienceHero[activeAudience];
-  const activeThemeLabel = resolvedTheme === 'dark' ? 'Modo oscuro' : 'Modo claro';
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -321,663 +332,654 @@ export function LandingPage() {
   }
 
   return (
-    <main suppressHydrationWarning className="main-container min-h-screen bg-white font-sans text-slate-950 dark:bg-black dark:text-white">
-      <div className="fixed inset-0 hidden overflow-hidden pointer-events-none md:block">
-        <div className="absolute top-0 left-0 h-full w-full">
-          <div className="absolute top-20 left-20 h-96 w-96 rounded-full bg-pink-100/60 blur-3xl dark:bg-pink-500/10" />
-          <div className="absolute right-20 bottom-20 h-96 w-96 rounded-full bg-rose-100/60 blur-3xl dark:bg-rose-500/10" />
-          <div className="absolute top-1/2 left-1/2 h-[600px] w-[600px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-pink-50/50 blur-3xl dark:bg-pink-600/5" />
+    <main
+      suppressHydrationWarning
+      className="flex min-h-screen flex-col overflow-hidden bg-[linear-gradient(180deg,#fff7fb_0%,#f8fbff_42%,#ffffff_100%)] font-sans text-slate-950 dark:bg-[linear-gradient(180deg,#12060b_0%,#08080a_42%,#000000_100%)] dark:text-white"
+    >
+      <LandingBackground />
+      <LandingHeader trackMarketingEvent={trackMarketingEvent} />
+
+      <div className="relative z-10 flex min-h-screen flex-1 flex-col pt-16 md:pt-20">
+        <HeroSection
+          activeAudience={activeAudience}
+          activeHero={activeHero}
+          setActiveAudience={setActiveAudience}
+          trackMarketingEvent={trackMarketingEvent}
+        />
+
+        <LandingSections
+          activeAudience={activeAudience}
+          setActiveAudience={setActiveAudience}
+          trackMarketingEvent={trackMarketingEvent}
+        />
+
+        <LandingFooter trackMarketingEvent={trackMarketingEvent} />
+      </div>
+    </main>
+  );
+}
+
+function LandingBackground() {
+  return (
+    <div className="fixed inset-0 hidden overflow-hidden pointer-events-none md:block">
+      <div className="absolute top-0 left-0 h-full w-full">
+        <div className="absolute -top-24 left-12 h-[32rem] w-[32rem] rounded-full bg-pink-100/70 blur-3xl dark:bg-pink-500/10" />
+        <div className="absolute right-4 top-20 h-[34rem] w-[34rem] rounded-full bg-rose-100/70 blur-3xl dark:bg-rose-500/10" />
+        <div className="absolute bottom-0 left-1/2 h-[42rem] w-[42rem] -translate-x-1/2 rounded-full bg-white/70 blur-3xl dark:bg-white/5" />
+      </div>
+    </div>
+  );
+}
+
+function LandingHeader({
+  trackMarketingEvent,
+}: {
+  trackMarketingEvent: TrackMarketingEvent;
+}) {
+  return (
+    <header className="fixed inset-x-0 top-0 z-50 px-4">
+      <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-4 transition-all duration-300 md:h-20">
+        <Link
+          href="/"
+          className="flex min-w-0 items-center gap-2"
+          onClick={() => trackMarketingEvent('landing_cta_click', { cta: 'Logo header', target: '/' })}
+        >
+          <DashboardLogo priority size="md" labelClassName="text-base md:text-lg" />
+        </Link>
+
+        <nav className="hidden items-center justify-center gap-1 rounded-full border border-white/70 bg-white/56 px-2 py-1 shadow-sm shadow-slate-200/60 backdrop-blur-xl lg:flex dark:border-white/10 dark:bg-white/[0.04] dark:shadow-none">
+          {landingNav.map((item) => (
+            <a
+              key={item.href}
+              href={item.href}
+              onClick={() => trackMarketingEvent('landing_cta_click', { cta: `Header ${item.label}`, target: item.href })}
+              className="rounded-full px-5 py-2 text-xs font-semibold text-slate-600 transition-all duration-300 hover:bg-white hover:text-pink-600 dark:text-white/68 dark:hover:bg-white/[0.08] dark:hover:text-pink-300"
+            >
+              {item.label}
+            </a>
+          ))}
+        </nav>
+
+        <div className="flex items-center gap-2">
+          <div className="hidden md:block">
+            <ThemeToggle />
+          </div>
+          <Button
+            asChild
+            variant="ghost"
+            className="hidden h-10 rounded-full px-4 text-sm font-semibold text-slate-600 transition-all duration-300 hover:bg-white hover:text-pink-600 sm:inline-flex dark:text-white/70 dark:hover:bg-white/[0.08] dark:hover:text-pink-300"
+          >
+            <Link
+              href="/login"
+              onClick={() => trackMarketingEvent('landing_cta_click', { cta: 'Entrar', target: '/login' })}
+            >
+              Entrar
+            </Link>
+          </Button>
+          <Button
+            asChild
+            className="h-10 rounded-full bg-brand-gradient px-4 text-xs font-black uppercase tracking-[0.12em] text-white shadow-[0_14px_36px_rgba(236,72,153,0.28)] hover:opacity-95 md:px-5"
+          >
+            <a
+              href="#accesos"
+              onClick={() => trackMarketingEvent('landing_cta_click', { cta: 'Header solicitar acceso', target: '#accesos' })}
+            >
+              Acceso <ArrowRight className="ml-1 h-3.5 w-3.5" />
+            </a>
+          </Button>
+          <div className="md:hidden">
+            <ThemeToggle />
+          </div>
+        </div>
+      </div>
+    </header>
+  );
+}
+
+function HeroSection({
+  activeAudience,
+  activeHero,
+  setActiveAudience,
+  trackMarketingEvent,
+}: {
+  activeAudience: AudienceKey;
+  activeHero: AudienceHeroContent;
+  setActiveAudience: (audience: AudienceKey) => void;
+  trackMarketingEvent: TrackMarketingEvent;
+}) {
+  return (
+    <section className="relative flex min-h-[calc(100svh-4rem)] w-full flex-col items-center overflow-hidden px-4 pb-0 pt-8 sm:px-6 md:min-h-[calc(100svh-5rem)] lg:px-8">
+      <HeroOrbits />
+
+      <div className="mx-auto flex w-full max-w-5xl flex-col items-center text-center">
+        <div className="inline-flex items-center gap-2 rounded-full border border-white/70 bg-white/64 px-3 py-1.5 text-[11px] font-semibold text-slate-600 shadow-sm shadow-slate-200/60 backdrop-blur-xl dark:border-white/10 dark:bg-white/[0.05] dark:text-white/70 dark:shadow-none">
+          <SparkBadge />
+          {activeHero.badge}
+        </div>
+
+        <AudienceSelector
+          activeAudience={activeAudience}
+          setActiveAudience={setActiveAudience}
+          trackMarketingEvent={trackMarketingEvent}
+        />
+
+        <h1 className="mt-5 max-w-4xl text-4xl font-semibold leading-[1.04] tracking-tight text-slate-950 sm:text-5xl md:text-6xl dark:text-white">
+          {activeHero.title}
+        </h1>
+
+        <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-600 sm:text-base dark:text-white/68">
+          {activeHero.description}
+        </p>
+
+        <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+          <Button
+            asChild
+            className="h-11 rounded-full bg-brand-gradient px-6 text-xs font-black uppercase tracking-[0.16em] text-white shadow-[0_18px_46px_rgba(236,72,153,0.30)] hover:opacity-95"
+          >
+            <Link
+              href={`${activeHero.formAction}?role=${activeHero.formRole}`}
+              onClick={() => trackMarketingEvent('landing_cta_click', { cta: activeHero.formButton, target: activeHero.formAction })}
+            >
+              {activeHero.formButton}
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Link>
+          </Button>
+          <a
+            href="#audiencias"
+            onClick={() => trackMarketingEvent('landing_cta_click', { cta: 'Explorar audiencias', target: '#audiencias' })}
+            className="inline-flex h-11 items-center rounded-full border border-white/70 bg-white/58 px-5 text-xs font-black uppercase tracking-[0.16em] text-slate-600 shadow-sm shadow-slate-200/50 backdrop-blur-xl transition hover:bg-white hover:text-pink-600 dark:border-white/10 dark:bg-white/[0.04] dark:text-white/70 dark:shadow-none dark:hover:bg-white/[0.08]"
+          >
+            Ver rutas
+          </a>
+        </div>
+
+        <div className="mt-5 hidden flex-wrap justify-center gap-2 sm:flex">
+          {credibilityItems.slice(0, 4).map((item) => (
+            <span
+              key={item}
+              className="rounded-full border border-white/70 bg-white/48 px-3 py-1.5 text-[11px] font-semibold text-slate-500 shadow-sm shadow-slate-200/40 backdrop-blur-xl dark:border-white/10 dark:bg-white/[0.04] dark:text-white/55 dark:shadow-none"
+            >
+              {item}
+            </span>
+          ))}
         </div>
       </div>
 
-      <div
-        className={cn(
-          'relative mx-auto flex w-full flex-col',
-          'h-screen md:h-[calc(100vh-4rem)]',
-          'md:max-w-[1440px] md:rounded-[2.5rem] md:border md:border-border/10 md:shadow-xl md:shadow-slate-200/20 dark:md:shadow-black/20'
-        )}
-      >
-        <header
-          className={cn(
-            'z-50 flex h-16 shrink-0 items-center justify-between border-b border-border/10 px-4 transition-all duration-300 md:h-20 md:px-10',
-            'bg-linear-to-b from-white to-slate-50 dark:from-slate-900 dark:to-slate-950',
-            'md:rounded-t-[2.5rem]',
-            scrolled && 'h-14 shadow-lg shadow-black/5 md:h-16'
-          )}
-        >
-          <div className="flex min-w-0 items-center gap-2">
-            <Link
-              href="/"
-              className="flex items-center gap-2"
-              onClick={() => trackMarketingEvent('landing_cta_click', { cta: 'Logo header', target: '/' })}
+      <HeroVisual activeAudience={activeAudience} activeHero={activeHero} />
+    </section>
+  );
+}
+
+function HeroOrbits() {
+  return (
+    <>
+      <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_18%_16%,rgba(236,72,153,0.14),transparent_30%),radial-gradient(circle_at_84%_26%,rgba(225,29,72,0.12),transparent_34%),linear-gradient(180deg,rgba(255,255,255,0.18),rgba(255,255,255,0))] dark:bg-[radial-gradient(circle_at_18%_16%,rgba(236,72,153,0.16),transparent_30%),radial-gradient(circle_at_84%_26%,rgba(225,29,72,0.14),transparent_34%),linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0))]" />
+      <div className="absolute left-1/2 top-[23rem] -z-10 h-[42rem] w-[42rem] -translate-x-1/2 rounded-full border border-pink-200/50 dark:border-pink-300/10" />
+      <div className="absolute left-1/2 top-[28rem] -z-10 h-[31rem] w-[31rem] -translate-x-1/2 rounded-full border border-rose-200/50 dark:border-rose-300/10" />
+      <div className="absolute left-1/2 top-[34rem] -z-10 h-[19rem] w-[19rem] -translate-x-1/2 rounded-full border border-pink-100/70 dark:border-white/10" />
+    </>
+  );
+}
+
+function AudienceSelector({
+  activeAudience,
+  setActiveAudience,
+  trackMarketingEvent,
+}: {
+  activeAudience: AudienceKey;
+  setActiveAudience: (audience: AudienceKey) => void;
+  trackMarketingEvent: TrackMarketingEvent;
+}) {
+  return (
+    <div className="mt-5 flex flex-wrap justify-center gap-2">
+      {audienceTracks.map((track) => {
+        const isActive = track.key === activeAudience;
+
+        return (
+          <button
+            key={track.key}
+            type="button"
+            onClick={() => {
+              setActiveAudience(track.key);
+              trackMarketingEvent('landing_audience_select', {
+                selected_audience: track.key,
+                cta: track.ctaLabel,
+              });
+            }}
+            className={cn(
+              'rounded-full px-4 py-2 text-[11px] font-black uppercase tracking-[0.14em] transition-all duration-300',
+              isActive
+                ? 'bg-brand-gradient text-white shadow-[0_14px_34px_rgba(236,72,153,0.26)]'
+                : 'border border-white/70 bg-white/58 text-slate-500 shadow-sm shadow-slate-200/50 hover:bg-white hover:text-pink-600 dark:border-white/10 dark:bg-white/[0.04] dark:text-white/60 dark:shadow-none dark:hover:bg-white/[0.08] dark:hover:text-pink-300'
+            )}
+          >
+            {audienceHero[track.key].selector}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function HeroVisual({
+  activeAudience,
+  activeHero,
+}: {
+  activeAudience: AudienceKey;
+  activeHero: AudienceHeroContent;
+}) {
+  return (
+    <div className="relative mx-auto mb-10 mt-8 h-[480px] w-full max-w-5xl sm:mb-14 sm:h-[540px] md:mt-6 lg:mb-16">
+      <HeroMetricCard
+        className="left-0 top-[38%] hidden sm:flex lg:left-12"
+        code={activeAudience === 'developers' ? 'API' : 'USD'}
+        title={activeHero.topLabel}
+        primary={activeHero.topValue}
+        meta={activeHero.topMeta}
+      />
+      <HeroMetricCard
+        className="right-0 top-[55%] hidden sm:flex lg:right-10"
+        code={activeAudience === 'developers' ? 'HOOK' : 'XAF'}
+        title={activeHero.sideLabel}
+        primary={activeHero.sideValue}
+        meta={activeHero.sideMeta}
+        reverse
+      />
+
+      <HeroPhone activeAudience={activeAudience} activeHero={activeHero} />
+
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-linear-to-t from-white via-white/80 to-transparent dark:from-black dark:via-black/75" />
+    </div>
+  );
+}
+
+function LandingSections({
+  activeAudience,
+  setActiveAudience,
+  trackMarketingEvent,
+}: {
+  activeAudience: AudienceKey;
+  setActiveAudience: (audience: AudienceKey) => void;
+  trackMarketingEvent: TrackMarketingEvent;
+}) {
+  return (
+    <section className="relative mx-auto w-full max-w-7xl px-4 pb-24 pt-10 sm:px-6 sm:pt-14 lg:px-8 lg:pt-16">
+      <BenefitsSummary />
+      <AudiencesSection
+        activeAudience={activeAudience}
+        setActiveAudience={setActiveAudience}
+        trackMarketingEvent={trackMarketingEvent}
+      />
+      <OperationsSection />
+      <AccessSection trackMarketingEvent={trackMarketingEvent} />
+      <UrgencyBand trackMarketingEvent={trackMarketingEvent} />
+    </section>
+  );
+}
+
+function BenefitsSummary() {
+  return (
+    <div className="grid gap-6 lg:grid-cols-3">
+      {benefits.map(({ icon: Icon, title, description }) => (
+        <Card key={title} className={surfaceCardClass}>
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-gradient text-white shadow-[0_18px_40px_rgba(236,72,153,0.22)]">
+            <Icon className="h-5 w-5" />
+          </div>
+          <h3 className={cn('mt-5', textStyles.cardTitle)}>{title}</h3>
+          <p className={cn('mt-3', textStyles.cardParagraph)}>{description}</p>
+        </Card>
+      ))}
+    </div>
+  );
+}
+
+function AudiencesSection({
+  activeAudience,
+  setActiveAudience,
+  trackMarketingEvent,
+}: {
+  activeAudience: AudienceKey;
+  setActiveAudience: (audience: AudienceKey) => void;
+  trackMarketingEvent: TrackMarketingEvent;
+}) {
+  return (
+    <div id="audiencias" className="mt-20 scroll-mt-28">
+      <SectionHeading
+        eyebrow="Tres rutas, misma plataforma"
+        title="Una landing, tres publicos y un mensaje claro para cada uno."
+        description="En lugar de forzar un solo discurso, FondosEG presenta una entrada util para quien opera la red, para quien evalua una alianza y para quien necesita integrar la API."
+      />
+
+      <div className="mt-8 grid gap-6 lg:grid-cols-3">
+        {audienceTracks.map((track) => {
+          const isActive = track.key === activeAudience;
+
+          return (
+            <Card
+              key={track.id}
+              className={cn(
+                surfaceCardClass,
+                isActive && 'border-pink-400/40 bg-white shadow-[0_18px_50px_rgba(236,72,153,0.16)] dark:bg-white/[0.08]'
+              )}
             >
-              <DashboardLogo priority size="md" labelClassName="text-lg md:text-xl" />
-            </Link>
+              <p className={textStyles.eyebrow}>{track.eyebrow}</p>
+              <h3 className={cn('mt-4', textStyles.cardTitle)}>{track.title}</h3>
+              <p className={cn('mt-3', textStyles.cardParagraph)}>{track.description}</p>
 
-            <nav className="ml-4 hidden items-center gap-1 lg:flex">
-              {landingNav.map((item) => (
-                <a
-                  key={item.href}
-                  href={item.href}
-                  onClick={() => trackMarketingEvent('landing_cta_click', { cta: `Header ${item.label}`, target: item.href })}
-                  className="rounded-full px-5 py-2 text-sm font-bold text-muted-foreground transition-all duration-300 hover:bg-pink-100 hover:text-pink-600 dark:hover:bg-pink-500/20 dark:hover:text-pink-400"
-                >
-                  {item.label}
-                </a>
-              ))}
-            </nav>
-          </div>
-
-          <div className="flex items-center gap-1 md:gap-4">
-            <div className="hidden items-center gap-2 text-muted-foreground md:flex">
-              <ThemeToggle />
-            </div>
-
-            <div className="flex items-center gap-2 border-l border-border/50 pl-2 md:gap-3 md:pl-6">
-              <div className="hidden text-right md:block">
-                <p className="text-sm font-black leading-tight text-foreground">Landing</p>
-                <p className="text-[10px] font-bold text-muted-foreground">{activeThemeLabel}</p>
-              </div>
-              <div className="md:hidden">
-                <ThemeToggle />
-              </div>
-              <Button
-                asChild
-                variant="ghost"
-                className="hidden rounded-full px-5 py-2 text-sm font-bold text-muted-foreground transition-all duration-300 hover:bg-pink-100 hover:text-pink-600 md:inline-flex dark:hover:bg-pink-500/20 dark:hover:text-pink-400"
-              >
-                <Link
-                  href="/login"
-                  onClick={() => trackMarketingEvent('landing_cta_click', { cta: 'Entrar', target: '/login' })}
-                >
-                  Entrar
-                </Link>
-              </Button>
-              <Button
-                asChild
-                className="h-10 rounded-full bg-brand-gradient px-4 text-xs font-black uppercase tracking-[0.14em] text-white shadow-lg shadow-pink-500/20 hover:opacity-95 md:h-11 md:px-5 md:text-sm"
-              >
-                <a
-                  href="#lead-form"
-                  onClick={() => trackMarketingEvent('landing_cta_click', { cta: 'Header solicitar acceso', target: '#lead-form' })}
-                >
-                  Solicitar acceso
-                </a>
-              </Button>
-            </div>
-          </div>
-        </header>
-
-        <main
-          onScroll={(event) => setScrolled(event.currentTarget.scrollTop > 10)}
-          className="h-[calc(100vh-4rem)] flex-1 overflow-y-auto bg-white p-0 md:h-auto md:bg-transparent dark:bg-black"
-        >
-          <div className="relative isolate">
-        <section className="relative mx-auto flex min-h-screen w-full max-w-7xl items-center px-4 py-10 sm:px-6 lg:px-8">
-          <div className="grid w-full gap-12 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
-            <div className="max-w-2xl">
-              <div className="inline-flex items-center gap-2 rounded-full border border-slate-200/70 bg-white/80 px-4 py-2 text-xs font-semibold uppercase tracking-[0.22em] text-slate-700 shadow-sm shadow-slate-200/40 backdrop-blur dark:border-white/10 dark:bg-white/5 dark:text-white/70 dark:shadow-none">
-                <SparkBadge />
-                {activeHero.badge}
-              </div>
-
-              <div className="mt-8">
-                <DashboardLogo
-                  priority
-                  size="lg"
-                  iconClassName="h-16 w-16 sm:h-20 sm:w-20"
-                  labelClassName="text-3xl sm:text-4xl"
-                />
-              </div>
-
-              <div className="mt-8 flex flex-wrap gap-3">
-                {audienceTracks.map((track) => {
-                  const isActive = track.key === activeAudience;
-
-                  return (
-                    <button
-                      key={track.key}
-                      type="button"
-                      onClick={() => {
-                        setActiveAudience(track.key);
-                        trackMarketingEvent('landing_audience_select', {
-                          selected_audience: track.key,
-                          cta: track.ctaLabel,
-                        });
-                      }}
-                      className={
-                        isActive
-                          ? 'rounded-full bg-brand-gradient px-4 py-2 text-sm font-black uppercase tracking-[0.16em] text-white shadow-[0_14px_40px_rgba(236,72,153,0.25)]'
-                          : 'rounded-full border border-slate-200/70 bg-white/80 px-4 py-2 text-sm font-semibold uppercase tracking-[0.16em] text-slate-600 shadow-sm shadow-slate-200/40 hover:bg-white dark:border-white/10 dark:bg-white/5 dark:text-white/70 dark:shadow-none dark:hover:bg-white/[0.08]'
-                      }
-                    >
-                      {audienceHero[track.key].selector}
-                    </button>
-                  );
-                })}
-              </div>
-
-              <h1 className="mt-8 max-w-3xl text-4xl font-semibold leading-[1.02] tracking-tight text-slate-950 sm:text-5xl lg:text-7xl dark:text-white">
-                {activeHero.title}
-              </h1>
-
-              <p className="mt-6 max-w-xl text-base leading-7 text-slate-600 sm:text-lg dark:text-white/70">
-                {activeHero.description}
-              </p>
-
-              <form
-                id="lead-form"
-                action={activeHero.formAction}
-                method="get"
-                onSubmit={() =>
-                  trackMarketingEvent('landing_form_submit', {
-                    cta: activeHero.formButton,
-                    target: activeHero.formAction,
-                  })
-                }
-                className="mt-10 max-w-xl rounded-[2rem] border border-slate-200/70 bg-white/82 p-4 shadow-[0_24px_80px_rgba(15,23,42,0.12)] backdrop-blur dark:border-white/10 dark:bg-white/[0.06] dark:shadow-[0_24px_80px_rgba(0,0,0,0.45)]"
-              >
-                <input type="hidden" name="role" value={activeHero.formRole} />
-                <div className="grid gap-3 sm:grid-cols-[1fr_1fr_auto] sm:items-center">
-                  <Input
-                    name="name"
-                    placeholder="Tu nombre"
-                    autoComplete="name"
-                    className="h-12 border-slate-200 bg-white/85 text-slate-900 placeholder:text-slate-400 focus-visible:border-pink-300 sm:h-14 dark:border-white/10 dark:bg-black/30 dark:text-white dark:placeholder:text-white/[0.35] dark:focus-visible:border-white/20"
-                  />
-                  <Input
-                    name="email"
-                    type="email"
-                    placeholder="Correo de trabajo"
-                    autoComplete="email"
-                    required
-                    className="h-12 border-slate-200 bg-white/85 text-slate-900 placeholder:text-slate-400 focus-visible:border-pink-300 sm:h-14 dark:border-white/10 dark:bg-black/30 dark:text-white dark:placeholder:text-white/[0.35] dark:focus-visible:border-white/20"
-                  />
-                  <Button
-                    type="submit"
-                    className="h-12 rounded-2xl bg-brand-gradient px-6 text-sm font-black uppercase tracking-[0.18em] text-white shadow-[0_18px_50px_rgba(236,72,153,0.28)] hover:opacity-95 sm:h-14"
-                  >
-                    {activeHero.formButton}
-                  </Button>
-                </div>
-
-                <div className="mt-4 flex flex-wrap items-center gap-3 text-sm text-slate-500 dark:text-white/62">
-                  <span className="inline-flex items-center gap-2 rounded-full border border-slate-200/70 bg-white/80 px-3 py-1.5 dark:border-white/10 dark:bg-white/5">
-                    <CheckCircle2 className="h-4 w-4 text-pink-400" />
-                    {activeHero.helperPrimary}
-                  </span>
-                  <span className="inline-flex items-center gap-2 rounded-full border border-slate-200/70 bg-white/80 px-3 py-1.5 dark:border-white/10 dark:bg-white/5">
-                    <Clock3 className="h-4 w-4 text-pink-400" />
-                    {activeHero.helperSecondary}
-                  </span>
-                </div>
-
-                {activeAudience === 'developers' && (
-                  <div className="mt-4 flex flex-wrap gap-3 text-sm">
-                    <Link
-                      href="/developers-portal"
-                      onClick={() => trackMarketingEvent('landing_cta_click', { cta: 'Ir al portal de developers', target: '/developers-portal' })}
-                      className="text-slate-600 underline-offset-4 hover:text-slate-950 hover:underline dark:text-white/70 dark:hover:text-white"
-                    >
-                      Ir al portal de developers
-                    </Link>
-                    <Link
-                      href="/api/docs/openapi.json"
-                      onClick={() => trackMarketingEvent('landing_cta_click', { cta: 'Ver OpenAPI', target: '/api/docs/openapi.json' })}
-                      className="text-slate-600 underline-offset-4 hover:text-slate-950 hover:underline dark:text-white/70 dark:hover:text-white"
-                    >
-                      Ver OpenAPI
-                    </Link>
-                  </div>
-                )}
-              </form>
-
-              <div className="mt-8 flex flex-wrap gap-3">
-                {credibilityItems.map((item) => (
-                  <span
-                    key={item}
-                    className="rounded-full border border-slate-200/70 bg-white/80 px-4 py-2 text-sm font-medium text-slate-600 shadow-sm shadow-slate-200/40 dark:border-white/10 dark:bg-white/5 dark:text-white/75 dark:shadow-none"
-                  >
-                    {item}
-                  </span>
-                ))}
-              </div>
-            </div>
-
-            <div className="relative">
-              <div className="absolute left-0 top-1/3 h-44 w-44 rounded-full bg-[rgba(236,72,153,0.16)] blur-[110px]" />
-              <div className="absolute right-0 top-10 h-36 w-36 rounded-full bg-[rgba(225,29,72,0.14)] blur-[100px]" />
-
-              <div className="relative rounded-[2.5rem] border border-slate-200/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(255,245,248,0.96))] p-4 shadow-[0_35px_90px_rgba(236,72,153,0.14)] transition-colors duration-500 sm:p-6 dark:border-white/10 dark:bg-[#090909] dark:shadow-[0_35px_90px_rgba(0,0,0,0.55)]">
-                <div className="rounded-[2rem] border border-slate-200/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.92),rgba(248,250,252,0.96))] p-4 transition-colors duration-500 sm:p-5 dark:border-white/[0.08] dark:bg-black/90">
-                  <div className="flex items-center justify-between rounded-full border border-slate-200/80 bg-white/85 px-4 py-3 text-sm text-slate-500 shadow-sm shadow-slate-200/60 transition-colors duration-500 dark:border-white/[0.08] dark:bg-white/[0.04] dark:text-white/65">
-                    <div className="flex items-center gap-3">
-                      <DashboardLogo size="sm" showLabel={false} iconClassName="h-8 w-8" />
-                      <span className="font-semibold text-slate-900 dark:text-white/90">FondosEG</span>
-                    </div>
-                    <div className="inline-flex items-center gap-2 rounded-full border border-pink-200/80 bg-pink-50 px-3 py-1 text-xs uppercase tracking-[0.18em] text-slate-600 transition-colors duration-500 dark:border-white/10 dark:bg-white/5 dark:text-white/55">
-                      <LockKeyhole className="h-3.5 w-3.5 text-pink-400" />
-                      {activeAudience === 'developers' ? 'Portal tecnico' : 'Flujo seguro'}
-                    </div>
-                  </div>
-
-                  <div className="relative mt-10 min-h-[530px] rounded-[2rem] border border-slate-200/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(255,247,250,0.92),rgba(248,250,252,0.96))] p-5 transition-colors duration-500 sm:min-h-[620px] dark:border-white/[0.06] dark:bg-[#060606]">
-                    <div className="absolute left-4 top-14 hidden rounded-[1.5rem] border border-slate-200/80 bg-white/92 p-4 shadow-[0_24px_60px_rgba(148,163,184,0.22)] transition-colors duration-500 lg:block dark:border-white/[0.08] dark:bg-white/[0.04] dark:shadow-2xl">
-                      <p className="text-xs uppercase tracking-[0.18em] text-slate-400 dark:text-white/[0.35]">{activeHero.topLabel}</p>
-                      <p className="mt-2 text-3xl font-semibold text-slate-950 dark:text-white">{activeHero.topValue}</p>
-                      <p className="mt-1 text-sm text-emerald-400">{activeHero.topMeta}</p>
-                    </div>
-
-                    <div className="absolute bottom-10 right-0 hidden w-48 rounded-[1.5rem] border border-slate-200/80 bg-white/92 p-4 shadow-[0_24px_60px_rgba(148,163,184,0.22)] transition-colors duration-500 sm:block dark:border-white/[0.08] dark:bg-white/[0.04] dark:shadow-2xl">
-                      <p className="text-xs uppercase tracking-[0.18em] text-slate-400 dark:text-white/[0.35]">{activeHero.sideLabel}</p>
-                      <div className="mt-4 h-2 rounded-full bg-slate-200 dark:bg-white/10">
-                        <div className="h-2 w-3/4 rounded-full bg-brand-gradient" />
-                      </div>
-                      <p className="mt-3 text-lg font-semibold text-slate-950 dark:text-white">{activeHero.sideValue}</p>
-                      <p className="text-sm text-slate-500 dark:text-white/[0.45]">{activeHero.sideMeta}</p>
-                    </div>
-
-                    <div className="absolute inset-x-0 top-12 mx-auto w-[280px] rounded-[2.25rem] border border-slate-200/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(255,245,248,0.94))] p-3 shadow-[0_28px_80px_rgba(236,72,153,0.16)] transition-colors duration-500 sm:w-[320px] dark:border-white/12 dark:bg-[#0d0d0d] dark:shadow-[0_28px_80px_rgba(0,0,0,0.55)]">
-                      <div className="rounded-[1.75rem] border border-slate-200/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(248,250,252,0.96))] p-4 transition-colors duration-500 dark:border-white/[0.08] dark:bg-[#111111]">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="text-xs text-slate-500 dark:text-white/[0.45]">{activeHero.welcomeEyebrow}</p>
-                            <h2 className="text-lg font-semibold text-slate-950 dark:text-white">{activeHero.welcomeTitle}</h2>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className="h-8 w-8 rounded-full border border-slate-200 bg-slate-100 dark:border-white/10 dark:bg-white/5" />
-                            <span className="h-8 w-8 rounded-full border border-slate-200 bg-slate-100 dark:border-white/10 dark:bg-white/5" />
-                          </div>
-                        </div>
-
-                        <div className="mt-5 rounded-[1.5rem] border border-slate-200/80 bg-white/90 p-4 shadow-sm shadow-slate-200/70 transition-colors duration-500 dark:border-white/[0.08] dark:bg-white/[0.04] dark:shadow-none">
-                          <p className="text-xs uppercase tracking-[0.18em] text-slate-400 dark:text-white/[0.35]">{activeHero.mainLabel}</p>
-                          <div className="mt-2 flex items-end justify-between gap-3">
-                            <p className="text-3xl font-semibold text-slate-950 dark:text-white">{activeHero.mainValue}</p>
-                            <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs text-emerald-500 dark:bg-white/[0.06] dark:text-emerald-400">{activeHero.mainBadge}</span>
-                          </div>
-                          <p className="mt-2 text-sm text-slate-500 dark:text-white/[0.45]">{activeHero.mainDescription}</p>
-                        </div>
-
-                        <div className="mt-4 grid grid-cols-3 gap-2">
-                          <div className="rounded-2xl bg-brand-gradient px-3 py-2 text-center text-xs font-semibold text-white">
-                            {activeHero.tabs[0]}
-                          </div>
-                          <div className="rounded-2xl border border-slate-200/80 bg-white px-3 py-2 text-center text-xs font-semibold text-slate-700 shadow-sm shadow-slate-200/60 transition-colors duration-500 dark:border-white/[0.08] dark:bg-white/[0.04] dark:text-white/75 dark:shadow-none">
-                            {activeHero.tabs[1]}
-                          </div>
-                          <div className="rounded-2xl border border-slate-200/80 bg-white px-3 py-2 text-center text-xs font-semibold text-slate-700 shadow-sm shadow-slate-200/60 transition-colors duration-500 dark:border-white/[0.08] dark:bg-white/[0.04] dark:text-white/75 dark:shadow-none">
-                            {activeHero.tabs[2]}
-                          </div>
-                        </div>
-
-                        <div className="mt-4 grid gap-2 sm:grid-cols-2">
-                          {activeHero.grid.map(([label, value, meta]) => (
-                            <div key={label} className="rounded-[1.25rem] border border-slate-200/80 bg-white/92 p-3 shadow-sm shadow-slate-200/70 transition-colors duration-500 dark:border-white/[0.08] dark:bg-white/[0.04] dark:shadow-none">
-                              <p className="text-[11px] uppercase tracking-[0.16em] text-slate-400 dark:text-white/[0.35]">{label}</p>
-                              <div className="mt-2 flex items-end justify-between gap-2">
-                                <p className="text-xl font-semibold text-slate-950 dark:text-white">{value}</p>
-                                <p className="text-xs text-slate-500 dark:text-white/[0.45]">{meta}</p>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-
-                        <div className="mt-4 rounded-[1.25rem] border border-slate-200/80 bg-white/92 p-4 shadow-sm shadow-slate-200/70 transition-colors duration-500 dark:border-white/[0.08] dark:bg-white/[0.04] dark:shadow-none">
-                          <div className="flex items-start justify-between gap-3">
-                            <div>
-                              <p className="text-sm font-semibold text-slate-950 dark:text-white">{activeHero.priorityTitle}</p>
-                              <p className="mt-1 text-sm text-slate-500 dark:text-white/[0.45]">
-                                {activeHero.priorityDescription}
-                              </p>
-                            </div>
-                            {activeAudience === 'developers' ? (
-                              <Code2 className="h-5 w-5 text-pink-400" />
-                            ) : activeAudience === 'alliances' ? (
-                              <Layers3 className="h-5 w-5 text-pink-400" />
-                            ) : (
-                              <BadgeCheck className="h-5 w-5 text-pink-400" />
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="absolute bottom-8 left-6 right-6 flex items-center justify-between rounded-[1.4rem] border border-slate-200/80 bg-white/92 px-4 py-3 text-sm text-slate-500 shadow-[0_18px_40px_rgba(148,163,184,0.18)] transition-colors duration-500 dark:border-white/[0.08] dark:bg-white/[0.04] dark:text-white/55 dark:shadow-none">
-                      <span>{activeHero.footer}</span>
-                      {activeAudience === 'developers' ? (
-                        <Webhook className="h-4 w-4 text-pink-400" />
-                      ) : (
-                        <ArrowRight className="h-4 w-4 text-pink-400" />
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section className="relative mx-auto max-w-7xl px-4 pb-24 sm:px-6 lg:px-8">
-          <div className="grid gap-6 lg:grid-cols-3">
-            {benefits.map(({ icon: Icon, title, description }) => (
-              <Card
-                key={title}
-                className="rounded-[2rem] border border-slate-200/70 bg-white/82 p-6 text-slate-950 shadow-[0_18px_50px_rgba(15,23,42,0.08)] dark:border-white/10 dark:bg-white/[0.06] dark:text-white dark:shadow-[0_18px_50px_rgba(0,0,0,0.3)]"
-              >
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-gradient text-white shadow-[0_18px_40px_rgba(236,72,153,0.22)]">
-                  <Icon className="h-5 w-5" />
-                </div>
-                <h3 className="mt-5 text-2xl font-semibold">{title}</h3>
-                <p className="mt-3 text-sm leading-7 text-slate-600 dark:text-white/68">{description}</p>
-              </Card>
-            ))}
-          </div>
-
-          <div id="audiencias" className="mt-20 scroll-mt-28">
-            <div className="max-w-3xl">
-              <p className="text-sm font-semibold uppercase tracking-[0.24em] text-pink-300/80">Tres rutas, misma plataforma</p>
-              <h2 className="mt-4 text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl dark:text-white">
-                Una landing, tres publicos y un mensaje claro para cada uno.
-              </h2>
-              <p className="mt-5 text-base leading-7 text-slate-600 dark:text-white/65">
-                En lugar de forzar un solo discurso, FondosEG presenta una entrada util para quien opera la red, para
-                quien evalua una alianza y para quien necesita integrar la API.
-              </p>
-            </div>
-
-            <div className="mt-8 grid gap-6 lg:grid-cols-3">
-              {audienceTracks.map((track) => {
-                const isActive = track.key === activeAudience;
-
-                return (
-                  <Card
-                    key={track.id}
-                    className={isActive
-                      ? 'rounded-[2rem] border border-pink-400/40 bg-white p-6 text-slate-950 shadow-[0_18px_50px_rgba(236,72,153,0.16)] dark:bg-white/[0.08] dark:text-white'
-                      : 'rounded-[2rem] border border-slate-200/70 bg-white/82 p-6 text-slate-950 shadow-[0_18px_50px_rgba(15,23,42,0.08)] dark:border-white/10 dark:bg-white/[0.06] dark:text-white dark:shadow-[0_18px_50px_rgba(0,0,0,0.3)]'}
-                  >
-                    <p className="text-xs font-semibold uppercase tracking-[0.22em] text-pink-300/80">{track.eyebrow}</p>
-                    <h3 className="mt-4 text-2xl font-semibold">{track.title}</h3>
-                    <p className="mt-3 text-sm leading-7 text-slate-600 dark:text-white/68">{track.description}</p>
-
-                    <div className="mt-5 space-y-3">
-                      {track.bullets.map((item) => (
-                        <div key={item} className="flex items-start gap-3 text-sm text-slate-600 dark:text-white/75">
-                          <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-pink-400" />
-                          <span>{item}</span>
-                        </div>
-                      ))}
-                    </div>
-
-                    <div className="mt-8 flex flex-wrap gap-3">
-                      <Button
-                        type="button"
-                        onClick={() => {
-                          setActiveAudience(track.key);
-                          trackMarketingEvent('landing_cta_click', {
-                            cta: track.ctaLabel,
-                            target: track.isPortal ? track.href : track.id,
-                            selected_audience: track.key,
-                          });
-                        }}
-                        className="h-12 rounded-2xl bg-brand-gradient px-5 text-sm font-black uppercase tracking-[0.18em] text-white shadow-[0_18px_50px_rgba(236,72,153,0.28)] hover:opacity-95"
-                      >
-                        {track.ctaLabel}
-                      </Button>
-                      {track.isPortal && (
-                        <Button
-                          asChild
-                          variant="outline"
-                          className="h-12 rounded-2xl border-slate-200/70 bg-white/80 px-5 text-sm font-black uppercase tracking-[0.18em] text-slate-700 hover:bg-white dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:hover:bg-white/[0.08]"
-                        >
-                          <Link
-                            href={track.href}
-                            onClick={() => trackMarketingEvent('landing_cta_click', { cta: 'Abrir portal', target: track.href, selected_audience: track.key })}
-                          >
-                            Abrir portal
-                          </Link>
-                        </Button>
-                      )}
-                    </div>
-                  </Card>
-                );
-              })}
-            </div>
-          </div>
-
-          <div id="beneficios" className="mt-20 grid gap-8 scroll-mt-28 lg:grid-cols-[0.92fr_1.08fr] lg:items-start">
-            <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.24em] text-pink-300/80">Hecho para operacion real</p>
-              <h2 className="mt-4 max-w-xl text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl dark:text-white">
-                Lo que gana tu equipo cuando deja atras el control manual.
-              </h2>
-              <p className="mt-5 max-w-xl text-base leading-7 text-slate-600 dark:text-white/65">
-                La propuesta no se queda en funciones sueltas. Esta pensada para resolver tres dolores concretos de una
-                operacion diaria: visibilidad, coordinacion y velocidad de respuesta.
-              </p>
-
-              <div className="mt-8 space-y-4">
-                {[
-                  'Sabras que saldo tiene cada gestor y que movimientos estan pendientes.',
-                  'Podras responder al cliente sin abrir varias conversaciones o archivos.',
-                  'Tendras historial, validacion y seguimiento en el mismo flujo.',
-                  'Podras escalar la operacion con mas orden y menos dependencia de memoria humana.',
-                ].map((item) => (
-                  <div key={item} className="flex items-start gap-3 text-slate-600 dark:text-white/75">
-                    <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-pink-400" />
+              <div className="mt-5 space-y-3">
+                {track.bullets.map((item) => (
+                  <div key={item} className="flex items-start gap-3 text-sm text-slate-600 dark:text-white/75">
+                    <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-pink-400" />
                     <span>{item}</span>
                   </div>
                 ))}
               </div>
-            </div>
 
-            <div className="grid gap-5 sm:grid-cols-3">
-              {useCases.map(({ icon: Icon, title, description }) => (
-                <div key={title} className="rounded-[1.75rem] border border-slate-200/70 bg-white/82 p-5 shadow-[0_18px_50px_rgba(15,23,42,0.06)] dark:border-white/10 dark:bg-white/5 dark:shadow-none">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200/70 bg-white dark:border-white/10 dark:bg-white/[0.06]">
-                    <Icon className="h-5 w-5 text-pink-300" />
-                  </div>
-                  <h3 className="mt-4 text-lg font-semibold text-slate-950 dark:text-white">{title}</h3>
-                  <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-white/62">{description}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div id="accesos" className="mt-20 grid gap-6 scroll-mt-28 lg:grid-cols-2">
-            <Card
-              id="gestores-access"
-              className="rounded-[2rem] border border-slate-200/70 bg-white/82 p-6 text-slate-950 shadow-[0_18px_50px_rgba(15,23,42,0.08)] dark:border-white/10 dark:bg-white/[0.06] dark:text-white dark:shadow-[0_18px_50px_rgba(0,0,0,0.3)]"
-            >
-              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-pink-300/80">Acceso para operacion</p>
-              <h3 className="mt-4 text-3xl font-semibold">Si eres gestor o agencia, entra por aqui.</h3>
-              <p className="mt-4 max-w-xl text-sm leading-7 text-slate-600 dark:text-white/68">
-                Crea tu acceso inicial y empieza a trabajar con saldo, trazabilidad y seguimiento desde un flujo mas
-                ordenado.
-              </p>
-
-              <form
-                action="/register"
-                method="get"
-                onSubmit={() => trackMarketingEvent('landing_form_submit', { cta: 'Crear acceso', target: '/register', section: 'gestores-access' })}
-                className="mt-6 grid gap-3 sm:grid-cols-[1fr_1fr_auto]"
-              >
-                <input type="hidden" name="role" value="gestor" />
-                <Input
-                  name="name"
-                  placeholder="Nombre del responsable"
-                  autoComplete="name"
-                  className="h-12 border-slate-200 bg-white/85 text-slate-900 placeholder:text-slate-400 focus-visible:border-pink-300 sm:h-14 dark:border-white/10 dark:bg-black/30 dark:text-white dark:placeholder:text-white/[0.35] dark:focus-visible:border-white/20"
-                />
-                <Input
-                  name="email"
-                  type="email"
-                  placeholder="Correo de trabajo"
-                  autoComplete="email"
-                  required
-                  className="h-12 border-slate-200 bg-white/85 text-slate-900 placeholder:text-slate-400 focus-visible:border-pink-300 sm:h-14 dark:border-white/10 dark:bg-black/30 dark:text-white dark:placeholder:text-white/[0.35] dark:focus-visible:border-white/20"
-                />
+              <div className="mt-8 flex flex-wrap gap-3">
                 <Button
-                  type="submit"
-                  className="h-12 rounded-2xl bg-brand-gradient px-6 text-sm font-black uppercase tracking-[0.18em] text-white shadow-[0_18px_50px_rgba(236,72,153,0.28)] hover:opacity-95 sm:h-14"
+                  type="button"
+                  onClick={() => {
+                    setActiveAudience(track.key);
+                    trackMarketingEvent('landing_cta_click', {
+                      cta: track.ctaLabel,
+                      target: track.isPortal ? track.href : track.id,
+                      selected_audience: track.key,
+                    });
+                  }}
+                  className={cn('h-12 px-5', primaryButtonClass)}
                 >
-                  Crear acceso
+                  {track.ctaLabel}
                 </Button>
-              </form>
-            </Card>
-
-            <Card
-              id="alliances-access"
-              className="rounded-[2rem] border border-slate-200/70 bg-white/82 p-6 text-slate-950 shadow-[0_18px_50px_rgba(15,23,42,0.08)] dark:border-white/10 dark:bg-white/[0.06] dark:text-white dark:shadow-[0_18px_50px_rgba(0,0,0,0.3)]"
-            >
-              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-pink-300/80">Acceso para alianzas</p>
-              <h3 className="mt-4 text-3xl font-semibold">Si evaluas una alianza o inversion, empieza aqui.</h3>
-              <p className="mt-4 max-w-xl text-sm leading-7 text-slate-600 dark:text-white/68">
-                Deja tu correo para abrir una entrada inicial a la plataforma y revisar el negocio con mas contexto.
-              </p>
-
-              <form
-                action="/register"
-                method="get"
-                onSubmit={() => trackMarketingEvent('landing_form_submit', { cta: 'Solicitar presentacion', target: '/register', section: 'alliances-access' })}
-                className="mt-6 grid gap-3 sm:grid-cols-[1fr_1fr_auto]"
-              >
-                <input type="hidden" name="role" value="cliente" />
-                <Input
-                  name="name"
-                  placeholder="Tu nombre"
-                  autoComplete="name"
-                  className="h-12 border-slate-200 bg-white/85 text-slate-900 placeholder:text-slate-400 focus-visible:border-pink-300 sm:h-14 dark:border-white/10 dark:bg-black/30 dark:text-white dark:placeholder:text-white/[0.35] dark:focus-visible:border-white/20"
-                />
-                <Input
-                  name="email"
-                  type="email"
-                  placeholder="Correo corporativo"
-                  autoComplete="email"
-                  required
-                  className="h-12 border-slate-200 bg-white/85 text-slate-900 placeholder:text-slate-400 focus-visible:border-pink-300 sm:h-14 dark:border-white/10 dark:bg-black/30 dark:text-white dark:placeholder:text-white/[0.35] dark:focus-visible:border-white/20"
-                />
-                <Button
-                  type="submit"
-                  className="h-12 rounded-2xl bg-brand-gradient px-6 text-sm font-black uppercase tracking-[0.18em] text-white shadow-[0_18px_50px_rgba(236,72,153,0.28)] hover:opacity-95 sm:h-14"
-                >
-                  Solicitar presentacion
-                </Button>
-              </form>
-            </Card>
-          </div>
-
-          <div className="mt-20 rounded-[2.5rem] border border-slate-200/70 bg-white/82 p-6 shadow-[0_24px_80px_rgba(15,23,42,0.10)] sm:p-8 lg:p-10 dark:border-white/10 dark:bg-white/5 dark:shadow-[0_24px_80px_rgba(0,0,0,0.32)]">
-            <div className="grid gap-10 lg:grid-cols-[1fr_auto] lg:items-center">
-              <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.24em] text-pink-300/80">Urgencia operativa</p>
-                <h2 className="mt-4 max-w-2xl text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl dark:text-white">
-                  Cada jornada que sigues resolviendo a mano te cuesta tiempo, foco y margen de respuesta.
-                </h2>
-                <p className="mt-4 max-w-2xl text-base leading-7 text-slate-600 dark:text-white/65">
-                  Si hoy tu operacion depende de chats, memoria y conciliaciones manuales, el mejor momento para
-                  ordenar el proceso es antes del proximo pico de trabajo.
-                </p>
+                {track.isPortal && (
+                  <Button
+                    asChild
+                    variant="outline"
+                    className="h-12 rounded-2xl border-slate-200/70 bg-white/80 px-5 text-sm font-black uppercase tracking-[0.16em] text-slate-700 hover:bg-white dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:hover:bg-white/[0.08]"
+                  >
+                    <Link
+                      href={track.href}
+                      onClick={() => trackMarketingEvent('landing_cta_click', { cta: 'Abrir portal', target: track.href, selected_audience: track.key })}
+                    >
+                      Abrir portal
+                    </Link>
+                  </Button>
+                )}
               </div>
+            </Card>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
 
-              <Button
-                asChild
-                className="h-14 rounded-2xl bg-brand-gradient px-8 text-sm font-black uppercase tracking-[0.18em] text-white shadow-[0_18px_50px_rgba(236,72,153,0.28)] hover:opacity-95"
-              >
+function OperationsSection() {
+  const operationsBullets = [
+    'Sabras que saldo tiene cada gestor y que movimientos estan pendientes.',
+    'Podras responder al cliente sin abrir varias conversaciones o archivos.',
+    'Tendras historial, validacion y seguimiento en el mismo flujo.',
+    'Podras escalar la operacion con mas orden y menos dependencia de memoria humana.',
+  ];
+
+  return (
+    <div id="beneficios" className="mt-20 grid gap-8 scroll-mt-28 lg:grid-cols-[0.92fr_1.08fr] lg:items-start">
+      <div>
+        <SectionHeading
+          eyebrow="Hecho para operacion real"
+          title="Lo que gana tu equipo cuando deja atras el control manual."
+          description="La propuesta no se queda en funciones sueltas. Esta pensada para resolver tres dolores concretos de una operacion diaria: visibilidad, coordinacion y velocidad de respuesta."
+        />
+
+        <div className="mt-8 space-y-4">
+          {operationsBullets.map((item) => (
+            <div key={item} className="flex items-start gap-3 text-slate-600 dark:text-white/75">
+              <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-pink-400" />
+              <span>{item}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="grid gap-5 sm:grid-cols-3">
+        {useCases.map(({ icon: Icon, title, description }) => (
+          <div key={title} className="rounded-[1.75rem] border border-slate-200/70 bg-white/82 p-5 shadow-[0_18px_50px_rgba(15,23,42,0.06)] dark:border-white/10 dark:bg-white/5 dark:shadow-none">
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200/70 bg-white dark:border-white/10 dark:bg-white/[0.06]">
+              <Icon className="h-5 w-5 text-pink-300" />
+            </div>
+            <h3 className="mt-4 text-lg font-semibold leading-tight text-slate-950 dark:text-white">{title}</h3>
+            <p className={cn('mt-2', textStyles.smallParagraph)}>{description}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function AccessSection({ trackMarketingEvent }: { trackMarketingEvent: TrackMarketingEvent }) {
+  return (
+    <div id="accesos" className="mt-20 grid gap-6 scroll-mt-28 lg:grid-cols-2">
+      <AccessCard
+        id="gestores-access"
+        eyebrow="Acceso para operacion"
+        title="Si eres gestor o agencia, entra por aqui."
+        description="Crea tu acceso inicial y empieza a trabajar con saldo, trazabilidad y seguimiento desde un flujo mas ordenado."
+        role="gestor"
+        namePlaceholder="Nombre del responsable"
+        emailPlaceholder="Correo de trabajo"
+        buttonLabel="Crear acceso"
+        section="gestores-access"
+        trackMarketingEvent={trackMarketingEvent}
+      />
+      <AccessCard
+        id="alliances-access"
+        eyebrow="Acceso para alianzas"
+        title="Si evaluas una alianza o inversion, empieza aqui."
+        description="Deja tu correo para abrir una entrada inicial a la plataforma y revisar el negocio con mas contexto."
+        role="cliente"
+        namePlaceholder="Tu nombre"
+        emailPlaceholder="Correo corporativo"
+        buttonLabel="Solicitar presentacion"
+        section="alliances-access"
+        trackMarketingEvent={trackMarketingEvent}
+      />
+    </div>
+  );
+}
+
+function AccessCard({
+  id,
+  eyebrow,
+  title,
+  description,
+  role,
+  namePlaceholder,
+  emailPlaceholder,
+  buttonLabel,
+  section,
+  trackMarketingEvent,
+}: {
+  id: string;
+  eyebrow: string;
+  title: string;
+  description: string;
+  role: string;
+  namePlaceholder: string;
+  emailPlaceholder: string;
+  buttonLabel: string;
+  section: string;
+  trackMarketingEvent: TrackMarketingEvent;
+}) {
+  return (
+    <Card id={id} className={surfaceCardClass}>
+      <p className={textStyles.eyebrow}>{eyebrow}</p>
+      <h3 className={cn('mt-4', textStyles.sectionTitle)}>{title}</h3>
+      <p className={cn('mt-4 max-w-xl', textStyles.cardParagraph)}>{description}</p>
+
+      <form
+        action="/register"
+        method="get"
+        onSubmit={() => trackMarketingEvent('landing_form_submit', { cta: buttonLabel, target: '/register', section })}
+        className="mt-6 grid gap-3 sm:grid-cols-[1fr_1fr_auto]"
+      >
+        <input type="hidden" name="role" value={role} />
+        <Input
+          name="name"
+          placeholder={namePlaceholder}
+          autoComplete="name"
+          className="h-12 border-slate-200 bg-white/85 text-slate-900 placeholder:text-slate-400 focus-visible:border-pink-300 sm:h-14 dark:border-white/10 dark:bg-black/30 dark:text-white dark:placeholder:text-white/[0.35] dark:focus-visible:border-white/20"
+        />
+        <Input
+          name="email"
+          type="email"
+          placeholder={emailPlaceholder}
+          autoComplete="email"
+          required
+          className="h-12 border-slate-200 bg-white/85 text-slate-900 placeholder:text-slate-400 focus-visible:border-pink-300 sm:h-14 dark:border-white/10 dark:bg-black/30 dark:text-white dark:placeholder:text-white/[0.35] dark:focus-visible:border-white/20"
+        />
+        <Button type="submit" className={cn('h-12 px-6 sm:h-14', primaryButtonClass)}>
+          {buttonLabel}
+        </Button>
+      </form>
+    </Card>
+  );
+}
+
+function UrgencyBand({ trackMarketingEvent }: { trackMarketingEvent: TrackMarketingEvent }) {
+  return (
+    <div className="mt-20 rounded-[2.5rem] border border-slate-200/70 bg-white/82 p-6 shadow-[0_24px_80px_rgba(15,23,42,0.10)] sm:p-8 lg:p-10 dark:border-white/10 dark:bg-white/5 dark:shadow-[0_24px_80px_rgba(0,0,0,0.32)]">
+      <div className="grid gap-10 lg:grid-cols-[1fr_auto] lg:items-center">
+        <div>
+          <p className={textStyles.eyebrow}>Urgencia operativa</p>
+          <h2 className={cn('mt-4 max-w-2xl', textStyles.sectionTitle)}>
+            Cada jornada que sigues resolviendo a mano te cuesta tiempo, foco y margen de respuesta.
+          </h2>
+          <p className={cn('mt-4 max-w-2xl', textStyles.sectionParagraph)}>
+            Si hoy tu operacion depende de chats, memoria y conciliaciones manuales, el mejor momento para ordenar el proceso es antes del proximo pico de trabajo.
+          </p>
+        </div>
+
+        <Button asChild className={cn('h-14 px-8', primaryButtonClass)}>
+          <a
+            href="#accesos"
+            onClick={() => trackMarketingEvent('landing_cta_click', { cta: 'Solicitar acceso', target: '#accesos', section: 'urgency-footer' })}
+          >
+            Solicitar acceso
+          </a>
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+function LandingFooter({ trackMarketingEvent }: { trackMarketingEvent: TrackMarketingEvent }) {
+  return (
+    <footer className="relative z-10 mt-auto min-h-[340px] w-full border-t border-slate-200/80 bg-white/88 px-4 py-12 shadow-[0_-24px_80px_rgba(15,23,42,0.05)] backdrop-blur-xl sm:px-6 lg:px-8 dark:border-white/10 dark:bg-black/42 dark:shadow-black/20">
+      <div className="mx-auto flex h-full max-w-7xl flex-col justify-between gap-10">
+        <div className="grid gap-10 lg:grid-cols-[1.2fr_0.8fr]">
+          <div>
+            <DashboardLogo size="md" labelClassName="text-2xl" />
+            <p className={cn('mt-4 max-w-xl', textStyles.cardParagraph)}>
+              FondosEG organiza operacion, seguimiento y acceso tecnico en una sola plataforma para equipos que necesitan control real y capacidad de crecimiento.
+            </p>
+            <div className="mt-5 flex flex-wrap gap-3">
+              <Button asChild className={cn('h-11 px-5', primaryButtonClass)}>
                 <a
-                  href="#lead-form"
-                  onClick={() => trackMarketingEvent('landing_cta_click', { cta: 'Solicitar acceso', target: '#lead-form', section: 'urgency-footer' })}
+                  href="#accesos"
+                  onClick={() => trackMarketingEvent('landing_cta_click', { cta: 'Footer solicitar acceso', target: '#accesos' })}
                 >
                   Solicitar acceso
                 </a>
               </Button>
+              <Button
+                asChild
+                variant="outline"
+                className="h-11 rounded-2xl border-slate-200/80 bg-white/82 px-5 text-sm font-black uppercase tracking-[0.16em] text-slate-700 hover:bg-white dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:hover:bg-white/[0.08]"
+              >
+                <Link
+                  href="/developers-portal"
+                  onClick={() => trackMarketingEvent('landing_cta_click', { cta: 'Footer developers portal', target: '/developers-portal' })}
+                >
+                  Developers portal
+                </Link>
+              </Button>
             </div>
           </div>
 
-          <footer className="mt-10 rounded-[2.5rem] border border-slate-200/80 bg-white/86 p-6 shadow-[0_24px_80px_rgba(15,23,42,0.08)] transition-colors duration-500 sm:p-8 dark:border-white/10 dark:bg-white/[0.05] dark:shadow-[0_24px_80px_rgba(0,0,0,0.26)]">
-            <div className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr]">
-              <div>
-                <DashboardLogo size="md" labelClassName="text-2xl" />
-                <p className="mt-4 max-w-xl text-sm leading-7 text-slate-600 dark:text-white/68">
-                  FondosEG organiza operacion, seguimiento y acceso tecnico en una sola plataforma para equipos que necesitan control real y capacidad de crecimiento.
-                </p>
-                <div className="mt-5 flex flex-wrap gap-3">
-                  <Button
-                    asChild
-                    className="h-11 rounded-2xl bg-brand-gradient px-5 text-sm font-black uppercase tracking-[0.16em] text-white shadow-[0_18px_50px_rgba(236,72,153,0.28)] hover:opacity-95"
-                  >
-                    <a
-                      href="#lead-form"
-                      onClick={() => trackMarketingEvent('landing_cta_click', { cta: 'Footer solicitar acceso', target: '#lead-form' })}
-                    >
-                      Solicitar acceso
-                    </a>
-                  </Button>
-                  <Button
-                    asChild
-                    variant="outline"
-                    className="h-11 rounded-2xl border-slate-200/80 bg-white/82 px-5 text-sm font-black uppercase tracking-[0.16em] text-slate-700 hover:bg-white dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:hover:bg-white/[0.08]"
-                  >
-                    <Link
-                      href="/developers-portal"
-                      onClick={() => trackMarketingEvent('landing_cta_click', { cta: 'Footer developers portal', target: '/developers-portal' })}
-                    >
-                      Developers portal
-                    </Link>
-                  </Button>
-                </div>
-              </div>
-
-              <div className="grid gap-6 sm:grid-cols-2">
-                <div>
-                  <p className="text-xs font-black uppercase tracking-[0.22em] text-slate-400 dark:text-white/45">
-                    Navegacion
-                  </p>
-                  <div className="mt-4 flex flex-col gap-3">
-                    {landingNav.map((item) => (
-                      <a
-                        key={item.href}
-                        href={item.href}
-                        onClick={() => trackMarketingEvent('landing_cta_click', { cta: `Footer ${item.label}`, target: item.href })}
-                        className="text-sm font-medium text-slate-600 transition hover:text-slate-950 dark:text-white/68 dark:hover:text-white"
-                      >
-                        {item.label}
-                      </a>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <p className="text-xs font-black uppercase tracking-[0.22em] text-slate-400 dark:text-white/45">
-                    Recursos
-                  </p>
-                  <div className="mt-4 flex flex-col gap-3">
-                    {footerLinks.map((item) => (
-                      <Link
-                        key={item.href}
-                        href={item.href}
-                        onClick={() => trackMarketingEvent('landing_cta_click', { cta: `Footer ${item.label}`, target: item.href })}
-                        className="text-sm font-medium text-slate-600 transition hover:text-slate-950 dark:text-white/68 dark:hover:text-white"
-                      >
-                        {item.label}
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-8 flex flex-col gap-3 border-t border-slate-200/80 pt-5 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between dark:border-white/10 dark:text-white/55">
-              <span>FondosEG. Plataforma de operacion, control y acceso tecnico.</span>
-              <span>Landing enfocada en gestores, aliados e integradores.</span>
-            </div>
-          </footer>
-        </section>
+          <div className="grid gap-6 sm:grid-cols-2">
+            <FooterLinkGroup title="Navegacion" trackMarketingEvent={trackMarketingEvent} />
+            <FooterResourceGroup trackMarketingEvent={trackMarketingEvent} />
           </div>
-        </main>
+        </div>
+
+        <div className="border-t border-slate-200/80 pt-5 text-center text-sm text-slate-500 dark:border-white/10 dark:text-white/55">
+          <span>FondosEG. Plataforma de operacion, control y acceso tecnico.</span>
+        </div>
       </div>
-    </main>
+    </footer>
+  );
+}
+
+function FooterLinkGroup({
+  title,
+  trackMarketingEvent,
+}: {
+  title: string;
+  trackMarketingEvent: TrackMarketingEvent;
+}) {
+  return (
+    <div>
+      <p className="text-xs font-black uppercase tracking-[0.22em] text-slate-400 dark:text-white/45">{title}</p>
+      <div className="mt-4 flex flex-col gap-3">
+        {landingNav.map((item) => (
+          <a
+            key={item.href}
+            href={item.href}
+            onClick={() => trackMarketingEvent('landing_cta_click', { cta: `Footer ${item.label}`, target: item.href })}
+            className="text-sm font-medium text-slate-600 transition hover:text-slate-950 dark:text-white/68 dark:hover:text-white"
+          >
+            {item.label}
+          </a>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function FooterResourceGroup({ trackMarketingEvent }: { trackMarketingEvent: TrackMarketingEvent }) {
+  return (
+    <div>
+      <p className="text-xs font-black uppercase tracking-[0.22em] text-slate-400 dark:text-white/45">Recursos</p>
+      <div className="mt-4 flex flex-col gap-3">
+        {footerLinks.map((item) => (
+          <Link
+            key={item.href}
+            href={item.href}
+            onClick={() => trackMarketingEvent('landing_cta_click', { cta: `Footer ${item.label}`, target: item.href })}
+            className="text-sm font-medium text-slate-600 transition hover:text-slate-950 dark:text-white/68 dark:hover:text-white"
+          >
+            {item.label}
+          </Link>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function SectionHeading({
+  eyebrow,
+  title,
+  description,
+}: {
+  eyebrow: string;
+  title: string;
+  description: string;
+}) {
+  return (
+    <div className="max-w-3xl">
+      <p className={textStyles.eyebrow}>{eyebrow}</p>
+      <h2 className={cn('mt-4', textStyles.sectionTitle)}>{title}</h2>
+      <p className={cn('mt-5', textStyles.sectionParagraph)}>{description}</p>
+    </div>
   );
 }
 
@@ -986,5 +988,123 @@ function SparkBadge() {
     <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-brand-gradient text-white shadow-[0_10px_30px_rgba(236,72,153,0.25)]">
       <BadgeCheck className="h-3.5 w-3.5" />
     </span>
+  );
+}
+
+function HeroMetricCard({
+  className,
+  code,
+  title,
+  primary,
+  meta,
+  reverse = false,
+}: {
+  className?: string;
+  code: string;
+  title: string;
+  primary: string;
+  meta: string;
+  reverse?: boolean;
+}) {
+  return (
+    <div
+      className={cn(
+        'absolute z-20 w-[250px] items-center gap-4 rounded-2xl border border-white/75 bg-white/86 p-4 text-left shadow-[0_24px_70px_rgba(15,23,42,0.14)] backdrop-blur-xl dark:border-white/10 dark:bg-white/[0.07] dark:shadow-black/30',
+        reverse && 'flex-row-reverse text-right',
+        className
+      )}
+    >
+      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-brand-gradient text-xs font-black uppercase tracking-[0.08em] text-white shadow-[0_14px_32px_rgba(236,72,153,0.28)]">
+        {code.slice(0, 4)}
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="text-xs font-black uppercase tracking-[0.14em] text-slate-900 dark:text-white">{title}</p>
+        <div className={cn('mt-1 flex items-baseline justify-between gap-3', reverse && 'flex-row-reverse')}>
+          <span className="text-xl font-semibold text-slate-950 dark:text-white">{primary}</span>
+          <span className="text-[11px] font-semibold text-pink-500 dark:text-pink-300">{meta}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function HeroPhone({
+  activeAudience,
+  activeHero,
+}: {
+  activeAudience: AudienceKey;
+  activeHero: AudienceHeroContent;
+}) {
+  return (
+    <div className="absolute left-1/2 top-0 z-10 h-[500px] w-[245px] -translate-x-1/2 sm:h-[560px] sm:w-[278px]">
+      <div className="absolute left-1/2 top-4 h-[92%] w-[72%] -translate-x-1/2 rounded-full bg-[rgba(15,23,42,0.22)] blur-3xl dark:bg-black/70" />
+      <div className="relative mx-auto h-full rounded-[2.45rem] border-[9px] border-slate-950 bg-slate-950 p-2 shadow-[0_38px_90px_rgba(15,23,42,0.24)] dark:border-slate-900 dark:shadow-black/60">
+        <div className="absolute left-1/2 top-3 z-20 h-6 w-24 -translate-x-1/2 rounded-full bg-black" />
+        <div className="h-full overflow-hidden rounded-[1.85rem] bg-[linear-gradient(180deg,#fff7fb_0%,#ffffff_45%,#f8fafc_100%)] dark:bg-[linear-gradient(180deg,#181014_0%,#0b0b0d_54%,#060606_100%)]">
+          <div className="flex items-center justify-between bg-brand-gradient px-4 pb-4 pt-5 text-white">
+            <DashboardLogo size="sm" showLabel={false} iconClassName="h-7 w-7" />
+            <div className="flex items-center gap-1.5">
+              <span className="h-6 w-6 rounded-full bg-white/24" />
+              <span className="h-6 w-6 rounded-full bg-white/24" />
+            </div>
+          </div>
+
+          <div className="px-4 py-4">
+            <div className="rounded-2xl bg-slate-950 p-4 text-white shadow-[0_18px_42px_rgba(15,23,42,0.22)] dark:bg-black">
+              <p className="text-[10px] font-black uppercase tracking-[0.14em] text-pink-200">{activeHero.priorityTitle}</p>
+              <p className="mt-2 text-sm font-semibold leading-5">{activeHero.priorityDescription}</p>
+              <div className="mt-4 h-1.5 rounded-full bg-white/10">
+                <div className="h-1.5 w-3/4 rounded-full bg-brand-gradient" />
+              </div>
+            </div>
+
+            <div className="mt-4 flex items-center justify-between">
+              <div>
+                <p className="text-xs text-slate-500 dark:text-white/45">{activeHero.welcomeEyebrow}</p>
+                <h2 className="text-lg font-semibold text-slate-950 dark:text-white">{activeHero.welcomeTitle}</h2>
+              </div>
+              <span className="rounded-full bg-brand-gradient px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.12em] text-white">
+                {activeHero.mainBadge}
+              </span>
+            </div>
+
+            <div className="mt-4 rounded-2xl border border-slate-200/80 bg-white/88 p-4 shadow-sm shadow-slate-200/80 dark:border-white/10 dark:bg-white/[0.05] dark:shadow-none">
+              <p className="text-[10px] font-black uppercase tracking-[0.16em] text-slate-400 dark:text-white/35">{activeHero.mainLabel}</p>
+              <p className="mt-2 text-2xl font-semibold text-slate-950 dark:text-white">{activeHero.mainValue}</p>
+              <p className="mt-1 text-xs leading-5 text-slate-500 dark:text-white/50">{activeHero.mainDescription}</p>
+            </div>
+
+            <div className="mt-4 grid grid-cols-3 gap-2">
+              {activeHero.tabs.map((tab, index) => (
+                <div
+                  key={tab}
+                  className={cn(
+                    'rounded-xl px-2 py-2 text-center text-[10px] font-black',
+                    index === 0
+                      ? 'bg-brand-gradient text-white'
+                      : 'border border-slate-200/80 bg-white/80 text-slate-600 dark:border-white/10 dark:bg-white/[0.04] dark:text-white/62'
+                  )}
+                >
+                  {tab}
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-4 space-y-2">
+              {activeHero.grid.slice(0, 4).map(([label, value, meta]) => (
+                <div
+                  key={label}
+                  className="grid grid-cols-[1fr_auto_auto] items-center gap-3 rounded-xl border border-slate-200/70 bg-white/86 px-3 py-2 text-xs dark:border-white/10 dark:bg-white/[0.04]"
+                >
+                  <span className="font-semibold text-slate-700 dark:text-white/76">{label}</span>
+                  <span className="font-semibold text-slate-950 dark:text-white">{value}</span>
+                  <span className={cn('text-[10px]', activeAudience === 'gestores' ? 'text-emerald-500' : 'text-pink-400')}>{meta}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
