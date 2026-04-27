@@ -21,10 +21,10 @@ const iconSizeClasses: Record<DashboardLogoSize, string> = {
 };
 
 const labelSizeClasses: Record<DashboardLogoSize, string> = {
-  sm: 'text-base',
-  md: 'text-lg',
-  lg: 'text-2xl',
-  xl: 'text-4xl',
+  sm: 'text-xl',
+  md: 'text-2xl',
+  lg: 'text-3xl',
+  xl: 'text-5xl',
 };
 
 export function DashboardLogo({
@@ -36,7 +36,7 @@ export function DashboardLogo({
   size = 'md',
 }: DashboardLogoProps) {
   return (
-    <div className={cn('flex items-center gap-1.5', className)}>
+    <div className={cn('flex items-center gap-2', className)}>
       <div className={cn('relative flex items-center justify-center', iconSizeClasses[size], iconClassName)}>
         <div className="relative w-full h-full">
           <Image

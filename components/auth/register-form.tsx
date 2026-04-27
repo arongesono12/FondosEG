@@ -181,7 +181,7 @@ export function RegisterForm({
               size="lg"
               priority
               className="justify-center"
-              labelClassName="text-2xl md:text-3xl"
+              labelClassName="text-3xl md:text-4xl"
             />
           </div>
           <CardTitle className="text-3xl font-black tracking-tighter text-foreground">

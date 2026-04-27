@@ -63,7 +63,7 @@ export function LoginForm({
               size="lg"
               priority
               className="justify-center"
-              labelClassName="text-3xl md:text-4xl"
+              labelClassName="text-4xl md:text-5xl"
             />
           </div>
           <CardTitle className="text-3xl font-bold tracking-tight text-foreground">

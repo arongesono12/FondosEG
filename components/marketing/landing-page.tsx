@@ -384,7 +384,7 @@ function LandingHeader({
           className="flex min-w-0 items-center gap-2"
           onClick={() => trackMarketingEvent('landing_cta_click', { cta: 'Logo header', target: '/' })}
         >
-          <DashboardLogo priority size="md" labelClassName="text-base md:text-lg" />
+          <DashboardLogo priority size="md" labelClassName="text-xl md:text-2xl" />
         </Link>
 
         <nav className="hidden items-center justify-center gap-1 rounded-full border border-white/70 bg-white/56 px-2 py-1 shadow-sm shadow-slate-200/60 backdrop-blur-xl lg:flex dark:border-white/10 dark:bg-white/[0.04] dark:shadow-none">
@@ -877,7 +877,7 @@ function LandingFooter({ trackMarketingEvent }: { trackMarketingEvent: TrackMark
       <div className="mx-auto flex h-full max-w-7xl flex-col justify-between gap-10">
         <div className="grid gap-10 lg:grid-cols-[1.2fr_0.8fr]">
           <div>
-            <DashboardLogo size="md" labelClassName="text-2xl" />
+            <DashboardLogo size="md" labelClassName="text-3xl" />
             <p className={cn('mt-4 max-w-xl', textStyles.cardParagraph)}>
               FondosEG organiza operacion, seguimiento y acceso tecnico en una sola plataforma para equipos que necesitan control real y capacidad de crecimiento.
             </p>

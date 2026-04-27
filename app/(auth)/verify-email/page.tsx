@@ -122,7 +122,7 @@ function VerifyEmailContent() {
             <DashboardLogo
               size="md"
               className="justify-center"
-              labelClassName="text-xl"
+              labelClassName="text-2xl"
             />
           </div>
           <div className="flex justify-center mb-2">
@@ -159,7 +159,7 @@ function VerifyEmailContent() {
           <DashboardLogo
             size="md"
             className="justify-center"
-            labelClassName="text-xl"
+            labelClassName="text-2xl"
           />
         </div>
         <div className="flex justify-center mb-2">

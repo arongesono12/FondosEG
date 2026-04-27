@@ -19,6 +19,7 @@ export function ServiceUnavailableScreen({
           size="lg"
           className="justify-center mb-5"
           iconClassName="h-14 w-14 rounded-full"
+          labelClassName="text-4xl"
         />
         <div className="mx-auto mb-5 h-14 w-14 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
           <span className="text-2xl leading-none">!</span>

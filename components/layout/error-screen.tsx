@@ -22,6 +22,7 @@ export function ErrorScreen({ title, description, badge, actions }: ErrorScreenP
           size="lg"
           className="justify-center mb-5"
           iconClassName="h-14 w-14 rounded-full"
+          labelClassName="text-4xl"
         />
         {badge && (
           <div className="mx-auto mb-4 inline-flex items-center rounded-full border border-border/20 bg-muted/60 px-3 py-1 text-[10px] font-black uppercase tracking-[0.24em] text-muted-foreground">
