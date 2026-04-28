@@ -61,7 +61,7 @@ export async function fetchJSON<T>(input: RequestInfo | URL, init?: RequestInit)
             ? 'No autorizado'
             : res.status === 503
               ? 'Servicio no disponible'
-              : `La solicitud no pudo completarse (${res.status})`;
+              : `La solicitud no pudo completarse (${res.status}) al llamar a ${method} ${url}`;
         const message = getErrorMessage(data) || fallbackMessage;
         if (res.status === 401 && typeof window !== 'undefined' && window.location.pathname !== '/login') {
           window.location.assign('/login');

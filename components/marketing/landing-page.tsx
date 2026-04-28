@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import {
@@ -586,9 +587,7 @@ function HeroVisual({
         reverse
       />
 
-      <HeroPhone activeAudience={activeAudience} activeHero={activeHero} />
-
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-linear-to-t from-white via-white/80 to-transparent dark:from-black dark:via-black/75" />
+      <HeroPhone />
     </div>
   );
 }
@@ -1028,83 +1027,16 @@ function HeroMetricCard({
   );
 }
 
-function HeroPhone({
-  activeAudience,
-  activeHero,
-}: {
-  activeAudience: AudienceKey;
-  activeHero: AudienceHeroContent;
-}) {
+function HeroPhone() {
   return (
-    <div className="absolute left-1/2 top-0 z-10 h-[500px] w-[245px] -translate-x-1/2 sm:h-[560px] sm:w-[278px]">
-      <div className="absolute left-1/2 top-4 h-[92%] w-[72%] -translate-x-1/2 rounded-full bg-[rgba(15,23,42,0.22)] blur-3xl dark:bg-black/70" />
-      <div className="relative mx-auto h-full rounded-[2.45rem] border-[9px] border-slate-950 bg-slate-950 p-2 shadow-[0_38px_90px_rgba(15,23,42,0.24)] dark:border-slate-900 dark:shadow-black/60">
-        <div className="absolute left-1/2 top-3 z-20 h-6 w-24 -translate-x-1/2 rounded-full bg-black" />
-        <div className="h-full overflow-hidden rounded-[1.85rem] bg-[linear-gradient(180deg,#fff7fb_0%,#ffffff_45%,#f8fafc_100%)] dark:bg-[linear-gradient(180deg,#181014_0%,#0b0b0d_54%,#060606_100%)]">
-          <div className="flex items-center justify-between bg-brand-gradient px-4 pb-4 pt-5 text-white">
-            <DashboardLogo size="sm" showLabel={false} iconClassName="h-7 w-7" />
-            <div className="flex items-center gap-1.5">
-              <span className="h-6 w-6 rounded-full bg-white/24" />
-              <span className="h-6 w-6 rounded-full bg-white/24" />
-            </div>
-          </div>
-
-          <div className="px-4 py-4">
-            <div className="rounded-2xl bg-slate-950 p-4 text-white shadow-[0_18px_42px_rgba(15,23,42,0.22)] dark:bg-black">
-              <p className="text-[10px] font-black uppercase tracking-[0.14em] text-pink-200">{activeHero.priorityTitle}</p>
-              <p className="mt-2 text-sm font-semibold leading-5">{activeHero.priorityDescription}</p>
-              <div className="mt-4 h-1.5 rounded-full bg-white/10">
-                <div className="h-1.5 w-3/4 rounded-full bg-brand-gradient" />
-              </div>
-            </div>
-
-            <div className="mt-4 flex items-center justify-between">
-              <div>
-                <p className="text-xs text-slate-500 dark:text-white/45">{activeHero.welcomeEyebrow}</p>
-                <h2 className="text-lg font-semibold text-slate-950 dark:text-white">{activeHero.welcomeTitle}</h2>
-              </div>
-              <span className="rounded-full bg-brand-gradient px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.12em] text-white">
-                {activeHero.mainBadge}
-              </span>
-            </div>
-
-            <div className="mt-4 rounded-2xl border border-slate-200/80 bg-white/88 p-4 shadow-sm shadow-slate-200/80 dark:border-white/10 dark:bg-white/[0.05] dark:shadow-none">
-              <p className="text-[10px] font-black uppercase tracking-[0.16em] text-slate-400 dark:text-white/35">{activeHero.mainLabel}</p>
-              <p className="mt-2 text-2xl font-semibold text-slate-950 dark:text-white">{activeHero.mainValue}</p>
-              <p className="mt-1 text-xs leading-5 text-slate-500 dark:text-white/50">{activeHero.mainDescription}</p>
-            </div>
-
-            <div className="mt-4 grid grid-cols-3 gap-2">
-              {activeHero.tabs.map((tab, index) => (
-                <div
-                  key={tab}
-                  className={cn(
-                    'rounded-xl px-2 py-2 text-center text-[10px] font-black',
-                    index === 0
-                      ? 'bg-brand-gradient text-white'
-                      : 'border border-slate-200/80 bg-white/80 text-slate-600 dark:border-white/10 dark:bg-white/[0.04] dark:text-white/62'
-                  )}
-                >
-                  {tab}
-                </div>
-              ))}
-            </div>
-
-            <div className="mt-4 space-y-2">
-              {activeHero.grid.slice(0, 4).map(([label, value, meta]) => (
-                <div
-                  key={label}
-                  className="grid grid-cols-[1fr_auto_auto] items-center gap-3 rounded-xl border border-slate-200/70 bg-white/86 px-3 py-2 text-xs dark:border-white/10 dark:bg-white/[0.04]"
-                >
-                  <span className="font-semibold text-slate-700 dark:text-white/76">{label}</span>
-                  <span className="font-semibold text-slate-950 dark:text-white">{value}</span>
-                  <span className={cn('text-[10px]', activeAudience === 'gestores' ? 'text-emerald-500' : 'text-pink-400')}>{meta}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+    <Image
+      src="/mockup.png"
+      alt="Mockup de FondosEG"
+      width={4096}
+      height={2304}
+      priority
+      sizes="(min-width: 1024px) 860px, (min-width: 640px) 720px, 580px"
+      className="absolute left-1/2 top-0 z-10 h-auto w-[580px] -translate-x-1/2 drop-shadow-[0_26px_52px_rgba(15,23,42,0.18)] sm:w-[720px] lg:w-[860px] dark:drop-shadow-[0_28px_56px_rgba(0,0,0,0.38)]"
+    />
   );
 }
