@@ -2,6 +2,8 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
+import type { ReactNode } from 'react';
+import { useEffect, useState } from 'react';
 import {
   ArrowRight,
   BadgeCheck,
@@ -25,10 +27,14 @@ import { cn } from '@/lib/utils';
 export type LandingRole = 'gestores' | 'aliados' | 'developers';
 
 const primaryButtonClass =
-  'h-12 rounded-[8px] bg-brand-gradient px-6 text-sm font-bold text-white shadow-[0_16px_36px_rgba(225,29,72,0.22)] hover:opacity-95';
+  'h-12 rounded-2xl bg-brand-gradient px-6 text-sm font-bold text-white shadow-xl shadow-pink-500/20 hover:scale-[1.01]';
 
 const secondaryButtonClass =
-  'h-12 rounded-[8px] border-slate-200/80 bg-white/80 px-6 text-sm font-bold text-slate-950 hover:bg-white dark:border-white/15 dark:bg-white/5 dark:text-white dark:hover:bg-white/10';
+  'h-12 rounded-2xl border-border/20 bg-white/60 px-6 text-sm font-bold text-foreground backdrop-blur-md hover:bg-white/80 dark:bg-white/5 dark:hover:bg-white/10';
+
+const eyebrowClass = 'text-[10px] font-semibold uppercase tracking-[0.24em] text-muted-foreground';
+
+const panelClass = 'glass-premium overflow-hidden border-border/10 bg-card/40 shadow-xl shadow-black/5';
 
 const stats = [
   { value: '250K+', label: 'transacciones procesadas' },
@@ -144,26 +150,47 @@ const roleDetails = {
 >;
 
 function Header() {
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 12);
+
+    handleScroll();
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   return (
-    <header className="sticky top-0 z-30 border-b border-slate-200/70 bg-background/85 backdrop-blur-xl dark:border-white/10">
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 sm:px-8">
-        <Link href="/" aria-label="FondosEG inicio">
-          <DashboardLogo size="md" priority />
-        </Link>
-        <nav className="hidden items-center gap-6 text-sm font-semibold text-slate-600 dark:text-white/70 md:flex">
-          <Link className="hover:text-slate-950 dark:hover:text-white" href="/landing/gestores">
+    <header
+      className={cn(
+        'fixed inset-x-0 top-0 z-50 h-16 w-full transition-all duration-300 md:h-20',
+        scrolled
+          ? 'border-b border-transparent bg-transparent shadow-none backdrop-blur-0'
+          : 'border-b border-border/10 bg-white/30 shadow-sm shadow-black/5 backdrop-blur-xl dark:bg-black/20'
+      )}
+    >
+      <div className="relative mx-auto flex h-full w-full max-w-[1440px] items-center justify-between px-4 md:px-10">
+        <div className="flex items-center gap-2">
+          <Link href="/" aria-label="FondosEG inicio">
+            <DashboardLogo size="md" priority labelClassName="text-xl md:text-2xl" />
+          </Link>
+        </div>
+
+        <nav className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-1 lg:flex">
+          <Link className="rounded-full px-5 py-2 text-sm font-bold text-muted-foreground transition-all duration-300 hover:bg-pink-100 hover:text-pink-600 dark:hover:bg-pink-500/20 dark:hover:text-pink-400" href="/landing/gestores">
             Gestores
           </Link>
-          <Link className="hover:text-slate-950 dark:hover:text-white" href="/landing/aliados">
+          <Link className="rounded-full px-5 py-2 text-sm font-bold text-muted-foreground transition-all duration-300 hover:bg-pink-100 hover:text-pink-600 dark:hover:bg-pink-500/20 dark:hover:text-pink-400" href="/landing/aliados">
             Aliados
           </Link>
-          <Link className="hover:text-slate-950 dark:hover:text-white" href="/landing/developers">
+          <Link className="rounded-full px-5 py-2 text-sm font-bold text-muted-foreground transition-all duration-300 hover:bg-pink-100 hover:text-pink-600 dark:hover:bg-pink-500/20 dark:hover:text-pink-400" href="/landing/developers">
             Developers
           </Link>
         </nav>
-        <div className="flex items-center gap-2">
+
+        <div className="flex items-center gap-2 text-muted-foreground md:gap-3">
           <ThemeToggle />
-          <Button asChild className="hidden h-10 rounded-[8px] px-4 font-bold sm:inline-flex">
+          <Button asChild className="hidden h-10 rounded-full bg-brand-gradient px-5 text-sm font-bold text-white shadow-lg shadow-pink-500/20 sm:inline-flex">
             <Link href="/register">Comenzar</Link>
           </Button>
         </div>
@@ -172,28 +199,45 @@ function Header() {
   );
 }
 
+function LandingShell({ children }: { children: ReactNode }) {
+  return (
+    <main suppressHydrationWarning className="main-container min-h-screen bg-white font-sans text-foreground dark:bg-black">
+      <div className="pointer-events-none fixed inset-0 hidden overflow-hidden md:block">
+        <div className="absolute left-20 top-20 h-96 w-96 rounded-full bg-pink-100/60 blur-3xl dark:bg-pink-500/10" />
+        <div className="absolute bottom-20 right-20 h-96 w-96 rounded-full bg-rose-100/60 blur-3xl dark:bg-rose-500/10" />
+        <div className="absolute left-1/2 top-1/2 h-[600px] w-[600px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-pink-50/50 blur-3xl dark:bg-pink-600/5" />
+      </div>
+
+      <div className="relative mx-auto flex min-h-screen w-full flex-col overflow-hidden bg-white pt-16 dark:bg-black md:min-h-[calc(100vh-4rem)] md:max-w-[1440px] md:rounded-[2.5rem] md:border md:border-border/10 md:bg-transparent md:pt-20 md:shadow-xl md:shadow-slate-200/20 dark:md:shadow-black/20">
+        <Header />
+        <div className="flex-1 overflow-hidden bg-white dark:bg-black md:bg-transparent">{children}</div>
+      </div>
+    </main>
+  );
+}
+
 function FinalCta({ compact = false }: { compact?: boolean }) {
   return (
-    <section className={cn('px-5 py-14 sm:px-8', compact ? 'pt-6' : 'bg-slate-950 text-white dark:bg-black')}>
+    <section className="px-4 py-8 md:px-10 md:py-10">
       <div
         className={cn(
-          'mx-auto grid max-w-7xl gap-8 rounded-[8px] border p-6 sm:p-8 lg:grid-cols-[1fr_420px] lg:items-center',
+          'mx-auto grid max-w-7xl gap-8 rounded-4xl border p-6 sm:p-8 lg:grid-cols-[1fr_420px] lg:items-center',
           compact
-            ? 'border-slate-200 bg-white dark:border-white/10 dark:bg-white/[0.04]'
-            : 'border-white/10 bg-white/[0.04]'
+            ? 'glass-premium border-border/10 bg-card/40 shadow-xl shadow-black/5'
+            : 'border-border/10 bg-[radial-gradient(circle_at_top_left,rgba(236,72,153,0.16),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(14,165,233,0.14),transparent_32%),linear-gradient(135deg,rgba(255,255,255,0.86),rgba(248,250,252,0.72))] shadow-2xl shadow-slate-200/40 backdrop-blur-xl dark:bg-[radial-gradient(circle_at_top_left,rgba(236,72,153,0.12),transparent_30%),radial-gradient(circle_at_bottom_right,rgba(14,165,233,0.12),transparent_34%),linear-gradient(135deg,rgba(15,23,42,0.88),rgba(2,6,23,0.82))] dark:shadow-black/20'
         )}
       >
         <div>
-          <p className="text-sm font-bold uppercase tracking-[0.18em] text-rose-400">CTA simple</p>
-          <h2 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">Comienza con FondosEG</h2>
-          <p className={cn('mt-3 max-w-2xl text-base leading-7', compact ? 'text-slate-600 dark:text-white/65' : 'text-white/70')}>
+          <p className={eyebrowClass}>CTA simple</p>
+          <h2 className="mt-3 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">Comienza con FondosEG</h2>
+          <p className="mt-3 max-w-2xl text-base font-medium leading-7 text-muted-foreground">
             Deja tu email y te mostramos el flujo completo para mover dinero con conexión directa, sin intermediarios.
           </p>
         </div>
         <form className="flex flex-col gap-3 sm:flex-row" action="/register">
           <Input
             aria-label="Email"
-            className={cn('h-12 rounded-[8px]', compact ? 'bg-transparent' : 'border-white/15 bg-white/10 text-white placeholder:text-white/45')}
+            className="h-12 rounded-2xl border-border/20 bg-white/60 font-medium backdrop-blur-md dark:bg-white/5"
             name="email"
             placeholder="tu@email.com"
             type="email"
@@ -210,20 +254,20 @@ function FinalCta({ compact = false }: { compact?: boolean }) {
 
 export function LandingPage() {
   return (
-    <main className="min-h-screen overflow-hidden bg-background text-foreground">
-      <Header />
-
-      <section className="px-5 py-16 sm:px-8 lg:py-20">
+    <LandingShell>
+      <section className="px-4 py-6 md:px-10 md:py-10">
         <div className="mx-auto grid max-w-7xl gap-12 lg:grid-cols-[1.02fr_0.98fr] lg:items-center">
-          <div>
-            <p className="text-sm font-bold uppercase tracking-[0.18em] text-rose-500">Conexión directa, sin intermediarios</p>
-            <h1 className="mt-5 max-w-4xl text-5xl font-semibold leading-[1.02] tracking-tight text-slate-950 sm:text-6xl lg:text-7xl dark:text-white">
+          <div className="space-y-6">
+            <span className="inline-flex w-fit rounded-full border border-white/30 bg-white/70 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-slate-700 shadow-sm dark:border-white/10 dark:bg-white/10 dark:text-slate-200">
+              Conexión directa, sin intermediarios
+            </span>
+            <h1 className="max-w-4xl text-5xl font-bold leading-[1.02] tracking-tight text-foreground sm:text-6xl lg:text-7xl">
               Transfiere más dinero en menos tiempo
             </h1>
-            <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-600 dark:text-white/68">
+            <p className="max-w-2xl text-base font-medium leading-7 text-muted-foreground md:text-lg md:leading-8">
               FondosEG conecta operación, control y seguimiento para que cada transferencia avance con claridad desde el primer registro.
             </p>
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+            <div className="flex flex-col gap-3 sm:flex-row">
               <Button asChild className={primaryButtonClass}>
                 <Link href="/register">
                   Comenzar gratis
@@ -237,40 +281,38 @@ export function LandingPage() {
           </div>
 
           <div className="relative">
-            <div className="overflow-hidden rounded-[8px] border border-slate-200 bg-white shadow-[0_24px_80px_rgba(15,23,42,0.14)] dark:border-white/10 dark:bg-white/[0.04]">
-              <Image
-                src="/mockup.png"
-                alt="Vista del panel FondosEG"
-                width={1040}
-                height={780}
-                priority
-                className="h-auto w-full object-cover"
-              />
-            </div>
+            <Image
+              src="/mockup.png"
+              alt="Vista del panel FondosEG"
+              width={1040}
+              height={780}
+              priority
+              className="h-auto w-full object-contain"
+            />
           </div>
         </div>
       </section>
 
-      <section className="border-y border-slate-200/70 bg-white/65 px-5 py-14 dark:border-white/10 dark:bg-white/[0.03] sm:px-8">
+      <section className="px-4 py-6 md:px-10">
         <div className="mx-auto max-w-7xl">
           <div className="grid gap-4 md:grid-cols-3">
             {stats.map((item) => (
-              <div key={item.label} className="rounded-[8px] border border-slate-200 bg-background p-5 dark:border-white/10">
-                <p className="text-4xl font-semibold tracking-tight text-slate-950 dark:text-white">{item.value}</p>
-                <p className="mt-2 text-sm font-medium text-slate-600 dark:text-white/64">{item.label}</p>
+              <div key={item.label} className={cn(panelClass, 'rounded-4xl p-5')}>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">{item.label}</p>
+                <p className="mt-2 text-4xl font-bold tracking-tight text-foreground">{item.value}</p>
               </div>
             ))}
           </div>
 
           <div className="mt-8 grid gap-4 lg:grid-cols-2">
             {testimonials.map((item) => (
-              <Card key={item.quote} className="rounded-[8px] border-slate-200/80 bg-white p-6 shadow-none dark:border-white/10 dark:bg-white/[0.04]">
-                <p className="text-base leading-7 text-slate-700 dark:text-white/74">&ldquo;{item.quote}&rdquo;</p>
+              <Card key={item.quote} className={cn(panelClass, 'rounded-4xl p-6')}>
+                <p className="text-base font-medium leading-7 text-foreground/80">&ldquo;{item.quote}&rdquo;</p>
                 <div className="mt-5 flex items-center gap-3">
-                  <BadgeCheck className="text-rose-500" />
+                  <BadgeCheck className="text-pink-500" />
                   <div>
-                    <p className="font-semibold text-slate-950 dark:text-white">{item.author}</p>
-                    <p className="text-sm text-slate-500 dark:text-white/50">{item.label}</p>
+                    <p className="font-semibold text-foreground">{item.author}</p>
+                    <p className="text-sm text-muted-foreground">{item.label}</p>
                   </div>
                 </div>
               </Card>
@@ -279,29 +321,31 @@ export function LandingPage() {
         </div>
       </section>
 
-      <section className="px-5 py-16 sm:px-8">
+      <section className="px-4 py-8 md:px-10 md:py-10">
         <div className="mx-auto max-w-7xl">
           <div className="max-w-3xl">
-            <p className="text-sm font-bold uppercase tracking-[0.18em] text-rose-500">3 funciones core</p>
-            <h2 className="mt-3 text-4xl font-semibold tracking-tight text-slate-950 dark:text-white">Lo esencial para transferir mejor</h2>
+            <p className={eyebrowClass}>3 funciones core</p>
+            <h2 className="mt-3 text-4xl font-bold tracking-tight text-foreground">Lo esencial para transferir mejor</h2>
           </div>
           <div className="mt-8 grid gap-4 md:grid-cols-3">
             {features.map((feature) => (
-              <Card key={feature.title} className="rounded-[8px] border-slate-200/80 bg-white p-6 shadow-none dark:border-white/10 dark:bg-white/[0.04]">
-                <feature.icon className="h-8 w-8 text-rose-500" />
-                <h3 className="mt-5 text-xl font-semibold text-slate-950 dark:text-white">{feature.title}</h3>
-                <p className="mt-3 text-sm leading-7 text-slate-600 dark:text-white/64">{feature.description}</p>
+              <Card key={feature.title} className={cn(panelClass, 'rounded-4xl p-6')}>
+                <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-pink-500/20 bg-brand-gradient text-white shadow-lg shadow-pink-500/20">
+                  <feature.icon className="h-5 w-5" />
+                </div>
+                <h3 className="mt-5 text-xl font-bold text-foreground">{feature.title}</h3>
+                <p className="mt-3 text-sm font-medium leading-7 text-muted-foreground">{feature.description}</p>
               </Card>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="bg-slate-50 px-5 py-16 dark:bg-white/[0.02] sm:px-8">
+      <section className="px-4 py-8 md:px-10 md:py-10">
         <div className="mx-auto max-w-7xl">
           <div className="max-w-3xl">
-            <p className="text-sm font-bold uppercase tracking-[0.18em] text-rose-500">3 roles, 3 páginas</p>
-            <h2 className="mt-3 text-4xl font-semibold tracking-tight text-slate-950 dark:text-white">Cada audiencia entra por su puerta correcta</h2>
+            <p className={eyebrowClass}>3 roles, 3 páginas</p>
+            <h2 className="mt-3 text-4xl font-bold tracking-tight text-foreground">Cada audiencia entra por su puerta correcta</h2>
           </div>
           <div className="mt-8 grid gap-4 lg:grid-cols-3">
             {(Object.keys(roles) as LandingRole[]).map((key) => {
@@ -309,14 +353,16 @@ export function LandingPage() {
               return (
                 <Link
                   key={key}
-                  className="group rounded-[8px] border border-slate-200 bg-white p-6 transition hover:-translate-y-1 hover:border-rose-300 dark:border-white/10 dark:bg-white/[0.04] dark:hover:border-rose-400/60"
+                  className={cn(panelClass, 'group rounded-4xl p-6 transition hover:-translate-y-1 hover:border-pink-500/30')}
                   href={role.href}
                 >
-                  <role.icon className="h-8 w-8 text-rose-500" />
-                  <p className="mt-5 text-sm font-bold uppercase tracking-[0.16em] text-slate-500 dark:text-white/48">{role.eyebrow}</p>
-                  <h3 className="mt-3 text-2xl font-semibold leading-tight text-slate-950 dark:text-white">{role.title}</h3>
-                  <p className="mt-4 text-sm leading-7 text-slate-600 dark:text-white/64">{role.description}</p>
-                  <span className="mt-6 inline-flex items-center gap-2 text-sm font-bold text-rose-600 dark:text-rose-300">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-pink-100 text-pink-600 dark:bg-pink-500/20 dark:text-pink-400">
+                    <role.icon className="h-5 w-5" />
+                  </div>
+                  <p className="mt-5 text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">{role.eyebrow}</p>
+                  <h3 className="mt-3 text-2xl font-bold leading-tight text-foreground">{role.title}</h3>
+                  <p className="mt-4 text-sm font-medium leading-7 text-muted-foreground">{role.description}</p>
+                  <span className="mt-6 inline-flex items-center gap-2 text-sm font-bold text-pink-600 dark:text-pink-400">
                     Ver página
                     <ArrowRight className="transition group-hover:translate-x-1" />
                   </span>
@@ -328,7 +374,7 @@ export function LandingPage() {
       </section>
 
       <FinalCta />
-    </main>
+    </LandingShell>
   );
 }
 
@@ -337,17 +383,18 @@ export function RoleLandingPage({ role }: { role: LandingRole }) {
   const roleMeta = roles[role];
 
   return (
-    <main className="min-h-screen bg-background text-foreground">
-      <Header />
-      <section className="px-5 py-16 sm:px-8 lg:py-20">
+    <LandingShell>
+      <section className="px-4 py-6 md:px-10 md:py-10">
         <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[0.95fr_1.05fr] lg:items-center">
-          <div>
-            <p className="text-sm font-bold uppercase tracking-[0.18em] text-rose-500">{detail.heroLabel}</p>
-            <h1 className="mt-5 text-5xl font-semibold leading-[1.03] tracking-tight text-slate-950 sm:text-6xl dark:text-white">
+          <div className="space-y-6">
+            <span className="inline-flex w-fit rounded-full border border-white/30 bg-white/70 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-slate-700 shadow-sm dark:border-white/10 dark:bg-white/10 dark:text-slate-200">
+              {detail.heroLabel}
+            </span>
+            <h1 className="text-5xl font-bold leading-[1.03] tracking-tight text-foreground sm:text-6xl">
               {detail.headline}
             </h1>
-            <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-600 dark:text-white/68">{detail.summary}</p>
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+            <p className="max-w-2xl text-base font-medium leading-7 text-muted-foreground md:text-lg md:leading-8">{detail.summary}</p>
+            <div className="flex flex-col gap-3 sm:flex-row">
               <Button asChild className={primaryButtonClass}>
                 <Link href="/register">
                   Comenzar
@@ -360,15 +407,17 @@ export function RoleLandingPage({ role }: { role: LandingRole }) {
             </div>
           </div>
 
-          <div className="rounded-[8px] border border-slate-200 bg-white p-6 dark:border-white/10 dark:bg-white/[0.04]">
-            <roleMeta.icon className="h-10 w-10 text-rose-500" />
-            <h2 className="mt-5 text-3xl font-semibold tracking-tight text-slate-950 dark:text-white">{roleMeta.eyebrow}</h2>
-            <p className="mt-3 text-base leading-7 text-slate-600 dark:text-white/64">{detail.proof}</p>
+          <div className={cn(panelClass, 'rounded-4xl p-6')}>
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-gradient text-white shadow-lg shadow-pink-500/20">
+              <roleMeta.icon className="h-6 w-6" />
+            </div>
+            <h2 className="mt-5 text-3xl font-bold tracking-tight text-foreground">{roleMeta.eyebrow}</h2>
+            <p className="mt-3 text-base font-medium leading-7 text-muted-foreground">{detail.proof}</p>
             <div className="mt-6 grid gap-3">
               {detail.points.map((point) => (
-                <div key={point} className="flex items-start gap-3 rounded-[8px] bg-slate-50 p-4 dark:bg-white/[0.04]">
-                  <BadgeCheck className="mt-0.5 h-5 w-5 text-rose-500" />
-                  <span className="text-sm font-medium text-slate-700 dark:text-white/72">{point}</span>
+                <div key={point} className="flex items-start gap-3 rounded-2xl border border-border/10 bg-primary/5 p-4">
+                  <BadgeCheck className="mt-0.5 h-5 w-5 text-pink-500" />
+                  <span className="text-sm font-medium text-foreground/75">{point}</span>
                 </div>
               ))}
             </div>
@@ -376,39 +425,41 @@ export function RoleLandingPage({ role }: { role: LandingRole }) {
         </div>
       </section>
 
-      <section className="border-y border-slate-200/70 bg-white/65 px-5 py-14 dark:border-white/10 dark:bg-white/[0.03] sm:px-8">
+      <section className="px-4 py-8 md:px-10 md:py-10">
         <div className="mx-auto grid max-w-7xl gap-4 md:grid-cols-3">
           {features.map((feature) => (
-            <Card key={feature.title} className="rounded-[8px] border-slate-200/80 bg-white p-6 shadow-none dark:border-white/10 dark:bg-white/[0.04]">
-              <feature.icon className="h-7 w-7 text-rose-500" />
-              <h3 className="mt-4 text-xl font-semibold text-slate-950 dark:text-white">{feature.title}</h3>
-              <p className="mt-3 text-sm leading-7 text-slate-600 dark:text-white/64">{feature.description}</p>
+            <Card key={feature.title} className={cn(panelClass, 'rounded-4xl p-6')}>
+              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-pink-100 text-pink-600 dark:bg-pink-500/20 dark:text-pink-400">
+                <feature.icon className="h-5 w-5" />
+              </div>
+              <h3 className="mt-4 text-xl font-bold text-foreground">{feature.title}</h3>
+              <p className="mt-3 text-sm font-medium leading-7 text-muted-foreground">{feature.description}</p>
             </Card>
           ))}
         </div>
       </section>
 
-      <section className="px-5 py-14 sm:px-8">
+      <section className="px-4 py-8 md:px-10 md:py-10">
         <div className="mx-auto grid max-w-7xl gap-4 md:grid-cols-3">
-          <div className="rounded-[8px] border border-slate-200 p-5 dark:border-white/10">
-            <Clock3 className="h-7 w-7 text-rose-500" />
-            <p className="mt-4 text-3xl font-semibold">250K+</p>
-            <p className="mt-2 text-sm text-slate-600 dark:text-white/60">transacciones procesadas</p>
+          <div className={cn(panelClass, 'rounded-4xl p-5')}>
+            <Clock3 className="h-7 w-7 text-pink-500" />
+            <p className="mt-4 text-3xl font-bold">250K+</p>
+            <p className="mt-2 text-sm font-medium text-muted-foreground">transacciones procesadas</p>
           </div>
-          <div className="rounded-[8px] border border-slate-200 p-5 dark:border-white/10">
-            <Landmark className="h-7 w-7 text-rose-500" />
-            <p className="mt-4 text-3xl font-semibold">$12.5M</p>
-            <p className="mt-2 text-sm text-slate-600 dark:text-white/60">dinero movido en 2024</p>
+          <div className={cn(panelClass, 'rounded-4xl p-5')}>
+            <Landmark className="h-7 w-7 text-pink-500" />
+            <p className="mt-4 text-3xl font-bold">$12.5M</p>
+            <p className="mt-2 text-sm font-medium text-muted-foreground">dinero movido en 2024</p>
           </div>
-          <div className="rounded-[8px] border border-slate-200 p-5 dark:border-white/10">
-            <BadgeCheck className="h-7 w-7 text-rose-500" />
-            <p className="mt-4 text-3xl font-semibold">24/7</p>
-            <p className="mt-2 text-sm text-slate-600 dark:text-white/60">acompañamiento operativo</p>
+          <div className={cn(panelClass, 'rounded-4xl p-5')}>
+            <BadgeCheck className="h-7 w-7 text-pink-500" />
+            <p className="mt-4 text-3xl font-bold">24/7</p>
+            <p className="mt-2 text-sm font-medium text-muted-foreground">acompañamiento operativo</p>
           </div>
         </div>
       </section>
 
       <FinalCta compact />
-    </main>
+    </LandingShell>
   );
 }

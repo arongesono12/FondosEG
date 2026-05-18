@@ -40,7 +40,7 @@ export function DashboardLogo({
       <div className={cn('relative flex items-center justify-center', iconSizeClasses[size], iconClassName)}>
         <div className="relative w-full h-full">
           <Image
-            src="/logo fondosEG/FondosEG-logo.png"
+            src="/logo fondosEG/LFondosEG.png"
             alt="FondosEG"
             width={144}
             height={144}
