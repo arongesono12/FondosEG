@@ -28,7 +28,7 @@ import { useAppStore } from '@/lib/store';
 import { cn, formatDateShort } from '@/lib/utils';
 import { isAdminRole } from '@/lib/roles';
 import { createApiKey, getApiKeyUsage, getApiKeys, revokeApiKey, rotateApiKey } from '@/services/api-keys';
-import type { ApiKeyRecord, ApiPermission, ApiUsageResponse, CreateApiKeyData, RotateApiKeyResponse, UserRole } from '@/types';
+import type { ApiEnvironment, ApiKeyRecord, ApiPermission, ApiUsageResponse, CreateApiKeyData, RotateApiKeyResponse, UserRole } from '@/types';
 
 const permissionLabels: Record<ApiPermission, { label: string; icon: ElementType; detail: string }> = {
   balance: { label: 'Saldos', icon: Wallet, detail: 'Lectura de balances disponibles.' },
@@ -39,28 +39,28 @@ const permissionLabels: Record<ApiPermission, { label: string; icon: ElementType
 const endpointDocs = [
   {
     method: 'GET',
-    path: '/api/external/balance',
+    path: '/api/v1/external/balance',
     title: 'Consultar saldo',
     scope: 'balance',
     description: 'Devuelve el saldo disponible según el rol de la credencial.',
   },
   {
     method: 'POST',
-    path: '/api/external/transfer',
+    path: '/api/v1/external/transfer',
     title: 'Crear envío de gestor',
     scope: 'transfer',
     description: 'Registra un envío FondosEG y descuenta el float del gestor.',
   },
   {
     method: 'POST',
-    path: '/api/external/wallet-transfer',
+    path: '/api/v1/external/wallet-transfer',
     title: 'Transferencia entre clientes',
     scope: 'transfer',
     description: 'Mueve saldo entre billeteras de clientes FondosEG.',
   },
   {
     method: 'GET',
-    path: '/api/external/history?limit=20&offset=0',
+    path: '/api/v1/external/history?limit=20&offset=0',
     title: 'Historial de operaciones',
     scope: 'history',
     description: 'Lista operaciones visibles para la credencial autenticada.',
@@ -71,6 +71,19 @@ const defaultPermissions: Record<ApiPermission, boolean> = {
   balance: true,
   transfer: true,
   history: true,
+};
+
+const environmentLabels: Record<ApiEnvironment, { label: string; detail: string; badge: string }> = {
+  test: {
+    label: 'Prueba',
+    detail: 'Simula saldos y transferencias sin mover dinero real.',
+    badge: 'bg-amber-500 text-white',
+  },
+  production: {
+    label: 'Produccion',
+    detail: 'Opera sobre saldos y transferencias reales.',
+    badge: 'bg-emerald-600 text-white',
+  },
 };
 
 function getRoleOptions(role?: string | null): UserRole[] {
@@ -86,6 +99,7 @@ function createInitialForm(role?: string | null): CreateApiKeyData {
   return {
     app_name: '',
     app_description: '',
+    environment: 'test',
     role_access,
     permissions: defaultPermissions,
   };
@@ -229,7 +243,7 @@ export default function DevelopersPage() {
       }\nidempotency-key: <UUID_UNICO_POR_OPERACION>`
     : 'x-api-key: <API_KEY>\nx-api-secret: <API_SECRET>\nidempotency-key: <UUID_UNICO_POR_OPERACION>';
 
-  const curlSnippet = `curl -X GET "${baseUrl}/api/external/balance" \\
+  const curlSnippet = `curl -X GET "${baseUrl}/api/v1/external/balance" \\
   -H "x-api-key: ${activeCredential?.api_key || '<API_KEY>'}" \\
   -H "x-api-secret: ${activeCredential && 'api_secret' in activeCredential ? activeCredential.api_secret : '<API_SECRET>'}"`;
 
@@ -343,6 +357,23 @@ export default function DevelopersPage() {
               </div>
 
               <div className="grid gap-2">
+                <Label htmlFor="environment">Entorno</Label>
+                <select
+                  id="environment"
+                  value={form.environment}
+                  onChange={(event) => setForm((current) => ({ ...current, environment: event.target.value as ApiEnvironment }))}
+                  className="h-11 rounded-2xl border border-input bg-background px-3 text-sm font-medium shadow-sm outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                >
+                  {(Object.keys(environmentLabels) as ApiEnvironment[]).map((environment) => (
+                    <option key={environment} value={environment}>
+                      {environmentLabels[environment].label}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-xs font-medium text-muted-foreground">{environmentLabels[form.environment].detail}</p>
+              </div>
+
+              <div className="grid gap-2">
                 <Label htmlFor="role_access">Rol de acceso</Label>
                 <select
                   id="role_access"
@@ -428,6 +459,9 @@ export default function DevelopersPage() {
                         <Badge className="rounded-full bg-slate-900 px-2 py-1 text-[10px] uppercase tracking-[0.16em] text-white dark:bg-white dark:text-slate-900">
                           {key.role_access}
                         </Badge>
+                        <Badge className={cn('rounded-full px-2 py-1 text-[10px] uppercase tracking-[0.16em]', environmentLabels[key.environment || 'test'].badge)}>
+                          {environmentLabels[key.environment || 'test'].label}
+                        </Badge>
                       </div>
                       <p className="mt-1 break-all font-mono text-xs text-muted-foreground">{key.api_key}</p>
                       <p className="mt-2 text-xs font-medium text-muted-foreground">{permissionSummary(key) || 'Sin permisos activos'}</p>
@@ -475,8 +509,9 @@ export default function DevelopersPage() {
                       </Button>
                     </div>
                   </div>
-                  <div className="mt-4 grid gap-3 text-xs font-semibold text-muted-foreground sm:grid-cols-3">
+                  <div className="mt-4 grid gap-3 text-xs font-semibold text-muted-foreground sm:grid-cols-4">
                     <span>Secret: {key.api_secret_preview || 'solo visible al crear'}</span>
+                    <span>Entorno: {environmentLabels[key.environment || 'test'].label}</span>
                     <span>Creada: {formatDateShort(key.created_at)}</span>
                     <span>Ultimo uso: {key.last_used_at ? formatDateShort(key.last_used_at) : 'sin uso'}</span>
                   </div>

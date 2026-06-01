@@ -21,6 +21,7 @@ import {
   ArrowUpRight,
   Users,
   BarChart3,
+  Landmark,
   MessageSquare,
   Wallet,
   QrCode,
@@ -31,6 +32,7 @@ import { WalletTransferModal } from '@/components/wallet-transfer-modal';
 import { VerifyTransferModal } from '@/components/verify-transfer-modal';
 import { AgentPayoutModal } from '@/components/agent-payout-modal';
 import { AgentTransferModal } from '@/components/agent-transfer-modal';
+import { RevolutPayoutModal } from '@/components/revolut-payout-modal';
 import { isAdminRole } from '@/lib/roles';
 
 export default function TransfersPage() {
@@ -48,6 +50,7 @@ export default function TransfersPage() {
   const [verifyTransferOpen, setVerifyTransferOpen] = useState(false);
   const [agentTransferOpen, setAgentTransferOpen] = useState(false);
   const [agentPayoutOpen, setAgentPayoutOpen] = useState(false);
+  const [revolutPayoutOpen, setRevolutPayoutOpen] = useState(false);
   
   const displayCurrency = preferredCurrency || 'XAF';
 
@@ -201,6 +204,23 @@ export default function TransfersPage() {
               <p className="text-xs text-emerald-500 mt-1">Valida la transferencia y registra el pago</p>
               <Button variant="ghost" className="text-xs font-bold text-emerald-600 mt-2 p-0 h-auto">
                 Ver disponibles <ArrowUpRight className="h-3 w-3 ml-1" />
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+        {/* Card: Payout Revolut (gestores y administración) */}
+        {user?.role !== 'cliente' && (
+          <Card className="bg-sky-50 dark:bg-sky-950/20 border-sky-200 dark:border-sky-900 rounded-3xl p-6 cursor-pointer hover:shadow-lg transition-all" onClick={() => setRevolutPayoutOpen(true)}>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-bold text-sky-700 dark:text-sky-300 flex items-center gap-2">
+                <Landmark className="h-4 w-4" /> Payout Revolut
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-bold text-sky-700 dark:text-sky-300">Link externo</p>
+              <p className="text-xs text-sky-600 dark:text-sky-400 mt-1">Alternativa cuando no hay gestor</p>
+              <Button variant="ghost" className="text-xs font-bold text-sky-700 dark:text-sky-300 mt-2 p-0 h-auto">
+                Generar <ArrowUpRight className="h-3 w-3 ml-1" />
               </Button>
             </CardContent>
           </Card>
@@ -453,6 +473,12 @@ export default function TransfersPage() {
       <AgentTransferModal 
         open={agentTransferOpen} 
         onOpenChange={setAgentTransferOpen}
+        onSuccess={refreshData}
+      />
+
+      <RevolutPayoutModal
+        open={revolutPayoutOpen}
+        onOpenChange={setRevolutPayoutOpen}
         onSuccess={refreshData}
       />
     </div>

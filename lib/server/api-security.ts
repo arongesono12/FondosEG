@@ -1,11 +1,12 @@
 import { createHash, randomBytes, timingSafeEqual } from 'crypto';
+import { getApiKeyPrefix, type ApiEnvironment } from '@/lib/server/api-environments';
 
 function toBuffer(value: string): Buffer {
   return Buffer.from(value, 'utf8');
 }
 
-export function generateApiKey(): string {
-  return `sk_${randomBytes(24).toString('hex')}`;
+export function generateApiKey(environment: ApiEnvironment = 'test'): string {
+  return `${getApiKeyPrefix(environment)}${randomBytes(24).toString('hex')}`;
 }
 
 export function generateApiSecret(): string {

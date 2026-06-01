@@ -1,5 +1,7 @@
 import { createAdminClient } from '@/lib/supabase/admin';
+import { normalizeApiEnvironment, type ApiEnvironment } from '@/lib/server/api-environments';
 import { verifyApiSecret } from '@/lib/server/api-security';
+import type { PublicApiErrorCode, PublicApiRateLimitHeaders } from '@/lib/server/public-api';
 import { NextRequest } from 'next/server';
 
 export interface APIKeyAuthResult {
@@ -8,6 +10,7 @@ export interface APIKeyAuthResult {
     id: string;
     app_name: string;
     user_id: string;
+    environment: ApiEnvironment;
     role_access: string;
     permissions: {
       balance: boolean;
@@ -16,8 +19,10 @@ export interface APIKeyAuthResult {
     };
     rate_limit: number;
   };
+  errorCode?: PublicApiErrorCode;
   error?: string;
   status?: number;
+  rateLimit?: PublicApiRateLimitHeaders;
 }
 
 export async function authenticateAPIKey(request: NextRequest): Promise<APIKeyAuthResult> {
@@ -27,7 +32,12 @@ export async function authenticateAPIKey(request: NextRequest): Promise<APIKeyAu
   const apiSecret = request.headers.get('x-api-secret');
 
   if (!apiKey || !apiSecret) {
-    return { success: false, error: 'API key y secret son requeridos', status: 401 };
+    return {
+      success: false,
+      errorCode: 'authentication_required',
+      error: 'API key y secret son requeridos',
+      status: 401,
+    };
   }
 
   const { data: keyData, error } = await adminClient
@@ -38,18 +48,18 @@ export async function authenticateAPIKey(request: NextRequest): Promise<APIKeyAu
     .single();
 
   if (error || !keyData) {
-    return { success: false, error: 'API key inválida', status: 401 };
+    return { success: false, errorCode: 'invalid_credentials', error: 'API key invalida', status: 401 };
   }
 
   const expectedSecret = keyData.api_secret_hash || keyData.api_secret;
   const isLegacyPlaintext = !keyData.api_secret_hash;
 
   if (!expectedSecret || !verifyApiSecret(apiSecret, expectedSecret, isLegacyPlaintext)) {
-    return { success: false, error: 'API secret incorrecto', status: 401 };
+    return { success: false, errorCode: 'invalid_credentials', error: 'API secret incorrecto', status: 401 };
   }
 
   if (keyData.expires_at && new Date(keyData.expires_at) < new Date()) {
-    return { success: false, error: 'API key expirada', status: 401 };
+    return { success: false, errorCode: 'invalid_credentials', error: 'API key expirada', status: 401 };
   }
 
   const rateLimit = await consumeRateLimit({
@@ -61,8 +71,10 @@ export async function authenticateAPIKey(request: NextRequest): Promise<APIKeyAu
   if (!rateLimit.allowed) {
     return {
       success: false,
+      errorCode: 'rate_limit_exceeded',
       error: `Rate limit excedido. Intenta de nuevo despues de ${rateLimit.retryAfterSeconds} segundos`,
       status: 429,
+      rateLimit,
     };
   }
 
@@ -77,10 +89,12 @@ export async function authenticateAPIKey(request: NextRequest): Promise<APIKeyAu
       id: keyData.id,
       app_name: keyData.app_name,
       user_id: keyData.user_id,
+      environment: normalizeApiEnvironment(keyData.environment),
       role_access: keyData.role_access,
       permissions: keyData.permissions,
       rate_limit: keyData.rate_limit,
     },
+    rateLimit,
   };
 }
 
@@ -92,11 +106,13 @@ async function consumeRateLimit({
   apiKeyId: string;
   rateLimit: number;
   windowMinutes: number;
-}): Promise<{ allowed: boolean; retryAfterSeconds?: number }> {
+}): Promise<PublicApiRateLimitHeaders & { allowed: boolean }> {
   const adminClient = createAdminClient();
   const windowMs = Math.max(windowMinutes, 1) * 60 * 1000;
   const now = Date.now();
-  const windowStartedAt = new Date(Math.floor(now / windowMs) * windowMs).toISOString();
+  const windowStartedAtMs = Math.floor(now / windowMs) * windowMs;
+  const windowStartedAt = new Date(windowStartedAtMs).toISOString();
+  const resetAt = new Date(windowStartedAtMs + windowMs).toISOString();
 
   const { data, error } = await adminClient
     .from('api_key_usage_windows')
@@ -111,8 +127,14 @@ async function consumeRateLimit({
 
   const currentCount = Number(data?.request_count || 0);
   if (currentCount >= rateLimit) {
-    const retryAfterSeconds = Math.ceil((new Date(windowStartedAt).getTime() + windowMs - now) / 1000);
-    return { allowed: false, retryAfterSeconds };
+    const retryAfterSeconds = Math.max(1, Math.ceil((windowStartedAtMs + windowMs - now) / 1000));
+    return {
+      allowed: false,
+      limit: rateLimit,
+      remaining: 0,
+      resetAt,
+      retryAfterSeconds,
+    };
   }
 
   const nextCount = currentCount + 1;
@@ -132,7 +154,12 @@ async function consumeRateLimit({
     throw new Error(`Rate limit persist failed: ${writeError.message}`);
   }
 
-  return { allowed: true };
+  return {
+    allowed: true,
+    limit: rateLimit,
+    remaining: Math.max(rateLimit - nextCount, 0),
+    resetAt,
+  };
 }
 
 export async function requirePermission(

@@ -1,5 +1,6 @@
 export type UserRole = 'admin' | 'superadmin' | 'gestor' | 'cliente';
 export type TransferStatus = 'created' | 'available_for_pickup' | 'paid_out' | 'completed' | 'cancelled';
+export type TransferPayoutProvider = 'agent' | 'revolut';
 
 export interface User {
   id: string;
@@ -58,6 +59,14 @@ export interface Transfer {
   notes?: string;
   commission_amount?: number;
   pricing_rule_code?: string;
+  payout_provider?: TransferPayoutProvider;
+  payout_reference_id?: string;
+  payout_url?: string;
+  payout_state?: string;
+  payout_request_id?: string;
+  payout_expires_at?: string;
+  payout_methods?: string[];
+  payout_raw?: Record<string, unknown>;
   available_at?: string;
   paid_out_at?: string;
   wallet_credited_at?: string;
@@ -298,12 +307,14 @@ export interface ConfirmWalletTransferData {
 }
 
 export type ApiPermission = 'balance' | 'transfer' | 'history';
+export type ApiEnvironment = 'test' | 'production';
 
 export interface ApiKeyRecord {
   id: string;
   app_name: string;
   app_description?: string;
   api_key: string;
+  environment: ApiEnvironment;
   api_secret_preview?: string;
   role_access: UserRole;
   permissions: Record<ApiPermission, boolean>;
@@ -318,6 +329,7 @@ export interface ApiKeyRecord {
 export interface CreateApiKeyData {
   app_name: string;
   app_description?: string;
+  environment: ApiEnvironment;
   role_access: UserRole;
   permissions: Record<ApiPermission, boolean>;
 }

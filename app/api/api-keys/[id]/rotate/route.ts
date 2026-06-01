@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { AuthzError, requireAuthUser } from '@/lib/server/authz';
+import { normalizeApiEnvironment } from '@/lib/server/api-environments';
 import { generateApiSecret, getApiSecretPreview, hashApiSecret } from '@/lib/server/api-security';
 import { createAdminClient } from '@/lib/supabase/admin';
 
@@ -8,6 +9,7 @@ const apiKeySelect = [
   'app_name',
   'app_description',
   'api_key',
+  'environment',
   'api_secret_preview',
   'role_access',
   'permissions',
@@ -62,6 +64,7 @@ export async function POST(
       success: true,
       apiKey: {
         ...(apiKey as unknown as Record<string, unknown>),
+        environment: normalizeApiEnvironment((apiKey as { environment?: unknown }).environment),
         api_secret: secret,
       },
     });

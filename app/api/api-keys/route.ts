@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { AuthzError, requireAuthUser } from '@/lib/server/authz';
+import { normalizeApiEnvironment } from '@/lib/server/api-environments';
 import { generateApiKey, generateApiSecret, getApiSecretPreview, hashApiSecret } from '@/lib/server/api-security';
 import { isTransientNetworkError } from '@/lib/network-errors';
 import { isAdminRole } from '@/lib/roles';
@@ -11,6 +12,7 @@ const apiKeySelect = [
   'app_name',
   'app_description',
   'api_key',
+  'environment',
   'api_secret_preview',
   'role_access',
   'permissions',
@@ -60,6 +62,7 @@ function publicApiKeyRecord(row: Record<string, unknown>) {
     app_name: row.app_name,
     app_description: row.app_description,
     api_key: row.api_key,
+    environment: normalizeApiEnvironment(row.environment),
     api_secret_preview: row.api_secret_preview,
     role_access: row.role_access,
     permissions: row.permissions,
@@ -116,6 +119,7 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json();
     const { app_name, app_description, role_access = 'cliente', permissions } = body;
+    const environment = normalizeApiEnvironment(body?.environment);
 
     if (!app_name) {
       return NextResponse.json(
@@ -152,7 +156,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const keyData = generateApiKey();
+    const keyData = generateApiKey(environment);
     const secretData = generateApiSecret();
     const secretHash = hashApiSecret(secretData);
 
@@ -166,6 +170,7 @@ export async function POST(request: NextRequest) {
           api_secret: secretHash,
           api_secret_hash: secretHash,
           api_secret_preview: getApiSecretPreview(secretData),
+          environment,
           user_id: user.id,
           role_access: requestedRole,
           permissions: normalizePermissions(permissions, requestedRole),

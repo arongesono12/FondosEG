@@ -21,7 +21,7 @@ export class FondosEGClient {
         this.userAgent = options.userAgent;
     }
     async getBalance(options) {
-        return this.request('/api/external/balance', {
+        return this.request('/api/v1/external/balance', {
             method: 'GET',
             signal: options?.signal,
         });
@@ -32,14 +32,14 @@ export class FondosEGClient {
             search.set('limit', String(params.limit));
         if (typeof params.offset === 'number')
             search.set('offset', String(params.offset));
-        const path = `/api/external/history${search.toString() ? `?${search.toString()}` : ''}`;
+        const path = `/api/v1/external/history${search.toString() ? `?${search.toString()}` : ''}`;
         return this.request(path, {
             method: 'GET',
             signal: options?.signal,
         });
     }
     async createTransfer(input, options) {
-        return this.request('/api/external/transfer', {
+        return this.request('/api/v1/external/transfer', {
             method: 'POST',
             body: input,
             idempotencyKey: options?.idempotencyKey ?? createIdempotencyKey(),
@@ -47,7 +47,7 @@ export class FondosEGClient {
         });
     }
     async createWalletTransfer(input, options) {
-        return this.request('/api/external/wallet-transfer', {
+        return this.request('/api/v1/external/wallet-transfer', {
             method: 'POST',
             body: input,
             idempotencyKey: options?.idempotencyKey ?? createIdempotencyKey(),

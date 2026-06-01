@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { publicApiDocumentationResponse } from '@/lib/server/public-api';
 
 const baseErrorSchema = {
   type: 'object',
@@ -31,15 +31,42 @@ const baseErrorSchema = {
   },
 };
 
+const publicApiResponseHeaders = {
+  'x-request-id': {
+    description: 'Identificador de trazabilidad de la solicitud.',
+    schema: { type: 'string', format: 'uuid' },
+  },
+  'x-api-version': {
+    description: 'Version estable de la API publica.',
+    schema: { type: 'string', example: 'v1' },
+  },
+  'x-api-environment': {
+    description: 'Entorno de la credencial autenticada.',
+    schema: { type: 'string', enum: ['test', 'production'] },
+  },
+  'x-ratelimit-limit': {
+    description: 'Limite de requests para la ventana actual.',
+    schema: { type: 'integer' },
+  },
+  'x-ratelimit-remaining': {
+    description: 'Requests restantes en la ventana actual.',
+    schema: { type: 'integer' },
+  },
+  'x-ratelimit-reset': {
+    description: 'Fecha ISO en que reinicia la ventana de rate limit.',
+    schema: { type: 'string', format: 'date-time' },
+  },
+};
+
 export async function GET() {
-  return NextResponse.json({
+  return publicApiDocumentationResponse({
     openapi: '3.1.0',
     info: {
       title: 'FondosEG Public API',
-      version: '2026-04-23',
+      version: 'v1',
       summary: 'API publica para saldos, transferencias e historial de FondosEG.',
       description:
-        'Usa credenciales emitidas desde el portal de desarrolladores. Las operaciones que mueven dinero aceptan el header idempotency-key para evitar duplicados. FondosEG tambien soporta webhooks firmados con HMAC SHA-256 en el formato timestamp.body.',
+        'Usa credenciales emitidas desde el portal de desarrolladores. La version estable actual vive bajo /api/v1/external. Cada credencial pertenece al entorno test o production. Las claves test simulan saldos y transferencias sin mover dinero real; las production operan sobre datos reales. Las rutas historicas /api/external siguen disponibles por compatibilidad. Las operaciones que mueven dinero aceptan el header idempotency-key para evitar duplicados. FondosEG tambien soporta webhooks firmados con HMAC SHA-256 en el formato timestamp.body.',
     },
     servers: [
       {
@@ -59,7 +86,7 @@ export async function GET() {
       { name: 'Webhooks', description: 'Eventos salientes firmados para integraciones.' },
     ],
     paths: {
-      '/api/external/balance': {
+      '/api/v1/external/balance': {
         get: {
           tags: ['Balance'],
           operationId: 'getExternalBalance',
@@ -67,6 +94,7 @@ export async function GET() {
           responses: {
             '200': {
               description: 'Saldo consultado correctamente.',
+              headers: publicApiResponseHeaders,
               content: {
                 'application/json': {
                   schema: { $ref: '#/components/schemas/BalanceResponse' },
@@ -80,7 +108,7 @@ export async function GET() {
           },
         },
       },
-      '/api/external/transfer': {
+      '/api/v1/external/transfer': {
         post: {
           tags: ['Transfers'],
           operationId: 'createAgentTransfer',
@@ -95,8 +123,9 @@ export async function GET() {
             },
           },
           responses: {
-            '200': {
+            '201': {
               description: 'Transferencia creada correctamente.',
+              headers: publicApiResponseHeaders,
               content: {
                 'application/json': {
                   schema: { $ref: '#/components/schemas/CreateAgentTransferResponse' },
@@ -112,7 +141,7 @@ export async function GET() {
           },
         },
       },
-      '/api/external/wallet-transfer': {
+      '/api/v1/external/wallet-transfer': {
         post: {
           tags: ['Transfers'],
           operationId: 'createWalletTransfer',
@@ -127,8 +156,9 @@ export async function GET() {
             },
           },
           responses: {
-            '200': {
+            '201': {
               description: 'Transferencia de billetera creada correctamente.',
+              headers: publicApiResponseHeaders,
               content: {
                 'application/json': {
                   schema: { $ref: '#/components/schemas/CreateWalletTransferResponse' },
@@ -145,7 +175,7 @@ export async function GET() {
           },
         },
       },
-      '/api/external/history': {
+      '/api/v1/external/history': {
         get: {
           tags: ['History'],
           operationId: 'getExternalHistory',
@@ -161,10 +191,29 @@ export async function GET() {
               in: 'query',
               schema: { type: 'integer', minimum: 0, default: 0 },
             },
+            {
+              name: 'status',
+              in: 'query',
+              schema: { type: 'string' },
+              description: 'Filtra por estado de la operacion.',
+            },
+            {
+              name: 'created_from',
+              in: 'query',
+              schema: { type: 'string', format: 'date-time' },
+              description: 'Fecha inicial ISO 8601 con zona horaria.',
+            },
+            {
+              name: 'created_to',
+              in: 'query',
+              schema: { type: 'string', format: 'date-time' },
+              description: 'Fecha final ISO 8601 con zona horaria.',
+            },
           ],
           responses: {
             '200': {
               description: 'Historial consultado correctamente.',
+              headers: publicApiResponseHeaders,
               content: {
                 'application/json': {
                   schema: { $ref: '#/components/schemas/HistoryResponse' },
@@ -307,30 +356,43 @@ export async function GET() {
       responses: {
         BadRequest: {
           description: 'Payload invalido o regla de negocio fallida.',
+          headers: publicApiResponseHeaders,
           content: { 'application/json': { schema: baseErrorSchema } },
         },
         Unauthorized: {
           description: 'Credenciales ausentes o invalidas.',
+          headers: publicApiResponseHeaders,
           content: { 'application/json': { schema: baseErrorSchema } },
         },
         Forbidden: {
           description: 'La credencial no tiene permiso para esta operacion.',
+          headers: publicApiResponseHeaders,
           content: { 'application/json': { schema: baseErrorSchema } },
         },
         NotFound: {
           description: 'Recurso no encontrado.',
+          headers: publicApiResponseHeaders,
           content: { 'application/json': { schema: baseErrorSchema } },
         },
         IdempotencyConflict: {
           description: 'La misma idempotency-key fue usada con un payload distinto.',
+          headers: publicApiResponseHeaders,
           content: { 'application/json': { schema: baseErrorSchema } },
         },
         RateLimited: {
           description: 'La credencial supero su limite de requests.',
+          headers: {
+            ...publicApiResponseHeaders,
+            'retry-after': {
+              description: 'Segundos recomendados antes de reintentar.',
+              schema: { type: 'integer' },
+            },
+          },
           content: { 'application/json': { schema: baseErrorSchema } },
         },
         InternalError: {
           description: 'Error interno no esperado.',
+          headers: publicApiResponseHeaders,
           content: { 'application/json': { schema: baseErrorSchema } },
         },
       },
@@ -358,6 +420,7 @@ export async function GET() {
                     cash_balance: { type: 'number' },
                     total_balance: { type: 'number' },
                     currency: { type: 'string', example: 'XAF' },
+                    sandbox: { type: 'boolean', description: 'true cuando la credencial es test.' },
                   },
                 },
               },
@@ -401,6 +464,7 @@ export async function GET() {
                     destination_city: { type: 'string' },
                     status: { type: 'string', example: 'available_for_pickup' },
                     created_at: { type: 'string', format: 'date-time' },
+                    sandbox: { type: 'boolean', description: 'true cuando la credencial es test.' },
                   },
                 },
               },
@@ -438,6 +502,7 @@ export async function GET() {
                     status: { type: 'string', example: 'completed' },
                     created_at: { type: 'string', format: 'date-time' },
                     new_balance: { type: 'number' },
+                    sandbox: { type: 'boolean', description: 'true cuando la credencial es test.' },
                   },
                 },
               },
@@ -456,6 +521,8 @@ export async function GET() {
                   properties: {
                     limit: { type: 'integer' },
                     offset: { type: 'integer' },
+                    has_more: { type: 'boolean' },
+                    next_offset: { type: ['integer', 'null'] },
                   },
                 },
               },

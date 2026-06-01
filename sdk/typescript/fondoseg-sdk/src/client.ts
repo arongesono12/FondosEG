@@ -43,7 +43,7 @@ export class FondosEGClient {
   }
 
   async getBalance(options?: RequestOptions): Promise<FondosEGApiSuccess<BalanceData>> {
-    return this.request<BalanceData>('/api/external/balance', {
+    return this.request<BalanceData>('/api/v1/external/balance', {
       method: 'GET',
       signal: options?.signal,
     });
@@ -57,7 +57,7 @@ export class FondosEGClient {
     if (typeof params.limit === 'number') search.set('limit', String(params.limit));
     if (typeof params.offset === 'number') search.set('offset', String(params.offset));
 
-    const path = `/api/external/history${search.toString() ? `?${search.toString()}` : ''}`;
+    const path = `/api/v1/external/history${search.toString() ? `?${search.toString()}` : ''}`;
     return this.request<HistoryItem[]>(path, {
       method: 'GET',
       signal: options?.signal,
@@ -68,7 +68,7 @@ export class FondosEGClient {
     input: CreateAgentTransferInput,
     options?: RequestOptions
   ): Promise<FondosEGApiSuccess<AgentTransferData>> {
-    return this.request<AgentTransferData>('/api/external/transfer', {
+    return this.request<AgentTransferData>('/api/v1/external/transfer', {
       method: 'POST',
       body: input,
       idempotencyKey: options?.idempotencyKey ?? createIdempotencyKey(),
@@ -80,7 +80,7 @@ export class FondosEGClient {
     input: CreateWalletTransferInput,
     options?: RequestOptions
   ): Promise<FondosEGApiSuccess<WalletTransferData>> {
-    return this.request<WalletTransferData>('/api/external/wallet-transfer', {
+    return this.request<WalletTransferData>('/api/v1/external/wallet-transfer', {
       method: 'POST',
       body: input,
       idempotencyKey: options?.idempotencyKey ?? createIdempotencyKey(),

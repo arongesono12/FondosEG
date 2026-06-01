@@ -26,10 +26,10 @@ La aplicacion ya tiene una base funcional solida para dashboard financiero: aute
 
 Endpoints externos disponibles:
 
-- `GET /api/external/balance`
-- `GET /api/external/history`
-- `POST /api/external/transfer`
-- `POST /api/external/wallet-transfer`
+- `GET /api/v1/external/balance`
+- `GET /api/v1/external/history`
+- `POST /api/v1/external/transfer`
+- `POST /api/v1/external/wallet-transfer`
 
 Endpoint interno para credenciales:
 

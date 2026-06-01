@@ -1,9 +1,13 @@
 # Guia de Integracion FondosEG Public API
 
+> Guia completa para integradores: [`docs/fondoseg-api-documentation-es.md`](./fondoseg-api-documentation-es.md).
+
 ## Base URL
 
 - Desarrollo local: `http://localhost:3001`
 - Produccion: usar el dominio configurado en `NEXT_PUBLIC_APP_URL`
+- Version estable: `/api/v1/external`
+- Entornos por credencial: `test` y `production`
 
 ## Portal de Desarrolladores
 
@@ -32,6 +36,8 @@ x-api-secret: ...
 
 Las credenciales se crean desde `/developers`. El `api_secret` completo solo se muestra una vez al crear la credencial.
 Si necesitas regenerarlo, usa la opcion de rotacion desde el portal de desarrolladores.
+
+Las claves de prueba usan prefijo `sk_test_` y simulan respuestas sin mover dinero real. Las claves productivas usan `sk_live_` y operan sobre saldos reales.
 
 ## Idempotencia
 
@@ -83,7 +89,7 @@ Codigos principales:
 ### Consultar saldo
 
 ```bash
-curl -X GET "http://localhost:3001/api/external/balance" \
+curl -X GET "http://localhost:3001/api/v1/external/balance" \
   -H "x-api-key: <API_KEY>" \
   -H "x-api-secret: <API_SECRET>"
 ```
@@ -91,7 +97,7 @@ curl -X GET "http://localhost:3001/api/external/balance" \
 ### Crear transferencia de gestor
 
 ```bash
-curl -X POST "http://localhost:3001/api/external/transfer" \
+curl -X POST "http://localhost:3001/api/v1/external/transfer" \
   -H "content-type: application/json" \
   -H "x-api-key: <API_KEY>" \
   -H "x-api-secret: <API_SECRET>" \
@@ -111,7 +117,7 @@ curl -X POST "http://localhost:3001/api/external/transfer" \
 ### Crear transferencia entre billeteras
 
 ```bash
-curl -X POST "http://localhost:3001/api/external/wallet-transfer" \
+curl -X POST "http://localhost:3001/api/v1/external/wallet-transfer" \
   -H "content-type: application/json" \
   -H "x-api-key: <API_KEY>" \
   -H "x-api-secret: <API_SECRET>" \
@@ -127,7 +133,7 @@ curl -X POST "http://localhost:3001/api/external/wallet-transfer" \
 ### Consultar historial
 
 ```bash
-curl -X GET "http://localhost:3001/api/external/history?limit=20&offset=0" \
+curl -X GET "http://localhost:3001/api/v1/external/history?limit=20&offset=0" \
   -H "x-api-key: <API_KEY>" \
   -H "x-api-secret: <API_SECRET>"
 ```
@@ -247,7 +253,11 @@ Variables de entorno recomendadas:
 
 - API keys con secret hasheado y rotacion.
 - Rate limit por credencial.
+- Headers `x-ratelimit-limit`, `x-ratelimit-remaining`, `x-ratelimit-reset` y `retry-after` cuando aplica.
+- Header `x-api-environment` para distinguir `test` y `production`.
 - `request_id` en todas las respuestas externas.
+- Versionado estable en `/api/v1/external` con compatibilidad para `/api/external`.
+- `Cache-Control: no-store` en respuestas privadas y cache publico corto para OpenAPI.
 - Idempotencia en operaciones de dinero.
 - Logs de actividad por credencial.
 - Transferencia wallet externa ejecutada como operacion atomica en SQL.

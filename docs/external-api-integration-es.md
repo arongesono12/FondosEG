@@ -79,7 +79,7 @@ Respuesta esperada:
 Ruta:
 
 ```http
-GET /api/external/balance
+GET /api/v1/external/balance
 ```
 
 ### Respuesta para gestor
@@ -139,7 +139,7 @@ GET /api/external/balance
 Ruta:
 
 ```http
-GET /api/external/history?limit=50&offset=0
+GET /api/v1/external/history?limit=50&offset=0
 ```
 
 Parametros:
@@ -171,7 +171,7 @@ Respuesta:
 Ruta:
 
 ```http
-POST /api/external/transfer
+POST /api/v1/external/transfer
 ```
 
 Solo funciona si la API key tiene `role_access = "gestor"` y permiso `transfer = true`.
@@ -227,7 +227,7 @@ Notas operativas:
 Ruta:
 
 ```http
-POST /api/external/wallet-transfer
+POST /api/v1/external/wallet-transfer
 ```
 
 Solo funciona si la API key tiene `role_access = "cliente"` y permiso `transfer = true`.
@@ -328,18 +328,18 @@ o
 Usa:
 
 - `POST /api/api-keys` con `role_access = "gestor"`
-- `GET /api/external/balance`
-- `GET /api/external/history`
-- `POST /api/external/transfer`
+- `GET /api/v1/external/balance`
+- `GET /api/v1/external/history`
+- `POST /api/v1/external/transfer`
 
 ### Si tu otra app es para clientes
 
 Usa:
 
 - `POST /api/api-keys` con `role_access = "cliente"`
-- `GET /api/external/balance`
-- `GET /api/external/history`
-- `POST /api/external/wallet-transfer`
+- `GET /api/v1/external/balance`
+- `GET /api/v1/external/history`
+- `POST /api/v1/external/wallet-transfer`
 
 ## Recomendaciones antes de produccion
 

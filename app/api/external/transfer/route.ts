@@ -1,62 +1,89 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { z } from 'zod';
 import { authenticateAPIKey, requirePermission } from '@/lib/api-auth';
 import { generateTransferCode } from '@/lib/utils';
 import { createAgentTransferOperation } from '@/lib/server/financial-operations';
 import { persistIdempotencyResponse, readIdempotencyState } from '@/lib/server/api-idempotency';
+import { createSandboxAgentTransfer } from '@/lib/server/public-api-sandbox';
 import { emitWebhookEvent } from '@/lib/server/webhook-outbox';
 import {
   createPublicApiContext,
   logPublicApiRequest,
   mapAuthErrorStatus,
+  publicApiCachedResponse,
   publicApiError,
   publicApiSuccess,
+  readJsonBody,
+  toPublicBusinessErrorMessage,
 } from '@/lib/server/public-api';
 
 const transferSchema = z.object({
-  sender_name: z.string().trim().min(1, 'sender_name es requerido'),
-  sender_phone: z.string().trim().min(1, 'sender_phone es requerido'),
-  sender_document_type: z.string().trim().optional(),
-  sender_document_number: z.string().trim().optional(),
-  receiver_name: z.string().trim().min(1, 'receiver_name es requerido'),
-  receiver_phone: z.string().trim().min(1, 'receiver_phone es requerido'),
-  receiver_document_type: z.string().trim().optional(),
-  receiver_document_number: z.string().trim().optional(),
-  destination_city: z.string().trim().min(1, 'destination_city es requerido'),
-  destination_country: z.string().trim().optional(),
-  amount: z.coerce.number().positive('amount debe ser mayor a 0'),
-  currency: z.string().trim().default('XAF'),
-  notes: z.string().trim().optional(),
-});
+  sender_name: z.string().trim().min(1, 'sender_name es requerido').max(120),
+  sender_phone: z.string().trim().min(1, 'sender_phone es requerido').max(32),
+  sender_document_type: z.string().trim().max(40).optional(),
+  sender_document_number: z.string().trim().max(80).optional(),
+  receiver_name: z.string().trim().min(1, 'receiver_name es requerido').max(120),
+  receiver_phone: z.string().trim().min(1, 'receiver_phone es requerido').max(32),
+  receiver_document_type: z.string().trim().max(40).optional(),
+  receiver_document_number: z.string().trim().max(80).optional(),
+  destination_city: z.string().trim().min(1, 'destination_city es requerido').max(100),
+  destination_country: z.string().trim().max(80).optional(),
+  amount: z.coerce.number().positive('amount debe ser mayor a 0').max(10000000),
+  currency: z.string().trim().length(3).regex(/^[A-Z]{3}$/).default('XAF'),
+  notes: z.string().trim().max(500).optional(),
+}).strict();
 
 export async function POST(request: NextRequest) {
   const context = createPublicApiContext(request);
   let apiKeyId: string | null = null;
+  let apiEnvironment: 'test' | 'production' | undefined;
 
   try {
     const auth = await authenticateAPIKey(request);
     
     if (!auth.success) {
       const status = auth.status || 401;
-      const code = mapAuthErrorStatus(status);
+      const code = auth.errorCode || mapAuthErrorStatus(status);
       await logPublicApiRequest({ context, status, errorCode: code });
-      return publicApiError(context, code, auth.error || 'Credenciales invalidas', status);
+      return publicApiError(context, code, auth.error || 'Credenciales invalidas', status, undefined, {
+        rateLimit: auth.rateLimit,
+      });
     }
     apiKeyId = auth.apiKey!.id;
+    apiEnvironment = auth.apiKey!.environment;
 
     if (!await requirePermission(auth, 'transfer')) {
       await logPublicApiRequest({ context, apiKeyId, status: 403, errorCode: 'permission_denied' });
-      return publicApiError(context, 'permission_denied', 'Permiso denegado: transfer', 403);
+      return publicApiError(context, 'permission_denied', 'Permiso denegado: transfer', 403, undefined, {
+        environment: auth.apiKey!.environment,
+        rateLimit: auth.rateLimit,
+      });
     }
 
     const { user_id, role_access } = auth.apiKey!;
     
     if (role_access !== 'gestor') {
       await logPublicApiRequest({ context, apiKeyId, status: 403, errorCode: 'permission_denied' });
-      return publicApiError(context, 'permission_denied', 'Solo gestores pueden realizar transferencias', 403);
+      return publicApiError(
+        context,
+        'permission_denied',
+        'Solo gestores pueden realizar transferencias',
+        403,
+        undefined,
+        { environment: auth.apiKey!.environment, rateLimit: auth.rateLimit }
+      );
     }
 
-    const body = await request.json();
+    const jsonBody = await readJsonBody(request);
+    if (!jsonBody.success) {
+      await logPublicApiRequest({ context, apiKeyId, status: 400, errorCode: 'validation_error' });
+      return publicApiError(context, 'validation_error', 'Payload invalido', 400, jsonBody.details, {
+        environment: auth.apiKey!.environment,
+        rateLimit: auth.rateLimit,
+      });
+    }
+
+    const body = jsonBody.data;
     const parsedBody = transferSchema.safeParse(body);
 
     if (!parsedBody.success) {
@@ -66,7 +93,8 @@ export async function POST(request: NextRequest) {
         'validation_error',
         'Payload invalido',
         400,
-        parsedBody.error.flatten().fieldErrors
+        parsedBody.error.flatten().fieldErrors,
+        { environment: auth.apiKey!.environment, rateLimit: auth.rateLimit }
       );
     }
 
@@ -78,15 +106,20 @@ export async function POST(request: NextRequest) {
 
     if (idempotencyState?.conflictMessage) {
       await logPublicApiRequest({ context, apiKeyId, status: 409, errorCode: 'idempotency_conflict' });
-      return publicApiError(context, 'idempotency_conflict', idempotencyState.conflictMessage, 409);
+      return publicApiError(context, 'idempotency_conflict', idempotencyState.conflictMessage, 409, undefined, {
+        environment: auth.apiKey!.environment,
+        rateLimit: auth.rateLimit,
+      });
     }
 
     if (idempotencyState?.cachedResponse) {
       await logPublicApiRequest({ context, apiKeyId, status: idempotencyState.cachedResponse.status });
-      return NextResponse.json(idempotencyState.cachedResponse.body, {
-        status: idempotencyState.cachedResponse.status,
-        headers: { 'x-request-id': context.requestId },
-      });
+      return publicApiCachedResponse(
+        context,
+        idempotencyState.cachedResponse.body,
+        idempotencyState.cachedResponse.status,
+        { environment: auth.apiKey!.environment, rateLimit: auth.rateLimit }
+      );
     }
 
     const {
@@ -104,6 +137,29 @@ export async function POST(request: NextRequest) {
       currency = 'XAF',
       notes,
     } = parsedBody.data;
+
+    if (auth.apiKey!.environment === 'test') {
+      const sandboxData = createSandboxAgentTransfer({
+        amount: Number(amount),
+        currency,
+        receiverName: receiver_name,
+        receiverPhone: receiver_phone,
+        destinationCity: destination_city,
+      });
+      const responseBody = {
+        success: true,
+        data: sandboxData,
+        request_id: context.requestId,
+      };
+
+      await persistIdempotencyResponse(auth.apiKey!.id, idempotencyState, 201, responseBody);
+      await logPublicApiRequest({ context, apiKeyId, status: 201 });
+      return publicApiSuccess(context, sandboxData, {
+        status: 201,
+        environment: auth.apiKey!.environment,
+        rateLimit: auth.rateLimit,
+      });
+    }
 
     const transferCode = generateTransferCode();
 
@@ -167,19 +223,40 @@ export async function POST(request: NextRequest) {
       console.error('Webhook dispatch failed after external transfer creation:', webhookError);
     }
 
-    await persistIdempotencyResponse(auth.apiKey!.id, idempotencyState, 200, responseBody);
-    await logPublicApiRequest({ context, apiKeyId, status: 200 });
+    await persistIdempotencyResponse(auth.apiKey!.id, idempotencyState, 201, responseBody);
+    await logPublicApiRequest({ context, apiKeyId, status: 201 });
 
-    return publicApiSuccess(context, responseBody.data);
+    return publicApiSuccess(context, responseBody.data, {
+      status: 201,
+      environment: auth.apiKey!.environment,
+      rateLimit: auth.rateLimit,
+    });
 
   } catch (error) {
     console.error('API Transfer Error:', error);
     if (error instanceof Error && error.message) {
+      const message = toPublicBusinessErrorMessage(error);
+      if (message === 'La operacion no pudo completarse') {
+        await logPublicApiRequest({ context, apiKeyId, status: 500, errorCode: 'internal_error' });
+        return publicApiError(context, 'internal_error', 'Error interno del servidor', 500, undefined, {
+          environment: apiEnvironment,
+        });
+      }
+
       await logPublicApiRequest({ context, apiKeyId, status: 400, errorCode: 'business_rule_failed' });
-      return publicApiError(context, 'business_rule_failed', error.message, 400);
+      return publicApiError(
+        context,
+        'business_rule_failed',
+        message,
+        400,
+        undefined,
+        { environment: apiEnvironment }
+      );
     }
     await logPublicApiRequest({ context, apiKeyId, status: 500, errorCode: 'internal_error' });
-    return publicApiError(context, 'internal_error', 'Error interno del servidor', 500);
+    return publicApiError(context, 'internal_error', 'Error interno del servidor', 500, undefined, {
+      environment: apiEnvironment,
+    });
   }
 }
 

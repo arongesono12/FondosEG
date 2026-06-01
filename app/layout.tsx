@@ -1,23 +1,8 @@
 import type { Metadata } from "next";
-import { Poppins, Inter } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
 
 import { ThemeProvider, themeScript } from "@/components/theme-provider";
-
-const poppins = Poppins({
-  subsets: ["latin"],
-  weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
-  variable: "--font-poppins",
-  display: "swap",
-});
-
-const inter = Inter({
-  subsets: ["latin"],
-  weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
-  variable: "--font-inter",
-  display: "swap",
-});
 
 export const metadata: Metadata = {
   title: "FondosEG - Gestión de Envíos de Dinero",
@@ -39,7 +24,7 @@ export default function RootLayout({
           {themeScript}
         </Script>
       </head>
-      <body suppressHydrationWarning className={`${poppins.variable} ${inter.variable} font-sans antialiased`}>
+      <body suppressHydrationWarning className="font-sans antialiased">
         <ThemeProvider
           attribute="class"
           defaultTheme="system"

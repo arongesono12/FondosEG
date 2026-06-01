@@ -33,6 +33,18 @@ export async function correctTransfer(
   );
 }
 
+export async function createRevolutPayoutForTransfer(
+  transferId: string
+): Promise<{ success: boolean; transfer?: Transfer; error?: string }> {
+  return fetchJSON<{ success: boolean; transfer?: Transfer; error?: string }>(
+    `/api/transfers/${encodeURIComponent(transferId)}/revolut-payout`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+    }
+  );
+}
+
 export async function searchTransfers(query: string): Promise<Transfer[]> {
   return fetchJSON<Transfer[]>(`/api/transfers/search?q=${encodeURIComponent(query)}&limit=10`);
 }

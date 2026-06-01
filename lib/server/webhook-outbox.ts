@@ -5,6 +5,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 export type FondosEGWebhookEvent =
   | 'transfer.created'
   | 'transfer.paid_out'
+  | 'transfer.revolut_payout_link_created'
   | 'wallet_transfer.confirmed';
 
 interface QueueWebhookEventInput {
