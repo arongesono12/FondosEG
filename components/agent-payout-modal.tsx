@@ -5,6 +5,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { PanelSkeleton } from '@/components/skeletons/app-skeletons';
 import { formatCurrency } from '@/lib/utils';
 import type { Transfer } from '@/types';
 import { AlertCircle, CheckCircle2, HandCoins, Loader2, Search } from 'lucide-react';
@@ -112,6 +113,10 @@ export function AgentPayoutModal({ open, onOpenChange, onSuccess }: AgentPayoutM
                   </Button>
                 </div>
               </div>
+
+              {loading && !transfer && !error && (
+                <PanelSkeleton rows={2} className="rounded-2xl border border-border/10 bg-background/70 p-4" />
+              )}
 
               {transfer && (
                 <div className="rounded-2xl border border-border/10 bg-background/70 p-4">

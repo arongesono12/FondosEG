@@ -6,8 +6,10 @@ import {
   DialogContent, 
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Search, MapPin, User, ArrowRight, Loader2 } from 'lucide-react';
+import { Search, MapPin, User, ArrowRight } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import { Skeleton } from '@/components/ui/skeleton';
+import { ModalListSkeleton } from '@/components/skeletons/app-skeletons';
 import { searchTransfers } from '@/services/transfer';
 import { useAppStore } from '@/lib/store';
 import { formatCurrency } from '@/lib/utils';
@@ -63,7 +65,7 @@ export function SearchModal({ open, onOpenChange }: SearchModalProps) {
             onChange={(e) => setQuery(e.target.value)}
           />
           {loading && (
-            <Loader2 className="absolute right-10 top-1/2 -translate-y-1/2 h-5 w-5 text-primary animate-spin" />
+            <Skeleton className="absolute right-10 top-1/2 h-5 w-5 -translate-y-1/2 rounded-full" />
           )}
         </div>
 
@@ -73,7 +75,9 @@ export function SearchModal({ open, onOpenChange }: SearchModalProps) {
               <p className="text-sm font-black text-muted-foreground uppercase tracking-widest">Escribe al menos 3 caracteres</p>
               <p className="text-xs font-bold text-muted-foreground/60">Busca rápidamente cualquier movimiento en el sistema</p>
             </div>
-          ) : results.length === 0 && !loading ? (
+          ) : loading ? (
+            <ModalListSkeleton rows={4} />
+          ) : results.length === 0 ? (
             <div className="py-12 text-center">
               <p className="text-sm font-black text-muted-foreground uppercase tracking-widest">No se encontraron resultados</p>
             </div>

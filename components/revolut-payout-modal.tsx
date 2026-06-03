@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { PanelSkeleton } from '@/components/skeletons/app-skeletons';
 import { createRevolutPayoutForTransfer } from '@/services/transfer';
 import type { Transfer } from '@/types';
 import { formatCurrency, getStatusColor, getStatusText } from '@/lib/utils';
@@ -115,6 +116,10 @@ export function RevolutPayoutModal({ open, onOpenChange, onSuccess }: RevolutPay
               <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
               <span>{error}</span>
             </div>
+          )}
+
+          {loading && !transfer && !error && (
+            <PanelSkeleton rows={2} className="rounded-2xl border border-border/10 bg-muted/20 p-4" />
           )}
 
           {transfer && (

@@ -11,6 +11,7 @@ import { MessageSquare, Send, Loader2, ChevronDown, ShieldCheck } from 'lucide-r
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { InlineFieldSkeleton } from '@/components/skeletons/app-skeletons';
 import { useAppStore } from '@/lib/store';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { getInitials } from '@/lib/utils';
@@ -144,10 +145,7 @@ export function SupportModal({ open, onOpenChange, requestType = 'general', defa
                   </label>
 
                   {loadingAdmins ? (
-                    <div className="flex items-center gap-2 p-3 rounded-xl border border-border/20 text-muted-foreground text-sm">
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      {isClient ? 'Cargando gestores...' : 'Cargando administradores...'}
-                    </div>
+                    <InlineFieldSkeleton />
                   ) : admins.length === 0 ? (
                     <div className="p-3 rounded-xl border border-border/20 text-muted-foreground text-sm">
                       {isClient ? 'No hay gestores disponibles' : 'No hay administradores disponibles'}

@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { signOutAction } from '@/app/actions/auth';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function ForceSignOutPage() {
   const router = useRouter();
@@ -20,11 +21,10 @@ export default function ForceSignOutPage() {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-background">
       <div className="p-8 text-center space-y-4">
-        <h1 className="text-2xl font-bold">Cerrando sesión...</h1>
-        <p className="text-muted-foreground">Estamos limpiando tu sesión para corregir el error de navegación.</p>
-        <div className="flex justify-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-        </div>
+        <Skeleton className="mx-auto h-12 w-12 rounded-2xl" />
+        <Skeleton className="mx-auto h-7 w-56 rounded-xl" />
+        <Skeleton className="mx-auto h-4 w-80 max-w-full rounded-xl" />
+        <Skeleton className="mx-auto h-10 w-40 rounded-2xl" />
       </div>
     </div>
   );

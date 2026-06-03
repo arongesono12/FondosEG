@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { cn, getInitials, formatCurrency, convertCurrency, formatDateShort, formatDateWithWeekday } from '@/lib/utils';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
+import { ModalListSkeleton, PanelSkeleton } from '@/components/skeletons/app-skeletons';
 import {
   X,
   TrendingUp,
@@ -13,7 +14,6 @@ import {
   Calendar,
   ArrowUpRight,
   BarChart3,
-  Loader2,
   CheckCircle2,
   Clock,
   XCircle,
@@ -244,10 +244,7 @@ export function GestoresModal({ open, onClose, userRole, preferredCurrency }: Ge
       )}
 
       {loading ? (
-        <div className="flex items-center justify-center h-32 gap-2 text-muted-foreground">
-          <Loader2 className="h-5 w-5 animate-spin" />
-          <span className="text-sm font-bold">Cargando transferencias...</span>
-        </div>
+        <ModalListSkeleton rows={5} />
       ) : transfers.length === 0 ? (
         <div className="text-center py-12 text-muted-foreground">
           <Send className="h-8 w-8 mx-auto mb-2 opacity-30" />
@@ -325,10 +322,7 @@ export function VolumenSemanalModal({ open, onClose, preferredCurrency }: Volume
   return (
     <Drawer open={open} onClose={onClose} title="Volumen Semanal" subtitle="Actividad de los últimos 7 días" icon={BarChart3}>
       {loading ? (
-        <div className="flex items-center justify-center h-32 gap-2 text-muted-foreground">
-          <Loader2 className="h-5 w-5 animate-spin" />
-          <span className="text-sm font-bold">Cargando datos...</span>
-        </div>
+        <PanelSkeleton rows={5} />
       ) : (
         <>
           {/* Summary cards */}

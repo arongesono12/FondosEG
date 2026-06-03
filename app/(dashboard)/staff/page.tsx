@@ -182,15 +182,6 @@ export default function StaffPage() {
     }
   }, [loadData, user]);
 
-  if (!user || !isSuperAdminRole(user.role)) {
-    return (
-      <div className="space-y-6">
-        <h1 className="text-3xl font-bold">Acceso denegado</h1>
-        <p className="text-muted-foreground">Esta sección es exclusiva para el superadministrador.</p>
-      </div>
-    );
-  }
-
   const activeAdmins = staff.filter((member) => member.role === 'admin' && member.is_active).length;
   const inactiveAdmins = staff.filter((member) => member.role === 'admin' && !member.is_active).length;
   const managedAgents = managedUsers.filter((member) => member.role === 'gestor').length;
@@ -350,6 +341,15 @@ export default function StaffPage() {
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
   };
+
+  if (!user || !isSuperAdminRole(user.role)) {
+    return (
+      <div className="space-y-6">
+        <h1 className="text-3xl font-bold">Acceso denegado</h1>
+        <p className="text-muted-foreground">Esta sección es exclusiva para el superadministrador.</p>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
@@ -685,11 +685,13 @@ export default function StaffPage() {
         <DialogContent className="max-h-[85vh] overflow-hidden sm:max-w-4xl">
           <DialogHeader>
             <DialogTitle>Movimientos del usuario</DialogTitle>
-            <DialogDescription>
-              {selectedUser
-                ? `${selectedUser.name} · ${getRoleLabel(selectedUser.role)} · ${selectedUser.email}`
-                : 'Cargando usuario'}
-            </DialogDescription>
+            {selectedUser ? (
+              <DialogDescription>
+                {`${selectedUser.name} · ${getRoleLabel(selectedUser.role)} · ${selectedUser.email}`}
+              </DialogDescription>
+            ) : (
+              <Skeleton className="h-4 w-72 rounded-xl" />
+            )}
           </DialogHeader>
 
           <div className="grid gap-4 md:grid-cols-4">

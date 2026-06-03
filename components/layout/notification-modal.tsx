@@ -7,6 +7,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { ModalListSkeleton } from '@/components/skeletons/app-skeletons';
 import { 
   Bell, 
   CheckCircle, 
@@ -194,9 +195,8 @@ export function NotificationModal({ open, onOpenChange }: NotificationModalProps
           
           <div className="flex-1 overflow-y-auto p-4 space-y-3">
             {loading ? (
-              <div className="py-20 flex flex-col items-center justify-center space-y-4">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest">Cargando...</p>
+              <div className="py-2">
+                <ModalListSkeleton rows={5} />
               </div>
             ) : notifications.length === 0 ? (
               <div className="py-20 text-center">

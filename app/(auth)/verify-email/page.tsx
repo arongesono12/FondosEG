@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { DashboardLogo } from '@/components/layout/dashboard-logo';
+import { AuthPageSkeleton, FormSkeleton } from '@/components/skeletons/app-skeletons';
 import { sendVerificationEmail, verifyEmailCode, resendVerificationEmail } from '@/app/actions/auth';
 import { Mail, CheckCircle2, AlertCircle, Loader2, ArrowLeft } from 'lucide-react';
 
@@ -152,6 +153,23 @@ function VerifyEmailContent() {
     );
   }
 
+  if (loading && !error) {
+    return (
+      <Card className="backdrop-blur-xl bg-card/80 border-border/50 shadow-xl rounded-3xl overflow-hidden ring-1 ring-border/5">
+        <CardHeader className="space-y-4 text-center">
+          <div className="flex justify-center">
+            <DashboardLogo
+              size="md"
+              className="justify-center"
+              labelClassName="text-2xl"
+            />
+          </div>
+          <FormSkeleton rows={3} />
+        </CardHeader>
+      </Card>
+    );
+  }
+
   return (
     <Card className="backdrop-blur-xl bg-card/80 border-border/50 shadow-xl hover:shadow-primary/10 transition-all duration-300 rounded-3xl overflow-hidden ring-1 ring-border/5">
       <CardHeader className="space-y-2 text-center">
@@ -258,14 +276,7 @@ function VerifyEmailContent() {
 export default function VerifyEmailPage() {
   return (
     <div className="min-h-screen bg-linear-to-br from-pink-50 via-white to-rose-50 dark:from-pink-950/20 dark:via-slate-950 dark:to-rose-950/20 flex items-center justify-center p-4">
-      <Suspense fallback={
-        <Card className="backdrop-blur-xl bg-card/80 border-border/50 shadow-xl rounded-3xl p-8">
-          <div className="flex flex-col items-center gap-4">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            <p className="text-muted-foreground">Cargando...</p>
-          </div>
-        </Card>
-      }>
+      <Suspense fallback={<AuthPageSkeleton />}>
         <VerifyEmailContent />
       </Suspense>
     </div>

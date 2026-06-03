@@ -2,8 +2,9 @@
 
 import { useEffect, useRef, useState } from 'react';
 import QRCode from 'qrcode';
-import { Download, Loader2 } from 'lucide-react';
+import { Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface QRGeneratorProps {
   data: string;
@@ -65,7 +66,7 @@ export function QRGenerator({ data, size = 200, onDownload }: QRGeneratorProps) 
       <div className="p-4 bg-white rounded-2xl shadow-lg">
         {loading ? (
           <div className="flex items-center justify-center" style={{ width: size, height: size }}>
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <Skeleton className="h-full w-full rounded-xl" />
           </div>
         ) : (
           <canvas ref={canvasRef} />

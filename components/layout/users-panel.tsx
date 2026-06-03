@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { cn, getInitials } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
+import { ModalListSkeleton } from '@/components/skeletons/app-skeletons';
 import { 
   X, 
   Users, 
@@ -13,7 +14,6 @@ import {
   MapPin,
   Wifi,
   WifiOff,
-  Loader2,
   RefreshCw,
 } from 'lucide-react';
 
@@ -156,10 +156,7 @@ export function UsersPanel({ open, onClose }: UsersPanelProps) {
         {/* User List */}
         <div className="flex-1 overflow-y-auto p-3 space-y-2">
           {loading ? (
-            <div className="flex items-center justify-center h-32 gap-2 text-muted-foreground">
-              <Loader2 className="h-5 w-5 animate-spin" />
-              <span className="text-sm font-semibold">Cargando usuarios...</span>
-            </div>
+            <ModalListSkeleton rows={6} />
           ) : filtered.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">
               <Users className="h-8 w-8 mx-auto mb-2 opacity-30" />
