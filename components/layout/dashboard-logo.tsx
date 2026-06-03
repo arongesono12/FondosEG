@@ -1,3 +1,5 @@
+import Image from 'next/image';
+
 import { cn } from '@/lib/utils';
 
 type DashboardLogoSize = 'sm' | 'md' | 'lg' | 'xl';
@@ -36,12 +38,16 @@ export function DashboardLogo({
   return (
     <div className={cn('flex items-center gap-2', className)}>
       <div className={cn('relative flex items-center justify-center', iconSizeClasses[size], iconClassName)}>
-        <img
-          src="/logo%20fondosEG/FondosEG-logo.png"
-          alt="FondosEG"
-          fetchPriority={priority ? 'high' : undefined}
-          className="h-full w-full object-contain"
-        />
+        <div className="relative w-full h-full">
+          <Image
+            src="/logo fondosEG/LFondosEG.png"
+            alt="FondosEG"
+            width={144}
+            height={144}
+            priority={priority}
+            className="object-contain w-full h-full"
+          />
+        </div>
       </div>
 
       {showLabel && (
