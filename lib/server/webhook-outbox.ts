@@ -6,7 +6,13 @@ export type FondosEGWebhookEvent =
   | 'transfer.created'
   | 'transfer.paid_out'
   | 'transfer.revolut_payout_link_created'
-  | 'wallet_transfer.confirmed';
+  | 'wallet_transfer.confirmed'
+  | 'rental_payment.created'
+  | 'rental_payment.processing'
+  | 'rental_payment.paid'
+  | 'rental_payment.failed'
+  | 'rental_payment.refunded'
+  | 'rental_payment.cancelled';
 
 interface QueueWebhookEventInput {
   eventType: FondosEGWebhookEvent;

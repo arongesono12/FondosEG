@@ -24,7 +24,7 @@ const apiKeySelect = [
   'created_at',
 ].join(',');
 
-const permissionKeys: ApiPermission[] = ['balance', 'transfer', 'history'];
+const permissionKeys: ApiPermission[] = ['balance', 'transfer', 'history', 'properties', 'payments'];
 
 async function withSupabaseRetry<T>(operation: () => PromiseLike<T>, attempts: number = 3): Promise<Awaited<T>> {
   let lastError: unknown;
@@ -50,10 +50,18 @@ async function withSupabaseRetry<T>(operation: () => PromiseLike<T>, attempts: n
 function normalizePermissions(input: unknown, role: UserRole) {
   const values = typeof input === 'object' && input !== null ? input as Record<string, unknown> : {};
   return permissionKeys.reduce<Record<ApiPermission, boolean>>((acc, key) => {
-    const defaultValue = key === 'transfer' ? role === 'gestor' || role === 'cliente' : true;
+    let defaultValue: boolean;
+    if (key === 'transfer') {
+      defaultValue = role === 'gestor' || role === 'cliente';
+    } else if (key === 'properties' || key === 'payments') {
+      // Opt-in scopes: only granted when explicitly requested.
+      defaultValue = false;
+    } else {
+      defaultValue = true;
+    }
     acc[key] = typeof values[key] === 'boolean' ? Boolean(values[key]) : defaultValue;
     return acc;
-  }, { balance: true, transfer: false, history: true });
+  }, { balance: true, transfer: false, history: true, properties: false, payments: false });
 }
 
 function publicApiKeyRecord(row: Record<string, unknown>) {

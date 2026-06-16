@@ -16,6 +16,8 @@ export interface APIKeyAuthResult {
       balance: boolean;
       transfer: boolean;
       history: boolean;
+      properties: boolean;
+      payments: boolean;
     };
     rate_limit: number;
   };
@@ -164,7 +166,7 @@ async function consumeRateLimit({
 
 export async function requirePermission(
   auth: APIKeyAuthResult,
-  permission: 'balance' | 'transfer' | 'history'
+  permission: 'balance' | 'transfer' | 'history' | 'properties' | 'payments'
 ): Promise<boolean> {
   if (!auth.success || !auth.apiKey) {
     return false;

@@ -252,6 +252,69 @@ function FinalCta({ compact = false }: { compact?: boolean }) {
   );
 }
 
+function MarketingFooter() {
+  const year = new Date().getFullYear();
+
+  return (
+    <footer className="border-t border-border/10 px-4 py-8 md:px-10 md:py-10">
+      <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[1.2fr_0.8fr_0.8fr_0.8fr]">
+        <div className="max-w-md">
+          <DashboardLogo size="md" className="justify-start" labelClassName="text-xl" />
+          <p className="mt-4 text-sm font-medium leading-7 text-muted-foreground">
+            Infraestructura financiera para transferencias, billeteras, trazabilidad operativa e integraciones API con control de credenciales.
+          </p>
+          <div className="mt-5 flex flex-wrap gap-2">
+            <span className="inline-flex items-center gap-2 rounded-full border border-border/10 bg-background/70 px-3 py-1 text-xs font-bold text-foreground">
+              <ShieldCheck className="h-3.5 w-3.5 text-pink-500" />
+              API segura
+            </span>
+            <span className="inline-flex items-center gap-2 rounded-full border border-border/10 bg-background/70 px-3 py-1 text-xs font-bold text-foreground">
+              <Code2 className="h-3.5 w-3.5 text-pink-500" />
+              OpenAPI
+            </span>
+          </div>
+        </div>
+
+        <div>
+          <p className="text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">Producto</p>
+          <div className="mt-4 grid gap-3 text-sm font-semibold text-foreground/80">
+            <Link className="transition hover:text-pink-600 dark:hover:text-pink-400" href="/landing/gestores">Gestores</Link>
+            <Link className="transition hover:text-pink-600 dark:hover:text-pink-400" href="/landing/aliados">Aliados</Link>
+            <Link className="transition hover:text-pink-600 dark:hover:text-pink-400" href="/landing/developers">Developers</Link>
+          </div>
+        </div>
+
+        <div>
+          <p className="text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">Desarrolladores</p>
+          <div className="mt-4 grid gap-3 text-sm font-semibold text-foreground/80">
+            <Link className="transition hover:text-pink-600 dark:hover:text-pink-400" href="/developers-portal">Portal API</Link>
+            <Link className="transition hover:text-pink-600 dark:hover:text-pink-400" href="/api/docs/openapi.json">OpenAPI JSON</Link>
+            <Link className="transition hover:text-pink-600 dark:hover:text-pink-400" href="/developers-portal/register">Crear cuenta</Link>
+          </div>
+        </div>
+
+        <div>
+          <p className="text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">Cuenta</p>
+          <div className="mt-4 grid gap-3 text-sm font-semibold text-foreground/80">
+            <Link className="transition hover:text-pink-600 dark:hover:text-pink-400" href="/login">Entrar</Link>
+            <Link className="transition hover:text-pink-600 dark:hover:text-pink-400" href="/register">Registrarse</Link>
+            <Link className="transition hover:text-pink-600 dark:hover:text-pink-400" href="/developers-portal/login">Login developers</Link>
+          </div>
+        </div>
+      </div>
+
+      <div className="mx-auto mt-8 flex max-w-7xl flex-col gap-3 border-t border-border/10 pt-6 text-xs font-semibold text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+        <p>© {year} FondosEG. Todos los derechos reservados.</p>
+        <div className="flex flex-wrap gap-4">
+          <Link className="transition hover:text-pink-600 dark:hover:text-pink-400" href="/privacy">Privacidad</Link>
+          <Link className="transition hover:text-pink-600 dark:hover:text-pink-400" href="/cookies">Cookies</Link>
+          <Link className="transition hover:text-pink-600 dark:hover:text-pink-400" href="/policies">Políticas</Link>
+        </div>
+      </div>
+    </footer>
+  );
+}
+
 export function LandingPage() {
   return (
     <LandingShell>
@@ -374,6 +437,7 @@ export function LandingPage() {
       </section>
 
       <FinalCta />
+      <MarketingFooter />
     </LandingShell>
   );
 }

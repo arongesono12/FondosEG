@@ -306,7 +306,7 @@ export interface ConfirmWalletTransferData {
   verification_code: string;
 }
 
-export type ApiPermission = 'balance' | 'transfer' | 'history';
+export type ApiPermission = 'balance' | 'transfer' | 'history' | 'properties' | 'payments';
 export type ApiEnvironment = 'test' | 'production';
 
 export interface ApiKeyRecord {

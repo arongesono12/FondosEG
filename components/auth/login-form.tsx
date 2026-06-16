@@ -4,12 +4,12 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Eye, EyeOff } from 'lucide-react';
-import { signInAction } from '@/app/actions/auth';
 import { DashboardLogo } from '@/components/layout/dashboard-logo';
 import { Button } from '@/components/ui/button';
 import { CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { createClient } from '@/lib/supabase/client';
 
 interface LoginFormProps {
   title?: string;
@@ -35,21 +35,47 @@ export function LoginForm({
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
+  const getLoginErrorMessage = (message?: string) => {
+    const normalizedMessage = message?.toLowerCase().trim() ?? '';
+
+    if (normalizedMessage.includes('invalid login credentials')) {
+      return 'Correo o contraseña incorrectos.';
+    }
+
+    if (normalizedMessage.includes('email not confirmed')) {
+      return 'Debes confirmar tu correo electrónico antes de iniciar sesión.';
+    }
+
+    if (normalizedMessage.includes('too many requests')) {
+      return 'Se han realizado demasiados intentos. Espera un momento e inténtalo de nuevo.';
+    }
+
+    return 'Error al iniciar sesión. Verifica tus credenciales e inténtalo de nuevo.';
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setLoading(true);
 
-    const result = await signInAction(email, password);
+    try {
+      const supabase = createClient();
+      const { data, error: signInError } = await supabase.auth.signInWithPassword({
+        email: email.toLowerCase().trim(),
+        password,
+      });
 
-    if (result.success) {
-      router.push(successRedirect);
-      router.refresh();
-    } else {
-      setError(result.error || 'Error al iniciar sesión');
+      if (!signInError && data.session) {
+        router.push(successRedirect);
+        router.refresh();
+      } else {
+        setError(getLoginErrorMessage(signInError?.message));
+      }
+    } catch {
+      setError('No se pudo conectar con el servicio de autenticación. Verifica tu red e intenta de nuevo.');
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
   return (

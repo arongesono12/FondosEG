@@ -83,6 +83,8 @@ export async function GET() {
       { name: 'Balance', description: 'Consulta de saldos por rol.' },
       { name: 'Transfers', description: 'Creacion de movimientos FondosEG.' },
       { name: 'History', description: 'Consulta de operaciones.' },
+      { name: 'Properties', description: 'Consulta de propiedades y contratos de alquiler.' },
+      { name: 'Payments', description: 'Pagos de alquiler procesados con la app de pagos externa.' },
       { name: 'Webhooks', description: 'Eventos salientes firmados para integraciones.' },
     ],
     paths: {
@@ -227,6 +229,140 @@ export async function GET() {
           },
         },
       },
+      '/api/v1/external/properties': {
+        get: {
+          tags: ['Properties'],
+          operationId: 'listExternalProperties',
+          summary: 'Listar propiedades',
+          description: 'Requiere el scope `properties`. Devuelve las propiedades visibles para la credencial.',
+          parameters: [
+            { name: 'limit', in: 'query', schema: { type: 'integer', minimum: 1, maximum: 100, default: 50 } },
+            { name: 'offset', in: 'query', schema: { type: 'integer', minimum: 0, default: 0 } },
+            {
+              name: 'status',
+              in: 'query',
+              schema: { type: 'string', enum: ['available', 'rented', 'inactive'] },
+              description: 'Filtra por estado de la propiedad.',
+            },
+          ],
+          responses: {
+            '200': {
+              description: 'Propiedades consultadas correctamente.',
+              headers: publicApiResponseHeaders,
+              content: {
+                'application/json': { schema: { $ref: '#/components/schemas/HistoryResponse' } },
+              },
+            },
+            '400': { $ref: '#/components/responses/BadRequest' },
+            '401': { $ref: '#/components/responses/Unauthorized' },
+            '403': { $ref: '#/components/responses/Forbidden' },
+            '429': { $ref: '#/components/responses/RateLimited' },
+            '500': { $ref: '#/components/responses/InternalError' },
+          },
+        },
+      },
+      '/api/v1/external/rentals': {
+        get: {
+          tags: ['Properties'],
+          operationId: 'listExternalRentals',
+          summary: 'Listar contratos de alquiler',
+          description: 'Requiere el scope `properties`. Lista los alquileres asociados a la credencial.',
+          parameters: [
+            { name: 'limit', in: 'query', schema: { type: 'integer', minimum: 1, maximum: 100, default: 50 } },
+            { name: 'offset', in: 'query', schema: { type: 'integer', minimum: 0, default: 0 } },
+            {
+              name: 'status',
+              in: 'query',
+              schema: { type: 'string', enum: ['active', 'ended', 'cancelled'] },
+              description: 'Filtra por estado del alquiler.',
+            },
+            {
+              name: 'property_id',
+              in: 'query',
+              schema: { type: 'string', format: 'uuid' },
+              description: 'Filtra por propiedad.',
+            },
+          ],
+          responses: {
+            '200': {
+              description: 'Alquileres consultados correctamente.',
+              headers: publicApiResponseHeaders,
+              content: {
+                'application/json': { schema: { $ref: '#/components/schemas/HistoryResponse' } },
+              },
+            },
+            '400': { $ref: '#/components/responses/BadRequest' },
+            '401': { $ref: '#/components/responses/Unauthorized' },
+            '403': { $ref: '#/components/responses/Forbidden' },
+            '429': { $ref: '#/components/responses/RateLimited' },
+            '500': { $ref: '#/components/responses/InternalError' },
+          },
+        },
+      },
+      '/api/v1/external/rental-payments': {
+        get: {
+          tags: ['Payments'],
+          operationId: 'listRentalPayments',
+          summary: 'Listar pagos de alquiler',
+          description: 'Requiere el scope `payments`. Lista los pagos visibles para la credencial.',
+          parameters: [
+            { name: 'limit', in: 'query', schema: { type: 'integer', minimum: 1, maximum: 100, default: 50 } },
+            { name: 'offset', in: 'query', schema: { type: 'integer', minimum: 0, default: 0 } },
+            {
+              name: 'status',
+              in: 'query',
+              schema: { type: 'string', enum: ['pending', 'processing', 'paid', 'failed', 'refunded', 'cancelled'] },
+            },
+            { name: 'rental_id', in: 'query', schema: { type: 'string', format: 'uuid' } },
+          ],
+          responses: {
+            '200': {
+              description: 'Pagos consultados correctamente.',
+              headers: publicApiResponseHeaders,
+              content: {
+                'application/json': { schema: { $ref: '#/components/schemas/HistoryResponse' } },
+              },
+            },
+            '400': { $ref: '#/components/responses/BadRequest' },
+            '401': { $ref: '#/components/responses/Unauthorized' },
+            '403': { $ref: '#/components/responses/Forbidden' },
+            '429': { $ref: '#/components/responses/RateLimited' },
+            '500': { $ref: '#/components/responses/InternalError' },
+          },
+        },
+        post: {
+          tags: ['Payments'],
+          operationId: 'createRentalPayment',
+          summary: 'Iniciar un pago de alquiler',
+          description:
+            'Requiere el scope `payments`. Crea un pago de alquiler y, si la app de pagos esta configurada, genera el cobro externo. Si no, el pago queda en estado `pending`.',
+          parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }],
+          requestBody: {
+            required: true,
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/CreateRentalPaymentRequest' },
+              },
+            },
+          },
+          responses: {
+            '201': {
+              description: 'Pago de alquiler creado correctamente.',
+              headers: publicApiResponseHeaders,
+              content: {
+                'application/json': { schema: { $ref: '#/components/schemas/CreateRentalPaymentResponse' } },
+              },
+            },
+            '400': { $ref: '#/components/responses/BadRequest' },
+            '401': { $ref: '#/components/responses/Unauthorized' },
+            '403': { $ref: '#/components/responses/Forbidden' },
+            '404': { $ref: '#/components/responses/NotFound' },
+            '409': { $ref: '#/components/responses/IdempotencyConflict' },
+            '429': { $ref: '#/components/responses/RateLimited' },
+            '500': { $ref: '#/components/responses/InternalError' },
+          },
+        },
+      },
     },
     webhooks: {
       transferCreated: {
@@ -298,6 +434,30 @@ export async function GET() {
           },
         },
       },
+      rentalPaymentUpdated: {
+        post: {
+          tags: ['Webhooks'],
+          summary:
+            'Evento emitido cuando cambia el estado de un pago de alquiler (created, processing, paid, failed, refunded, cancelled).',
+          parameters: [
+            { $ref: '#/components/parameters/WebhookIdHeader' },
+            { $ref: '#/components/parameters/WebhookEventHeader' },
+            { $ref: '#/components/parameters/WebhookTimestampHeader' },
+            { $ref: '#/components/parameters/WebhookSignatureHeader' },
+          ],
+          requestBody: {
+            required: true,
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/RentalPaymentWebhook' },
+              },
+            },
+          },
+          responses: {
+            '200': { description: 'El receptor acepto el evento.' },
+          },
+        },
+      },
     },
     components: {
       securitySchemes: {
@@ -333,7 +493,17 @@ export async function GET() {
           required: true,
           schema: {
             type: 'string',
-            enum: ['transfer.created', 'transfer.paid_out', 'wallet_transfer.confirmed'],
+            enum: [
+              'transfer.created',
+              'transfer.paid_out',
+              'wallet_transfer.confirmed',
+              'rental_payment.created',
+              'rental_payment.processing',
+              'rental_payment.paid',
+              'rental_payment.failed',
+              'rental_payment.refunded',
+              'rental_payment.cancelled',
+            ],
           },
           description: 'Tipo de evento emitido por FondosEG.',
         },

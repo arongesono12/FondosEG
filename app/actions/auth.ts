@@ -125,7 +125,11 @@ export async function signInAction(email: string, password: string) {
       return { success: false, error: getAuthErrorMessage(error) };
     }
 
-    return { success: true, session: data.session, user: data.user };
+    if (!data.session || !data.user) {
+      return { success: false, error: 'No se pudo iniciar sesión. Inténtalo de nuevo.' };
+    }
+
+    return { success: true };
   } catch (err) {
     console.error('Fatal SignIn error:', err);
     return {

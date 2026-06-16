@@ -34,6 +34,8 @@ const permissionLabels: Record<ApiPermission, { label: string; icon: ElementType
   balance: { label: 'Saldos', icon: Wallet, detail: 'Lectura de balances disponibles.' },
   transfer: { label: 'Transferencias', icon: Send, detail: 'Creación de movimientos externos.' },
   history: { label: 'Historial', icon: History, detail: 'Consulta de operaciones y estados.' },
+  properties: { label: 'Propiedades', icon: BookOpen, detail: 'Lectura de propiedades y alquileres.' },
+  payments: { label: 'Pagos de alquiler', icon: Wallet, detail: 'Inicio y consulta de pagos de alquiler.' },
 };
 
 const endpointDocs = [
@@ -65,12 +67,35 @@ const endpointDocs = [
     scope: 'history',
     description: 'Lista operaciones visibles para la credencial autenticada.',
   },
+  {
+    method: 'GET',
+    path: '/api/v1/external/properties',
+    title: 'Listar propiedades',
+    scope: 'properties',
+    description: 'Devuelve las propiedades visibles para la credencial.',
+  },
+  {
+    method: 'GET',
+    path: '/api/v1/external/rentals',
+    title: 'Listar alquileres',
+    scope: 'properties',
+    description: 'Lista los contratos de alquiler asociados a la credencial.',
+  },
+  {
+    method: 'POST',
+    path: '/api/v1/external/rental-payments',
+    title: 'Iniciar pago de alquiler',
+    scope: 'payments',
+    description: 'Crea un pago de alquiler y genera el cobro en la app de pagos.',
+  },
 ] as const;
 
 const defaultPermissions: Record<ApiPermission, boolean> = {
   balance: true,
   transfer: true,
   history: true,
+  properties: false,
+  payments: false,
 };
 
 const environmentLabels: Record<ApiEnvironment, { label: string; detail: string; badge: string }> = {
@@ -85,6 +110,63 @@ const environmentLabels: Record<ApiEnvironment, { label: string; detail: string;
     badge: 'bg-emerald-600 text-white',
   },
 };
+
+const integrationSteps = [
+  {
+    title: '1. Crea una credencial por app',
+    detail: 'Asigna nombre, entorno, rol y permisos. Usa test para QA y production solo desde servidores productivos.',
+  },
+  {
+    title: '2. Guarda el secret como variable de servidor',
+    detail: 'El api_secret se muestra una vez. No lo pongas en frontend, apps moviles, repositorios, logs ni analytics.',
+  },
+  {
+    title: '3. Llama siempre desde tu backend',
+    detail: 'Tu backend firma cada request con x-api-key y x-api-secret, y expone a tu app solo tus propios endpoints.',
+  },
+  {
+    title: '4. Usa idempotency-key en dinero',
+    detail: 'En transferencias y pagos envia un UUID unico por operacion para evitar duplicados por reintentos.',
+  },
+] as const;
+
+const requiredHeaders = [
+  { name: 'x-api-key', value: 'Clave publica de la credencial.' },
+  { name: 'x-api-secret', value: 'Secreto privado, solo en backend.' },
+  { name: 'idempotency-key', value: 'UUID recomendado para POST que mueve dinero.' },
+  { name: 'content-type', value: 'application/json cuando el request tenga body.' },
+] as const;
+
+const responseHeaderDocs = [
+  { name: 'x-request-id', value: 'ID para soporte, logs y conciliacion.' },
+  { name: 'x-api-version', value: 'Version estable servida por la API.' },
+  { name: 'x-api-environment', value: 'test o production segun la credencial.' },
+  { name: 'x-ratelimit-remaining', value: 'Requests restantes en la ventana actual.' },
+] as const;
+
+const errorDocs = [
+  { status: '400', code: 'validation_error', detail: 'Campos invalidos, faltantes o con formato incorrecto.' },
+  { status: '401', code: 'invalid_credentials', detail: 'API key o secret ausente, incorrecto o revocado.' },
+  { status: '403', code: 'permission_denied', detail: 'La credencial no tiene rol o permiso para ese endpoint.' },
+  { status: '409', code: 'idempotency_conflict', detail: 'La misma idempotency-key se uso con otro payload.' },
+  { status: '429', code: 'rate_limit_exceeded', detail: 'La credencial supero su limite temporal de requests.' },
+] as const;
+
+const webhookEvents = [
+  { event: 'transfer.created', detail: 'Una transferencia fue registrada.' },
+  { event: 'transfer.completed', detail: 'La transferencia se completo correctamente.' },
+  { event: 'transfer.cancelled', detail: 'La transferencia fue cancelada.' },
+  { event: 'rental_payment.updated', detail: 'Cambio de estado en un pago de alquiler.' },
+] as const;
+
+const productionChecklist = [
+  'Separar FONDOSEG_TEST_* y FONDOSEG_PROD_* por entorno.',
+  'Rotar credenciales cuando cambie el equipo o exista una sospecha.',
+  'Registrar x-request-id, status_code y latency_ms en tus logs.',
+  'Reintentar 429 y 5xx con backoff; no reintentar 4xx de validacion.',
+  'Validar firmas HMAC SHA-256 antes de procesar webhooks.',
+  'Nunca mostrar api_secret en respuestas, errores o pantallas de cliente.',
+] as const;
 
 function getRoleOptions(role?: string | null): UserRole[] {
   if (isAdminRole(role)) {
@@ -246,6 +328,63 @@ export default function DevelopersPage() {
   const curlSnippet = `curl -X GET "${baseUrl}/api/v1/external/balance" \\
   -H "x-api-key: ${activeCredential?.api_key || '<API_KEY>'}" \\
   -H "x-api-secret: ${activeCredential && 'api_secret' in activeCredential ? activeCredential.api_secret : '<API_SECRET>'}"`;
+
+  const transferCurlSnippet = `curl -X POST "${baseUrl}/api/v1/external/transfer" \\
+  -H "content-type: application/json" \\
+  -H "x-api-key: ${activeCredential?.api_key || '<API_KEY>'}" \\
+  -H "x-api-secret: ${activeCredential && 'api_secret' in activeCredential ? activeCredential.api_secret : '<API_SECRET>'}" \\
+  -H "idempotency-key: 0bdb9c7a-8a0f-4e4b-9f26-6f9e7d3c0f10" \\
+  -d '{
+    "sender_name": "Cliente origen",
+    "sender_phone": "+240000000000",
+    "receiver_name": "Cliente destino",
+    "receiver_phone": "+240111111111",
+    "destination_city": "Malabo",
+    "amount": 25000,
+    "currency": "XAF"
+  }'`;
+
+  const sdkSnippet = `import { FondosEGClient } from '@fondoseg/sdk';
+
+const fondos = new FondosEGClient({
+  baseUrl: '${baseUrl}',
+  apiKey: process.env.FONDOSEG_API_KEY!,
+  apiSecret: process.env.FONDOSEG_API_SECRET!,
+  userAgent: 'mi-app/1.0.0',
+});
+
+const balance = await fondos.getBalance();
+const transfer = await fondos.createTransfer({
+  sender_name: 'Cliente origen',
+  sender_phone: '+240000000000',
+  receiver_name: 'Cliente destino',
+  receiver_phone: '+240111111111',
+  destination_city: 'Malabo',
+  amount: 25000,
+  currency: 'XAF',
+});
+
+console.log(balance.data.balance, transfer.data.transfer_code);`;
+
+  const webhookSnippet = `import {
+  parseFondosEGWebhookBody,
+  parseFondosEGWebhookHeaders,
+  verifyFondosEGWebhookSignature,
+} from '@fondoseg/sdk';
+
+const rawBody = await request.text();
+const headers = parseFondosEGWebhookHeaders(request.headers);
+
+const valid = verifyFondosEGWebhookSignature({
+  signingSecret: process.env.FONDOSEG_WEBHOOK_SECRET!,
+  timestamp: headers.timestamp,
+  signature: headers.signature,
+  rawBody,
+});
+
+if (!valid) throw new Error('Invalid FondosEG webhook signature');
+
+const event = parseFondosEGWebhookBody(rawBody);`;
 
   if (loading) {
     return (
@@ -628,6 +767,156 @@ export default function DevelopersPage() {
             <p className="mt-3 text-xs font-medium leading-5 text-muted-foreground">{endpoint.description}</p>
           </div>
         ))}
+      </section>
+
+      <section className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
+        <Card className="glass-premium overflow-hidden border-border/10 bg-card/40 shadow-xl shadow-black/5">
+          <CardHeader className="border-b border-border/5 pb-5">
+            <CardTitle className="flex items-center gap-2 text-xl font-bold text-foreground">
+              <BookOpen className="h-5 w-5 text-primary" />
+              Guia de implementacion
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-5 p-6">
+            <div className="grid gap-3">
+              {integrationSteps.map((step) => (
+                <div key={step.title} className="rounded-3xl border border-border/10 bg-background/70 p-4">
+                  <p className="text-sm font-bold text-foreground">{step.title}</p>
+                  <p className="mt-2 text-xs font-medium leading-5 text-muted-foreground">{step.detail}</p>
+                </div>
+              ))}
+            </div>
+
+            <div className="grid gap-4 lg:grid-cols-2">
+              <div className="rounded-3xl border border-border/10 bg-background/70 p-4">
+                <p className="text-sm font-bold text-foreground">Headers requeridos</p>
+                <div className="mt-3 space-y-3">
+                  {requiredHeaders.map((header) => (
+                    <div key={header.name}>
+                      <p className="font-mono text-xs font-bold text-primary">{header.name}</p>
+                      <p className="mt-1 text-xs font-medium leading-5 text-muted-foreground">{header.value}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="rounded-3xl border border-border/10 bg-background/70 p-4">
+                <p className="text-sm font-bold text-foreground">Headers de respuesta</p>
+                <div className="mt-3 space-y-3">
+                  {responseHeaderDocs.map((header) => (
+                    <div key={header.name}>
+                      <p className="font-mono text-xs font-bold text-primary">{header.name}</p>
+                      <p className="mt-1 text-xs font-medium leading-5 text-muted-foreground">{header.value}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="glass-premium overflow-hidden border-border/10 bg-card/40 shadow-xl shadow-black/5">
+          <CardHeader className="border-b border-border/5 pb-5">
+            <CardTitle className="flex items-center gap-2 text-xl font-bold text-foreground">
+              <Code2 className="h-5 w-5 text-primary" />
+              Ejemplos listos para copiar
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4 p-6">
+            <div className="rounded-3xl border border-border/10 bg-slate-950 p-4 text-slate-100">
+              <div className="mb-3 flex items-center justify-between gap-3">
+                <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-400">Crear transferencia</p>
+                <Button type="button" size="sm" variant="ghost" className="rounded-xl text-slate-200 hover:bg-white/10 hover:text-white" onClick={() => copyText('transfer-curl', transferCurlSnippet)}>
+                  <Copy className="h-4 w-4" />
+                  {copied === 'transfer-curl' ? 'Copiado' : 'Copiar'}
+                </Button>
+              </div>
+              <pre className="max-h-80 overflow-x-auto whitespace-pre-wrap text-xs leading-6">{transferCurlSnippet}</pre>
+            </div>
+
+            <div className="rounded-3xl border border-border/10 bg-slate-950 p-4 text-slate-100">
+              <div className="mb-3 flex items-center justify-between gap-3">
+                <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-400">SDK TypeScript</p>
+                <Button type="button" size="sm" variant="ghost" className="rounded-xl text-slate-200 hover:bg-white/10 hover:text-white" onClick={() => copyText('sdk', sdkSnippet)}>
+                  <Copy className="h-4 w-4" />
+                  {copied === 'sdk' ? 'Copiado' : 'Copiar'}
+                </Button>
+              </div>
+              <pre className="max-h-80 overflow-x-auto whitespace-pre-wrap text-xs leading-6">{sdkSnippet}</pre>
+            </div>
+          </CardContent>
+        </Card>
+      </section>
+
+      <section className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
+        <Card className="glass-premium overflow-hidden border-border/10 bg-card/40 shadow-xl shadow-black/5">
+          <CardHeader className="border-b border-border/5 pb-5">
+            <CardTitle className="flex items-center gap-2 text-xl font-bold text-foreground">
+              <AlertTriangle className="h-5 w-5 text-primary" />
+              Errores y reintentos
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3 p-6">
+            {errorDocs.map((errorDoc) => (
+              <div key={errorDoc.code} className="grid gap-3 rounded-3xl border border-border/10 bg-background/70 p-4 md:grid-cols-[72px_1fr] md:items-start">
+                <Badge className="w-fit rounded-full bg-slate-900 px-3 py-1 text-xs font-bold text-white dark:bg-white dark:text-slate-900">
+                  {errorDoc.status}
+                </Badge>
+                <div>
+                  <p className="font-mono text-xs font-bold text-primary">{errorDoc.code}</p>
+                  <p className="mt-1 text-xs font-medium leading-5 text-muted-foreground">{errorDoc.detail}</p>
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+
+        <Card className="glass-premium overflow-hidden border-border/10 bg-card/40 shadow-xl shadow-black/5">
+          <CardHeader className="border-b border-border/5 pb-5">
+            <CardTitle className="flex items-center gap-2 text-xl font-bold text-foreground">
+              <ShieldCheck className="h-5 w-5 text-primary" />
+              Webhooks firmados
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4 p-6">
+            <div className="grid gap-3">
+              {webhookEvents.map((webhookEvent) => (
+                <div key={webhookEvent.event} className="rounded-3xl border border-border/10 bg-background/70 p-4">
+                  <p className="font-mono text-xs font-bold text-primary">{webhookEvent.event}</p>
+                  <p className="mt-1 text-xs font-medium leading-5 text-muted-foreground">{webhookEvent.detail}</p>
+                </div>
+              ))}
+            </div>
+
+            <div className="rounded-3xl border border-border/10 bg-slate-950 p-4 text-slate-100">
+              <div className="mb-3 flex items-center justify-between gap-3">
+                <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-400">Verificar firma</p>
+                <Button type="button" size="sm" variant="ghost" className="rounded-xl text-slate-200 hover:bg-white/10 hover:text-white" onClick={() => copyText('webhook', webhookSnippet)}>
+                  <Copy className="h-4 w-4" />
+                  {copied === 'webhook' ? 'Copiado' : 'Copiar'}
+                </Button>
+              </div>
+              <pre className="max-h-80 overflow-x-auto whitespace-pre-wrap text-xs leading-6">{webhookSnippet}</pre>
+            </div>
+          </CardContent>
+        </Card>
+      </section>
+
+      <section className="rounded-4xl border border-border/10 bg-background/70 p-5">
+        <div className="flex items-start gap-3">
+          <CheckCircle2 className="mt-1 h-5 w-5 text-emerald-600 dark:text-emerald-300" />
+          <div className="w-full">
+            <p className="font-bold text-foreground">Checklist antes de produccion</p>
+            <div className="mt-4 grid gap-3 md:grid-cols-2">
+              {productionChecklist.map((item) => (
+                <div key={item} className="flex items-start gap-3 rounded-3xl border border-border/10 bg-background/70 p-4">
+                  <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-300" />
+                  <p className="text-xs font-semibold leading-5 text-muted-foreground">{item}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       </section>
 
       <section className="rounded-4xl border border-border/10 bg-background/70 p-5">
