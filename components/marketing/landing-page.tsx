@@ -210,7 +210,10 @@ function LandingShell({ children }: { children: ReactNode }) {
 
       <div className="relative mx-auto flex min-h-screen w-full flex-col overflow-hidden bg-white pt-16 dark:bg-black md:min-h-[calc(100vh-4rem)] md:max-w-[1440px] md:rounded-[2.5rem] md:border md:border-border/10 md:bg-transparent md:pt-20 md:shadow-xl md:shadow-slate-200/20 dark:md:shadow-black/20">
         <Header />
-        <div className="flex-1 overflow-hidden bg-white dark:bg-black md:bg-transparent">{children}</div>
+        <div className="flex-1 overflow-hidden bg-white dark:bg-black md:bg-transparent">
+          {children}
+          <MarketingFooter />
+        </div>
       </div>
     </main>
   );
@@ -437,7 +440,6 @@ export function LandingPage() {
       </section>
 
       <FinalCta />
-      <MarketingFooter />
     </LandingShell>
   );
 }
