@@ -2,6 +2,8 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import type { WalletTransfer, CreateWalletTransferData, ConfirmWalletTransferData } from '@/types';
 import { queueWalletVerificationInternal, queueWalletConfirmationInternal } from '@/lib/server/notification-outbox';
 import { emitWebhookEvent } from '@/lib/server/webhook-outbox';
+import { PAYMENT_REGULATION } from '@/lib/compliance';
+import { assertComplianceInfrastructure, recordPaymentConsent } from '@/lib/server/compliance-events';
 
 function generateVerificationCode(): string {
   return Math.floor(100000 + Math.random() * 900000).toString();
@@ -9,9 +11,18 @@ function generateVerificationCode(): string {
 
 export async function createWalletTransfer(
   senderId: string,
-  data: CreateWalletTransferData
+  data: CreateWalletTransferData,
+  requestEvidence?: { ipAddress?: string | null; userAgent?: string | null }
 ): Promise<{ success: boolean; transfer?: WalletTransfer; error?: string }> {
   const adminClient = createAdminClient();
+
+  if (
+    data.compliance_consent !== true ||
+    data.disclosure_version !== PAYMENT_REGULATION.disclosureVersion
+  ) {
+    return { success: false, error: 'Debe revisar y aceptar la información previa del servicio de pago' };
+  }
+  await assertComplianceInfrastructure();
 
   const { data: sender, error: senderError } = await adminClient
     .from('users')
@@ -72,6 +83,19 @@ export async function createWalletTransfer(
   if (transferError) {
     return { success: false, error: transferError.message };
   }
+
+  await recordPaymentConsent({
+    actorUserId: senderId,
+    transferId: transfer.id,
+    transferType: 'wallet_transfer',
+    amount: Number(transfer.amount),
+    currency: transfer.currency,
+    feeAmount: 0,
+    beneficiaryName: transfer.receiver_name,
+    channel: 'dashboard_wallet',
+    ipAddress: requestEvidence?.ipAddress,
+    userAgent: requestEvidence?.userAgent,
+  });
 
   // Queue Verification Notification (Internal only, no SMS)
   try {

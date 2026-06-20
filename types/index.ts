@@ -201,6 +201,8 @@ export interface TransferFormData {
   amount: number;
   currency: string;
   notes?: string;
+  compliance_consent?: boolean;
+  disclosure_version?: string;
 }
 
 export interface ClientTransferFormData {
@@ -299,6 +301,8 @@ export interface CreateWalletTransferData {
   amount: number;
   currency: string;
   notes?: string;
+  compliance_consent?: boolean;
+  disclosure_version?: string;
 }
 
 export interface ConfirmWalletTransferData {

@@ -28,6 +28,7 @@ import {
   ArrowLeft,
 } from 'lucide-react';
 import { getAgentBalance } from '@/services/agent';
+import { PAYMENT_REGULATION } from '@/lib/compliance';
 
 interface AgentTransferModalProps {
   open: boolean;
@@ -119,6 +120,7 @@ export function AgentTransferModal({ open, onOpenChange, onSuccess }: AgentTrans
   const [balance, setBalance] = useState<number>(0);
   const [customCity, setCustomCity] = useState(false);
   const [customCountry, setCustomCountry] = useState(false);
+  const [complianceConsent, setComplianceConsent] = useState(false);
 
   const [formData, setFormData] = useState({
     sender_name: '',
@@ -210,6 +212,8 @@ export function AgentTransferModal({ open, onOpenChange, onSuccess }: AgentTrans
         amount: amount,
         currency: formData.currency,
         notes: formData.notes || undefined,
+        compliance_consent: complianceConsent,
+        disclosure_version: PAYMENT_REGULATION.disclosureVersion,
       });
 
       if (result.success) {
@@ -234,6 +238,7 @@ export function AgentTransferModal({ open, onOpenChange, onSuccess }: AgentTrans
           });
           setCustomCity(false);
           setCustomCountry(false);
+          setComplianceConsent(false);
           onOpenChange(false);
           onSuccess?.();
         }, 2000);
@@ -649,6 +654,32 @@ export function AgentTransferModal({ open, onOpenChange, onSuccess }: AgentTrans
                 )}
               </div>
 
+              <div className="rounded-2xl border border-primary/15 bg-primary/5 p-4">
+                <p className="text-xs font-black uppercase tracking-[0.16em] text-primary">
+                  Información previa del servicio de pago
+                </p>
+                <div className="mt-3 grid gap-2 text-xs font-semibold text-muted-foreground">
+                  <p>Prestador y canal: FondosEG, operación registrada por gestor.</p>
+                  <p>Importe de la operación: {formatCurrency(transferAmount, formData.currency)}</p>
+                  <p>Comisión informada: {formatCurrency(estimatedCommission, formData.currency)}</p>
+                  <p>Beneficiario: {formData.receiver_name}</p>
+                  <p>Disponibilidad prevista: inmediata tras el registro, sujeta a validaciones operativas.</p>
+                  <p>La operación quedará identificada por una referencia y podrá reclamarse desde Cumplimiento.</p>
+                </div>
+                <label className="mt-4 flex cursor-pointer items-start gap-3 text-xs font-semibold text-foreground">
+                  <input
+                    type="checkbox"
+                    checked={complianceConsent}
+                    onChange={(event) => setComplianceConsent(event.target.checked)}
+                    className="mt-0.5 h-4 w-4 accent-pink-600"
+                  />
+                  <span>
+                    Confirmo que he revisado los datos, autorizo la orden de pago y acepto la información
+                    previa conforme al Reglamento {PAYMENT_REGULATION.code}.
+                  </span>
+                </label>
+              </div>
+
               <div className="flex gap-3 pt-2">
                 <Button 
                   variant="outline"
@@ -661,7 +692,7 @@ export function AgentTransferModal({ open, onOpenChange, onSuccess }: AgentTrans
                 </Button>
                 <Button 
                   onClick={handleConfirmTransfer}
-                  disabled={loading}
+                  disabled={loading || !complianceConsent}
                     className="flex-1 h-12 rounded-xl bg-brand-gradient text-white font-bold shadow-lg shadow-pink-500/20 hover:opacity-90 transition-all"
                 >
                   {loading ? (

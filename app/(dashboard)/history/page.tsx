@@ -15,6 +15,7 @@ import { formatCurrency, formatDate, getStatusColor, getStatusText } from '@/lib
 import type { Transfer } from '@/types';
 import { Download, History, PencilLine, Search, TrendingUp, Wallet, XCircle } from 'lucide-react';
 import { isAdminRole } from '@/lib/roles';
+import Link from 'next/link';
 
 type StatusFilter = 'all' | 'completed' | 'created' | 'available_for_pickup' | 'cancelled';
 
@@ -302,15 +303,13 @@ export default function HistoryPage() {
                   <TableHead className="py-4 text-[10px] font-black uppercase tracking-[0.18em] text-muted-foreground text-right">Monto</TableHead>
                   <TableHead className="py-4 text-[10px] font-black uppercase tracking-[0.18em] text-muted-foreground">Estado</TableHead>
                   <TableHead className="py-4 text-[10px] font-black uppercase tracking-[0.18em] text-muted-foreground">Fecha</TableHead>
-                  {showAdminActions && (
-                    <TableHead className="pr-8 py-4 text-[10px] font-black uppercase tracking-[0.18em] text-muted-foreground text-right">Acciones</TableHead>
-                  )}
+                  <TableHead className="pr-8 py-4 text-[10px] font-black uppercase tracking-[0.18em] text-muted-foreground text-right">Acciones</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredTransfers.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={showAdminActions ? 7 : 6} className="py-20 text-center text-sm font-bold text-muted-foreground">
+                    <TableCell colSpan={7} className="py-20 text-center text-sm font-bold text-muted-foreground">
                       No hay operaciones que coincidan con los filtros actuales.
                     </TableCell>
                   </TableRow>
@@ -342,24 +341,31 @@ export default function HistoryPage() {
                         </Badge>
                       </TableCell>
                       <TableCell className="text-xs font-semibold text-muted-foreground">{formatDate(transfer.created_at)}</TableCell>
-                      {showAdminActions && (
-                        <TableCell className="pr-8 text-right">
-                          {canCorrectTransfer(transfer) ? (
-                            <Button
-                              type="button"
-                              size="sm"
-                              variant="outline"
-                              className="rounded-xl font-black"
-                              onClick={() => openCorrectionModal(transfer)}
-                            >
-                              <PencilLine className="mr-2 h-4 w-4" />
-                              Corregir
-                            </Button>
-                          ) : (
-                            <span className="text-xs font-semibold text-muted-foreground">Bloqueada</span>
-                          )}
-                        </TableCell>
-                      )}
+                      <TableCell className="pr-8 text-right">
+                        <div className="flex justify-end gap-2">
+                          <Button asChild type="button" size="sm" variant="outline" className="rounded-xl font-black">
+                            <Link href={`/receipts/${transfer.id}`}>
+                              <Download className="mr-2 h-4 w-4" />
+                              Comprobante
+                            </Link>
+                          </Button>
+                          {showAdminActions &&
+                            (canCorrectTransfer(transfer) ? (
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant="outline"
+                                className="rounded-xl font-black"
+                                onClick={() => openCorrectionModal(transfer)}
+                              >
+                                <PencilLine className="mr-2 h-4 w-4" />
+                                Corregir
+                              </Button>
+                            ) : (
+                              <span className="self-center text-xs font-semibold text-muted-foreground">Bloqueada</span>
+                            ))}
+                        </div>
+                      </TableCell>
                     </TableRow>
                   ))
                 )}

@@ -4,12 +4,15 @@ import { AuthzError, requireProfile, requireRole } from '@/lib/server/authz';
 
 import { queueNotification, processNotificationOutbox } from '@/lib/server/notification-outbox';
 import { sendSupportRequestEmail } from '@/lib/email-service';
+import { createComplaintReference, PAYMENT_COMPLAINT_TARGET_DAYS } from '@/lib/compliance';
 
 interface SupportMessageBody {
   message: string;
   targetAdminId?: string;
   targetAdminPhone?: string;
   requestType?: 'balance_topup' | 'report_error' | 'general' | string;
+  transactionReference?: string;
+  complaintCategory?: string;
 }
 
 // Twilio and sendSMS replaced by lib/server/notification-outbox.ts
@@ -25,6 +28,12 @@ export async function POST(request: NextRequest) {
 
     const supabaseAdmin = createAdminClient();
     const requestType = data.requestType || null;
+    const isPaymentComplaint = requestType === 'payment_complaint';
+    const complaintReference = isPaymentComplaint ? createComplaintReference() : null;
+    const acknowledgedAt = isPaymentComplaint ? new Date() : null;
+    const dueAt = acknowledgedAt
+      ? new Date(acknowledgedAt.getTime() + PAYMENT_COMPLAINT_TARGET_DAYS * 24 * 60 * 60 * 1000)
+      : null;
 
     const isClient = profile.role === 'cliente';
     const targetRole = isClient ? 'gestor' : 'admin';
@@ -52,9 +61,9 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const requiresAssignedAdmin = !isClient && requestType !== 'general';
+    const requiresAssignedAdmin = !isClient && requestType !== 'general' && !isPaymentComplaint;
 
-    if (isClient) {
+    if (isClient && !isPaymentComplaint) {
       // Clients may only contact gestors who have completed transfers to them.
       const { data: transfers } = await supabaseAdmin
         .from('transfers')
@@ -72,14 +81,24 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const { error } = await supabaseAdmin.from('support_messages').insert({
-      user_id: profile.id,
-      user_name: profile.name || 'Usuario anónimo',
-      user_email: profile.email || null,
-      message: data.message,
-      status: 'pending',
-      request_type: requestType,
-    });
+    const { data: savedMessage, error } = await supabaseAdmin
+      .from('support_messages')
+      .insert({
+        user_id: profile.id,
+        target_user_id: targetUser?.id ?? null,
+        user_name: profile.name || 'Usuario',
+        user_email: profile.email || null,
+        message: data.message,
+        status: 'pending',
+        request_type: requestType,
+        complaint_reference: complaintReference,
+        transaction_reference: data.transactionReference?.trim() || null,
+        complaint_category: data.complaintCategory?.trim() || null,
+        acknowledged_at: acknowledgedAt?.toISOString() || null,
+        due_at: dueAt?.toISOString() || null,
+      })
+      .select('id, complaint_reference, acknowledged_at, due_at')
+      .single();
 
     if (error) {
       console.error('Error saving support message:', error);
@@ -128,7 +147,17 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({
+      success: true,
+      complaint: isPaymentComplaint
+        ? {
+            id: savedMessage?.id,
+            reference: savedMessage?.complaint_reference,
+            acknowledged_at: savedMessage?.acknowledged_at,
+            target_response_at: savedMessage?.due_at,
+          }
+        : undefined,
+    });
   } catch (error) {
     console.error('Support API error:', error);
     if (error instanceof AuthzError) {

@@ -7,6 +7,8 @@ import { generateTransferCode, getPhoneLookupCandidates, normalizePhoneDigits } 
 import { queueTransferNotifications, processNotificationOutbox } from '@/lib/server/notification-outbox';
 import { emitWebhookEvent } from '@/lib/server/webhook-outbox';
 import { isAdminRole } from '@/lib/roles';
+import { PAYMENT_REGULATION } from '@/lib/compliance';
+import { assertComplianceInfrastructure, recordPaymentConsent } from '@/lib/server/compliance-events';
 
 // Unified notification helper replaced by lib/server/notification-outbox.ts
 
@@ -141,6 +143,16 @@ export async function POST(request: NextRequest) {
     if (!body.receiver_name || !body.receiver_phone || !body.amount || !body.destination_city) {
       return NextResponse.json({ success: false, error: 'Faltan campos requeridos' }, { status: 400 });
     }
+    if (
+      body.compliance_consent !== true ||
+      body.disclosure_version !== PAYMENT_REGULATION.disclosureVersion
+    ) {
+      return NextResponse.json(
+        { success: false, error: 'Debe revisar y aceptar la información previa del servicio de pago' },
+        { status: 400 }
+      );
+    }
+    await assertComplianceInfrastructure();
 
     const adminClient = createAdminClient();
     const registeredReceiver = await findRegisteredClientByPhone(adminClient, body.receiver_phone);
@@ -166,6 +178,19 @@ export async function POST(request: NextRequest) {
     });
 
     const typedTransfer = (transfer as unknown) as Transfer;
+
+    await recordPaymentConsent({
+      actorUserId: profile.id,
+      transferId: typedTransfer.id,
+      transferType: 'agent_transfer',
+      amount: typedTransfer.amount,
+      currency: typedTransfer.currency,
+      feeAmount: typedTransfer.commission_amount ?? 0,
+      beneficiaryName: typedTransfer.receiver_name,
+      channel: 'dashboard',
+      ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? null,
+      userAgent: request.headers.get('user-agent'),
+    });
 
     // Enqueue notifications using the unified system.
     try {

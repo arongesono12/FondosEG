@@ -25,6 +25,7 @@ import { QRGenerator, generateQRData } from '@/components/ui/qr-generator';
 import { useAppStore } from '@/lib/store';
 import { formatCurrency } from '@/lib/utils';
 import type { WalletTransfer } from '@/types';
+import { PAYMENT_REGULATION } from '@/lib/compliance';
 
 interface WalletTransferModalProps {
   open: boolean;
@@ -45,6 +46,7 @@ export function WalletTransferModal({ open, onOpenChange, onSuccess }: WalletTra
   const [notes, setNotes] = useState('');
   const [transfer, setTransfer] = useState<WalletTransfer | null>(null);
   const [balance, setBalance] = useState(0);
+  const [complianceConsent, setComplianceConsent] = useState(false);
 
   const currency = preferredCurrency || 'XAF';
 
@@ -57,6 +59,7 @@ export function WalletTransferModal({ open, onOpenChange, onSuccess }: WalletTra
       setNotes('');
       setTransfer(null);
       setError(null);
+      setComplianceConsent(false);
     }
   }, [open]);
 
@@ -106,6 +109,8 @@ export function WalletTransferModal({ open, onOpenChange, onSuccess }: WalletTra
           amount: numAmount,
           currency,
           notes,
+          compliance_consent: complianceConsent,
+          disclosure_version: PAYMENT_REGULATION.disclosureVersion,
         }),
       });
 
@@ -235,9 +240,33 @@ export function WalletTransferModal({ open, onOpenChange, onSuccess }: WalletTra
                 </div>
               )}
 
+              <div className="rounded-2xl border border-primary/15 bg-primary/5 p-4">
+                <p className="text-xs font-black uppercase tracking-[0.16em] text-primary">
+                  Información previa
+                </p>
+                <div className="mt-3 grid gap-2 text-xs font-semibold text-muted-foreground">
+                  <p>Importe: {formatCurrency(Number(amount) || 0, currency)}</p>
+                  <p>Comisión: {formatCurrency(0, currency)}</p>
+                  <p>Beneficiario: {receiverName || 'Pendiente de completar'}</p>
+                  <p>Plazo: pendiente de confirmación del beneficiario, con vigencia máxima de 24 horas.</p>
+                </div>
+                <label className="mt-4 flex cursor-pointer items-start gap-3 text-xs font-semibold text-foreground">
+                  <input
+                    type="checkbox"
+                    checked={complianceConsent}
+                    onChange={(event) => setComplianceConsent(event.target.checked)}
+                    className="mt-0.5 h-4 w-4 accent-pink-600"
+                  />
+                  <span>
+                    Autorizo esta orden de pago y acepto la información previa conforme al Reglamento{' '}
+                    {PAYMENT_REGULATION.code}.
+                  </span>
+                </label>
+              </div>
+
               <Button 
                 onClick={handleSubmit}
-                disabled={loading || !receiverPhone || !receiverName || !amount}
+                disabled={loading || !receiverPhone || !receiverName || !amount || !complianceConsent}
                 className="w-full h-12 rounded-xl bg-brand-gradient text-white font-bold shadow-lg shadow-pink-500/20"
               >
                 {loading ? (

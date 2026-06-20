@@ -10,7 +10,10 @@ export async function POST(request: NextRequest) {
     const { action, ...data } = body;
 
     if (action === 'create') {
-      const result = await createWalletTransfer(user.id, data);
+      const result = await createWalletTransfer(user.id, data, {
+        ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? null,
+        userAgent: request.headers.get('user-agent'),
+      });
       return NextResponse.json(result);
     }
 
