@@ -54,7 +54,7 @@ export function CookieConsentModal({
               <p className="max-w-3xl text-xs font-semibold leading-5 text-muted-foreground">
                 Las cookies son pequeños datos que el navegador guarda para mantener tu sesión segura, recordar preferencias del dashboard y mejorar la estabilidad de la aplicación. Puedes aceptar todas, rechazar las opcionales o configurar tus preferencias.
               </p>
-              <Link href="/cookies" className="inline-flex text-xs font-black text-primary hover:underline">
+              <Link href="/landing/cookies" className="inline-flex text-xs font-black text-primary hover:underline">
                 Ver más información sobre cookies
               </Link>
             </div>

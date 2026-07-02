@@ -2,530 +2,128 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import type { ReactNode } from 'react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import {
-  ArrowRight,
-  BadgeCheck,
-  Clock3,
-  Code2,
-  Headphones,
-  Landmark,
-  ShieldCheck,
-  TrendingUp,
-  WalletCards,
-  Zap,
+  ArrowRight, BadgeCheck, BarChart3, BookOpen, Check, ChevronDown, CircleDollarSign,
+  Clock3, Code2, Eye, Facebook, Headphones, Linkedin, LockKeyhole, Mail,
+  Menu, Network, Phone, Play, Quote, ShieldCheck, TrendingUp, Twitter,
+  Users, WalletCards, X, Youtube, Zap,
 } from 'lucide-react';
 
 import { DashboardLogo } from '@/components/layout/dashboard-logo';
 import { ThemeToggle } from '@/components/theme-toggle';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 
 export type LandingRole = 'gestores' | 'aliados' | 'developers';
 
-const primaryButtonClass =
-  'h-12 rounded-2xl bg-brand-gradient px-6 text-sm font-bold text-white shadow-xl shadow-pink-500/20 hover:scale-[1.01]';
+const roleCopy = {
+  gestores: { label: 'Gestores', title: 'Control total para quienes mueven el dinero', text: 'Administra operaciones, controla billeteras, comisiones y rendimiento de tu red en un solo lugar.', href: '/landing/gestores', icon: Users },
+  aliados: { label: 'Aliados', title: 'Servicios financieros para ampliar tu alcance', text: 'Ofrece servicios financieros a tu red con herramientas simples, seguras y sin complicaciones.', href: '/landing/aliados', icon: WalletCards },
+  developers: { label: 'Developers', title: 'La infraestructura para construir sin límites', text: 'Integra nuestras APIs y construye experiencias financieras rápidas, seguras y escalables.', href: '/landing/developers', icon: Code2 },
+};
 
-const secondaryButtonClass =
-  'h-12 rounded-2xl border-border/20 bg-white/60 px-6 text-sm font-bold text-foreground backdrop-blur-md hover:bg-white/80 dark:bg-white/5 dark:hover:bg-white/10';
-
-const eyebrowClass = 'text-[10px] font-semibold uppercase tracking-[0.24em] text-muted-foreground';
-
-const panelClass = 'glass-premium overflow-hidden border-border/10 bg-card/40 shadow-xl shadow-black/5';
-
-const stats = [
-  { value: '250K+', label: 'transacciones procesadas' },
-  { value: '$12.5M', label: 'dinero movido en 2024' },
-  { value: '99.9%', label: 'seguimiento operativo' },
+const tools = [
+  { icon: Zap, title: 'Transferencias\nal instante', text: 'Envía y recibe dinero en segundos. Sin intermediarios, con liquidación inmediata y notificaciones en tiempo real.', tone: 'pink' },
+  { icon: LockKeyhole, title: 'Billetera\nsegura', text: 'Tus fondos protegidos con encriptación bancaria, controles de acceso y múltiples niveles de seguridad.', tone: 'blue' },
+  { icon: TrendingUp, title: 'Trazabilidad\ncompleta', text: 'Visualiza cada movimiento, descarga reportes y da seguimiento operativo con total transparencia.', tone: 'green' },
+  { icon: Code2, title: 'API e\nintegraciones', text: 'Conecta FondosEG con tus sistemas para automatizar pagos, conciliaciones y flujos de trabajo.', tone: 'purple' },
 ];
 
-const testimonials = [
-  {
-    quote: 'FondosEG nos dio una forma más clara de mover dinero, revisar estados y cerrar el día sin perder contexto.',
-    author: 'Equipo operativo',
-    label: 'Red de gestores',
-  },
-  {
-    quote: 'La trazabilidad cambió la conversación: ahora vemos el flujo completo antes de escalar una incidencia.',
-    author: 'Dirección financiera',
-    label: 'Partner regional',
-  },
+const trust = [
+  { icon: ShieldCheck, title: 'Cumplimiento\nnormativo', text: 'Cumplimos con estándares locales e internacionales para proteger tu operación y tu negocio.' },
+  { icon: LockKeyhole, title: 'Seguridad\nde nivel bancario', text: 'Encriptación de extremo a extremo, monitoreo 24/7 y controles avanzados de prevención de fraudes.' },
+  { icon: BarChart3, title: 'Saldos en\ntiempo real', text: 'Consulta tus saldos y movimientos al instante para tomar decisiones con total precisión.' },
+  { icon: Eye, title: 'Operación\ntransparente', text: 'Comisiones claras, reportes detallados y total visibilidad de tu flujo de efectivo.' },
 ];
-
-const features = [
-  {
-    icon: Zap,
-    title: 'Transferencias al instante',
-    description: 'Registra, valida y consulta movimientos en un flujo rápido para equipos que operan cada minuto.',
-  },
-  {
-    icon: ShieldCheck,
-    title: 'Sin comisiones ocultas',
-    description: 'Condiciones claras, saldos visibles y trazabilidad para que cada operación llegue con contexto.',
-  },
-  {
-    icon: Headphones,
-    title: 'Soporte 24/7',
-    description: 'Seguimiento continuo para incidencias, estados de transferencia y coordinación entre equipos.',
-  },
-];
-
-const roles = {
-  gestores: {
-    eyebrow: 'Para operadores de dinero',
-    title: 'Opera transferencias con más velocidad y menos fricción',
-    description:
-      'Una página enfocada en gestores, agencias y equipos que necesitan controlar caja, saldos, clientes y estados de envío desde un único lugar.',
-    href: '/landing/gestores',
-    icon: WalletCards,
-    bullets: ['Control de saldo por gestor', 'Historial auditable', 'Flujo simple para caja y soporte'],
-  },
-  aliados: {
-    eyebrow: 'Para inversores y partners',
-    title: 'Evalúa una red lista para escalar',
-    description:
-      'Una vista clara para aliados comerciales, inversores y partners que quieren entender el volumen, el modelo operativo y las oportunidades de crecimiento.',
-    href: '/landing/aliados',
-    icon: TrendingUp,
-    bullets: ['Métricas de crecimiento', 'Modelo operativo transparente', 'Entrada directa para alianzas'],
-  },
-  developers: {
-    eyebrow: 'Portal técnico',
-    title: 'Conecta FondosEG con tus sistemas',
-    description:
-      'Documentación, APIs, webhooks y rutas técnicas para equipos que quieren integrar transferencias y consultas en productos externos.',
-    href: '/landing/developers',
-    icon: Code2,
-    bullets: ['API pública', 'Webhooks y credenciales', 'SDK y documentación técnica'],
-  },
-} satisfies Record<
-  LandingRole,
-  {
-    eyebrow: string;
-    title: string;
-    description: string;
-    href: string;
-    icon: typeof WalletCards;
-    bullets: string[];
-  }
->;
-
-const roleDetails = {
-  gestores: {
-    heroLabel: 'Para operadores de dinero',
-    headline: 'Más control para equipos que mueven dinero todos los días',
-    summary:
-      'Diseñado para gestores y agencias que necesitan registrar transferencias, revisar saldos y resolver incidencias sin depender de chats dispersos.',
-    proof: 'Reduce tareas manuales y acelera el seguimiento operativo.',
-    points: ['Caja y liquidez visibles por gestor', 'Estados claros por cada transferencia', 'Permisos por rol para equipos operativos'],
-  },
-  aliados: {
-    heroLabel: 'Para inversores y partners',
-    headline: 'Una operación medible para crecer con aliados',
-    summary:
-      'Presenta volumen, trazabilidad y madurez operativa para partners que quieren invertir, distribuir o construir sobre la red FondosEG.',
-    proof: '$12.5M movidos en 2024 con procesos auditables.',
-    points: ['Indicadores de volumen y adopción', 'Visibilidad del modelo operativo', 'Ruta comercial para nuevas alianzas'],
-  },
-  developers: {
-    heroLabel: 'Portal técnico',
-    headline: 'APIs, webhooks y documentación para integrar transferencias',
-    summary:
-      'Una entrada técnica para crear credenciales, revisar OpenAPI y conectar FondosEG con plataformas externas con menos fricción.',
-    proof: 'Portal pensado para equipos técnicos y productos integrados.',
-    points: ['Documentación OpenAPI', 'Webhooks para estados y eventos', 'SDK TypeScript disponible'],
-  },
-} satisfies Record<
-  LandingRole,
-  {
-    heroLabel: string;
-    headline: string;
-    summary: string;
-    proof: string;
-    points: string[];
-  }
->;
 
 function Header() {
+  const [open, setOpen] = useState(false);
+  const [resourcesOpen, setResourcesOpen] = useState(false);
+  const [mobileResourcesOpen, setMobileResourcesOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-
+  const resourcesRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 12);
-
-    handleScroll();
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
+    const onScroll = () => setScrolled(window.scrollY > 20);
+    onScroll(); window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
   }, []);
-
-  return (
-    <header
-      className={cn(
-        'fixed inset-x-0 top-0 z-50 h-16 w-full transition-all duration-300 md:h-20',
-        scrolled
-          ? 'border-b border-transparent bg-transparent shadow-none backdrop-blur-0'
-          : 'border-b border-border/10 bg-white/30 shadow-sm shadow-black/5 backdrop-blur-xl dark:bg-black/20'
-      )}
-    >
-      <div className="relative mx-auto flex h-full w-full max-w-[1440px] items-center justify-between px-4 md:px-10">
-        <div className="flex items-center gap-2">
-          <Link href="/" aria-label="FondosEG inicio">
-            <DashboardLogo size="md" priority labelClassName="text-xl md:text-2xl" />
-          </Link>
+  useEffect(() => {
+    const closeResources = (event: MouseEvent) => {
+      if (!resourcesRef.current?.contains(event.target as Node)) setResourcesOpen(false);
+    };
+    document.addEventListener('mousedown', closeResources);
+    return () => document.removeEventListener('mousedown', closeResources);
+  }, []);
+  return <header className={cn('landing-header', scrolled && 'landing-header--scrolled')}>
+    <div className="landing-nav">
+      <Link href="/" aria-label="FondosEG inicio"><DashboardLogo size="md" priority labelClassName="text-xl" /></Link>
+      <nav className="landing-navlinks">
+        <Link href="/landing/gestores">Gestores</Link><Link href="/landing/aliados">Aliados</Link><Link href="/landing/developers">Developers</Link>
+        <div
+          className="resources-dropdown"
+          ref={resourcesRef}
+          onMouseEnter={() => setResourcesOpen(true)}
+          onMouseLeave={() => setResourcesOpen(false)}
+          onFocus={() => setResourcesOpen(true)}
+          onBlur={(event) => {
+            if (!event.currentTarget.contains(event.relatedTarget)) setResourcesOpen(false);
+          }}
+        >
+          <button type="button" aria-expanded={resourcesOpen} aria-haspopup="menu" onClick={() => setResourcesOpen(current => !current)}>Recursos <ChevronDown className={cn('size-3', resourcesOpen && 'rotate-180')} /></button>
+          {resourcesOpen && <div className="resources-menu" role="menu"><Link role="menuitem" href="/documentation" onClick={() => setResourcesOpen(false)}><BookOpen /> <span><strong>Documentación</strong><small>Guías, API y recursos técnicos</small></span><ArrowRight /></Link></div>}
         </div>
-
-        <nav className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-1 lg:flex">
-          <Link className="rounded-full px-5 py-2 text-sm font-bold text-muted-foreground transition-all duration-300 hover:bg-pink-100 hover:text-pink-600 dark:hover:bg-pink-500/20 dark:hover:text-pink-400" href="/landing/gestores">
-            Gestores
-          </Link>
-          <Link className="rounded-full px-5 py-2 text-sm font-bold text-muted-foreground transition-all duration-300 hover:bg-pink-100 hover:text-pink-600 dark:hover:bg-pink-500/20 dark:hover:text-pink-400" href="/landing/aliados">
-            Aliados
-          </Link>
-          <Link className="rounded-full px-5 py-2 text-sm font-bold text-muted-foreground transition-all duration-300 hover:bg-pink-100 hover:text-pink-600 dark:hover:bg-pink-500/20 dark:hover:text-pink-400" href="/landing/developers">
-            Developers
-          </Link>
-        </nav>
-
-        <div className="flex items-center gap-2 text-muted-foreground md:gap-3">
-          <ThemeToggle />
-          <Button asChild className="hidden h-10 rounded-full bg-brand-gradient px-5 text-sm font-bold text-white shadow-lg shadow-pink-500/20 sm:inline-flex">
-            <Link href="/register">Comenzar</Link>
-          </Button>
-        </div>
+      </nav>
+      <div className="landing-actions"><ThemeToggle /><Link className="btn-secondary" href="/login">Entrar</Link><Link className="btn-primary" href="/register">Comenzar gratis <ArrowRight /></Link>
+        <button className="menu-button" onClick={() => setOpen(!open)} aria-label="Abrir menú">{open ? <X /> : <Menu />}</button>
       </div>
-    </header>
-  );
+    </div>
+    {open && <nav className="mobile-menu"><Link href="/landing/gestores">Gestores</Link><Link href="/landing/aliados">Aliados</Link><Link href="/landing/developers">Developers</Link><button type="button" onClick={() => setMobileResourcesOpen(current => !current)}>Recursos <ChevronDown className={cn(mobileResourcesOpen && 'rotate-180')} /></button>{mobileResourcesOpen && <Link className="mobile-submenu-link" href="/documentation"><BookOpen /> Documentación</Link>}<Link href="/login">Entrar</Link></nav>}
+  </header>;
 }
 
-function LandingShell({ children }: { children: ReactNode }) {
-  return (
-    <main suppressHydrationWarning className="main-container min-h-screen bg-white font-sans text-foreground dark:bg-black">
-      <div className="pointer-events-none fixed inset-0 hidden overflow-hidden md:block">
-        <div className="absolute left-20 top-20 h-96 w-96 rounded-full bg-pink-100/60 blur-3xl dark:bg-pink-500/10" />
-        <div className="absolute bottom-20 right-20 h-96 w-96 rounded-full bg-rose-100/60 blur-3xl dark:bg-rose-500/10" />
-        <div className="absolute left-1/2 top-1/2 h-[600px] w-[600px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-pink-50/50 blur-3xl dark:bg-pink-600/5" />
-      </div>
+function Shell({ children }: { children: ReactNode }) { return <main className="landing-root"><Header />{children}<Footer /></main>; }
 
-      <div className="relative mx-auto flex min-h-screen w-full flex-col overflow-hidden bg-white pt-16 dark:bg-black md:min-h-[calc(100vh-4rem)] md:max-w-[1440px] md:rounded-[2.5rem] md:border md:border-border/10 md:bg-transparent md:pt-20 md:shadow-xl md:shadow-slate-200/20 dark:md:shadow-black/20">
-        <Header />
-        <div className="flex-1 overflow-hidden bg-white dark:bg-black md:bg-transparent">
-          {children}
-          <MarketingFooter />
-        </div>
-      </div>
-    </main>
-  );
-}
+function SectionTitle({ eyebrow, children }: { eyebrow: string; children: ReactNode }) { return <div className="section-heading"><p>{eyebrow}</p><h2>{children}</h2></div>; }
 
-function FinalCta({ compact = false }: { compact?: boolean }) {
-  return (
-    <section className="px-4 py-8 md:px-10 md:py-10">
-      <div
-        className={cn(
-          'mx-auto grid max-w-7xl gap-8 rounded-4xl border p-6 sm:p-8 lg:grid-cols-[1fr_420px] lg:items-center',
-          compact
-            ? 'glass-premium border-border/10 bg-card/40 shadow-xl shadow-black/5'
-            : 'border-border/10 bg-[radial-gradient(circle_at_top_left,rgba(236,72,153,0.16),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(14,165,233,0.14),transparent_32%),linear-gradient(135deg,rgba(255,255,255,0.86),rgba(248,250,252,0.72))] shadow-2xl shadow-slate-200/40 backdrop-blur-xl dark:bg-[radial-gradient(circle_at_top_left,rgba(236,72,153,0.12),transparent_30%),radial-gradient(circle_at_bottom_right,rgba(14,165,233,0.12),transparent_34%),linear-gradient(135deg,rgba(15,23,42,0.88),rgba(2,6,23,0.82))] dark:shadow-black/20'
-        )}
-      >
-        <div>
-          <p className={eyebrowClass}>CTA simple</p>
-          <h2 className="mt-3 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">Comienza con FondosEG</h2>
-          <p className="mt-3 max-w-2xl text-base font-medium leading-7 text-muted-foreground">
-            Deja tu email y te mostramos el flujo completo para mover dinero con conexión directa, sin intermediarios.
-          </p>
-        </div>
-        <form className="flex flex-col gap-3 sm:flex-row" action="/register">
-          <Input
-            aria-label="Email"
-            className="h-12 rounded-2xl border-border/20 bg-white/60 font-medium backdrop-blur-md dark:bg-white/5"
-            name="email"
-            placeholder="tu@email.com"
-            type="email"
-          />
-          <Button className={primaryButtonClass} type="submit">
-            Comenzar
-            <ArrowRight />
-          </Button>
-        </form>
-      </div>
-    </section>
-  );
-}
+function Footer() { return <footer className="landing-footer"><div className="footer-grid">
+  <div className="footer-brand"><DashboardLogo size="md" labelClassName="text-xl" /><p>La plataforma financiera que conecta personas, empresas y oportunidades.<br />Sin intermediarios. Sin fronteras.</p><div className="socials"><a href="https://facebook.com/fondoseg" target="_blank" rel="noreferrer" aria-label="Facebook"><Facebook /></a><a href="https://linkedin.com/company/fondoseg" target="_blank" rel="noreferrer" aria-label="LinkedIn"><Linkedin /></a><a href="https://x.com/fondoseg" target="_blank" rel="noreferrer" aria-label="X / Twitter"><Twitter /></a><a href="https://youtube.com/@FondosEG" target="_blank" rel="noreferrer" aria-label="YouTube"><Youtube /></a></div></div>
+  <FooterLinks title="Producto" links={[{label:'Funciones',href:'/landing/funciones'},{label:'Seguridad',href:'/landing/seguridad'},{label:'Precios',href:'/landing/precios'},{label:'Novedades',href:'/landing/novedades'}]} />
+  <FooterLinks title="Para gestores" links={[{label:'Dashboard',href:'/landing/dashboard'},{label:'Liquidaciones',href:'/landing/liquidaciones'},{label:'Reportes',href:'/landing/reportes'},{label:'Soporte',href:'/landing/soporte'}]} />
+  <FooterLinks title="Developers" links={[{label:'Documentación',href:'/documentation'},{label:'API Reference',href:'/landing/api-reference'},{label:'Sandbox',href:'/landing/sandbox'},{label:'Estado de API',href:'/landing/estado-api'}]} />
+  <FooterLinks title="Legal" links={[{label:'Términos y condiciones',href:'/landing/terminos'},{label:'Política de privacidad',href:'/landing/privacidad'},{label:'Cumplimiento',href:'/landing/cumplimiento'},{label:'Cookies',href:'/landing/cookies'}]} />
+  <div className="footer-help"><h4>¿Necesitas ayuda?</h4><p><Mail /> soporte@fondoseg.com</p><p><Phone /> +240 555 984 943</p><p><Clock3 /> Lun–Dom 24/7</p></div>
+  </div><p className="copyright">© {new Date().getFullYear()} FondosEG. Todos los derechos reservados.</p></footer>; }
+function FooterLinks({ title, links }: { title: string; links: { label: string; href: string }[] }) { return <div><h4>{title}</h4>{links.map(link => <Link key={link.href} href={link.href}>{link.label}</Link>)}</div>; }
 
-function MarketingFooter() {
-  const year = new Date().getFullYear();
+export function LandingPage() { return <Shell>
+  <section className="hero-section">
+    <div className="hero-glow" />
+    <div className="hero-copy">
+      <span className="hero-pill"><Zap /> Conexión directa, sin intermediarios</span>
+      <h1>Mueve dinero con <span>velocidad, control</span> y confianza</h1>
+      <p>FondosEG centraliza tus operaciones de transferencia, controla tus billeteras, visualiza tu flujo de efectivo y da seguimiento operativo en tiempo real.</p>
+      <div className="hero-buttons"><Link className="btn-primary" href="/register">Comenzar gratis <ArrowRight /></Link><Link className="demo-button" href="/developers-portal">Ver demo <Play /></Link></div>
+      <div className="hero-checks"><span><Check /> Sin tarjeta</span><span><Check /> Sin instalación</span><span><Check /> Listo en minutos</span></div>
+    </div>
+    <div className="hero-visual"><div className="orbit orbit-a"/><div className="orbit orbit-b"/><Image src="/mockup.png" alt="Panel de FondosEG en ordenador, tableta y móvil" width={2048} height={1228} priority /></div>
+  </section>
 
-  return (
-    <footer className="border-t border-border/10 px-4 py-8 md:px-10 md:py-10">
-      <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[1.2fr_0.8fr_0.8fr_0.8fr]">
-        <div className="max-w-md">
-          <DashboardLogo size="md" className="justify-start" labelClassName="text-xl" />
-          <p className="mt-4 text-sm font-medium leading-7 text-muted-foreground">
-            Infraestructura financiera para transferencias, billeteras, trazabilidad operativa e integraciones API con control de credenciales.
-          </p>
-          <div className="mt-5 flex flex-wrap gap-2">
-            <span className="inline-flex items-center gap-2 rounded-full border border-border/10 bg-background/70 px-3 py-1 text-xs font-bold text-foreground">
-              <ShieldCheck className="h-3.5 w-3.5 text-pink-500" />
-              API segura
-            </span>
-            <span className="inline-flex items-center gap-2 rounded-full border border-border/10 bg-background/70 px-3 py-1 text-xs font-bold text-foreground">
-              <Code2 className="h-3.5 w-3.5 text-pink-500" />
-              OpenAPI
-            </span>
-          </div>
-        </div>
+  <section className="stats-grid">
+    <Stat icon={Network} value="250K+" label="Transacciones procesadas" tone="purple"/><Stat icon={CircleDollarSign} value="XAF 12.5M" label="Dinero movido por nuestros usuarios" tone="blue"/><Stat icon={ShieldCheck} value="99.9%" label="Seguimiento operativo en tiempo real" tone="green"/><Stat icon={Headphones} value="24/7" label="Soporte humano siempre disponible" tone="pink"/>
+  </section>
 
-        <div>
-          <p className="text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">Producto</p>
-          <div className="mt-4 grid gap-3 text-sm font-semibold text-foreground/80">
-            <Link className="transition hover:text-pink-600 dark:hover:text-pink-400" href="/landing/gestores">Gestores</Link>
-            <Link className="transition hover:text-pink-600 dark:hover:text-pink-400" href="/landing/aliados">Aliados</Link>
-            <Link className="transition hover:text-pink-600 dark:hover:text-pink-400" href="/landing/developers">Developers</Link>
-          </div>
-        </div>
+  <section className="landing-section"><SectionTitle eyebrow="TODO LO QUE NECESITAS">Potentes herramientas para <span>mover tu negocio</span></SectionTitle><div className="feature-grid">{tools.map(({icon:Icon,...f})=><article className="feature-card" key={f.title}><div className={`icon-box ${f.tone}`}><Icon /></div><h3>{f.title}</h3><p>{f.text}</p><Link className={f.tone} href="#">Saber más <ArrowRight /></Link></article>)}</div></section>
 
-        <div>
-          <p className="text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">Desarrolladores</p>
-          <div className="mt-4 grid gap-3 text-sm font-semibold text-foreground/80">
-            <Link className="transition hover:text-pink-600 dark:hover:text-pink-400" href="/developers-portal">Portal API</Link>
-            <Link className="transition hover:text-pink-600 dark:hover:text-pink-400" href="/api/docs/openapi.json">OpenAPI JSON</Link>
-            <Link className="transition hover:text-pink-600 dark:hover:text-pink-400" href="/developers-portal/register">Crear cuenta</Link>
-          </div>
-        </div>
+  <section className="landing-section roles-section"><SectionTitle eyebrow="PARA CADA ROL, UNA EXPERIENCIA PENSADA PARA TI"><span className="sr-only">Experiencias por rol</span></SectionTitle><div className="role-grid">{(Object.keys(roleCopy) as LandingRole[]).map((key,i)=>{const r=roleCopy[key];const Icon=r.icon;return <Link href={r.href} className={`role-card role-${i+1}`} key={key}><Icon/><h3>{r.label}</h3><p>{r.text}</p><strong>{key==='gestores'?'Entrar como gestor':key==='aliados'?'Entrar como aliado':'Explorar para developers'} <ArrowRight /></strong><div className="role-art"><Icon/></div></Link>})}</div></section>
 
-        <div>
-          <p className="text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">Cuenta</p>
-          <div className="mt-4 grid gap-3 text-sm font-semibold text-foreground/80">
-            <Link className="transition hover:text-pink-600 dark:hover:text-pink-400" href="/login">Entrar</Link>
-            <Link className="transition hover:text-pink-600 dark:hover:text-pink-400" href="/register">Registrarse</Link>
-            <Link className="transition hover:text-pink-600 dark:hover:text-pink-400" href="/developers-portal/login">Login developers</Link>
-          </div>
-        </div>
-      </div>
+  <section className="landing-section"><SectionTitle eyebrow="CONFIANZA EN CADA MOVIMIENTO">Infraestructura sólida para operaciones seguras</SectionTitle><div className="trust-grid">{trust.map(({icon:Icon,...x})=><article className="trust-card" key={x.title}><div><Icon /></div><section><h3>{x.title}</h3><p>{x.text}</p></section></article>)}</div></section>
 
-      <div className="mx-auto mt-8 flex max-w-7xl flex-col gap-3 border-t border-border/10 pt-6 text-xs font-semibold text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
-        <p>© {year} FondosEG. Todos los derechos reservados.</p>
-        <div className="flex flex-wrap gap-4">
-          <Link className="transition hover:text-pink-600 dark:hover:text-pink-400" href="/privacy">Privacidad</Link>
-          <Link className="transition hover:text-pink-600 dark:hover:text-pink-400" href="/cookies">Cookies</Link>
-          <Link className="transition hover:text-pink-600 dark:hover:text-pink-400" href="/policies">Políticas</Link>
-        </div>
-      </div>
-    </footer>
-  );
-}
+  <section className="landing-section"><SectionTitle eyebrow="LO QUE DICEN NUESTROS ALIADOS"><span className="sr-only">Testimonios</span></SectionTitle><div className="testimonial-grid"><Testimonial text="Con FondosEG optimizamos nuestros pagos y ahora tenemos visibilidad total de nuestras operaciones. La plataforma es rápida, estable y muy intuitiva." name="Mamadou Diallo" role="Director de Operaciones, LogiTrans SA"/><Testimonial text="La integración vía API nos permitió automatizar nuestros cobros y conciliaciones. El soporte técnico es excelente y siempre están disponibles." name="Aissatou Camara" role="CTO, PayLink Solutions" blue/></div><div className="dots"><i/><i/><i/><i/><i/></div></section>
 
-export function LandingPage() {
-  return (
-    <LandingShell>
-      <section className="px-4 py-6 md:px-10 md:py-10">
-        <div className="mx-auto grid max-w-7xl gap-12 lg:grid-cols-[1.02fr_0.98fr] lg:items-center">
-          <div className="space-y-6">
-            <span className="inline-flex w-fit rounded-full border border-white/30 bg-white/70 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-slate-700 shadow-sm dark:border-white/10 dark:bg-white/10 dark:text-slate-200">
-              Conexión directa, sin intermediarios
-            </span>
-            <h1 className="max-w-4xl text-5xl font-bold leading-[1.02] tracking-tight text-foreground sm:text-6xl lg:text-7xl">
-              Transfiere más dinero en menos tiempo
-            </h1>
-            <p className="max-w-2xl text-base font-medium leading-7 text-muted-foreground md:text-lg md:leading-8">
-              FondosEG conecta operación, control y seguimiento para que cada transferencia avance con claridad desde el primer registro.
-            </p>
-            <div className="flex flex-col gap-3 sm:flex-row">
-              <Button asChild className={primaryButtonClass}>
-                <Link href="/register">
-                  Comenzar gratis
-                  <ArrowRight />
-                </Link>
-              </Button>
-              <Button asChild className={secondaryButtonClass} variant="outline">
-                <Link href="/developers-portal">Ver demo</Link>
-              </Button>
-            </div>
-          </div>
+  <section className="cta-section"><div><h2>Comienza con <span>FondosEG</span></h2><p>Crea tu cuenta gratis y comienza a mover tu dinero<br/>con velocidad, control y confianza.</p></div><form action="/register"><div><input type="email" name="email" placeholder="Correo electrónico" aria-label="Correo electrónico"/><button className="btn-primary">Comenzar gratis <ArrowRight /></button></div><p><span><Check/> Sin tarjeta de crédito</span><span><Check/> Configuración en minutos</span><span><Check/> Cancela cuando quieras</span></p></form></section>
+  </Shell>; }
 
-          <div className="relative">
-            <Image
-              src="/mockup.png"
-              alt="Vista del panel FondosEG"
-              width={1040}
-              height={780}
-              priority
-              className="h-auto w-full object-contain"
-            />
-          </div>
-        </div>
-      </section>
+function Stat({icon:Icon,value,label,tone}:{icon:typeof Zap;value:string;label:string;tone:string}) { return <article className="stat-card"><div className={`stat-icon ${tone}`}><Icon/></div><div><strong>{value}</strong><p>{label}</p></div></article>; }
+function Testimonial({text,name,role,blue=false}:{text:string;name:string;role:string;blue?:boolean}) { return <article className="testimonial"><Quote className={blue?'blue':''}/><div><p>{text}</p><footer><span>{name.charAt(0)}</span><div><strong>{name}</strong><small>{role}</small></div></footer></div></article>; }
 
-      <section className="px-4 py-6 md:px-10">
-        <div className="mx-auto max-w-7xl">
-          <div className="grid gap-4 md:grid-cols-3">
-            {stats.map((item) => (
-              <div key={item.label} className={cn(panelClass, 'rounded-4xl p-5')}>
-                <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">{item.label}</p>
-                <p className="mt-2 text-4xl font-bold tracking-tight text-foreground">{item.value}</p>
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-8 grid gap-4 lg:grid-cols-2">
-            {testimonials.map((item) => (
-              <Card key={item.quote} className={cn(panelClass, 'rounded-4xl p-6')}>
-                <p className="text-base font-medium leading-7 text-foreground/80">&ldquo;{item.quote}&rdquo;</p>
-                <div className="mt-5 flex items-center gap-3">
-                  <BadgeCheck className="text-pink-500" />
-                  <div>
-                    <p className="font-semibold text-foreground">{item.author}</p>
-                    <p className="text-sm text-muted-foreground">{item.label}</p>
-                  </div>
-                </div>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="px-4 py-8 md:px-10 md:py-10">
-        <div className="mx-auto max-w-7xl">
-          <div className="max-w-3xl">
-            <p className={eyebrowClass}>3 funciones core</p>
-            <h2 className="mt-3 text-4xl font-bold tracking-tight text-foreground">Lo esencial para transferir mejor</h2>
-          </div>
-          <div className="mt-8 grid gap-4 md:grid-cols-3">
-            {features.map((feature) => (
-              <Card key={feature.title} className={cn(panelClass, 'rounded-4xl p-6')}>
-                <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-pink-500/20 bg-brand-gradient text-white shadow-lg shadow-pink-500/20">
-                  <feature.icon className="h-5 w-5" />
-                </div>
-                <h3 className="mt-5 text-xl font-bold text-foreground">{feature.title}</h3>
-                <p className="mt-3 text-sm font-medium leading-7 text-muted-foreground">{feature.description}</p>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="px-4 py-8 md:px-10 md:py-10">
-        <div className="mx-auto max-w-7xl">
-          <div className="max-w-3xl">
-            <p className={eyebrowClass}>3 roles, 3 páginas</p>
-            <h2 className="mt-3 text-4xl font-bold tracking-tight text-foreground">Cada audiencia entra por su puerta correcta</h2>
-          </div>
-          <div className="mt-8 grid gap-4 lg:grid-cols-3">
-            {(Object.keys(roles) as LandingRole[]).map((key) => {
-              const role = roles[key];
-              return (
-                <Link
-                  key={key}
-                  className={cn(panelClass, 'group rounded-4xl p-6 transition hover:-translate-y-1 hover:border-pink-500/30')}
-                  href={role.href}
-                >
-                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-pink-100 text-pink-600 dark:bg-pink-500/20 dark:text-pink-400">
-                    <role.icon className="h-5 w-5" />
-                  </div>
-                  <p className="mt-5 text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">{role.eyebrow}</p>
-                  <h3 className="mt-3 text-2xl font-bold leading-tight text-foreground">{role.title}</h3>
-                  <p className="mt-4 text-sm font-medium leading-7 text-muted-foreground">{role.description}</p>
-                  <span className="mt-6 inline-flex items-center gap-2 text-sm font-bold text-pink-600 dark:text-pink-400">
-                    Ver página
-                    <ArrowRight className="transition group-hover:translate-x-1" />
-                  </span>
-                </Link>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      <FinalCta />
-    </LandingShell>
-  );
-}
-
-export function RoleLandingPage({ role }: { role: LandingRole }) {
-  const detail = roleDetails[role];
-  const roleMeta = roles[role];
-
-  return (
-    <LandingShell>
-      <section className="px-4 py-6 md:px-10 md:py-10">
-        <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[0.95fr_1.05fr] lg:items-center">
-          <div className="space-y-6">
-            <span className="inline-flex w-fit rounded-full border border-white/30 bg-white/70 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-slate-700 shadow-sm dark:border-white/10 dark:bg-white/10 dark:text-slate-200">
-              {detail.heroLabel}
-            </span>
-            <h1 className="text-5xl font-bold leading-[1.03] tracking-tight text-foreground sm:text-6xl">
-              {detail.headline}
-            </h1>
-            <p className="max-w-2xl text-base font-medium leading-7 text-muted-foreground md:text-lg md:leading-8">{detail.summary}</p>
-            <div className="flex flex-col gap-3 sm:flex-row">
-              <Button asChild className={primaryButtonClass}>
-                <Link href="/register">
-                  Comenzar
-                  <ArrowRight />
-                </Link>
-              </Button>
-              <Button asChild className={secondaryButtonClass} variant="outline">
-                <Link href={role === 'developers' ? '/developers-portal' : '/login'}>Ver demo</Link>
-              </Button>
-            </div>
-          </div>
-
-          <div className={cn(panelClass, 'rounded-4xl p-6')}>
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-gradient text-white shadow-lg shadow-pink-500/20">
-              <roleMeta.icon className="h-6 w-6" />
-            </div>
-            <h2 className="mt-5 text-3xl font-bold tracking-tight text-foreground">{roleMeta.eyebrow}</h2>
-            <p className="mt-3 text-base font-medium leading-7 text-muted-foreground">{detail.proof}</p>
-            <div className="mt-6 grid gap-3">
-              {detail.points.map((point) => (
-                <div key={point} className="flex items-start gap-3 rounded-2xl border border-border/10 bg-primary/5 p-4">
-                  <BadgeCheck className="mt-0.5 h-5 w-5 text-pink-500" />
-                  <span className="text-sm font-medium text-foreground/75">{point}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="px-4 py-8 md:px-10 md:py-10">
-        <div className="mx-auto grid max-w-7xl gap-4 md:grid-cols-3">
-          {features.map((feature) => (
-            <Card key={feature.title} className={cn(panelClass, 'rounded-4xl p-6')}>
-              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-pink-100 text-pink-600 dark:bg-pink-500/20 dark:text-pink-400">
-                <feature.icon className="h-5 w-5" />
-              </div>
-              <h3 className="mt-4 text-xl font-bold text-foreground">{feature.title}</h3>
-              <p className="mt-3 text-sm font-medium leading-7 text-muted-foreground">{feature.description}</p>
-            </Card>
-          ))}
-        </div>
-      </section>
-
-      <section className="px-4 py-8 md:px-10 md:py-10">
-        <div className="mx-auto grid max-w-7xl gap-4 md:grid-cols-3">
-          <div className={cn(panelClass, 'rounded-4xl p-5')}>
-            <Clock3 className="h-7 w-7 text-pink-500" />
-            <p className="mt-4 text-3xl font-bold">250K+</p>
-            <p className="mt-2 text-sm font-medium text-muted-foreground">transacciones procesadas</p>
-          </div>
-          <div className={cn(panelClass, 'rounded-4xl p-5')}>
-            <Landmark className="h-7 w-7 text-pink-500" />
-            <p className="mt-4 text-3xl font-bold">$12.5M</p>
-            <p className="mt-2 text-sm font-medium text-muted-foreground">dinero movido en 2024</p>
-          </div>
-          <div className={cn(panelClass, 'rounded-4xl p-5')}>
-            <BadgeCheck className="h-7 w-7 text-pink-500" />
-            <p className="mt-4 text-3xl font-bold">24/7</p>
-            <p className="mt-2 text-sm font-medium text-muted-foreground">acompañamiento operativo</p>
-          </div>
-        </div>
-      </section>
-
-      <FinalCta compact />
-    </LandingShell>
-  );
-}
+export function RoleLandingPage({ role }: { role: LandingRole }) { const r=roleCopy[role]; const Icon=r.icon; return <Shell><section className="role-detail"><div><span className="hero-pill"><Icon/> {r.label}</span><h1>{r.title}</h1><p>{r.text} FondosEG reúne control, seguridad y trazabilidad en una experiencia creada para tu equipo.</p><div className="hero-buttons"><Link className="btn-primary" href="/register">Comenzar ahora <ArrowRight/></Link><Link className="demo-button" href={role==='developers'?'/developers-portal':'/login'}>Ver plataforma</Link></div></div><div className="role-detail-card"><Icon/><h2>{r.label}</h2>{['Operaciones en tiempo real','Seguridad de nivel bancario','Soporte y trazabilidad completa'].map(x=><p key={x}><BadgeCheck/>{x}</p>)}</div></section><section className="landing-section"><SectionTitle eyebrow="TODO EN UN SOLO LUGAR">La infraestructura para avanzar con confianza</SectionTitle><div className="feature-grid">{tools.map(({icon:I,...f})=><article className="feature-card" key={f.title}><div className={`icon-box ${f.tone}`}><I/></div><h3>{f.title}</h3><p>{f.text}</p></article>)}</div></section></Shell>; }

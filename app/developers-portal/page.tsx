@@ -45,6 +45,9 @@ export default async function DevelopersPortalPage() {
             <Button asChild size="lg" variant="outline" className="rounded-2xl px-6">
               <Link href="/developers-portal/login">Entrar al portal</Link>
             </Button>
+            <Button asChild size="lg" variant="ghost" className="rounded-2xl px-6">
+              <Link href="/documentation">Leer documentación</Link>
+            </Button>
           </div>
         </div>
 
@@ -86,7 +89,7 @@ export default async function DevelopersPortalPage() {
           </div>
           <div>
             <p className="font-semibold text-foreground">OpenAPI</p>
-            <p className="mt-2 break-all">/api/docs/openapi.json</p>
+            <Link className="mt-2 block break-all hover:text-pink-500" href="/documentation">/documentation</Link>
           </div>
           <div>
             <p className="font-semibold text-foreground">SDK</p>

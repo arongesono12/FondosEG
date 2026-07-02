@@ -109,7 +109,7 @@ export async function sendOTPEmail({ to, name, code }: SendOTPEmailParams): Prom
           <meta charset="utf-8">
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
         </head>
-        <body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f5f5f5;">
+        <body style="margin: 0; padding: 0; font-family: Poppins, Roboto, Arial, sans-serif; background-color: #f5f5f5;">
           <div style="max-width: 480px; margin: 40px auto; padding: 20px;">
             <div style="background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
               <!-- Header -->
@@ -205,7 +205,7 @@ export async function sendWelcomeEmail({ to, name, role }: SendWelcomeEmailParam
           <meta charset="utf-8">
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
         </head>
-        <body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f5f5f5;">
+        <body style="margin: 0; padding: 0; font-family: Poppins, Roboto, Arial, sans-serif; background-color: #f5f5f5;">
           <div style="max-width: 480px; margin: 40px auto; padding: 20px;">
             <div style="background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
               <!-- Header -->
@@ -331,7 +331,7 @@ export async function sendSupportRequestEmail({
           <meta charset="utf-8">
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
         </head>
-        <body style="margin: 0; padding: 24px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f5f5f5; color: #111827;">
+        <body style="margin: 0; padding: 24px; font-family: Poppins, Roboto, Arial, sans-serif; background-color: #f5f5f5; color: #111827;">
           <div style="max-width: 680px; margin: 0 auto; background: #ffffff; border-radius: 18px; overflow: hidden; box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);">
             <div style="background: linear-gradient(135deg, #ec4899 0%, #f43f5e 100%); padding: 28px 32px; color: #ffffff;">
               <p style="margin: 0 0 6px; font-size: 12px; letter-spacing: 1.2px; text-transform: uppercase; opacity: 0.9;">FondosEG Support</p>

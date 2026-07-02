@@ -20,6 +20,7 @@ import {
   UserCog,
   UsersRound,
   KeyRound,
+  BookOpen,
   ShieldCheck,
 } from 'lucide-react';
 import { signOutAction } from '@/app/actions/auth';
@@ -36,6 +37,7 @@ const adminRoutes = [
   { href: '/stats', label: 'Estadísticas', icon: BarChart3 },
   { href: '/history', label: 'Historial', icon: History },
   { href: '/developers', label: 'APIs', icon: KeyRound },
+  { href: '/documentation', label: 'Documentación', icon: BookOpen },
   { href: '/compliance', label: 'Cumplimiento', icon: ShieldCheck },
   { href: '/profile', label: 'Perfil', icon: UserCog },
 ];
@@ -46,6 +48,7 @@ const agentRoutes = [
   { href: '/history', label: 'Mis transferencias', icon: History },
   { href: '/balance', label: 'Mi saldo', icon: Wallet },
   { href: '/developers', label: 'Mis APIs', icon: KeyRound },
+  { href: '/documentation', label: 'Documentación', icon: BookOpen },
   { href: '/compliance', label: 'Cumplimiento', icon: ShieldCheck },
   { href: '/profile', label: 'Mi perfil', icon: UserCog },
 ];
@@ -56,6 +59,7 @@ const clientRoutes = [
   { href: '/history', label: 'Mis transferencias', icon: History },
   { href: '/balance', label: 'Mi saldo', icon: Wallet },
   { href: '/developers', label: 'Mis APIs', icon: KeyRound },
+  { href: '/documentation', label: 'Documentación', icon: BookOpen },
   { href: '/compliance', label: 'Cumplimiento', icon: ShieldCheck },
   { href: '/profile', label: 'Mi perfil', icon: UserCog },
 ];
