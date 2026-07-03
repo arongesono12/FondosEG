@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { DashboardLogo } from '@/components/layout/dashboard-logo';
 import { AuthPageSkeleton, FormSkeleton } from '@/components/skeletons/app-skeletons';
-import { sendVerificationEmail, verifyEmailCode, resendVerificationEmail } from '@/app/actions/auth';
+import { verifyEmailCode, resendVerificationEmail } from '@/app/actions/auth';
 import { Mail, CheckCircle2, AlertCircle, Loader2, ArrowLeft } from 'lucide-react';
 
 function VerifyEmailContent() {
@@ -37,14 +37,13 @@ function VerifyEmailContent() {
       setUserId(uid);
       setEmail(em);
       setName(nm || 'Usuario');
-      // Pass values directly — do NOT read from state here because setState is async.
-      // Reading `userId` / `email` from state at this point would return '' (stale closure).
-      sendOTP(uid, em, nm || 'Usuario');
+      // Supabase sends the first OTP as part of signUp().
+      setTimeLeft(900);
+      setLoading(false);
     } else {
       setError('Parámetros de verificación inválidos');
       setLoading(false);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
 
   useEffect(() => {
@@ -53,21 +52,6 @@ function VerifyEmailContent() {
       return () => clearTimeout(timer);
     }
   }, [timeLeft]);
-
-  // Accept explicit params to avoid stale-closure bugs with React state.
-  const sendOTP = async (uid = userId, em = email, nm = name) => {
-    setLoading(true);
-    setError('');
-    
-    const result = await sendVerificationEmail(uid, em, nm);
-    
-    if (result.success) {
-      setTimeLeft(result.expiresIn || 900);
-    } else {
-      setError(result.error || 'Error al enviar el código');
-    }
-    setLoading(false);
-  };
 
   const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -140,13 +124,13 @@ function VerifyEmailContent() {
         </CardHeader>
         <CardFooter className="flex flex-col space-y-4 pt-2">
           <Button 
-            onClick={() => router.push('/login')}
+            onClick={() => router.push('/dashboard')}
             className="w-full h-12 rounded-2xl text-base font-black uppercase tracking-widest bg-brand-gradient hover:opacity-90 text-white shadow-lg hover:shadow-primary/25 transition-all duration-300"
           >
-            Ir al inicio de sesión
+            Ir al dashboard
           </Button>
           <p className="text-sm text-center text-muted-foreground">
-            Ya puedes iniciar sesión con tu cuenta
+            Tu cuenta está confirmada y la sesión está activa
           </p>
         </CardFooter>
       </Card>

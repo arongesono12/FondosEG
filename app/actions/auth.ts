@@ -5,8 +5,7 @@ import { createClient } from '@/lib/supabase/server';
 import { getAuthErrorMessage, isAuthServiceUnavailableError } from '@/lib/supabase/auth-errors';
 import type { RegisterFormData } from '@/types';
 import { isValidEmailDomain, isValidEmailFormat, validatePassword } from '@/lib/email-validation';
-import { generateAndSendOTP, verifyOTP } from '@/lib/server/otp-service';
-import { provisionUserAccount } from '@/lib/server/user-provisioning';
+import { provisionPendingUserProfile } from '@/lib/server/user-provisioning';
 
 export async function signUpAction(data: RegisterFormData) {
   const adminClient = createAdminClient();
@@ -36,9 +35,31 @@ export async function signUpAction(data: RegisterFormData) {
     return { success: false, error: 'El correo electrónico ya está registrado' };
   }
 
+  const supabase = await createClient();
   let authUser;
   try {
-    const provisionResult = await provisionUserAccount(adminClient, {
+    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+      email: normalizedEmail,
+      password: data.password,
+      options: {
+        data: {
+          name: data.name,
+          phone: data.phone,
+          role: data.role,
+          document_type: data.document_type,
+          document_number: data.document_number,
+          country: data.country,
+          city: data.city,
+        },
+      },
+    });
+
+    if (signUpError || !signUpData.user) {
+      throw signUpError || new Error('No se pudo crear la cuenta.');
+    }
+
+    authUser = signUpData.user;
+    await provisionPendingUserProfile(adminClient, authUser, {
       email: normalizedEmail,
       password: data.password,
       name: data.name,
@@ -49,55 +70,61 @@ export async function signUpAction(data: RegisterFormData) {
       country: data.country,
       city: data.city,
     });
-    authUser = provisionResult.user;
   } catch (error) {
     return { success: false, error: getAuthErrorMessage(error) };
-  }
-
-  const supabase = await createClient();
-  const { data: sessionData, error: signInError } = await supabase.auth.signInWithPassword({
-    email: normalizedEmail,
-    password: data.password,
-  });
-
-  if (signInError || !sessionData.user) {
-    console.error('Auto sign-in after registration failed:', signInError);
-    return {
-      success: false,
-      error: signInError?.message || 'La cuenta fue creada, pero no se pudo iniciar la sesión automáticamente.',
-    };
   }
 
   return { 
     success: true, 
     user: authUser,
-    session: sessionData.session,
     email: normalizedEmail,
     name: data.name,
     role: data.role,
-    dashboardPath: '/dashboard',
+    verificationRequired: true,
   };
 }
 
-/**
- * Send the initial OTP after registration.
- */
-export async function sendVerificationEmail(userId: string, email: string, name: string) {
-  return generateAndSendOTP(userId, email, name, false);
-}
+export async function verifyEmailCode(_userId: string, email: string, code: string) {
+  const supabase = await createClient();
+  const { data, error } = await supabase.auth.verifyOtp({
+    email: email.toLowerCase().trim(),
+    token: code,
+    type: 'signup',
+  });
 
-/**
- * Verify a submitted OTP code.
- */
-export async function verifyEmailCode(userId: string, email: string, code: string) {
-  return verifyOTP(userId, email, code);
+  if (error || !data.user) {
+    return { success: false, error: getAuthErrorMessage(error, 'El código es inválido o ha caducado.') };
+  }
+
+  const adminClient = createAdminClient();
+  const { error: profileError } = await adminClient
+    .from('users')
+    .update({ is_verified: true, updated_at: new Date().toISOString() })
+    .eq('id', data.user.id);
+
+  if (profileError) {
+    return { success: false, error: 'El correo fue confirmado, pero no se pudo actualizar el perfil.' };
+  }
+
+  return { success: true };
 }
 
 /**
  * Resend an OTP.
  */
-export async function resendVerificationEmail(userId: string, email: string, name: string) {
-  return generateAndSendOTP(userId, email, name, true);
+export async function resendVerificationEmail(_userId: string, email: string, name: string) {
+  void name;
+  const supabase = await createClient();
+  const { error } = await supabase.auth.resend({
+    type: 'signup',
+    email: email.toLowerCase().trim(),
+  });
+
+  if (error) {
+    return { success: false, error: getAuthErrorMessage(error) };
+  }
+
+  return { success: true, expiresIn: 900 };
 }
 
 export async function signInAction(email: string, password: string) {

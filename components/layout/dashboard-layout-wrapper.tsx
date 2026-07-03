@@ -35,7 +35,6 @@ import {
   AlertTriangle,
   FileText,
   ShieldCheck,
-  Cookie,
 } from 'lucide-react';
 import { signOutAction } from '@/app/actions/auth';
 import { SearchModal } from './search-modal';
@@ -215,15 +214,7 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
       ];
 
   return (
-    <div suppressHydrationWarning className="main-container min-h-screen font-sans bg-white dark:bg-black">
-      {/* Background decoration - hidden on mobile */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none hidden md:block">
-        <div className="absolute top-0 left-0 w-full h-full">
-          <div className="absolute top-20 left-20 w-96 h-96 rounded-full blur-3xl bg-pink-100/60 dark:bg-pink-500/10" />
-          <div className="absolute bottom-20 right-20 w-96 h-96 rounded-full blur-3xl bg-rose-100/60 dark:bg-rose-500/10" />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full blur-3xl bg-pink-50/50 dark:bg-pink-600/5" />
-        </div>
-      </div>
+    <div suppressHydrationWarning className="dashboard-public-page main-container min-h-screen font-sans">
       
       {/* Mobile: Full screen card | Desktop: Max width card with rounded top corners */}
       <div className={cn(
@@ -386,17 +377,13 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
                     <span>Mi Perfil</span>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => router.push('/privacy')}>
+                  <DropdownMenuItem onClick={() => router.push('/landing/privacidad')}>
                     <ShieldCheck className="mr-2 h-4 w-4" />
                     <span>Privacidad</span>
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => router.push('/policies')}>
+                  <DropdownMenuItem onClick={() => router.push('/landing/terminos')}>
                     <FileText className="mr-2 h-4 w-4" />
-                    <span>Políticas</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => router.push('/cookies')}>
-                    <Cookie className="mr-2 h-4 w-4" />
-                    <span>Cookies</span>
+                    <span>Términos y condiciones</span>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleSignOut} className="text-rose-500 focus:text-rose-500 focus:bg-rose-500/10">
@@ -441,7 +428,7 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
         )}
 
         {/* Content Area */}
-        <main className="flex-1 overflow-y-auto scrollbar-hide bg-white dark:bg-black md:bg-transparent p-4 md:p-10 h-[calc(100vh-4rem)] md:h-auto">
+        <main className="flex-1 overflow-y-auto scrollbar-hide bg-transparent p-4 md:p-10 h-[calc(100vh-4rem)] md:h-auto">
           {children}
         </main>
 

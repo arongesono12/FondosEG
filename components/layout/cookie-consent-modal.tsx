@@ -58,7 +58,7 @@ export function CookieConsentModal({
                 Ver más información sobre cookies
               </Link>
             </div>
-            <div className="flex w-full flex-wrap gap-2 md:w-auto md:justify-end">
+            <div className="flex w-full flex-nowrap gap-2 overflow-x-auto pb-1 md:w-auto md:justify-end md:overflow-visible md:pb-0">
               <button
                 type="button"
                 onClick={onRejectOptional}
@@ -90,7 +90,7 @@ export function CookieConsentModal({
                 Las cookies esenciales siempre están activas porque mantienen la sesión, la seguridad y el acceso al dashboard. Las cookies de preferencias ayudan a recordar ajustes visuales o configuraciones ligeras.
               </p>
             </div>
-            <div className="flex w-full flex-wrap gap-2 md:w-auto md:justify-end">
+            <div className="flex w-full flex-nowrap gap-2 overflow-x-auto pb-1 md:w-auto md:justify-end md:overflow-visible md:pb-0">
               <button
                 type="button"
                 onClick={() =>

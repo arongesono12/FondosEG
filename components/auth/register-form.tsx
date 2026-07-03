@@ -165,7 +165,12 @@ export function RegisterForm({
     if (result.success) {
       setRegisteredName(result.name || formData.name);
       setRegisteredRole((result.role as UserRole) || formData.role);
-      setShowSuccessModal(true);
+      const query = new URLSearchParams({
+        userId: result.user?.id || '',
+        email: result.email || formData.email,
+        name: result.name || formData.name,
+      });
+      router.push(`/verify-email?${query.toString()}`);
     } else {
       setError(result.error || 'Error al registrar usuario');
     }
@@ -174,7 +179,7 @@ export function RegisterForm({
 
   return (
     <>
-      <div className="bg-white/40 dark:bg-[#10121B]/40 border border-white/18 shadow-xl hover:shadow-2xl hover:border-white/30 dark:hover:shadow-[0_0_20px_rgba(255,255,255,0.15)] transition-all duration-500 rounded-[10px] backdrop-blur-[2px] overflow-hidden text-card-foreground dark:text-white">
+      <div className="auth-register-card border shadow-2xl transition-all duration-500 rounded-[20px] overflow-hidden">
         <CardHeader className="space-y-2 text-center">
           <div className="flex justify-center mb-2">
             <DashboardLogo

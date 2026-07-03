@@ -5,6 +5,19 @@ export function isAuthServiceUnavailableError(error: unknown): boolean {
   return isAuthRetryableFetchError(error) || isTransientNetworkError(error);
 }
 
+export function isInvalidRefreshTokenError(error: unknown): boolean {
+  if (!error || typeof error !== 'object') return false;
+  const candidate = error as { code?: string; message?: string };
+  const normalized = normalizeMessage(candidate.message ?? '');
+  return (
+    candidate.code === 'refresh_token_not_found' ||
+    candidate.code === 'refresh_token_already_used' ||
+    normalized.includes('invalid refresh token') ||
+    normalized.includes('refresh token not found') ||
+    normalized.includes('refresh token already used')
+  );
+}
+
 function normalizeMessage(message: string): string {
   return message
     .normalize('NFD')
@@ -31,6 +44,14 @@ export function translateAuthErrorMessage(message: string): string {
 
   if (normalized.includes('invalid login credentials')) {
     return 'Correo o contraseña incorrectos.';
+  }
+
+  if (
+    normalized.includes('invalid refresh token') ||
+    normalized.includes('refresh token not found') ||
+    normalized.includes('refresh token already used')
+  ) {
+    return 'La sesión anterior ha caducado. Inicia sesión nuevamente.';
   }
 
   if (normalized.includes('email not confirmed')) {

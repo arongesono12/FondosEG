@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { createClient } from '@/lib/supabase/client';
+import { createClient, prepareForFreshSignIn } from '@/lib/supabase/client';
 
 interface LoginFormProps {
   title?: string;
@@ -59,6 +59,7 @@ export function LoginForm({
     setLoading(true);
 
     try {
+      prepareForFreshSignIn();
       const supabase = createClient();
       const { data, error: signInError } = await supabase.auth.signInWithPassword({
         email: email.toLowerCase().trim(),
@@ -82,7 +83,7 @@ export function LoginForm({
     <div className="w-full relative group perspective-1000">
       <div className="absolute -inset-1 bg-brand-gradient rounded-[24px] blur-3xl opacity-20 group-hover:opacity-30 transition duration-1000 group-hover:duration-500" />
 
-      <div className="relative bg-white/70 dark:bg-slate-950/50 border border-white/40 dark:border-white/10 shadow-2xl transition-all duration-500 rounded-[20px] backdrop-blur-2xl overflow-hidden text-card-foreground dark:text-white">
+      <div className="auth-contrast-card relative border shadow-2xl transition-all duration-500 rounded-[20px] overflow-hidden">
         <CardHeader className="space-y-2 text-center pb-4 md:pb-2">
           <div className="flex justify-center mb-2">
             <DashboardLogo
@@ -92,10 +93,10 @@ export function LoginForm({
               labelClassName="text-4xl md:text-5xl"
             />
           </div>
-          <CardTitle className="text-3xl font-bold tracking-tight text-foreground">
+          <CardTitle className="auth-card-title text-3xl font-bold tracking-tight">
             {title}
           </CardTitle>
-          <CardDescription className="text-muted-foreground/80 dark:text-white/50 text-sm font-medium">
+          <CardDescription className="auth-card-muted text-sm font-medium">
             {description}
           </CardDescription>
         </CardHeader>
@@ -107,21 +108,21 @@ export function LoginForm({
               </div>
             )}
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-sm font-semibold tracking-wide text-foreground/70 dark:text-white/60">
+              <Label htmlFor="email" className="auth-card-label text-sm font-semibold tracking-wide">
                 Correo electrónico
               </Label>
               <Input
                 id="email"
                 type="email"
                 placeholder="correo@ejemplo.com"
-                className="bg-white/50 dark:bg-white/5 border border-border/50 dark:border-white/10 focus:bg-white dark:focus:bg-white/10 focus:ring-2 focus:ring-pink-500/30 focus:border-pink-500/50 transition-all duration-300 h-12 px-4 rounded-xl text-foreground dark:text-white placeholder:text-muted-foreground dark:placeholder:text-white/40 shadow-inner"
+                className="auth-card-input border focus:ring-2 focus:ring-pink-500/30 focus:border-pink-500/50 transition-all duration-300 h-12 px-4 rounded-xl shadow-inner"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password" className="text-sm font-semibold tracking-wide text-foreground/70 dark:text-white/60">
+              <Label htmlFor="password" className="auth-card-label text-sm font-semibold tracking-wide">
                 Contraseña
               </Label>
               <div className="relative">
@@ -129,14 +130,14 @@ export function LoginForm({
                   id="password"
                   type={showPassword ? 'text' : 'password'}
                   placeholder="••••••••"
-                  className="bg-white/50 dark:bg-white/5 border border-border/50 dark:border-white/10 focus:bg-white dark:focus:bg-white/10 focus:ring-2 focus:ring-pink-500/30 focus:border-pink-500/50 transition-all duration-300 h-12 px-4 pr-10 rounded-xl text-foreground dark:text-white placeholder:text-muted-foreground dark:placeholder:text-white/40 shadow-inner"
+                  className="auth-card-input border focus:ring-2 focus:ring-pink-500/30 focus:border-pink-500/50 transition-all duration-300 h-12 px-4 pr-10 rounded-xl shadow-inner"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
                 />
                 <button
                   type="button"
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground dark:text-white/50 hover:text-foreground dark:hover:text-white transition-colors"
+                  className="auth-card-eye absolute right-3 top-1/2 -translate-y-1/2 transition-colors"
                   onClick={() => setShowPassword(!showPassword)}
                 >
                   {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
@@ -152,7 +153,7 @@ export function LoginForm({
             >
               {loading ? 'Iniciando...' : submitLabel}
             </Button>
-            <p className="text-sm text-center text-muted-foreground dark:text-white/60">
+            <p className="auth-card-muted text-sm text-center">
               ¿No tienes cuenta?{' '}
               <Link href={registerHref} className="font-medium bg-linear-to-r from-pink-500 to-rose-600 bg-clip-text text-transparent hover:from-pink-600 hover:to-rose-700 dark:from-pink-400 dark:to-rose-400 transition-all">
                 {registerLabel}
@@ -161,6 +162,14 @@ export function LoginForm({
           </CardFooter>
         </form>
       </div>
+      <footer className="login-legal-footer">
+        <p>© {new Date().getFullYear()} FondosEG. Todos los derechos reservados.</p>
+        <nav aria-label="Enlaces legales del acceso">
+          <Link href="/landing/terminos">Términos y condiciones</Link>
+          <span aria-hidden="true">·</span>
+          <Link href="/landing/privacidad">Privacidad</Link>
+        </nav>
+      </footer>
     </div>
   );
 }

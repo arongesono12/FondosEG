@@ -62,7 +62,8 @@ async function findAuthUserByEmail(adminClient: ReturnType<typeof createAdminCli
 async function ensureProfileAndBalance(
   adminClient: ReturnType<typeof createAdminClient>,
   authUser: AuthUserLike,
-  input: ProvisionUserInput
+  input: ProvisionUserInput,
+  isVerified = true
 ) {
   const nowIso = new Date().toISOString();
   const normalizedEmail = normalizeEmail(input.email);
@@ -79,7 +80,7 @@ async function ensureProfileAndBalance(
       country: input.country ?? null,
       city: input.city ?? null,
       is_active: true,
-      is_verified: true,
+      is_verified: isVerified,
       updated_at: nowIso,
     },
     { onConflict: 'id' }
@@ -121,6 +122,14 @@ async function ensureProfileAndBalance(
       throw new Error(balanceError.message);
     }
   }
+}
+
+export async function provisionPendingUserProfile(
+  adminClient: ReturnType<typeof createAdminClient>,
+  authUser: AuthUserLike,
+  input: ProvisionUserInput
+) {
+  await ensureProfileAndBalance(adminClient, authUser, input, false);
 }
 
 export async function provisionUserAccount(
