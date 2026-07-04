@@ -16,6 +16,62 @@ export type MarketingPageContent = {
 };
 
 export const marketingPages = {
+  'transferencias-instantaneas': {
+    eyebrow: 'Transferencias',
+    title: 'Transferencias conectadas con todo el ciclo operativo',
+    description: 'FondosEG permite crear, localizar, pagar y seguir transferencias en XAF desde un flujo centralizado, con reglas distintas para gestores y clientes.',
+    cta: 'Comenzar una transferencia',
+    destination: '/register',
+    points: ['Código único por operación', 'Estados y fechas de seguimiento', 'Comisión calculada para transferencias de gestor'],
+    sections: [
+      { title: 'Creación controlada', description: 'El sistema reúne los datos necesarios del ordenante, beneficiario y destino antes de registrar la operación.', items: ['Importe y moneda XAF', 'Datos de contacto y documentación', 'Ciudad y país de destino', 'Código de transferencia generado por el sistema'] },
+      { title: 'Flujos según el usuario', description: 'La aplicación diferencia las operaciones realizadas por gestores de los movimientos entre clientes registrados.', items: ['Débito del saldo del gestor al crear el envío', 'Transferencias entre billeteras de clientes', 'Reserva de saldo cuando corresponde', 'Validación del rol y del propietario de la operación'] },
+      { title: 'Seguimiento hasta el pago', description: 'Cada transferencia conserva su estado y las referencias necesarias para continuar el proceso.', items: ['Estados creada, disponible, pagada, completada o cancelada', 'Búsqueda mediante código', 'Registro de disponibilidad y pago', 'Recibo y notificaciones asociadas'] },
+    ],
+    note: 'La velocidad final de una operación depende de su validación, disponibilidad de saldo, estado y proveedor de pago configurado.',
+  },
+  'billetera-segura': {
+    eyebrow: 'Billetera',
+    title: 'Saldo, reservas y movimientos protegidos por permisos',
+    description: 'Las billeteras de FondosEG separan los saldos de clientes y gestores y aplican autenticación, autorización por rol y operaciones financieras ejecutadas en la base de datos.',
+    cta: 'Crear mi billetera',
+    destination: '/register',
+    points: ['Saldos separados por tipo de cuenta', 'Fondos reservados durante operaciones', 'Acceso limitado al usuario autorizado'],
+    sections: [
+      { title: 'Un saldo para cada rol', description: 'Al crear la cuenta, FondosEG prepara el recurso financiero correspondiente al perfil seleccionado.', items: ['Billetera de cliente en client_balances', 'Saldo operativo del gestor en agent_balances', 'Moneda XAF configurada', 'Saldo inicial registrado en cero'] },
+      { title: 'Consistencia financiera', description: 'Los cambios de saldo se realizan mediante funciones de base de datos que validan la operación y conservan sus resultados.', items: ['Comprobación de saldo disponible', 'Bloqueo de registros durante movimientos sensibles', 'Saldo disponible y reservado', 'Valores anteriores y posteriores en eventos financieros'] },
+      { title: 'Acceso y protección', description: 'El acceso combina Supabase Auth con comprobaciones de sesión, rol y propiedad.', items: ['Correo confirmado mediante OTP', 'Rutas privadas protegidas', 'Políticas Row Level Security', 'Claves y secretos fuera de la interfaz pública'] },
+    ],
+    note: 'La protección efectiva también depende de la configuración segura de Supabase, las variables de entorno y las prácticas del usuario.',
+  },
+  'trazabilidad-completa': {
+    eyebrow: 'Trazabilidad',
+    title: 'Cada movimiento conserva su contexto operativo',
+    description: 'El historial, los eventos financieros y los registros de actividad permiten reconstruir qué ocurrió en una transferencia y consultar su situación actual.',
+    cta: 'Consultar mis operaciones',
+    destination: '/login',
+    points: ['Historial filtrado por permisos', 'Estados y marcas de tiempo', 'Eventos financieros y actividad'],
+    sections: [
+      { title: 'Historial de transferencias', description: 'La vista de historial presenta las operaciones accesibles para el usuario autenticado.', items: ['Código, importe y participantes', 'Estado operativo actual', 'Fecha de creación y finalización', 'Detalle y recibo de la transferencia'] },
+      { title: 'Registro financiero', description: 'Las operaciones importantes guardan información que explica la variación de los fondos.', items: ['Débitos, créditos, reservas y liberaciones', 'Saldo anterior y saldo resultante', 'Referencia a la transferencia', 'Comisión y regla aplicada cuando corresponde'] },
+      { title: 'Informes operativos', description: 'Gestores y administradores disponen de indicadores construidos desde los datos almacenados.', items: ['Volumen por periodos', 'Operaciones por estado', 'Comisiones y conciliación', 'Actividad diaria y rendimiento por gestor'] },
+    ],
+    note: 'La información mostrada respeta el rol del usuario: los clientes consultan sus operaciones y los perfiles autorizados acceden al alcance operativo correspondiente.',
+  },
+  'api-integraciones': {
+    eyebrow: 'Integraciones',
+    title: 'API para conectar operaciones y sistemas externos',
+    description: 'FondosEG incluye una API documentada, credenciales por entorno, permisos por recurso, idempotencia, registros de uso y webhooks firmados.',
+    cta: 'Abrir documentación',
+    destination: '/documentation',
+    points: ['Credenciales test y production', 'Contrato OpenAPI disponible', 'Webhooks firmados y auditables'],
+    sections: [
+      { title: 'Acceso a la API', description: 'Las integraciones se autentican mediante una clave y un secreto asociados a su propietario y entorno.', items: ['Cabeceras x-api-key y x-api-secret', 'Permisos por balance, transferencias e historial', 'Rotación y revocación de credenciales', 'Rate limits y registros de solicitudes'] },
+      { title: 'Operaciones disponibles', description: 'Los endpoints existentes cubren recursos financieros y los módulos externos incorporados al proyecto.', items: ['Consulta de balance e historial', 'Transferencias de gestor y billetera', 'Propiedades y contratos de alquiler', 'Pagos de alquiler y estados'] },
+      { title: 'Automatización fiable', description: 'La API incorpora mecanismos para coordinar operaciones con otros sistemas.', items: ['Idempotency-Key en escrituras compatibles', 'Entorno sandbox sin afectar saldos reales', 'Webhooks con firma HMAC SHA-256', 'Entregas, reintentos y estados registrados'] },
+    ],
+    note: 'Cada integración sólo puede utilizar las rutas y permisos habilitados para sus credenciales. El sandbox devuelve datos simulados identificados como tales.',
+  },
   funciones: {
     eyebrow: 'Producto',
     title: 'Las funciones que ya operan dentro de FondosEG',

@@ -3,8 +3,8 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import {
   ArrowLeft, ArrowRight, BarChart3, BookOpen, CheckCircle2, Code2,
-  Gauge, Headphones, LayoutDashboard, Newspaper, ReceiptText, ShieldCheck,
-  Sparkles, TestTube2, WalletCards,
+  Gauge, Headphones, LayoutDashboard, LockKeyhole, Newspaper, ReceiptText, ShieldCheck,
+  Sparkles, TestTube2, TrendingUp, WalletCards, Zap,
 } from 'lucide-react';
 
 import { DashboardLogo } from '@/components/layout/dashboard-logo';
@@ -13,6 +13,10 @@ import { legalDocuments } from '@/lib/legal-content';
 import { marketingPages, type MarketingPageSlug } from '@/lib/marketing-content';
 
 const pageIcons = {
+  'transferencias-instantaneas': Zap,
+  'billetera-segura': LockKeyhole,
+  'trazabilidad-completa': TrendingUp,
+  'api-integraciones': Code2,
   funciones: Sparkles,
   seguridad: ShieldCheck,
   precios: ReceiptText,

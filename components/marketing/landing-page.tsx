@@ -12,6 +12,7 @@ import {
 
 import { DashboardLogo } from '@/components/layout/dashboard-logo';
 import { ThemeToggle } from '@/components/theme-toggle';
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 
 export type LandingRole = 'gestores' | 'aliados' | 'developers';
@@ -23,10 +24,10 @@ const roleCopy = {
 };
 
 const tools = [
-  { icon: Zap, title: 'Transferencias\nal instante', text: 'Envía y recibe dinero en segundos. Sin intermediarios, con liquidación inmediata y notificaciones en tiempo real.', tone: 'pink' },
-  { icon: LockKeyhole, title: 'Billetera\nsegura', text: 'Tus fondos protegidos con encriptación bancaria, controles de acceso y múltiples niveles de seguridad.', tone: 'blue' },
-  { icon: TrendingUp, title: 'Trazabilidad\ncompleta', text: 'Visualiza cada movimiento, descarga reportes y da seguimiento operativo con total transparencia.', tone: 'green' },
-  { icon: Code2, title: 'API e\nintegraciones', text: 'Conecta FondosEG con tus sistemas para automatizar pagos, conciliaciones y flujos de trabajo.', tone: 'purple' },
+  { icon: Zap, title: 'Transferencias\nal instante', text: 'Envía y recibe dinero en segundos. Sin intermediarios, con liquidación inmediata y notificaciones en tiempo real.', tone: 'pink', href: '/landing/transferencias-instantaneas' },
+  { icon: LockKeyhole, title: 'Billetera\nsegura', text: 'Tus fondos protegidos con encriptación bancaria, controles de acceso y múltiples niveles de seguridad.', tone: 'blue', href: '/landing/billetera-segura' },
+  { icon: TrendingUp, title: 'Trazabilidad\ncompleta', text: 'Visualiza cada movimiento, descarga reportes y da seguimiento operativo con total transparencia.', tone: 'green', href: '/landing/trazabilidad-completa' },
+  { icon: Code2, title: 'API e\nintegraciones', text: 'Conecta FondosEG con tus sistemas para automatizar pagos, conciliaciones y flujos de trabajo.', tone: 'purple', href: '/landing/api-integraciones' },
 ];
 
 const trust = [
@@ -95,14 +96,18 @@ function Footer() { return <footer className="landing-footer"><div className="fo
   </div><p className="copyright">© {new Date().getFullYear()} FondosEG. Todos los derechos reservados.</p></footer>; }
 function FooterLinks({ title, links }: { title: string; links: { label: string; href: string }[] }) { return <div><h4>{title}</h4>{links.map(link => <Link key={link.href} href={link.href}>{link.label}</Link>)}</div>; }
 
-export function LandingPage() { return <Shell>
+export function LandingPage() {
+  const [demoOpen, setDemoOpen] = useState(false);
+  const [videoUnavailable, setVideoUnavailable] = useState(false);
+
+  return <Shell>
   <section className="hero-section">
     <div className="hero-glow" />
     <div className="hero-copy">
       <span className="hero-pill"><Zap /> Conexión directa, sin intermediarios</span>
       <h1>Mueve dinero con <span>velocidad, control</span> y confianza</h1>
       <p>FondosEG centraliza tus operaciones de transferencia, controla tus billeteras, visualiza tu flujo de efectivo y da seguimiento operativo en tiempo real.</p>
-      <div className="hero-buttons"><Link className="btn-primary" href="/register">Comenzar gratis <ArrowRight /></Link><Link className="demo-button" href="/developers-portal">Ver demo <Play /></Link></div>
+      <div className="hero-buttons"><Link className="btn-primary" href="/register">Comenzar gratis <ArrowRight /></Link><button type="button" className="demo-button" onClick={() => setDemoOpen(true)}>Ver demo <Play /></button></div>
       <div className="hero-checks"><span><Check /> Sin tarjeta</span><span><Check /> Sin instalación</span><span><Check /> Listo en minutos</span></div>
     </div>
     <div className="hero-visual"><div className="orbit orbit-a"/><div className="orbit orbit-b"/><Image src="/mockup.png" alt="Panel de FondosEG en ordenador, tableta y móvil" width={2048} height={1228} priority /></div>
@@ -112,7 +117,7 @@ export function LandingPage() { return <Shell>
     <Stat icon={Network} value="250K+" label="Transacciones procesadas" tone="purple"/><Stat icon={CircleDollarSign} value="XAF 12.5M" label="Dinero movido por nuestros usuarios" tone="blue"/><Stat icon={ShieldCheck} value="99.9%" label="Seguimiento operativo en tiempo real" tone="green"/><Stat icon={Headphones} value="24/7" label="Soporte humano siempre disponible" tone="pink"/>
   </section>
 
-  <section className="landing-section"><SectionTitle eyebrow="TODO LO QUE NECESITAS">Potentes herramientas para <span>mover tu negocio</span></SectionTitle><div className="feature-grid">{tools.map(({icon:Icon,...f})=><article className="feature-card" key={f.title}><div className={`icon-box ${f.tone}`}><Icon /></div><h3>{f.title}</h3><p>{f.text}</p><Link className={f.tone} href="#">Saber más <ArrowRight /></Link></article>)}</div></section>
+  <section className="landing-section"><SectionTitle eyebrow="TODO LO QUE NECESITAS">Potentes herramientas para <span>mover tu negocio</span></SectionTitle><div className="feature-grid">{tools.map(({icon:Icon,...f})=><article className="feature-card" key={f.title}><div className={`icon-box ${f.tone}`}><Icon /></div><h3>{f.title}</h3><p>{f.text}</p><Link className={f.tone} href={f.href} aria-label={`Más información sobre ${f.title.replace('\n', ' ')}`}>Saber más <ArrowRight /></Link></article>)}</div></section>
 
   <section className="landing-section roles-section"><SectionTitle eyebrow="PARA CADA ROL, UNA EXPERIENCIA PENSADA PARA TI"><span className="sr-only">Experiencias por rol</span></SectionTitle><div className="role-grid">{(Object.keys(roleCopy) as LandingRole[]).map((key,i)=>{const r=roleCopy[key];const Icon=r.icon;return <Link href={r.href} className={`role-card role-${i+1}`} key={key}><Icon/><h3>{r.label}</h3><p>{r.text}</p><strong>{key==='gestores'?'Entrar como gestor':key==='aliados'?'Entrar como aliado':'Explorar para developers'} <ArrowRight /></strong><div className="role-art"><Icon/></div></Link>})}</div></section>
 
@@ -121,7 +126,28 @@ export function LandingPage() { return <Shell>
   <section className="landing-section"><SectionTitle eyebrow="LO QUE DICEN NUESTROS ALIADOS"><span className="sr-only">Testimonios</span></SectionTitle><div className="testimonial-grid"><Testimonial text="Con FondosEG optimizamos nuestros pagos y ahora tenemos visibilidad total de nuestras operaciones. La plataforma es rápida, estable y muy intuitiva." name="Mamadou Diallo" role="Director de Operaciones, LogiTrans SA"/><Testimonial text="La integración vía API nos permitió automatizar nuestros cobros y conciliaciones. El soporte técnico es excelente y siempre están disponibles." name="Aissatou Camara" role="CTO, PayLink Solutions" blue/></div><div className="dots"><i/><i/><i/><i/><i/></div></section>
 
   <section className="cta-section"><div><h2>Comienza con <span>FondosEG</span></h2><p>Crea tu cuenta gratis y comienza a mover tu dinero<br/>con velocidad, control y confianza.</p></div><form action="/register"><div><input type="email" name="email" placeholder="Correo electrónico" aria-label="Correo electrónico"/><button className="btn-primary">Comenzar gratis <ArrowRight /></button></div><p><span><Check/> Sin tarjeta de crédito</span><span><Check/> Configuración en minutos</span><span><Check/> Cancela cuando quieras</span></p></form></section>
-  </Shell>; }
+
+  <Dialog open={demoOpen} onOpenChange={setDemoOpen}>
+    <DialogContent className="demo-dialog" aria-describedby="demo-description">
+      <div className="demo-dialog-copy">
+        <span>RECORRIDO DE LA PLATAFORMA</span>
+        <DialogTitle>Descubre cómo funciona FondosEG</DialogTitle>
+        <DialogDescription id="demo-description">Del acceso seguro al envío de dinero y el seguimiento desde el dashboard.</DialogDescription>
+      </div>
+      <div className="demo-player">
+        {!videoUnavailable ? <video controls playsInline preload="metadata" poster="/mockup.png" onError={() => setVideoUnavailable(true)}>
+          <source src="/fondoseg-demo.mp4" type="video/mp4" />
+        </video> : <div className="demo-preview">
+          <Image src="/mockup.png" alt="Vista previa del dashboard de FondosEG" width={2048} height={1228} />
+          <div><Play /><strong>Demo en preparación</strong><p>El reproductor está listo para incorporar la grabación final de FondosEG.</p></div>
+        </div>}
+      </div>
+      <div className="demo-chapters"><span><b>01</b> Inicio de sesión</span><span><b>02</b> Envío de dinero</span><span><b>03</b> Dashboard y seguimiento</span></div>
+      <div className="demo-dialog-actions"><Link href="/login" className="demo-button" onClick={() => setDemoOpen(false)}>Explorar la aplicación</Link><Link href="/register" className="btn-primary" onClick={() => setDemoOpen(false)}>Crear cuenta <ArrowRight /></Link></div>
+    </DialogContent>
+  </Dialog>
+  </Shell>;
+}
 
 function Stat({icon:Icon,value,label,tone}:{icon:typeof Zap;value:string;label:string;tone:string}) { return <article className="stat-card"><div className={`stat-icon ${tone}`}><Icon/></div><div><strong>{value}</strong><p>{label}</p></div></article>; }
 function Testimonial({text,name,role,blue=false}:{text:string;name:string;role:string;blue?:boolean}) { return <article className="testimonial"><Quote className={blue?'blue':''}/><div><p>{text}</p><footer><span>{name.charAt(0)}</span><div><strong>{name}</strong><small>{role}</small></div></footer></div></article>; }
