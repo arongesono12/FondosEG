@@ -70,7 +70,7 @@ function Header() {
             if (!event.currentTarget.contains(event.relatedTarget)) setResourcesOpen(false);
           }}
         >
-          <button type="button" aria-expanded={resourcesOpen} aria-haspopup="menu" onClick={() => setResourcesOpen(current => !current)}>Recursos <ChevronDown className={cn('size-3', resourcesOpen && 'rotate-180')} /></button>
+          <button type="button" aria-expanded={resourcesOpen ? 'true' : 'false'} aria-haspopup="menu" onClick={() => setResourcesOpen(current => !current)}>Recursos <ChevronDown className={cn('size-3', resourcesOpen && 'rotate-180')} /></button>
           {resourcesOpen && <div className="resources-menu" role="menu"><Link role="menuitem" href="/documentation" onClick={() => setResourcesOpen(false)}><BookOpen /> <span><strong>Documentación</strong><small>Guías, API y recursos técnicos</small></span><ArrowRight /></Link></div>}
         </div>
       </nav>
