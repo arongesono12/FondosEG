@@ -13,7 +13,6 @@ fs.writeFileSync(
 );
 
 process.env.CSS_TRANSFORMER_WASM = '1';
-process.env.NEXT_TEST_WASM = '1';
 
 const nextBin = path.join(root, 'node_modules', 'next', 'dist', 'bin', 'next');
 const child = spawn(process.execPath, [nextBin, 'dev', '--webpack', '-p', '3001'], {
@@ -34,7 +33,10 @@ function writeFiltered(stream, target) {
         line.includes('Attempted to load @next/swc-win32-x64-msvc') ||
         line.includes('next-swc.win32-x64-msvc.node') ||
         line.includes('experimental.useWasmBinary is not an option') ||
-        line.includes('Skipping creating a lockfile')
+        line.includes('Skipping creating a lockfile') ||
+        line.includes('cannot run loadNative') ||
+        line.includes('Failed to load SWC binary') ||
+        line.includes('Failed to load next.config')
       ) {
         continue;
       }

@@ -9,6 +9,7 @@ import {
 
 import { DashboardLogo } from '@/components/layout/dashboard-logo';
 import { ThemeToggle } from '@/components/theme-toggle';
+import { FadeIn, FadeInRight, StaggerContainer, StaggerItem } from '@/components/marketing/motion-elements';
 import { legalDocuments } from '@/lib/legal-content';
 import { marketingPages, type MarketingPageSlug } from '@/lib/marketing-content';
 
@@ -54,33 +55,33 @@ export default async function MarketingContentPage({ params }: { params: Promise
   return <main className="info-page detailed-info-page">
     <PublicHeader />
     <section className="info-hero detailed-info-hero">
-      <div className="info-copy">
+      <FadeIn><div className="info-copy">
         <span><Icon /> {page.eyebrow}</span>
         <h1>{page.title}</h1>
         <p>{page.description}</p>
         <Link href={page.destination} className="btn-primary">{page.cta}<ArrowRight /></Link>
-      </div>
-      <article className="info-panel">
+      </div></FadeIn>
+      <FadeInRight><article className="info-panel">
         <div className="info-panel-icon"><Icon /></div>
         <h2>Disponible actualmente</h2>
         {page.points.map((point) => <p key={point}><CheckCircle2 />{point}</p>)}
-      </article>
+      </article></FadeInRight>
     </section>
 
     <section className="info-capabilities">
-      <div className="info-section-heading"><p>FUNCIONES VERIFICADAS</p><h2>Qué incluye esta sección</h2><span>Contenido construido a partir de rutas, componentes, servicios y migraciones presentes en FondosEG.</span></div>
-      <div className="info-capability-grid">
-        {page.sections.map((section, index) => <article className="info-capability-card" key={section.title}>
+      <FadeIn><div className="info-section-heading"><p>FUNCIONES VERIFICADAS</p><h2>Qué incluye esta sección</h2><span>Contenido construido a partir de rutas, componentes, servicios y migraciones presentes en FondosEG.</span></div></FadeIn>
+      <StaggerContainer><div className="info-capability-grid">
+        {page.sections.map((section, index) => <StaggerItem key={section.title}><article className="info-capability-card">
           <div className="info-card-number">{String(index + 1).padStart(2, '0')}</div>
           <h3>{section.title}</h3>
           <p>{section.description}</p>
           <ul>{section.items.map((item) => <li key={item}><CheckCircle2 />{item}</li>)}</ul>
-        </article>)}
-      </div>
+        </article></StaggerItem>)}
+      </div></StaggerContainer>
     </section>
 
-    <section className="info-note"><BookOpen /><div><h2>Alcance de esta página</h2><p>{page.note}</p></div></section>
-    <section className="info-final-cta"><div><p>FondosEG</p><h2>Continúa desde la función correspondiente</h2></div><Link className="btn-primary" href={page.destination}>{page.cta}<ArrowRight /></Link></section>
+    <FadeIn><section className="info-note"><BookOpen /><div><h2>Alcance de esta página</h2><p>{page.note}</p></div></section></FadeIn>
+    <FadeIn><section className="info-final-cta"><div><p>FondosEG</p><h2>Continúa desde la función correspondiente</h2></div><Link className="btn-primary" href={page.destination}>{page.cta}<ArrowRight /></Link></section></FadeIn>
   </main>;
 }
 
@@ -91,15 +92,15 @@ function PublicHeader() {
 function LegalPage({ document }: { document: (typeof legalDocuments)[keyof typeof legalDocuments] }) {
   return <main className="legal-page">
     <PublicHeader />
-    <section className="legal-hero"><span>{document.label}</span><h1>{document.title}</h1><p>{document.summary}</p><small>Vigente desde el {document.effectiveDate} · Versión 1.0</small></section>
-    <div className="legal-layout">
+    <FadeIn><section className="legal-hero"><span>{document.label}</span><h1>{document.title}</h1><p>{document.summary}</p><small>Vigente desde el {document.effectiveDate} · Versión 1.0</small></section></FadeIn>
+    <FadeIn><div className="legal-layout">
       <aside><p>Contenido</p>{document.sections.map((section, index) => <a key={section.title} href={`#seccion-${index + 1}`}>{section.title}</a>)}</aside>
       <article className="legal-document">
         <div className="legal-notice"><ShieldCheck /><p>Este documento refleja las funciones identificadas en la aplicación FondosEG a la fecha de vigencia. Debe completarse con la identificación legal y licencias del operador antes de un lanzamiento comercial.</p></div>
-        {document.sections.map((section, index) => <section id={`seccion-${index + 1}`} key={section.title}><h2>{section.title}</h2>{section.paragraphs?.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}{section.bullets && <ul>{section.bullets.map((bullet) => <li key={bullet}>{bullet}</li>)}</ul>}</section>)}
+        {document.sections.map((section, index) => <FadeIn key={section.title}><section id={`seccion-${index + 1}`}><h2>{section.title}</h2>{section.paragraphs?.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}{section.bullets && <ul>{section.bullets.map((bullet) => <li key={bullet}>{bullet}</li>)}</ul>}</section></FadeIn>)}
         <section className="legal-sources"><h2>Referencias regulatorias oficiales</h2><p>Marco consultado para la redacción. La aplicabilidad concreta debe confirmarse con asesoría jurídica local.</p><div><a href="https://www.beac.int/supervision-bancaire/reglements-de-cobac/" target="_blank" rel="noreferrer">Reglamentos COBAC — BEAC <ArrowRight /></a><a href="https://www.beac.int/systemes-paiement/instructions-circulaires-reglements/" target="_blank" rel="noreferrer">Sistemas de pago — BEAC <ArrowRight /></a><a href="https://www.beac.int/p-des-changes/reglements/" target="_blank" rel="noreferrer">Regulación de cambios — BEAC <ArrowRight /></a></div></section>
         <footer><p>¿Tienes dudas sobre este documento?</p><a href="mailto:soporte@fondoseg.com">soporte@fondoseg.com</a></footer>
       </article>
-    </div>
+    </div></FadeIn>
   </main>;
 }
