@@ -126,7 +126,7 @@ export default function TransfersPage() {
   const avgDaily = dailyStats.length > 0 ? totalMonthly / dailyStats.length : 0;
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-500">
+    <div className="transfers-mobile-page space-y-6 animate-in fade-in duration-500">
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
@@ -139,7 +139,7 @@ export default function TransfersPage() {
       <div className={`grid grid-cols-1 ${user?.role === 'gestor' ? 'md:grid-cols-2 lg:grid-cols-5' : user?.role === 'cliente' ? 'md:grid-cols-2' : 'md:grid-cols-2 lg:grid-cols-4'} gap-4`}>
         {/* Card: Nueva Transferencia (Solo gestores) */}
         {user?.role === 'gestor' && (
-          <Card className="bg-brand-gradient border-0 rounded-3xl p-6 cursor-pointer hover:shadow-xl transition-all text-white" onClick={() => setAgentTransferOpen(true)}>
+          <Card className="transfer-action-card bg-brand-gradient border-0 rounded-3xl p-6 cursor-pointer hover:shadow-xl transition-all text-white" onClick={() => setAgentTransferOpen(true)}>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-bold flex items-center gap-2">
                 <Send className="h-4 w-4" /> Nueva Transferencia
@@ -148,7 +148,7 @@ export default function TransfersPage() {
             <CardContent>
               <p className="text-2xl font-bold">Enviar dinero</p>
               <p className="text-xs text-white/70 mt-1">A clientes y beneficiarios</p>
-              <Button variant="ghost" className="text-xs font-bold text-white mt-2 p-0 h-auto">
+              <Button variant="ghost" className="transfer-mobile-action text-xs font-bold text-white mt-2 p-0 h-auto">
                 Iniciar <ArrowUpRight className="h-3 w-3 ml-1" />
               </Button>
             </CardContent>
@@ -157,7 +157,7 @@ export default function TransfersPage() {
 
         {/* Card: Transferir a Cliente (Solo clientes) */}
         {user?.role === 'cliente' && (
-          <Card className="bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 rounded-3xl p-6 cursor-pointer hover:shadow-lg transition-all" onClick={() => setWalletTransferOpen(true)}>
+          <Card className="transfer-action-card bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 rounded-3xl p-6 cursor-pointer hover:shadow-lg transition-all" onClick={() => setWalletTransferOpen(true)}>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-bold text-green-600 dark:text-green-400 flex items-center gap-2">
                 <Wallet className="h-4 w-4" /> Transferir a Cliente
@@ -166,7 +166,7 @@ export default function TransfersPage() {
             <CardContent>
               <p className="text-2xl font-bold text-green-600 dark:text-green-400">Sin comisión</p>
               <p className="text-xs text-green-500 mt-1">Envía dinero a otro cliente</p>
-              <Button variant="ghost" className="text-xs font-bold text-green-600 mt-2 p-0 h-auto">
+              <Button variant="ghost" className="transfer-mobile-action text-xs font-bold text-green-600 mt-2 p-0 h-auto">
                 Iniciar <ArrowUpRight className="h-3 w-3 ml-1" />
               </Button>
             </CardContent>
@@ -175,7 +175,7 @@ export default function TransfersPage() {
 
         {/* Card: Confirmar Recepción (Solo clientes) */}
         {user?.role === 'cliente' && (
-          <Card className="bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 rounded-3xl p-6 cursor-pointer hover:shadow-lg transition-all" onClick={() => setVerifyTransferOpen(true)}>
+          <Card className="transfer-action-card bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 rounded-3xl p-6 cursor-pointer hover:shadow-lg transition-all" onClick={() => setVerifyTransferOpen(true)}>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-bold text-blue-600 dark:text-blue-400 flex items-center gap-2">
                 <QrCode className="h-4 w-4" /> Confirmar Recepción
@@ -184,7 +184,7 @@ export default function TransfersPage() {
             <CardContent>
               <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">QR + Código</p>
               <p className="text-xs text-blue-500 mt-1">Confirma transferencias recibidas</p>
-              <Button variant="ghost" className="text-xs font-bold text-blue-600 mt-2 p-0 h-auto">
+              <Button variant="ghost" className="transfer-mobile-action text-xs font-bold text-blue-600 mt-2 p-0 h-auto">
                 Ver pendientes <ArrowUpRight className="h-3 w-3 ml-1" />
               </Button>
             </CardContent>
@@ -193,7 +193,7 @@ export default function TransfersPage() {
 
         {/* Card: Pagar Transferencia (Solo gestores) */}
         {user?.role === 'gestor' && (
-          <Card className="bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800 rounded-3xl p-6 cursor-pointer hover:shadow-lg transition-all" onClick={() => setAgentPayoutOpen(true)}>
+          <Card className="transfer-action-card bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800 rounded-3xl p-6 cursor-pointer hover:shadow-lg transition-all" onClick={() => setAgentPayoutOpen(true)}>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-2">
                 <QrCode className="h-4 w-4" /> Pagar transferencia
@@ -202,7 +202,7 @@ export default function TransfersPage() {
             <CardContent>
               <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">Código de retiro</p>
               <p className="text-xs text-emerald-500 mt-1">Valida la transferencia y registra el pago</p>
-              <Button variant="ghost" className="text-xs font-bold text-emerald-600 mt-2 p-0 h-auto">
+              <Button variant="ghost" className="transfer-mobile-action text-xs font-bold text-emerald-600 mt-2 p-0 h-auto">
                 Ver disponibles <ArrowUpRight className="h-3 w-3 ml-1" />
               </Button>
             </CardContent>
@@ -210,7 +210,7 @@ export default function TransfersPage() {
         )}
         {/* Card: Payout Revolut (gestores y administración) */}
         {user?.role !== 'cliente' && (
-          <Card className="bg-sky-50 dark:bg-sky-950/20 border-sky-200 dark:border-sky-900 rounded-3xl p-6 cursor-pointer hover:shadow-lg transition-all" onClick={() => setRevolutPayoutOpen(true)}>
+          <Card className="transfer-action-card bg-sky-50 dark:bg-sky-950/20 border-sky-200 dark:border-sky-900 rounded-3xl p-6 cursor-pointer hover:shadow-lg transition-all" onClick={() => setRevolutPayoutOpen(true)}>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-bold text-sky-700 dark:text-sky-300 flex items-center gap-2">
                 <Landmark className="h-4 w-4" /> Payout Revolut
@@ -219,7 +219,7 @@ export default function TransfersPage() {
             <CardContent>
               <p className="text-2xl font-bold text-sky-700 dark:text-sky-300">Link externo</p>
               <p className="text-xs text-sky-600 dark:text-sky-400 mt-1">Alternativa cuando no hay gestor</p>
-              <Button variant="ghost" className="text-xs font-bold text-sky-700 dark:text-sky-300 mt-2 p-0 h-auto">
+              <Button variant="ghost" className="transfer-mobile-action text-xs font-bold text-sky-700 dark:text-sky-300 mt-2 p-0 h-auto">
                 Generar <ArrowUpRight className="h-3 w-3 ml-1" />
               </Button>
             </CardContent>
@@ -227,7 +227,7 @@ export default function TransfersPage() {
         )}
         {/* Card 1: Flujo del Día */}
         {user?.role !== 'cliente' && (
-        <Card className="bg-card border-border/50 rounded-3xl p-6 cursor-pointer hover:shadow-lg transition-all" onClick={() => setShowDailyModal(true)}>
+        <Card className="transfer-action-card bg-card border-border/50 rounded-3xl p-6 cursor-pointer hover:shadow-lg transition-all" onClick={() => setShowDailyModal(true)}>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-bold text-muted-foreground flex items-center gap-2">
               <TrendingUp className="h-4 w-4" /> Flujo del Día
@@ -236,7 +236,7 @@ export default function TransfersPage() {
           <CardContent>
             <p className="text-2xl font-bold">{formatBalance(stats?.todayTransfers || 0)}</p>
             <p className="text-xs text-muted-foreground mt-1">transacciones hoy</p>
-            <Button variant="ghost" className="text-xs font-bold text-primary mt-2 p-0 h-auto">
+            <Button variant="ghost" className="transfer-mobile-action text-xs font-bold text-primary mt-2 p-0 h-auto">
               Ver todo <ArrowUpRight className="h-3 w-3 ml-1" />
             </Button>
           </CardContent>
@@ -246,7 +246,7 @@ export default function TransfersPage() {
 
         {/* Card 2: Envíos de Gestores */}
         {user?.role !== 'cliente' && (
-        <Card className="bg-card border-border/50 rounded-3xl p-6 cursor-pointer hover:shadow-lg transition-all" onClick={() => setShowAgentsModal(true)}>
+        <Card className="transfer-action-card bg-card border-border/50 rounded-3xl p-6 cursor-pointer hover:shadow-lg transition-all" onClick={() => setShowAgentsModal(true)}>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-bold text-muted-foreground flex items-center gap-2">
               <Users className="h-4 w-4" /> Envíos de Gestores
@@ -255,7 +255,7 @@ export default function TransfersPage() {
           <CardContent>
             <p className="text-2xl font-bold">{recentTransfers.length}</p>
             <p className="text-xs text-muted-foreground mt-1">transferencias totales</p>
-            <Button variant="ghost" className="text-xs font-bold text-primary mt-2 p-0 h-auto">
+            <Button variant="ghost" className="transfer-mobile-action text-xs font-bold text-primary mt-2 p-0 h-auto">
               Ver todo <ArrowUpRight className="h-3 w-3 ml-1" />
             </Button>
           </CardContent>
@@ -264,7 +264,7 @@ export default function TransfersPage() {
 
         {/* Card 3: Volumen Semanal */}
         {user?.role !== 'cliente' && (
-        <Card className="bg-card border-border/50 rounded-3xl p-6 cursor-pointer hover:shadow-lg transition-all" onClick={() => setShowWeeklyModal(true)}>
+        <Card className="transfer-action-card bg-card border-border/50 rounded-3xl p-6 cursor-pointer hover:shadow-lg transition-all" onClick={() => setShowWeeklyModal(true)}>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-bold text-muted-foreground flex items-center gap-2">
               <BarChart3 className="h-4 w-4" /> Volumen Semanal
@@ -273,7 +273,7 @@ export default function TransfersPage() {
           <CardContent>
             <p className="text-2xl font-bold">{formatBalance(totalWeekly)}</p>
             <p className="text-xs text-muted-foreground mt-1">últimos 7 días</p>
-            <Button variant="ghost" className="text-xs font-bold text-primary mt-2 p-0 h-auto">
+            <Button variant="ghost" className="transfer-mobile-action text-xs font-bold text-primary mt-2 p-0 h-auto">
               Ver todo <ArrowUpRight className="h-3 w-3 ml-1" />
             </Button>
           </CardContent>
@@ -281,7 +281,7 @@ export default function TransfersPage() {
         )}
 
         {/* Card 4: Soporte */}
-        <Card className="bg-card border-border/50 rounded-3xl p-6 cursor-pointer hover:shadow-lg transition-all" onClick={() => setSupportOpen(true)}>
+        <Card className="transfer-action-card bg-card border-border/50 rounded-3xl p-6 cursor-pointer hover:shadow-lg transition-all" onClick={() => setSupportOpen(true)}>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-bold text-muted-foreground flex items-center gap-2">
               <MessageSquare className="h-4 w-4" /> Soporte
@@ -290,7 +290,7 @@ export default function TransfersPage() {
           <CardContent>
             <p className="text-2xl font-bold">24/7</p>
             <p className="text-xs text-muted-foreground mt-1">asistencia disponible</p>
-            <Button variant="ghost" className="text-xs font-bold text-primary mt-2 p-0 h-auto">
+            <Button variant="ghost" className="transfer-mobile-action text-xs font-bold text-primary mt-2 p-0 h-auto">
               Contactar <ArrowUpRight className="h-3 w-3 ml-1" />
             </Button>
           </CardContent>

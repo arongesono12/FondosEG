@@ -265,7 +265,7 @@ export function AgentTransferModal({ open, onOpenChange, onSuccess }: AgentTrans
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-lg p-0 overflow-hidden outline-none max-h-[90vh] overflow-y-auto">
+      <DialogContent className="agent-transfer-dialog max-w-lg p-0 overflow-hidden outline-none max-h-[90vh] overflow-y-auto">
         <DialogHeader className="p-6 border-b border-border/10">
           <DialogTitle className="flex items-center gap-2 text-xl font-bold text-foreground">
             <Send className="h-5 w-5 text-primary" /> Nueva Transferencia
@@ -304,7 +304,7 @@ export function AgentTransferModal({ open, onOpenChange, onSuccess }: AgentTrans
                 </div>
               )}
 
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <form onSubmit={handleSubmit} className="agent-transfer-form space-y-4">
                 {/* Datos del remitente (solo lectura) */}
                 <div className="space-y-3">
                   <p className="text-xs font-bold text-muted-foreground uppercase tracking-wide">Datos del Remitente</p>
@@ -590,8 +590,8 @@ export function AgentTransferModal({ open, onOpenChange, onSuccess }: AgentTrans
         </div>
 
         {/* Modal de Confirmación */}
-        <Dialog open={showConfirm} onOpenChange={(open) => { if (!open) setShowConfirm(false); }}>
-          <DialogContent className="max-w-md p-0 overflow-hidden outline-none">
+        {showConfirm && (
+          <div className="agent-transfer-confirm-dialog max-w-md p-0 overflow-hidden outline-none">
             <DialogHeader className="p-6 border-b border-border/10">
               <DialogTitle className="flex items-center gap-2 text-xl font-bold text-foreground">
                 <CheckCircle2 className="h-5 w-5 text-green-500" /> Confirmar Transferencia
@@ -621,12 +621,24 @@ export function AgentTransferModal({ open, onOpenChange, onSuccess }: AgentTrans
                   <span className="text-sm font-bold text-foreground">{formData.sender_phone}</span>
                 </div>
                 <div className="flex justify-between items-center py-2 border-b border-border/10">
+                  <span className="text-xs font-semibold text-muted-foreground">Documento Remitente</span>
+                  <span className="text-sm font-bold text-foreground text-right">
+                    {formData.sender_document_type.toUpperCase()} · {formData.sender_document_number}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center py-2 border-b border-border/10">
                   <span className="text-xs font-semibold text-muted-foreground">Destinatario</span>
                   <span className="text-sm font-bold text-foreground">{formData.receiver_name}</span>
                 </div>
                 <div className="flex justify-between items-center py-2 border-b border-border/10">
                   <span className="text-xs font-semibold text-muted-foreground">Teléfono Destinatario</span>
                   <span className="text-sm font-bold text-foreground">{formData.receiver_phone}</span>
+                </div>
+                <div className="flex justify-between items-center py-2 border-b border-border/10">
+                  <span className="text-xs font-semibold text-muted-foreground">Documento Destinatario</span>
+                  <span className="text-sm font-bold text-foreground text-right">
+                    {formData.receiver_document_type.toUpperCase()} · {formData.receiver_document_number}
+                  </span>
                 </div>
                 <div className="flex justify-between items-center py-2 border-b border-border/10">
                   <span className="text-xs font-semibold text-muted-foreground">Ciudad</span>
@@ -709,8 +721,8 @@ export function AgentTransferModal({ open, onOpenChange, onSuccess }: AgentTrans
                 </Button>
               </div>
             </div>
-          </DialogContent>
-        </Dialog>
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );

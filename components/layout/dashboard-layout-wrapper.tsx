@@ -26,8 +26,6 @@ import {
   History,
   UserCog,
   LogOut,
-  Menu,
-  X,
   BarChart3,
   Settings,
   Moon,
@@ -70,7 +68,6 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
     preferences: true,
   });
   const [scrolled, setScrolled] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [notificationCount, setNotificationCount] = useState(0);
   const [lowBalance, setLowBalance] = useState(false);
   
@@ -213,21 +210,135 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
         { href: '/history', label: 'Actividad', icon: History },
       ];
 
+  const userMenuDropdown = (avatarClassName?: string, showMobileName = false) => (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button
+          type="button"
+          className={cn(
+            "cursor-pointer transition-transform hover:scale-[1.02] active:scale-[0.98]",
+            showMobileName
+              ? "dashboard-mobile-user-trigger"
+              : "rounded-full"
+          )}
+        >
+          <Avatar className={cn("border border-border/20 shadow-sm", avatarClassName || "h-10 w-10")}>
+            <AvatarImage src={user?.avatar_url} />
+            <AvatarFallback className="bg-brand-gradient text-white font-black text-xs">
+              {getInitials(user?.name || 'U')}
+            </AvatarFallback>
+          </Avatar>
+        </button>
+      </DropdownMenuTrigger>
+      {showMobileName ? (
+        <DropdownMenuContent className="w-[min(calc(100vw-24px),16rem)] rounded-2xl" align="end" sideOffset={10} forceMount>
+          <DropdownMenuLabel className="font-normal">
+            <div className="flex flex-col space-y-1">
+              <p className="text-sm font-black leading-none">{user?.name}</p>
+              <p className="text-[10px] font-bold text-muted-foreground capitalize">
+                {getRoleLabel(user?.role)}
+              </p>
+            </div>
+          </DropdownMenuLabel>
+          {user?.role === 'gestor' && lowBalance && (
+            <DropdownMenuItem
+              className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 cursor-pointer"
+              onClick={() => setSupportOpen(true)}
+            >
+              <AlertTriangle className="mr-2 h-4 w-4 text-amber-500" />
+              <span className="text-amber-600 dark:text-amber-400 font-bold text-xs">
+                Saldo bajo - Contacte administrador
+              </span>
+            </DropdownMenuItem>
+          )}
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={() => setSettingsOpen(true)}>
+            <Settings className="mr-2 h-4 w-4" />
+            <span>Configuración</span>
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => router.push('/profile')}>
+            <UserCog className="mr-2 h-4 w-4" />
+            <span>Mi Perfil</span>
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={() => router.push('/landing/privacidad')}>
+            <ShieldCheck className="mr-2 h-4 w-4" />
+            <span>Privacidad</span>
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => router.push('/landing/terminos')}>
+            <FileText className="mr-2 h-4 w-4" />
+            <span>Términos y condiciones</span>
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={handleSignOut} className="text-rose-500 focus:text-rose-500 focus:bg-rose-500/10">
+            <LogOut className="mr-2 h-4 w-4" />
+            <span>Cerrar sesión</span>
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      ) : (
+      <DropdownMenuContent className="w-[min(calc(100vw-24px),16rem)] rounded-2xl" align="end" sideOffset={10} forceMount>
+        <DropdownMenuLabel className="font-normal">
+          <div className="flex flex-col space-y-1">
+            <p className="text-sm font-black leading-none">{user?.name}</p>
+            <p className="text-[10px] font-bold text-muted-foreground capitalize">
+              {getRoleLabel(user?.role)}
+            </p>
+          </div>
+        </DropdownMenuLabel>
+        {user?.role === 'gestor' && lowBalance && (
+          <DropdownMenuItem
+            className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 cursor-pointer"
+            onClick={() => setSupportOpen(true)}
+          >
+            <AlertTriangle className="mr-2 h-4 w-4 text-amber-500" />
+            <span className="text-amber-600 dark:text-amber-400 font-bold text-xs">
+              âš ï¸ Saldo bajo - Contacte administrador
+            </span>
+          </DropdownMenuItem>
+        )}
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={() => setSettingsOpen(true)}>
+          <Settings className="mr-2 h-4 w-4" />
+          <span>ConfiguraciÃ³n</span>
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => router.push('/profile')}>
+          <UserCog className="mr-2 h-4 w-4" />
+          <span>Mi Perfil</span>
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={() => router.push('/landing/privacidad')}>
+          <ShieldCheck className="mr-2 h-4 w-4" />
+          <span>Privacidad</span>
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => router.push('/landing/terminos')}>
+          <FileText className="mr-2 h-4 w-4" />
+          <span>TÃ©rminos y condiciones</span>
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={handleSignOut} className="text-rose-500 focus:text-rose-500 focus:bg-rose-500/10">
+          <LogOut className="mr-2 h-4 w-4" />
+          <span>Cerrar sesiÃ³n</span>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+      )}
+    </DropdownMenu>
+  );
+
   return (
     <div suppressHydrationWarning className="dashboard-public-page main-container min-h-screen font-sans">
       
       {/* Mobile: Full screen card | Desktop: Max width card with rounded top corners */}
       <div className={cn(
         "mx-auto w-full relative flex flex-col",
-        "md:max-w-[1440px] md:h-[calc(100vh-4rem)] md:rounded-[2.5rem] md:shadow-xl md:shadow-slate-200/20 dark:md:shadow-black/20 md:border md:border-border/10",
-        "h-screen md:h-auto"
+        "lg:max-w-[1440px] lg:h-[calc(100vh-4rem)] lg:rounded-[2.5rem] lg:shadow-xl lg:shadow-slate-200/20 dark:lg:shadow-black/20 lg:border lg:border-border/10",
+        "h-screen lg:h-auto"
       )}>
         {/* Top Header Navigation - rounded top corners to match container */}
         <header className={cn(
-          "h-16 md:h-20 flex items-center justify-between px-4 md:px-10 border-b border-border/10 shrink-0 transition-all duration-300 z-50",
+          "hidden lg:flex h-20 items-center justify-between px-10 border-b border-border/10 shrink-0 transition-all duration-300 z-50",
           "bg-linear-to-b from-white to-slate-50 dark:from-slate-900 dark:to-slate-950",
-          "md:rounded-t-[2.5rem]",
-          scrolled && "h-14 md:h-16 shadow-lg shadow-black/5"
+          "lg:rounded-t-[2.5rem]",
+          scrolled && "h-16 shadow-lg shadow-black/5"
         )}>
           {/* Left side: Logo + Nav */}
           <div className="flex items-center gap-2">
@@ -291,13 +402,6 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
             </div>
 
             <div className="flex items-center gap-2 md:gap-3 pl-2 md:pl-6 border-l border-border/50">
-              {/* Mobile: Menu Button */}
-              <button 
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="lg:hidden p-2 hover:bg-pink-100 dark:hover:bg-pink-500/20 rounded-full transition-colors text-foreground/70 hover:text-pink-600 dark:hover:text-pink-400"
-              >
-                {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-              </button>
               <div className="text-right hidden md:block">
                 <p className="text-sm font-black text-foreground leading-tight">{user?.name || 'Usuario'}</p>
                 <p className="text-[10px] font-bold text-muted-foreground capitalize">
@@ -396,41 +500,60 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
             </div>
           </header>
 
-        {/* Mobile Menu */}
-        {mobileMenuOpen && (
-          <div className="lg:hidden fixed inset-0 top-16 md:top-20 z-40 bg-card/95 backdrop-blur-xl">
-            <nav className="flex flex-col p-4 space-y-2 mt-2">
-              {navItems.map((item) => {
-                const isActive = pathname === item.href;
-                const Icon = item.icon;
-                return (
-                  <Link 
-                    key={item.href} 
-                    href={item.href}
-                    onClick={() => {
-                      setMobileMenuOpen(false);
-                      window.scrollTo({ top: 0, behavior: 'smooth' });
-                    }}
-                    className={cn(
-                      "flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold transition-all duration-300",
-                      isActive 
-                        ? "bg-brand-gradient text-white shadow-lg shadow-pink-500/20" 
-                        : "text-muted-foreground hover:text-pink-600 dark:hover:text-pink-400 hover:bg-pink-100 dark:hover:bg-pink-500/20"
-                    )}
-                  >
-                    <Icon className="h-5 w-5" />
-                    {item.label}
-                  </Link>
-                );
-              })}
-            </nav>
-          </div>
-        )}
+        <header className="dashboard-mobile-header lg:hidden">
+          {userMenuDropdown("h-10 w-10", true)}
+        </header>
 
         {/* Content Area */}
-        <main className="flex-1 overflow-y-auto scrollbar-hide bg-transparent p-4 md:p-10 h-[calc(100vh-4rem)] md:h-auto">
+        <main className="flex-1 min-h-0 overflow-y-auto scrollbar-hide bg-transparent p-4 pb-28 lg:p-10">
           {children}
         </main>
+
+        <nav className="dashboard-mobile-bottom-bar lg:hidden" aria-label="NavegaciÃ³n principal del dashboard">
+          <div className="dashboard-mobile-bottom-scroll">
+            <Link
+              href="/"
+              className="dashboard-mobile-action"
+              aria-label="Inicio"
+              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            >
+              <DashboardLogo priority size="sm" labelClassName="sr-only" />
+              <span>Inicio</span>
+            </Link>
+            {navItems.map((item) => {
+              const isActive = pathname === item.href;
+              const Icon = item.icon;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                  className={cn("dashboard-mobile-action", isActive && "is-active")}
+                >
+                  <Icon className="h-5 w-5" />
+                  <span>{item.label}</span>
+                </Link>
+              );
+            })}
+            <button type="button" className="dashboard-mobile-action" onClick={() => setSearchOpen(true)}>
+              <Search className="h-5 w-5" />
+              <span>Buscar</span>
+            </button>
+            <button type="button" className="dashboard-mobile-action relative" onClick={() => setNotificationsOpen(true)}>
+              <Bell className="h-5 w-5" />
+              <span>Alertas</span>
+              {notificationCount > 0 && (
+                <span className="dashboard-mobile-badge">
+                  {notificationCount > 99 ? '99+' : notificationCount}
+                </span>
+              )}
+            </button>
+            <button type="button" className="dashboard-mobile-action" onClick={() => setTheme(isDark ? 'light' : 'dark')}>
+              {isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+              <span>Tema</span>
+            </button>
+          </div>
+        </nav>
 
         {/* Modals */}
         <SearchModal open={searchOpen} onOpenChange={setSearchOpen} />
