@@ -265,8 +265,8 @@ export function AgentTransferModal({ open, onOpenChange, onSuccess }: AgentTrans
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="agent-transfer-dialog max-w-lg p-0 overflow-hidden outline-none max-h-[90vh] overflow-y-auto">
-        <DialogHeader className="p-6 border-b border-border/10">
+      <DialogContent className="agent-transfer-dialog max-w-lg p-0 overflow-hidden outline-none max-h-[90vh] flex flex-col">
+        <DialogHeader className="agent-transfer-header p-6 border-b border-border/10 shrink-0">
           <DialogTitle className="flex items-center gap-2 text-xl font-bold text-foreground">
             <Send className="h-5 w-5 text-primary" /> Nueva Transferencia
           </DialogTitle>
@@ -275,7 +275,7 @@ export function AgentTransferModal({ open, onOpenChange, onSuccess }: AgentTrans
           </DialogDescription>
         </DialogHeader>
         
-        <div className="p-6 space-y-4">
+        <div className="agent-transfer-body flex-1 overflow-y-auto p-6 space-y-4">
           {sent ? (
             <div className="text-center py-8">
               <div className="w-16 h-16 bg-green-100 dark:bg-green-900/20 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -592,7 +592,7 @@ export function AgentTransferModal({ open, onOpenChange, onSuccess }: AgentTrans
         {/* Modal de Confirmación */}
         {showConfirm && (
           <div className="agent-transfer-confirm-dialog max-w-md p-0 overflow-hidden outline-none">
-            <DialogHeader className="p-6 border-b border-border/10">
+            <DialogHeader className="agent-transfer-confirm-header p-6 border-b border-border/10 shrink-0">
               <DialogTitle className="flex items-center gap-2 text-xl font-bold text-foreground">
                 <CheckCircle2 className="h-5 w-5 text-green-500" /> Confirmar Transferencia
               </DialogTitle>
@@ -601,7 +601,7 @@ export function AgentTransferModal({ open, onOpenChange, onSuccess }: AgentTrans
               </DialogDescription>
             </DialogHeader>
             
-            <div className="p-6 space-y-4">
+            <div className="agent-transfer-confirm-body p-6 space-y-4">
               <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800">
                  <p className="text-xs font-semibold text-amber-600 dark:text-amber-400 uppercase tracking-wide mb-2">
                   ⚠️ Revise los datos antes de confirmar
@@ -692,7 +692,7 @@ export function AgentTransferModal({ open, onOpenChange, onSuccess }: AgentTrans
                 </label>
               </div>
 
-              <div className="flex gap-3 pt-2">
+              <div className="agent-transfer-confirm-actions flex gap-3 pt-2">
                 <Button 
                   variant="outline"
                   onClick={() => setShowConfirm(false)}

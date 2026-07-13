@@ -9,7 +9,6 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { DashboardLogo } from '@/components/layout/dashboard-logo';
 import { AuthPageSkeleton, FormSkeleton } from '@/components/skeletons/app-skeletons';
-import { verifyEmailCode, resendVerificationEmail } from '@/app/actions/auth';
 import { Mail, CheckCircle2, AlertCircle, Loader2, ArrowLeft } from 'lucide-react';
 
 function VerifyEmailContent() {
@@ -64,7 +63,17 @@ function VerifyEmailContent() {
     setVerifying(true);
     setError('');
 
-    const result = await verifyEmailCode(userId, email, code);
+    let result: { success: boolean; error?: string };
+    try {
+      const response = await fetch('/api/auth/verify-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, email, code }),
+      });
+      result = await response.json();
+    } catch {
+      result = { success: false, error: 'No se pudo conectar con el servidor. Inténtalo de nuevo.' };
+    }
 
     if (result.success) {
       setSuccess(true);
@@ -82,7 +91,17 @@ function VerifyEmailContent() {
     setAttempts(0);
 
     // Use state values here — by this point they're already set from the initial effect.
-    const result = await resendVerificationEmail(userId, email, name);
+    let result: { success: boolean; error?: string; expiresIn?: number };
+    try {
+      const response = await fetch('/api/auth/resend-verification', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, email, name }),
+      });
+      result = await response.json();
+    } catch {
+      result = { success: false, error: 'No se pudo conectar con el servidor. Inténtalo de nuevo.' };
+    }
 
     if (result.success) {
       setTimeLeft(result.expiresIn || 900);

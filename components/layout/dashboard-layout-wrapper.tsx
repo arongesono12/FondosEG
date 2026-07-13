@@ -34,7 +34,6 @@ import {
   FileText,
   ShieldCheck,
 } from 'lucide-react';
-import { signOutAction } from '@/app/actions/auth';
 import { SearchModal } from './search-modal';
 import { NotificationModal } from './notification-modal';
 import { SettingsModal } from './settings-modal';
@@ -171,7 +170,12 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
   }, [user?.id, user?.role]);
 
   const handleSignOut = async () => {
-    await signOutAction();
+    try {
+      await fetch('/api/auth/signout', { method: 'POST' });
+    } catch {
+      // Continue with local sign-out so a transient network failure does not
+      // leave the user trapped in the dashboard UI.
+    }
     setUser(null);
     router.push('/login');
   };
@@ -501,7 +505,38 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
           </header>
 
         <header className="dashboard-mobile-header lg:hidden">
-          {userMenuDropdown("h-10 w-10", true)}
+          <Link
+            href="/dashboard"
+            className="dashboard-mobile-brand"
+            aria-label="FondosEG dashboard"
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          >
+            <DashboardLogo priority size="sm" labelClassName="text-lg" />
+          </Link>
+          <div className="dashboard-mobile-header-actions">
+            <button
+              type="button"
+              className="dashboard-mobile-header-action"
+              onClick={() => setTheme(isDark ? 'light' : 'dark')}
+              aria-label={isDark ? 'Activar modo claro' : 'Activar modo oscuro'}
+            >
+              {isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+            </button>
+            <button
+              type="button"
+              className="dashboard-mobile-header-action"
+              onClick={() => setNotificationsOpen(true)}
+              aria-label="Abrir notificaciones"
+            >
+              <Bell className="h-5 w-5" />
+              {notificationCount > 0 && (
+                <span className="dashboard-mobile-header-badge">
+                  {notificationCount > 99 ? '99+' : notificationCount}
+                </span>
+              )}
+            </button>
+            {userMenuDropdown("h-10 w-10", true)}
+          </div>
         </header>
 
         {/* Content Area */}
@@ -511,15 +546,6 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
 
         <nav className="dashboard-mobile-bottom-bar lg:hidden" aria-label="NavegaciÃ³n principal del dashboard">
           <div className="dashboard-mobile-bottom-scroll">
-            <Link
-              href="/"
-              className="dashboard-mobile-action"
-              aria-label="Inicio"
-              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-            >
-              <DashboardLogo priority size="sm" labelClassName="sr-only" />
-              <span>Inicio</span>
-            </Link>
             {navItems.map((item) => {
               const isActive = pathname === item.href;
               const Icon = item.icon;
@@ -538,19 +564,6 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
             <button type="button" className="dashboard-mobile-action" onClick={() => setSearchOpen(true)}>
               <Search className="h-5 w-5" />
               <span>Buscar</span>
-            </button>
-            <button type="button" className="dashboard-mobile-action relative" onClick={() => setNotificationsOpen(true)}>
-              <Bell className="h-5 w-5" />
-              <span>Alertas</span>
-              {notificationCount > 0 && (
-                <span className="dashboard-mobile-badge">
-                  {notificationCount > 99 ? '99+' : notificationCount}
-                </span>
-              )}
-            </button>
-            <button type="button" className="dashboard-mobile-action" onClick={() => setTheme(isDark ? 'light' : 'dark')}>
-              {isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-              <span>Tema</span>
             </button>
           </div>
         </nav>

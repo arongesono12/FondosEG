@@ -23,7 +23,6 @@ import {
   BookOpen,
   ShieldCheck,
 } from 'lucide-react';
-import { signOutAction } from '@/app/actions/auth';
 import { getInitials } from '@/lib/utils';
 import { useState } from 'react';
 import { UsersPanel } from './users-panel';
@@ -82,7 +81,11 @@ export function Sidebar({ isCollapsed, toggleCollapse }: SidebarProps) {
       : clientRoutes;
 
   const handleSignOut = async () => {
-    await signOutAction();
+    try {
+      await fetch('/api/auth/signout', { method: 'POST' });
+    } catch {
+      // Si la red falla, limpiamos la sesión local para no dejar bloqueada la UI.
+    }
     setUser(null);
     router.push('/login');
   };

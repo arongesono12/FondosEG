@@ -340,7 +340,7 @@ export default function TransfersPage() {
 
       {/* Modal: Flujo del Día */}
       <Dialog open={showDailyModal} onOpenChange={setShowDailyModal}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="mobile-native-dialog max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold flex items-center gap-2">
               <TrendingUp className="h-5 w-5" /> Flujo del Día
@@ -367,7 +367,7 @@ export default function TransfersPage() {
 
       {/* Modal: Envíos de Gestores */}
       <Dialog open={showAgentsModal} onOpenChange={setShowAgentsModal}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="mobile-native-dialog max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold flex items-center gap-2">
               <Users className="h-5 w-5" /> Envíos de Gestores
@@ -399,7 +399,7 @@ export default function TransfersPage() {
 
       {/* Modal: Volumen Semanal */}
       <Dialog open={showWeeklyModal} onOpenChange={setShowWeeklyModal}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="mobile-native-dialog max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold flex items-center gap-2">
               <BarChart3 className="h-5 w-5" /> Volumen Semanal

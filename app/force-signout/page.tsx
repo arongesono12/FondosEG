@@ -2,7 +2,6 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { signOutAction } from '@/app/actions/auth';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export default function ForceSignOutPage() {
@@ -11,7 +10,11 @@ export default function ForceSignOutPage() {
   useEffect(() => {
     const handleSignOut = async () => {
       console.log('Forcing sign out...');
-      await signOutAction();
+      try {
+        await fetch('/api/auth/signout', { method: 'POST' });
+      } catch {
+        // Aun si falla la red, mandamos al usuario al login para recuperar el flujo.
+      }
       router.push('/login');
       router.refresh();
     };

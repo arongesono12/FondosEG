@@ -275,7 +275,7 @@ export default function BalancePage() {
         </Card>
 
         <Dialog open={successOpen} onOpenChange={setSuccessOpen}>
-          <DialogContent className="max-w-md">
+          <DialogContent className="mobile-native-dialog max-w-md">
             <DialogHeader className="items-center text-center">
               <div className="flex h-20 w-20 items-center justify-center rounded-full bg-emerald-100">
                 <CheckCircle className="h-10 w-10 text-emerald-600" />
@@ -293,7 +293,7 @@ export default function BalancePage() {
         </Dialog>
 
         <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
-          <DialogContent className="max-w-md">
+          <DialogContent className="mobile-native-dialog max-w-md">
             <DialogHeader>
               <DialogTitle className="text-xl font-bold text-foreground">Recargar saldo a gestor</DialogTitle>
               <DialogDescription className="text-sm font-semibold text-muted-foreground">
@@ -342,7 +342,7 @@ export default function BalancePage() {
         </Dialog>
 
         <Dialog open={finalConfirmOpen} onOpenChange={setFinalConfirmOpen}>
-          <DialogContent className="max-w-md">
+          <DialogContent className="mobile-native-dialog max-w-md">
             <DialogHeader className="text-center">
               <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900/30">
                 <AlertCircle className="h-8 w-8 text-amber-600 dark:text-amber-400" />
@@ -578,7 +578,7 @@ export default function BalancePage() {
       </Card>
 
       <Dialog open={successOpen} onOpenChange={setSuccessOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="mobile-native-dialog max-w-md">
           <DialogHeader className="items-center text-center">
             <div className="flex h-20 w-20 items-center justify-center rounded-full bg-emerald-100">
               <CheckCircle className="h-10 w-10 text-emerald-600" />
@@ -596,7 +596,7 @@ export default function BalancePage() {
       </Dialog>
 
       <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="mobile-native-dialog max-w-md">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold text-foreground">Recargar saldo a gestor</DialogTitle>
             <DialogDescription className="text-sm font-semibold text-muted-foreground">
@@ -645,7 +645,7 @@ export default function BalancePage() {
       </Dialog>
 
       <Dialog open={finalConfirmOpen} onOpenChange={setFinalConfirmOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="mobile-native-dialog max-w-md">
           <DialogHeader className="text-center">
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900/30">
               <AlertCircle className="h-8 w-8 text-amber-600 dark:text-amber-400" />

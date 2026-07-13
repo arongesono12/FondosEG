@@ -4,7 +4,6 @@ import { ChangeEvent, useEffect, useRef, useState, useTransition } from 'react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Calendar, Camera, Clock, KeyRound, Mail, Phone, Shield, User as UserIcon } from 'lucide-react';
-import { updatePasswordAction, updateProfileAction, uploadAvatarAction } from '@/app/actions/profile';
 import { DashboardLogo } from '@/components/layout/dashboard-logo';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -20,6 +19,30 @@ function getInitials(name: string) {
     .slice(0, 2)
     .map((part) => part[0]?.toUpperCase() ?? '')
     .join('');
+}
+
+type ProfileApiResult = {
+  success: boolean;
+  error?: string;
+  avatarUrl?: string;
+};
+
+async function postProfileForm(endpoint: string, formData: FormData, fallbackError: string): Promise<ProfileApiResult> {
+  try {
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      body: formData,
+    });
+    const result = (await response.json()) as ProfileApiResult;
+
+    if (!response.ok && result.success) {
+      return { success: false, error: fallbackError };
+    }
+
+    return result;
+  } catch {
+    return { success: false, error: fallbackError };
+  }
 }
 
 export default function ProfilePage() {
@@ -73,7 +96,7 @@ export default function ProfilePage() {
     formData.set('phone', phone);
 
     startSavingTransition(async () => {
-      const result = await updateProfileAction(formData);
+      const result = await postProfileForm('/api/profile/update', formData, 'No se pudo guardar el perfil.');
       if (!result.success) {
         showFeedback('error', result.error || 'No se pudo guardar el perfil.');
         return;
@@ -101,7 +124,7 @@ export default function ProfilePage() {
     formData.set('oldAvatarUrl', user.avatar_url || '');
 
     startUploadTransition(async () => {
-      const result = await uploadAvatarAction(formData);
+      const result = await postProfileForm('/api/profile/avatar', formData, 'No se pudo actualizar el avatar.');
       if (!result.success || !result.avatarUrl) {
         showFeedback('error', result.error || 'No se pudo actualizar el avatar.');
         event.target.value = '';
@@ -125,7 +148,7 @@ export default function ProfilePage() {
     formData.set('confirmPassword', confirmPassword);
 
     startPasswordTransition(async () => {
-      const result = await updatePasswordAction(formData);
+      const result = await postProfileForm('/api/profile/password', formData, 'No se pudo actualizar la contraseña.');
       if (!result.success) {
         showFeedback('error', result.error || 'No se pudo actualizar la contraseña.');
         return;

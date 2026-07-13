@@ -4,7 +4,6 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { AlertCircle, CheckCircle2, Eye, EyeOff } from 'lucide-react';
-import { signUpAction } from '@/app/actions/auth';
 import { REGISTER_COUNTRIES } from '@/lib/countries';
 import { isValidEmailDomain, isValidEmailFormat, validatePassword } from '@/lib/email-validation';
 import { getRoleLabel } from '@/lib/roles';
@@ -160,21 +159,31 @@ export function RegisterForm({
     }
 
     setLoading(true);
-    const result = await signUpAction(formData);
-
-    if (result.success) {
-      setRegisteredName(result.name || formData.name);
-      setRegisteredRole((result.role as UserRole) || formData.role);
-      const query = new URLSearchParams({
-        userId: result.user?.id || '',
-        email: result.email || formData.email,
-        name: result.name || formData.name,
+    try {
+      const response = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
       });
-      router.push(`/verify-email?${query.toString()}`);
-    } else {
-      setError(result.error || 'Error al registrar usuario');
+      const result = await response.json();
+
+      if (result.success) {
+        setRegisteredName(result.name || formData.name);
+        setRegisteredRole((result.role as UserRole) || formData.role);
+        const query = new URLSearchParams({
+          userId: result.user?.id || '',
+          email: result.email || formData.email,
+          name: result.name || formData.name,
+        });
+        router.push(`/verify-email?${query.toString()}`);
+      } else {
+        setError(result.error || 'Error al registrar usuario');
+      }
+    } catch {
+      setError('No se pudo conectar con el servidor. Inténtalo de nuevo.');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (
