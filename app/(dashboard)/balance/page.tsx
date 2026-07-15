@@ -445,8 +445,8 @@ export default function BalancePage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <Table>
+            <div className="wallet-movements-scroll overflow-x-auto">
+              <Table className="wallet-movements-table">
                 <TableHeader className="bg-muted/30">
                   <TableRow className="border-border/5 hover:bg-transparent">
                     <TableHead className="pl-8 py-4 text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">Operación</TableHead>
@@ -464,25 +464,25 @@ export default function BalancePage() {
                     </TableRow>
                   ) : (
                     transactions.map((transaction) => (
-                      <TableRow key={transaction.id} className="border-border/5 hover:bg-muted/30">
-                        <TableCell className="pl-8">
+                      <TableRow key={transaction.id} className="wallet-movement-row border-border/5 hover:bg-muted/30">
+                        <TableCell data-label="Operación" className="pl-8">
                           <Badge className={`rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] ${transaction.amount >= 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`}>
                             {transactionTypeLabel(transaction.type)}
                           </Badge>
                         </TableCell>
-                        <TableCell>
+                        <TableCell data-label="Monto">
                           <span className={`text-sm font-bold ${transaction.amount >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
                             {transaction.amount >= 0 ? '+' : ''}
                             {formatCurrency(transaction.amount)}
                           </span>
                         </TableCell>
-                        <TableCell>
+                        <TableCell data-label="Detalle">
                           <p className="text-sm font-bold text-foreground">{transaction.description || 'Sin descripción'}</p>
                           <p className="text-[10px] font-semibold uppercase text-muted-foreground">
                             Saldo resultante: {formatCurrency(transaction.new_balance)}
                           </p>
                         </TableCell>
-                        <TableCell className="pr-8 text-xs font-semibold text-muted-foreground">{formatDate(transaction.created_at)}</TableCell>
+                        <TableCell data-label="Fecha" className="pr-8 text-xs font-semibold text-muted-foreground">{formatDate(transaction.created_at)}</TableCell>
                       </TableRow>
                     ))
                   )}

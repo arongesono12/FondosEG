@@ -173,7 +173,7 @@ export function NotificationModal({ open, onOpenChange }: NotificationModalProps
         <DialogContent className="!left-0 !top-0 !h-[100dvh] !max-h-[100dvh] !w-screen !max-w-none !translate-x-0 !translate-y-0 !rounded-none border-0 bg-background/95 p-0 backdrop-blur-xl sm:!left-1/2 sm:!top-1/2 sm:!h-auto sm:!max-h-[80vh] sm:!w-full sm:!max-w-md sm:!-translate-x-1/2 sm:!-translate-y-1/2 sm:!rounded-[10px] sm:border sm:bg-white/40 sm:dark:bg-[#10121B]/40 overflow-hidden flex flex-col">
           <DialogHeader className="px-5 pb-4 pt-[calc(1.25rem+env(safe-area-inset-top))] border-b border-border/10 shrink-0 text-left sm:p-6">
             <div className="flex items-center justify-between">
-              <DialogTitle className="flex items-center gap-2 text-xl font-black text-foreground">
+              <DialogTitle className="flex items-center gap-2 text-xl font-semibold text-foreground">
                 <Bell className="h-5 w-5 text-primary" /> Notificaciones
               </DialogTitle>
               {unreadCount > 0 && (
@@ -201,7 +201,7 @@ export function NotificationModal({ open, onOpenChange }: NotificationModalProps
             ) : notifications.length === 0 ? (
               <div className="py-20 text-center">
                 <Bell className="h-12 w-12 text-muted/30 mx-auto mb-4" />
-                <p className="text-muted-foreground font-bold">No hay notificaciones</p>
+                <p className="font-medium text-muted-foreground">No hay notificaciones</p>
               </div>
             ) : (
               notifications.map((notif) => (
@@ -281,7 +281,7 @@ export function NotificationModal({ open, onOpenChange }: NotificationModalProps
           </div>
           
           <div className="hidden p-3 bg-muted/20 border-t border-border/5 justify-center shrink-0 sm:flex">
-            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
+            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">
               FondosEG Notification System
             </p>
           </div>
@@ -293,7 +293,7 @@ export function NotificationModal({ open, onOpenChange }: NotificationModalProps
         <DialogContent className="!left-0 !top-0 !h-[100dvh] !max-h-[100dvh] !w-screen !max-w-none !translate-x-0 !translate-y-0 !rounded-none border-0 bg-background/95 p-0 backdrop-blur-xl sm:!left-1/2 sm:!top-1/2 sm:!h-auto sm:!max-h-[88vh] sm:!w-full sm:!max-w-lg sm:!-translate-x-1/2 sm:!-translate-y-1/2 sm:!rounded-[10px] sm:border sm:bg-white/40 sm:dark:bg-[#10121B]/40 overflow-hidden outline-none flex flex-col">
           <DialogHeader className="px-5 pb-4 pt-[calc(1.25rem+env(safe-area-inset-top))] border-b border-border/10 shrink-0 text-left sm:p-6">
             <div className="flex items-center justify-between">
-              <DialogTitle className="flex items-center gap-2 text-xl font-black text-foreground">
+              <DialogTitle className="flex items-center gap-2 text-xl font-semibold text-foreground">
                 {selectedNotification?.is_read ? (
                   <MailOpen className="h-5 w-5 text-muted-foreground" />
                 ) : (
@@ -338,13 +338,13 @@ export function NotificationModal({ open, onOpenChange }: NotificationModalProps
 
               {/* Código de transferencia */}
               <div className="space-y-2">
-                <label className="text-xs font-bold text-muted-foreground uppercase tracking-wide">Código de Transferencia</label>
-                <p className="text-lg font-black text-primary">{selectedNotification.transfer?.transfer_code || 'ADMIN'}</p>
+                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Código de Transferencia</label>
+                <p className="text-lg font-bold text-primary">{selectedNotification.transfer?.transfer_code || 'ADMIN'}</p>
               </div>
 
               {/* Información del mensaje */}
               <div className="space-y-2">
-                <label className="text-xs font-bold text-muted-foreground uppercase tracking-wide">Mensaje Enviado</label>
+                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Mensaje Enviado</label>
                 <div className="p-4 rounded-2xl bg-muted/30 border border-border/10">
                   <p className="text-sm font-medium text-foreground whitespace-pre-wrap leading-relaxed">
                     {selectedNotification.message}
@@ -355,38 +355,38 @@ export function NotificationModal({ open, onOpenChange }: NotificationModalProps
               {/* Datos del destinatario */}
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-muted-foreground uppercase tracking-wide">Destinatario</label>
-                  <p className="text-sm font-bold text-foreground">{selectedNotification.transfer?.receiver_name || 'Administración'}</p>
+                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Destinatario</label>
+                  <p className="text-sm font-medium text-foreground">{selectedNotification.transfer?.receiver_name || 'Administración'}</p>
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-muted-foreground uppercase tracking-wide">Teléfono</label>
-                  <p className="text-sm font-bold text-foreground">{selectedNotification.transfer?.receiver_phone || selectedNotification.phone}</p>
+                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Teléfono</label>
+                  <p className="text-sm font-medium text-foreground">{selectedNotification.transfer?.receiver_phone || selectedNotification.phone}</p>
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-muted-foreground uppercase tracking-wide">Monto</label>
-                  <p className="text-sm font-bold text-green-600">
+                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Monto</label>
+                  <p className="text-sm font-semibold text-green-600">
                     {selectedNotification.transfer
                       ? `${selectedNotification.transfer.amount} ${selectedNotification.transfer.currency}`
                       : 'N/A'}
                   </p>
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-muted-foreground uppercase tracking-wide">Ciudad</label>
-                  <p className="text-sm font-bold text-foreground">{selectedNotification.transfer?.destination_city || 'Sistema'}</p>
+                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Ciudad</label>
+                  <p className="text-sm font-medium text-foreground">{selectedNotification.transfer?.destination_city || 'Sistema'}</p>
                 </div>
               </div>
 
               {/* Fechas */}
               <div className="grid grid-cols-1 gap-4 pt-2 border-t border-border/10 sm:grid-cols-2">
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-muted-foreground uppercase tracking-wide">Fecha de creación</label>
+                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Fecha de creación</label>
                   <p className="text-xs font-medium text-foreground">
                     {format(new Date(selectedNotification.created_at), "dd 'de' MMMM 'de' yyyy 'a las' HH:mm", { locale: es })}
                   </p>
                 </div>
                 {selectedNotification.read_at && (
                   <div className="space-y-1">
-                    <label className="text-xs font-bold text-muted-foreground uppercase tracking-wide">Fecha de lectura</label>
+                    <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Fecha de lectura</label>
                     <p className="text-xs font-medium text-foreground">
                       {format(new Date(selectedNotification.read_at), "dd 'de' MMMM 'de' yyyy 'a las' HH:mm", { locale: es })}
                     </p>
@@ -396,8 +396,8 @@ export function NotificationModal({ open, onOpenChange }: NotificationModalProps
 
               {/* Teléfono del destinatario del SMS */}
               <div className="space-y-2">
-                <label className="text-xs font-bold text-muted-foreground uppercase tracking-wide">Teléfono que recibió el SMS</label>
-                <p className="text-sm font-bold text-foreground">{selectedNotification.phone}</p>
+                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Teléfono que recibió el SMS</label>
+                <p className="text-sm font-medium text-foreground">{selectedNotification.phone}</p>
               </div>
 
               {/* Botones de acción */}

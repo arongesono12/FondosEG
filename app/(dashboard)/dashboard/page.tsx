@@ -233,7 +233,7 @@ export default function DashboardPage() {
         <MetricCard title={isClient ? 'Saldo disponible' : 'Float disponible'} value={fmt(availableBalance)} hint={isClient ? 'Fondos listos para usar' : 'Liquidez inmediata para operar'} icon={Wallet} tone="border-emerald-500/20 bg-emerald-500 shadow-emerald-500/20" />
         <MetricCard title={isClient ? 'Saldo retenido' : 'Exposición en tránsito'} value={fmt(reservedBalance)} hint={isClient ? 'Importe reservado por operaciones pendientes' : 'Capital comprometido en envíos no liquidados'} icon={Clock3} tone="border-amber-500/20 bg-amber-500 shadow-amber-500/20" />
         <MetricCard title="Volumen 7 días" value={fmt(stats?.weeklyVolume ?? 0)} hint={`${stats?.todayTransfers ?? 0} operaciones registradas hoy`} icon={TrendingUp} tone="border-sky-500/20 bg-sky-500 shadow-sky-500/20" />
-        <MetricCard title={isClient ? 'Tasa de cierre' : 'Ingreso por comisiones'} value={isClient ? `${settlementRate}%` : fmt(stats?.totalCommission ?? 0)} hint={isClient ? 'Operaciones confirmadas frente al total' : `${fmt(stats?.todayCommission ?? 0)} generadas hoy`} icon={CreditCard} tone="border-fuchsia-500/20 bg-fuchsia-500 shadow-fuchsia-500/20" />
+        <MetricCard title={isClient ? 'Tasa de cierre' : 'Comisiones generadas'} value={isClient ? `${settlementRate}%` : fmt(stats?.totalCommission ?? 0)} hint={isClient ? 'Operaciones confirmadas frente al total' : `${fmt(stats?.todayCommission ?? 0)} generadas hoy`} icon={CreditCard} tone="border-fuchsia-500/20 bg-fuchsia-500 shadow-fuchsia-500/20" />
       </section>
 
       {isSuperAdmin && marketingStats && (
@@ -390,8 +390,8 @@ export default function DashboardPage() {
                   </CardTitle>
                   <p className="mt-2 text-sm font-medium text-muted-foreground">
                     {isAdmin
-                      ? 'Seguimiento de comisiones acumuladas por cada gestor.'
-                      : 'Tus comisiones acumuladas por día, mes y año.'}
+                      ? 'Seguimiento de comisiones generadas por cada gestor.'
+                      : 'Tus comisiones generadas por día, mes y año.'}
                   </p>
                 </div>
               </div>
@@ -439,7 +439,7 @@ export default function DashboardPage() {
                           >
                             <div>
                               <p className="font-bold text-foreground">{agent.agent_name}</p>
-                              <p className="text-xs font-medium text-muted-foreground">{agent.transfer_count} envíos completados</p>
+                              <p className="text-xs font-medium text-muted-foreground">{agent.transfer_count} envíos con comisión</p>
                             </div>
                             <p className="font-semibold text-foreground">{fmt(agent.today_commission)}</p>
                             <p className="font-semibold text-foreground">{fmt(agent.month_commission)}</p>

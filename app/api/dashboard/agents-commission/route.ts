@@ -14,7 +14,7 @@ export async function GET() {
     const { data: transfers, error } = await adminClient
       .from('transfers')
       .select('agent_id, amount, commission_amount, created_at, users!transfers_agent_id_fkey(name)')
-      .in('status', ['completed', 'paid_out']);
+      .neq('status', 'cancelled');
 
     if (error) throw error;
 
@@ -45,7 +45,8 @@ export async function GET() {
     interface TComm { agent_id: string; amount: number; commission_amount?: number; created_at: string; users?: { name: string } }
     (transfers as unknown as TComm[] || []).forEach((transfer) => {
       const agentId = transfer.agent_id;
-      const commission = Number(transfer.commission_amount ?? calculateCommission(Number(transfer.amount)));
+      const storedCommission = Number(transfer.commission_amount ?? 0);
+      const commission = storedCommission > 0 ? storedCommission : calculateCommission(Number(transfer.amount));
       const isToday = new Date(transfer.created_at) >= today;
       const isCurrentMonth = new Date(transfer.created_at) >= monthStart;
       const isCurrentYear = new Date(transfer.created_at) >= yearStart;

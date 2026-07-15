@@ -47,7 +47,7 @@ function isSameOrAfter(dateIso: string, threshold: Date): boolean {
 
 function getCommissionAmount(transfer: TransferRow): number {
   const stored = Number(transfer.commission_amount ?? NaN);
-  if (Number.isFinite(stored)) {
+  if (Number.isFinite(stored) && stored > 0) {
     return stored;
   }
   return calculateCommission(Number(transfer.amount ?? 0));
@@ -128,12 +128,18 @@ export async function GET() {
       const cancelledTransferRows = safeTransfers.filter(
         (transfer) => normalizeTransferStatus(transfer.status) === 'cancelled'
       );
+      const commissionableRows = safeTransfers.filter(
+        (transfer) => normalizeTransferStatus(transfer.status) !== 'cancelled'
+      );
       const pickupReadyRows = safeTransfers.filter(
         (transfer) => normalizeTransferStatus(transfer.status) === 'available_for_pickup'
       );
 
       const todayTransfersRows = safeTransfers.filter((transfer) => isSameOrAfter(transfer.created_at, today));
       const todayCompletedRows = completedTransfersRows.filter((transfer) => isSameOrAfter(transfer.created_at, today));
+      const todayCommissionableRows = commissionableRows.filter((transfer) => isSameOrAfter(transfer.created_at, today));
+      const monthCommissionableRows = commissionableRows.filter((transfer) => isSameOrAfter(transfer.created_at, monthStart));
+      const yearCommissionableRows = commissionableRows.filter((transfer) => isSameOrAfter(transfer.created_at, yearStart));
       const monthCompletedRows = completedTransfersRows.filter((transfer) => isSameOrAfter(transfer.created_at, monthStart));
       const yearCompletedRows = completedTransfersRows.filter((transfer) => isSameOrAfter(transfer.created_at, yearStart));
       const recent7dCompletedRows = completedTransfersRows.filter((transfer) => isSameOrAfter(transfer.created_at, sevenDaysAgo));
@@ -148,19 +154,19 @@ export async function GET() {
       const pendingExposure = sumAmounts(pendingTransferRows);
       const pickupReadyAmount = sumAmounts(pickupReadyRows);
 
-      const totalCommission = completedTransfersRows.reduce(
+      const totalCommission = commissionableRows.reduce(
         (sum, transfer) => sum + getCommissionAmount(transfer),
         0
       );
-      const todayCommission = todayCompletedRows.reduce(
+      const todayCommission = todayCommissionableRows.reduce(
         (sum, transfer) => sum + getCommissionAmount(transfer),
         0
       );
-      const monthlyCommission = monthCompletedRows.reduce(
+      const monthlyCommission = monthCommissionableRows.reduce(
         (sum, transfer) => sum + getCommissionAmount(transfer),
         0
       );
-      const yearlyCommission = yearCompletedRows.reduce(
+      const yearlyCommission = yearCommissionableRows.reduce(
         (sum, transfer) => sum + getCommissionAmount(transfer),
         0
       );
@@ -170,7 +176,8 @@ export async function GET() {
       const cancelledTransfers = cancelledTransferRows.length;
       const totalLifecycleTransfers = completedTransfers + pendingTransfers + cancelledTransfers;
       const averageTicket = completedTransfers > 0 ? totalSent / completedTransfers : 0;
-      const commissionPerTransfer = completedTransfers > 0 ? totalCommission / completedTransfers : 0;
+      const commissionableTransfers = commissionableRows.length;
+      const commissionPerTransfer = commissionableTransfers > 0 ? totalCommission / commissionableTransfers : 0;
       const averageDailyOutflow = monthlyVolume > 0 ? monthlyVolume / 30 : 0;
       const settlementRate = totalLifecycleTransfers > 0
         ? Math.round((completedTransfers / totalLifecycleTransfers) * 100)

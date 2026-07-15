@@ -46,9 +46,94 @@ import { HttpError } from '@/services/http';
 import { getRoleLabel, isAdminRole } from '@/lib/roles';
 
 const COOKIE_CONSENT_STORAGE_KEY_PREFIX = 'fondoseg_cookie_consent_v2';
+const COOKIE_CONSENT_GLOBAL_STORAGE_KEY = `${COOKIE_CONSENT_STORAGE_KEY_PREFIX}:site`;
+const COOKIE_CONSENT_COOKIE_NAME = 'fondoseg_cookie_consent';
+const COOKIE_CONSENT_MAX_AGE_SECONDS = 60 * 60 * 24 * 400;
+
+type CookieConsentStatus = 'accepted' | 'rejected' | 'configured';
+
+type StoredCookieConsent = {
+  status?: CookieConsentStatus;
+  preferences?: Partial<CookieConsentPreferences>;
+  updatedAt?: string;
+};
 
 function getCookieConsentStorageKey(userId?: string) {
   return `${COOKIE_CONSENT_STORAGE_KEY_PREFIX}:${userId || 'guest'}`;
+}
+
+function normalizeStoredCookieConsent(value: StoredCookieConsent | null): {
+  status: CookieConsentStatus;
+  preferences: CookieConsentPreferences;
+} | null {
+  if (!value?.status) return null;
+  if (!['accepted', 'rejected', 'configured'].includes(value.status)) return null;
+
+  return {
+    status: value.status,
+    preferences: {
+      essential: true,
+      preferences: Boolean(value.preferences?.preferences),
+    },
+  };
+}
+
+function readStoredCookieConsent(storageKey?: string) {
+  if (typeof window === 'undefined') return null;
+
+  const candidateKeys = [storageKey, COOKIE_CONSENT_GLOBAL_STORAGE_KEY].filter(Boolean) as string[];
+
+  for (const key of candidateKeys) {
+    try {
+      const storedValue = window.localStorage.getItem(key);
+      if (!storedValue) continue;
+      const normalized = normalizeStoredCookieConsent(JSON.parse(storedValue) as StoredCookieConsent);
+      if (normalized) return normalized;
+    } catch {
+      // Ignore malformed records and continue with the next persistence source.
+    }
+  }
+
+  try {
+    const cookieValue = document.cookie
+      .split('; ')
+      .find((entry) => entry.startsWith(`${COOKIE_CONSENT_COOKIE_NAME}=`))
+      ?.split('=')
+      .slice(1)
+      .join('=');
+
+    if (!cookieValue) return null;
+
+    return normalizeStoredCookieConsent(JSON.parse(decodeURIComponent(cookieValue)) as StoredCookieConsent);
+  } catch {
+    return null;
+  }
+}
+
+function writeStoredCookieConsent(storageKey: string, consent: {
+  status: CookieConsentStatus;
+  preferences: CookieConsentPreferences;
+}) {
+  if (typeof window === 'undefined') return;
+
+  const payload = JSON.stringify({
+    ...consent,
+    updatedAt: new Date().toISOString(),
+  });
+
+  try {
+    window.localStorage.setItem(storageKey, payload);
+    window.localStorage.setItem(COOKIE_CONSENT_GLOBAL_STORAGE_KEY, payload);
+  } catch {
+    // Cookie fallback below keeps the consent durable when localStorage is unavailable.
+  }
+
+  try {
+    const secure = window.location.protocol === 'https:' ? '; Secure' : '';
+    document.cookie = `${COOKIE_CONSENT_COOKIE_NAME}=${encodeURIComponent(payload)}; Max-Age=${COOKIE_CONSENT_MAX_AGE_SECONDS}; Path=/; SameSite=Lax${secure}`;
+  } catch {
+    // Some privacy modes may block document.cookie. In that case localStorage is enough.
+  }
 }
 
 export function DashboardLayoutWrapper({ children }: { children: React.ReactNode }) {
@@ -81,32 +166,15 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
 
     const storageKey = getCookieConsentStorageKey(user.id);
 
-    try {
-      const storedValue = localStorage.getItem(storageKey);
-      if (!storedValue) {
-        setCookieConsentOpen(true);
-        return;
-      }
+    const storedConsent = readStoredCookieConsent(storageKey);
 
-      const parsed = JSON.parse(storedValue) as {
-        status?: 'accepted' | 'rejected' | 'configured';
-        preferences?: CookieConsentPreferences;
-      } | null;
-
-      if (!parsed?.status || !parsed.preferences) {
-        setCookieConsentOpen(true);
-        return;
-      }
-
-      if (parsed.preferences) {
-        setCookiePreferences({
-          essential: true,
-          preferences: Boolean(parsed.preferences.preferences),
-        });
-      }
-    } catch {
+    if (!storedConsent) {
       setCookieConsentOpen(true);
+      return;
     }
+
+    setCookiePreferences(storedConsent.preferences);
+    setCookieConsentOpen(false);
   }, [mounted, user?.id]);
 
   useEffect(() => {
@@ -180,21 +248,14 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
     router.push('/login');
   };
 
-  const persistCookieConsent = (status: 'accepted' | 'rejected' | 'configured', preferences: CookieConsentPreferences) => {
+  const persistCookieConsent = (status: CookieConsentStatus, preferences: CookieConsentPreferences) => {
     setCookiePreferences(preferences);
     setCookieConsentOpen(false);
 
     if (!mounted || !user?.id) return;
 
     const storageKey = getCookieConsentStorageKey(user.id);
-    localStorage.setItem(
-      storageKey,
-      JSON.stringify({
-        status,
-        preferences,
-        updatedAt: new Date().toISOString(),
-      })
-    );
+    writeStoredCookieConsent(storageKey, { status, preferences });
   };
   
   const navItems = isAdminRole(user?.role)
@@ -238,8 +299,8 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
         <DropdownMenuContent className="w-[min(calc(100vw-24px),16rem)] rounded-2xl" align="end" sideOffset={10} forceMount>
           <DropdownMenuLabel className="font-normal">
             <div className="flex flex-col space-y-1">
-              <p className="text-sm font-black leading-none">{user?.name}</p>
-              <p className="text-[10px] font-bold text-muted-foreground capitalize">
+              <p className="text-sm font-semibold leading-none">{user?.name}</p>
+              <p className="text-[10px] font-medium text-muted-foreground capitalize">
                 {getRoleLabel(user?.role)}
               </p>
             </div>
@@ -283,8 +344,8 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
       <DropdownMenuContent className="w-[min(calc(100vw-24px),16rem)] rounded-2xl" align="end" sideOffset={10} forceMount>
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
-            <p className="text-sm font-black leading-none">{user?.name}</p>
-            <p className="text-[10px] font-bold text-muted-foreground capitalize">
+            <p className="text-sm font-semibold leading-none">{user?.name}</p>
+            <p className="text-[10px] font-medium text-muted-foreground capitalize">
               {getRoleLabel(user?.role)}
             </p>
           </div>
@@ -407,8 +468,8 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
 
             <div className="flex items-center gap-2 md:gap-3 pl-2 md:pl-6 border-l border-border/50">
               <div className="text-right hidden md:block">
-                <p className="text-sm font-black text-foreground leading-tight">{user?.name || 'Usuario'}</p>
-                <p className="text-[10px] font-bold text-muted-foreground capitalize">
+                <p className="text-sm font-semibold text-foreground leading-tight">{user?.name || 'Usuario'}</p>
+                <p className="text-[10px] font-medium text-muted-foreground capitalize">
                   {getRoleLabel(user?.role)}
                 </p>
               </div>
@@ -424,8 +485,8 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
                 <DropdownMenuContent className="w-56" align="end" forceMount>
                   <DropdownMenuLabel className="font-normal">
                     <div className="flex flex-col space-y-1">
-                      <p className="text-sm font-black leading-none">{user?.name}</p>
-                      <p className="text-[10px] font-bold text-muted-foreground capitalize">
+                      <p className="text-sm font-semibold leading-none">{user?.name}</p>
+                      <p className="text-[10px] font-medium text-muted-foreground capitalize">
                         {getRoleLabel(user?.role)}
                       </p>
                     </div>

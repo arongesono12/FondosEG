@@ -198,7 +198,7 @@ export function RegisterForm({
               labelClassName="text-3xl md:text-4xl"
             />
           </div>
-          <CardTitle className="text-3xl font-black tracking-tighter text-foreground">
+          <CardTitle className="text-3xl font-semibold tracking-tight text-foreground">
             {title}
           </CardTitle>
           <CardDescription className="text-muted-foreground dark:text-white/80">
@@ -381,7 +381,7 @@ export function RegisterForm({
             </div>
           </CardContent>
           <CardFooter className="flex flex-col space-y-6 pt-2">
-            <Button type="submit" className="w-full h-12 rounded-2xl text-base font-black uppercase tracking-widest bg-brand-gradient hover:opacity-90 text-white shadow-lg hover:shadow-primary/25 transition-all duration-300" disabled={loading}>
+            <Button type="submit" className="w-full h-12 rounded-2xl text-base font-semibold uppercase tracking-widest bg-brand-gradient hover:opacity-90 text-white shadow-lg hover:shadow-primary/25 transition-all duration-300" disabled={loading}>
               {loading ? 'Creando cuenta...' : submitLabel}
             </Button>
             <p className="text-sm text-center text-muted-foreground dark:text-white/60">

@@ -293,8 +293,8 @@ export default function HistoryPage() {
         </CardHeader>
 
         <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <Table>
+          <div className="activity-records-scroll overflow-x-auto">
+            <Table className="activity-records-table">
               <TableHeader className="bg-muted/30">
                 <TableRow className="border-border/5 hover:bg-transparent">
                   <TableHead className="pl-8 py-4 text-[10px] font-black uppercase tracking-[0.18em] text-muted-foreground">Código</TableHead>
@@ -315,33 +315,33 @@ export default function HistoryPage() {
                   </TableRow>
                 ) : (
                   filteredTransfers.map((transfer) => (
-                    <TableRow key={transfer.id} className="border-border/5 hover:bg-muted/30">
-                      <TableCell className="pl-8">
+                    <TableRow key={transfer.id} className="activity-record-row border-border/5 hover:bg-muted/30">
+                      <TableCell data-label="Código" className="pl-8">
                         <p className="font-mono text-sm font-black text-foreground">{transfer.transfer_code}</p>
                         {transfer.agent?.name && (
                           <p className="text-[10px] font-semibold uppercase text-primary">Gestor {transfer.agent.name}</p>
                         )}
                       </TableCell>
-                      <TableCell>
+                      <TableCell data-label="Participantes">
                         <div className="space-y-1">
                           <p className="text-sm font-black text-foreground">{transfer.sender_name}</p>
                           <p className="text-xs font-semibold text-muted-foreground">{transfer.receiver_name}</p>
                         </div>
                       </TableCell>
-                      <TableCell>
+                      <TableCell data-label="Destino">
                         <p className="text-sm font-bold text-foreground">{transfer.destination_city}</p>
                         <p className="text-[10px] font-semibold uppercase text-muted-foreground">{transfer.destination_country || 'N/A'}</p>
                       </TableCell>
-                      <TableCell className="text-right">
+                      <TableCell data-label="Monto" className="text-right">
                         <p className="text-sm font-black text-foreground">{formatCurrency(transfer.amount, transfer.currency)}</p>
                       </TableCell>
-                      <TableCell>
+                      <TableCell data-label="Estado">
                         <Badge className={`rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] ${getStatusColor(transfer.status)}`}>
                           {getStatusText(transfer.status)}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-xs font-semibold text-muted-foreground">{formatDate(transfer.created_at)}</TableCell>
-                      <TableCell className="pr-8 text-right">
+                      <TableCell data-label="Fecha" className="text-xs font-semibold text-muted-foreground">{formatDate(transfer.created_at)}</TableCell>
+                      <TableCell data-label="Acciones" className="pr-8 text-right">
                         <div className="flex justify-end gap-2">
                           <Button asChild type="button" size="sm" variant="outline" className="rounded-xl font-black">
                             <Link href={`/receipts/${transfer.id}`}>

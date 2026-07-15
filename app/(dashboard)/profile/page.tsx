@@ -3,12 +3,13 @@
 import { ChangeEvent, useEffect, useRef, useState, useTransition } from 'react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { Calendar, Camera, Clock, KeyRound, Mail, Phone, Shield, User as UserIcon } from 'lucide-react';
+import { Calendar, Camera, Clock, Image as ImageIcon, KeyRound, Mail, Phone, Shield, User as UserIcon } from 'lucide-react';
 import { DashboardLogo } from '@/components/layout/dashboard-logo';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { useAppStore } from '@/lib/store';
 
@@ -45,6 +46,48 @@ async function postProfileForm(endpoint: string, formData: FormData, fallbackErr
   }
 }
 
+function loadImage(src: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    image.onload = () => resolve(image);
+    image.onerror = reject;
+    image.src = src;
+  });
+}
+
+async function createCroppedAvatarBlob(
+  imageSrc: string,
+  options: { zoom: number; offsetX: number; offsetY: number; size?: number }
+) {
+  const image = await loadImage(imageSrc);
+  const size = options.size ?? 512;
+  const canvas = document.createElement('canvas');
+  const context = canvas.getContext('2d');
+
+  if (!context) return null;
+
+  canvas.width = size;
+  canvas.height = size;
+
+  context.fillStyle = '#ffffff';
+  context.fillRect(0, 0, size, size);
+
+  const baseScale = Math.max(size / image.naturalWidth, size / image.naturalHeight);
+  const scale = baseScale * options.zoom;
+  const drawWidth = image.naturalWidth * scale;
+  const drawHeight = image.naturalHeight * scale;
+  const maxOffsetX = Math.max((drawWidth - size) / 2, 0);
+  const maxOffsetY = Math.max((drawHeight - size) / 2, 0);
+  const x = (size - drawWidth) / 2 + (options.offsetX / 100) * maxOffsetX;
+  const y = (size - drawHeight) / 2 + (options.offsetY / 100) * maxOffsetY;
+
+  context.drawImage(image, x, y, drawWidth, drawHeight);
+
+  return new Promise<Blob | null>((resolve) => {
+    canvas.toBlob((blob) => resolve(blob), 'image/jpeg', 0.9);
+  });
+}
+
 export default function ProfilePage() {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const { user, setUser } = useAppStore();
@@ -54,6 +97,11 @@ export default function ProfilePage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [feedback, setFeedback] = useState('');
   const [feedbackTone, setFeedbackTone] = useState<'error' | 'success'>('success');
+  const [avatarDraftUrl, setAvatarDraftUrl] = useState('');
+  const [avatarDraftName, setAvatarDraftName] = useState('');
+  const [avatarZoom, setAvatarZoom] = useState(1.15);
+  const [avatarOffsetX, setAvatarOffsetX] = useState(0);
+  const [avatarOffsetY, setAvatarOffsetY] = useState(0);
   const [isSaving, startSavingTransition] = useTransition();
   const [isUploadingAvatar, startUploadTransition] = useTransition();
   const [isUpdatingPassword, startPasswordTransition] = useTransition();
@@ -63,6 +111,12 @@ export default function ProfilePage() {
     setPhone(user?.phone ?? '');
   }, [user?.name, user?.phone]);
 
+  useEffect(() => {
+    return () => {
+      if (avatarDraftUrl) URL.revokeObjectURL(avatarDraftUrl);
+    };
+  }, [avatarDraftUrl]);
+
   const roleLabels: Record<string, string> = {
     admin: 'Administrador',
     superadmin: 'Super Admin',
@@ -71,10 +125,10 @@ export default function ProfilePage() {
   };
 
   const roleColors: Record<string, string> = {
-    admin: 'bg-rose-100 text-rose-700',
-    superadmin: 'bg-rose-100 text-rose-700',
-    gestor: 'bg-blue-100 text-blue-700',
-    cliente: 'bg-emerald-100 text-emerald-700',
+    admin: 'bg-rose-500/10 text-rose-700 ring-1 ring-rose-500/20 dark:text-rose-300',
+    superadmin: 'bg-rose-500/10 text-rose-700 ring-1 ring-rose-500/20 dark:text-rose-300',
+    gestor: 'bg-blue-500/10 text-blue-700 ring-1 ring-blue-500/20 dark:text-blue-300',
+    cliente: 'bg-emerald-500/10 text-emerald-700 ring-1 ring-emerald-500/20 dark:text-emerald-300',
   };
 
   const formattedDate = user?.created_at
@@ -117,17 +171,59 @@ export default function ProfilePage() {
     if (!file) return;
 
     setFeedback('');
+    event.target.value = '';
 
+    if (!file.type.startsWith('image/')) {
+      showFeedback('error', 'Selecciona una imagen válida.');
+      return;
+    }
+
+    if (file.size > 8 * 1024 * 1024) {
+      showFeedback('error', 'La imagen no debe superar los 8 MB.');
+      return;
+    }
+
+    if (avatarDraftUrl) URL.revokeObjectURL(avatarDraftUrl);
+    setAvatarDraftUrl(URL.createObjectURL(file));
+    setAvatarDraftName(file.name.replace(/\.[^.]+$/, '') || 'avatar');
+    setAvatarZoom(1.15);
+    setAvatarOffsetX(0);
+    setAvatarOffsetY(0);
+  };
+
+  const closeAvatarCropper = () => {
+    if (avatarDraftUrl) URL.revokeObjectURL(avatarDraftUrl);
+    setAvatarDraftUrl('');
+    setAvatarDraftName('');
+    setAvatarZoom(1.15);
+    setAvatarOffsetX(0);
+    setAvatarOffsetY(0);
+  };
+
+  const handleAvatarCropUpload = () => {
+    if (!user || !avatarDraftUrl) return;
     const formData = new FormData();
-    formData.set('avatar', file);
     formData.set('userId', user.id);
     formData.set('oldAvatarUrl', user.avatar_url || '');
 
     startUploadTransition(async () => {
+      const croppedBlob = await createCroppedAvatarBlob(avatarDraftUrl, {
+        zoom: avatarZoom,
+        offsetX: avatarOffsetX,
+        offsetY: avatarOffsetY,
+      });
+
+      if (!croppedBlob) {
+        showFeedback('error', 'No se pudo recortar la imagen.');
+        return;
+      }
+
+      const croppedFile = new File([croppedBlob], `${avatarDraftName}-avatar.jpg`, { type: 'image/jpeg' });
+      formData.set('avatar', croppedFile);
+
       const result = await postProfileForm('/api/profile/avatar', formData, 'No se pudo actualizar el avatar.');
       if (!result.success || !result.avatarUrl) {
         showFeedback('error', result.error || 'No se pudo actualizar el avatar.');
-        event.target.value = '';
         return;
       }
 
@@ -136,7 +232,7 @@ export default function ProfilePage() {
         avatar_url: result.avatarUrl,
       });
       showFeedback('success', 'Avatar actualizado correctamente.');
-      event.target.value = '';
+      closeAvatarCropper();
     });
   };
 
@@ -179,8 +275,8 @@ export default function ProfilePage() {
         <div
           className={`rounded-xl border px-4 py-3 text-sm font-medium ${
             feedbackTone === 'error'
-              ? 'border-rose-200 bg-rose-50 text-rose-700'
-              : 'border-emerald-200 bg-emerald-50 text-emerald-700'
+              ? 'border-rose-500/20 bg-rose-500/10 text-rose-700 dark:text-rose-300'
+              : 'border-emerald-500/20 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
           }`}
         >
           {feedback}
@@ -188,14 +284,14 @@ export default function ProfilePage() {
       )}
 
       <div className="grid gap-6 md:grid-cols-2">
-        <Card className="border-none shadow-sm bg-white/50 backdrop-blur-sm">
+        <Card className="border border-border/10 bg-card/80 text-card-foreground shadow-sm backdrop-blur-sm dark:bg-slate-950/70">
           <CardHeader>
             <div className="flex items-center justify-between">
               <div className="space-y-1">
-                <h2 className="text-xl font-semibold">Información Personal</h2>
+                <h2 className="text-xl font-semibold text-foreground">Información Personal</h2>
                 <CardDescription>Datos básicos de tu cuenta</CardDescription>
               </div>
-              <Badge className={roleColors[user.role] || 'bg-gray-100'}>
+              <Badge className={roleColors[user.role] || 'bg-muted text-foreground ring-1 ring-border/20'}>
                 {roleLabels[user.role] || user.role}
               </Badge>
             </div>
@@ -205,7 +301,7 @@ export default function ProfilePage() {
               <div className="relative">
                 <Avatar className="h-16 w-16 border border-border/20">
                   <AvatarImage src={user.avatar_url} alt={user.name} />
-                  <AvatarFallback className="bg-rose-50 text-rose-600 text-lg font-bold">
+                  <AvatarFallback className="bg-rose-500/10 text-rose-600 text-lg font-bold dark:text-rose-300">
                     {getInitials(user.name)}
                   </AvatarFallback>
                 </Avatar>
@@ -239,12 +335,12 @@ export default function ProfilePage() {
                 Nombre Completo
               </label>
               <div className="relative">
-                <UserIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-rose-600" />
+                <UserIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-rose-600 dark:text-rose-300" />
                 <Input
                   id="profile-name"
                   value={name}
                   onChange={(event) => setName(event.target.value)}
-                  className="pl-10"
+                  className="border-border/20 bg-background/80 pl-10 text-foreground placeholder:text-muted-foreground disabled:text-muted-foreground"
                 />
               </div>
             </div>
@@ -254,11 +350,11 @@ export default function ProfilePage() {
                 Correo Electrónico
               </label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-rose-600" />
+                <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-rose-600 dark:text-rose-300" />
                 <Input
                   id="profile-email"
                   value={user.email}
-                  className="pl-10"
+                  className="border-border/20 bg-background/80 pl-10 text-foreground placeholder:text-muted-foreground disabled:text-muted-foreground"
                   disabled
                 />
               </div>
@@ -269,12 +365,12 @@ export default function ProfilePage() {
                 Teléfono
               </label>
               <div className="relative">
-                <Phone className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-rose-600" />
+                <Phone className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-rose-600 dark:text-rose-300" />
                 <Input
                   id="profile-phone"
                   value={phone}
                   onChange={(event) => setPhone(event.target.value)}
-                  className="pl-10"
+                  className="border-border/20 bg-background/80 pl-10 text-foreground placeholder:text-muted-foreground disabled:text-muted-foreground"
                 />
               </div>
             </div>
@@ -290,47 +386,47 @@ export default function ProfilePage() {
           </CardContent>
         </Card>
 
-        <Card className="border-none shadow-sm bg-white/50 backdrop-blur-sm">
+        <Card className="border border-border/10 bg-card/80 text-card-foreground shadow-sm backdrop-blur-sm dark:bg-slate-950/70">
           <CardHeader>
-            <h2 className="text-xl font-semibold">Detalles de Cuenta</h2>
+            <h2 className="text-xl font-semibold text-foreground">Detalles de Cuenta</h2>
             <CardDescription>Seguridad y ubicación registrada</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="flex items-center gap-4">
-              <div className="h-12 w-12 rounded-full bg-rose-50 flex items-center justify-center text-rose-600">
+              <div className="h-12 w-12 rounded-full bg-rose-500/10 flex items-center justify-center text-rose-600 dark:text-rose-300">
                 <Shield className="h-6 w-6" />
               </div>
               <div>
                 <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">ID de Usuario</p>
-                <p className="text-xs font-mono bg-rose-50 px-2 py-1 rounded text-rose-700 selection:bg-rose-200">
+                <p className="rounded bg-rose-500/10 px-2 py-1 font-mono text-xs text-rose-700 selection:bg-rose-200 dark:text-rose-300 dark:selection:bg-rose-900">
                   {user.id}
                 </p>
               </div>
             </div>
 
             <div className="flex items-center gap-4">
-              <div className="h-12 w-12 rounded-full bg-rose-50 flex items-center justify-center text-rose-600">
+              <div className="h-12 w-12 rounded-full bg-rose-500/10 flex items-center justify-center text-rose-600 dark:text-rose-300">
                 <Calendar className="h-6 w-6" />
               </div>
               <div>
                 <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Miembro desde</p>
-                <p className="text-base font-semibold">{formattedDate}</p>
+                <p className="text-base font-semibold text-foreground">{formattedDate}</p>
               </div>
             </div>
 
             <div className="flex items-center gap-4">
-              <div className="h-12 w-12 rounded-full bg-rose-50 flex items-center justify-center text-rose-600">
+              <div className="h-12 w-12 rounded-full bg-rose-500/10 flex items-center justify-center text-rose-600 dark:text-rose-300">
                 <Clock className="h-6 w-6" />
               </div>
               <div>
                 <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Última Conexión</p>
-                <p className="text-base font-semibold">Hace un momento</p>
+                <p className="text-base font-semibold text-foreground">Hace un momento</p>
               </div>
             </div>
 
-            <div className="space-y-4 rounded-xl border border-border/60 bg-background/60 p-4">
+            <div className="space-y-4 rounded-xl border border-border/20 bg-background/80 p-4 dark:bg-slate-900/60">
               <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-full bg-rose-50 flex items-center justify-center text-rose-600">
+                <div className="h-10 w-10 rounded-full bg-rose-500/10 flex items-center justify-center text-rose-600 dark:text-rose-300">
                   <KeyRound className="h-5 w-5" />
                 </div>
                 <div>
@@ -348,6 +444,7 @@ export default function ProfilePage() {
                   type="password"
                   value={newPassword}
                   onChange={(event) => setNewPassword(event.target.value)}
+                  className="border-border/20 bg-background/80 text-foreground placeholder:text-muted-foreground"
                 />
               </div>
 
@@ -360,6 +457,7 @@ export default function ProfilePage() {
                   type="password"
                   value={confirmPassword}
                   onChange={(event) => setConfirmPassword(event.target.value)}
+                  className="border-border/20 bg-background/80 text-foreground placeholder:text-muted-foreground"
                 />
               </div>
 
@@ -377,6 +475,85 @@ export default function ProfilePage() {
       </div>
         </>
       )}
+      <Dialog open={Boolean(avatarDraftUrl)} onOpenChange={(open) => !open && !isUploadingAvatar && closeAvatarCropper()}>
+        <DialogContent className="max-w-md rounded-3xl border-border/20 bg-background p-5">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-xl font-semibold text-foreground">
+              <ImageIcon className="h-5 w-5 text-primary" />
+              Recortar foto de perfil
+            </DialogTitle>
+            <DialogDescription>
+              Ajusta el encuadre antes de subir la imagen al almacenamiento de Supabase.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-5">
+            <div className="mx-auto h-64 w-64 overflow-hidden rounded-full border-4 border-primary/20 bg-muted shadow-inner">
+              {avatarDraftUrl && (
+                <img
+                  src={avatarDraftUrl}
+                  alt="Vista previa del avatar"
+                  className="h-full w-full object-cover"
+                  style={{
+                    transform: `translate(${avatarOffsetX * 0.35}%, ${avatarOffsetY * 0.35}%) scale(${avatarZoom})`,
+                    transformOrigin: 'center',
+                  }}
+                />
+              )}
+            </div>
+
+            <div className="space-y-4 rounded-2xl border border-border/10 bg-card/70 p-4">
+              <label className="block text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                Zoom
+                <input
+                  type="range"
+                  min="1"
+                  max="3"
+                  step="0.05"
+                  value={avatarZoom}
+                  onChange={(event) => setAvatarZoom(Number(event.target.value))}
+                  className="mt-2 w-full accent-primary"
+                />
+              </label>
+
+              <label className="block text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                Posición horizontal
+                <input
+                  type="range"
+                  min="-100"
+                  max="100"
+                  step="1"
+                  value={avatarOffsetX}
+                  onChange={(event) => setAvatarOffsetX(Number(event.target.value))}
+                  className="mt-2 w-full accent-primary"
+                />
+              </label>
+
+              <label className="block text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                Posición vertical
+                <input
+                  type="range"
+                  min="-100"
+                  max="100"
+                  step="1"
+                  value={avatarOffsetY}
+                  onChange={(event) => setAvatarOffsetY(Number(event.target.value))}
+                  className="mt-2 w-full accent-primary"
+                />
+              </label>
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2 sm:gap-2">
+            <Button type="button" variant="outline" className="rounded-xl" onClick={closeAvatarCropper} disabled={isUploadingAvatar}>
+              Cancelar
+            </Button>
+            <Button type="button" className="rounded-xl bg-brand-gradient text-white" onClick={handleAvatarCropUpload} disabled={isUploadingAvatar}>
+              {isUploadingAvatar ? 'Subiendo...' : 'Recortar y subir'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -48,7 +48,7 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="mobile-native-dialog max-w-md overflow-hidden border border-white/25 bg-white/95 p-0 shadow-2xl shadow-black/20 outline-none backdrop-blur-none dark:border-white/10 dark:bg-[#10131c]/95">
         <DialogHeader className="p-6 border-b border-border/10">
-          <DialogTitle className="flex items-center gap-2 text-xl font-black text-foreground">
+          <DialogTitle className="flex items-center gap-2 text-xl font-semibold text-foreground">
             <Settings className="h-5 w-5 text-primary" /> Configuración
           </DialogTitle>
           <DialogDescription className="text-sm text-muted-foreground">
@@ -59,7 +59,7 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
         <div className="p-6 space-y-6">
           {/* Moneda preferida */}
           <div className="space-y-3">
-            <label className="flex items-center gap-2 text-sm font-bold text-foreground">
+            <label className="flex items-center gap-2 text-sm font-medium text-foreground">
               <DollarSign className="h-4 w-4 text-primary" />
               Moneda para envíos
             </label>
@@ -77,7 +77,7 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
                   <div className="flex items-center gap-2">
                     <span className="text-lg">{curr.flag}</span>
                     <div>
-                      <p className="text-sm font-black">{curr.code}</p>
+                      <p className="text-sm font-semibold">{curr.code}</p>
                       <p className="text-[10px] text-muted-foreground">{curr.name}</p>
                     </div>
                   </div>
@@ -88,7 +88,7 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
 
           {/* Tema */}
           <div className="space-y-3">
-            <label className="flex items-center gap-2 text-sm font-bold text-foreground">
+            <label className="flex items-center gap-2 text-sm font-medium text-foreground">
               <Palette className="h-4 w-4 text-primary" />
               Apariencia
             </label>
@@ -103,7 +103,7 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
               >
                 <div className="flex items-center justify-center gap-2">
                   <div className="w-5 h-5 rounded-full bg-white border-2 border-gray-300" />
-                  <span className="text-sm font-bold">Claro</span>
+                  <span className="text-sm font-medium">Claro</span>
                 </div>
               </button>
               <button
@@ -116,7 +116,7 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
               >
                 <div className="flex items-center justify-center gap-2">
                   <div className="w-5 h-5 rounded-full bg-gray-900 border-2 border-gray-700" />
-                  <span className="text-sm font-bold">Oscuro</span>
+                  <span className="text-sm font-medium">Oscuro</span>
                 </div>
               </button>
             </div>
@@ -124,7 +124,7 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
 
           {/* Notificaciones */}
           <div className="space-y-3">
-            <label className="flex items-center gap-2 text-sm font-bold text-foreground">
+            <label className="flex items-center gap-2 text-sm font-medium text-foreground">
               <Bell className="h-4 w-4 text-primary" />
               Notificaciones
             </label>
@@ -136,7 +136,7 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
                   : 'border-border/20'
               }`}
             >
-              <span className="text-sm font-bold">Recibir notificaciones</span>
+              <span className="text-sm font-medium">Recibir notificaciones</span>
               <div className={`w-12 h-6 rounded-full transition-all ${notifications ? 'bg-pink-500' : 'bg-gray-300 dark:bg-gray-600'}`}>
                 <div className={`w-5 h-5 rounded-full bg-white shadow transition-transform ${notifications ? 'translate-x-6' : 'translate-x-0.5'} mt-0.5`} />
               </div>

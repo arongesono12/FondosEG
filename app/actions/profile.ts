@@ -40,6 +40,14 @@ export async function uploadAvatarAction(formData: FormData) {
     return { success: false, error: 'Faltan datos requeridos' };
   }
 
+  if (!file.type.startsWith('image/')) {
+    return { success: false, error: 'El archivo seleccionado no es una imagen válida.' };
+  }
+
+  if (file.size > 2 * 1024 * 1024) {
+    return { success: false, error: 'El avatar recortado no debe superar los 2 MB.' };
+  }
+
   // Delete old avatar if exists
   if (oldAvatarUrl) {
     try {
@@ -57,12 +65,14 @@ export async function uploadAvatarAction(formData: FormData) {
   }
 
   // Upload file to Supabase Storage
-  const fileExt = file.name.split('.').pop();
-  const filePath = `${userId}/${Math.random().toString(36).substring(2)}.${fileExt}`;
+  const filePath = `${userId}/${Math.random().toString(36).substring(2)}.jpg`;
 
   const { error: uploadError } = await supabase.storage
     .from('avatars')
-    .upload(filePath, file);
+    .upload(filePath, file, {
+      contentType: 'image/jpeg',
+      upsert: false,
+    });
 
   if (uploadError) {
     return { success: false, error: 'No se pudo subir el avatar.' };

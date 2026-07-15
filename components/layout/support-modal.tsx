@@ -116,7 +116,7 @@ export function SupportModal({ open, onOpenChange, requestType = 'general', defa
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="mobile-native-dialog max-w-md p-0 overflow-hidden outline-none">
         <DialogHeader className="p-6 border-b border-border/10">
-          <DialogTitle className="flex items-center gap-2 text-xl font-black text-foreground">
+          <DialogTitle className="flex items-center gap-2 text-xl font-semibold text-foreground">
             <MessageSquare className="h-5 w-5 text-primary" /> {titleMap[requestType]}
           </DialogTitle>
           <DialogDescription className="text-sm text-muted-foreground">
@@ -130,7 +130,7 @@ export function SupportModal({ open, onOpenChange, requestType = 'general', defa
               <div className="w-16 h-16 bg-green-100 dark:bg-green-900/20 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Send className="h-8 w-8 text-green-600" />
               </div>
-              <p className="text-lg font-black text-foreground">¡Solicitud enviada!</p>
+              <p className="text-lg font-semibold text-foreground">¡Solicitud enviada!</p>
               <p className="text-sm text-muted-foreground">
                 {requiresAssignee ? 'El equipo revisará tu solicitud pronto' : 'El equipo de soporte la recibirá en support@fondoseg.com'}
               </p>
@@ -139,7 +139,7 @@ export function SupportModal({ open, onOpenChange, requestType = 'general', defa
             <>
               {requiresAssignee ? (
                 <div className="space-y-2">
-                  <label className="text-sm font-bold text-foreground flex items-center gap-1.5">
+                  <label className="text-sm font-medium text-foreground flex items-center gap-1.5">
                     <ShieldCheck className="h-4 w-4 text-primary" />
                     {isClient ? 'Seleccionar gestor' : 'Seleccionar administrador'}
                   </label>
@@ -166,7 +166,7 @@ export function SupportModal({ open, onOpenChange, requestType = 'general', defa
                               </AvatarFallback>
                             </Avatar>
                             <div>
-                              <p className="text-sm font-bold text-foreground">{selectedAdmin.name}</p>
+                              <p className="text-sm font-medium text-foreground">{selectedAdmin.name}</p>
                               <p className="text-[10px] text-muted-foreground uppercase tracking-wider">
                                 {isClient ? 'Gestor' : 'Administrador'}
                               </p>
@@ -201,7 +201,7 @@ export function SupportModal({ open, onOpenChange, requestType = 'general', defa
                                 </AvatarFallback>
                               </Avatar>
                               <div>
-                                <p className="text-sm font-bold text-foreground">{admin.name}</p>
+                                <p className="text-sm font-medium text-foreground">{admin.name}</p>
                                 <p className="text-[10px] text-muted-foreground">{admin.email}</p>
                               </div>
                               {selectedAdmin?.id === admin.id && (
@@ -222,7 +222,7 @@ export function SupportModal({ open, onOpenChange, requestType = 'general', defa
 
               {/* Message */}
               <div className="space-y-2">
-                <label className="text-sm font-bold text-foreground">Tu mensaje / solicitud</label>
+                <label className="text-sm font-medium text-foreground">Tu mensaje / solicitud</label>
                 <Textarea 
                   placeholder={requestType === 'balance_topup' 
                     ? "Ej: Necesito recargar mi cuenta con 500.000 XAF para continuar operando..." 
@@ -238,7 +238,7 @@ export function SupportModal({ open, onOpenChange, requestType = 'general', defa
               <Button 
                 onClick={handleSend}
                 disabled={!message.trim() || loading || (requiresAssignee && !selectedAdmin)}
-                className="w-full h-12 rounded-xl bg-brand-gradient text-white font-black shadow-lg shadow-pink-500/20 hover:opacity-90 transition-all"
+                className="w-full h-12 rounded-xl bg-brand-gradient text-white font-semibold shadow-lg shadow-pink-500/20 hover:opacity-90 transition-all"
               >
                 {loading ? (
                   <Loader2 className="h-5 w-5 animate-spin" />

@@ -93,7 +93,7 @@ export function LoginForm({
               labelClassName="text-4xl md:text-5xl"
             />
           </div>
-          <CardTitle className="auth-card-title text-3xl font-bold tracking-tight">
+          <CardTitle className="auth-card-title text-3xl font-semibold tracking-tight">
             {title}
           </CardTitle>
           <CardDescription className="auth-card-muted text-sm font-medium">
@@ -108,7 +108,7 @@ export function LoginForm({
               </div>
             )}
             <div className="space-y-2">
-              <Label htmlFor="email" className="auth-card-label text-sm font-semibold tracking-wide">
+              <Label htmlFor="email" className="auth-card-label text-sm font-medium tracking-wide">
                 Correo electrónico
               </Label>
               <Input
@@ -122,7 +122,7 @@ export function LoginForm({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password" className="auth-card-label text-sm font-semibold tracking-wide">
+              <Label htmlFor="password" className="auth-card-label text-sm font-medium tracking-wide">
                 Contraseña
               </Label>
               <div className="relative">
@@ -148,7 +148,7 @@ export function LoginForm({
           <CardFooter className="flex flex-col space-y-4 pt-2">
             <Button
               type="submit"
-              className="w-full h-12 mt-2 rounded-2xl text-base font-bold uppercase tracking-widest bg-brand-gradient text-white shadow-[0_0_20px_rgba(236,72,153,0.3)] hover:shadow-[0_0_30px_rgba(236,72,153,0.5)] hover:scale-[1.02] active:scale-[0.98] transition-all duration-300"
+              className="w-full h-12 mt-2 rounded-2xl text-base font-semibold uppercase tracking-widest bg-brand-gradient text-white shadow-[0_0_20px_rgba(236,72,153,0.3)] hover:shadow-[0_0_30px_rgba(236,72,153,0.5)] hover:scale-[1.02] active:scale-[0.98] transition-all duration-300"
               disabled={loading}
             >
               {loading ? 'Iniciando...' : submitLabel}

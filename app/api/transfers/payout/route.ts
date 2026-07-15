@@ -3,6 +3,7 @@ import { AuthzError, requireProfile, requireRole } from '@/lib/server/authz';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { markAgentTransferPaidOut } from '@/lib/server/financial-operations';
 import { emitWebhookEvent } from '@/lib/server/webhook-outbox';
+import { saveInternalNotification } from '@/lib/server/notification-outbox';
 
 export async function POST(request: NextRequest) {
   try {
@@ -33,6 +34,34 @@ export async function POST(request: NextRequest) {
     }
 
     const result = await markAgentTransferPaidOut(transfer.id, profile.id);
+
+    try {
+      const paidTransfer = result.transfer as Record<string, unknown>;
+      const originAgentId = String(paidTransfer.agent_id || transfer.agent_id || '');
+      if (originAgentId) {
+        const { data: originAgent } = await adminClient
+          .from('users')
+          .select('id, name, phone')
+          .eq('id', originAgentId)
+          .single();
+
+        await saveInternalNotification({
+          transferId: String(paidTransfer.id),
+          userId: originAgentId,
+          phone: originAgent?.phone || String(paidTransfer.sender_phone || transfer.sender_phone || ''),
+          priority: 'high',
+          message: [
+            `FondosEG: La transferencia ${paidTransfer.transfer_code || transfer.transfer_code} fue retirada correctamente.`,
+            `Beneficiario: ${paidTransfer.receiver_name || transfer.receiver_name}.`,
+            `Monto: ${paidTransfer.amount || transfer.amount} ${paidTransfer.currency || transfer.currency}.`,
+            `Gestor pagador: ${profile.name || 'Gestor autorizado'}.`,
+            'Estado actual: pagada.',
+          ].join('\n'),
+        });
+      }
+    } catch (notificationErr) {
+      console.error('Failed to create payout notification for origin agent:', notificationErr);
+    }
 
     try {
       const paidTransfer = result.transfer as Record<string, unknown>;
