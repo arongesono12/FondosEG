@@ -39,7 +39,7 @@ import { NotificationModal } from './notification-modal';
 import { SettingsModal } from './settings-modal';
 import { SupportModal } from './support-modal';
 import { CookieConsentModal, type CookieConsentPreferences } from './cookie-consent-modal';
-import { getUnreadNotificationCount, getClientUnreadNotificationCount, getAdminUnreadNotificationCount } from '@/services/transfer';
+import { getUnreadNotificationCount, getClientUnreadNotificationCount, getAdminUnreadNotificationCount } from '@/modules/notifications/http/client';
 import { getAgentBalance } from '@/services/agent';
 import { useTheme } from '@/components/theme-provider';
 import { HttpError } from '@/services/http';

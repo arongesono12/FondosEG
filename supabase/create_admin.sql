@@ -7,12 +7,15 @@ CREATE EXTENSION IF NOT EXISTS pgcrypto;
 -- 2. Variables del nuevo administrador (Puedes cambiar estos valores)
 DO $$
 DECLARE
-  new_user_id UUID := uuid_generate_v4();
-  user_email TEXT := 'aesono@segesa.gq';
-  user_password TEXT := 'Admin1234@'; -- Cambia esta contraseña inmediatamente después del primer login
-  user_name TEXT := 'Administrador Principal';
+  new_user_id UUID := gen_random_uuid();
+  user_email TEXT := current_setting('app.bootstrap_admin_email', true);
+  user_password TEXT := current_setting('app.bootstrap_admin_password', true);
+  user_name TEXT := current_setting('app.bootstrap_admin_name', true);
   user_phone TEXT := '+240555877465'; -- Debe ser único en la tabla public.users
 BEGIN
+  IF user_email IS NULL OR user_password IS NULL OR length(user_password) < 16 THEN
+    RAISE EXCEPTION 'Set app.bootstrap_admin_password to a unique value of at least 16 characters for this session';
+  END IF;
   -- Verificar si el usuario ya existe
   IF EXISTS (SELECT 1 FROM auth.users WHERE email = user_email) THEN
     RAISE NOTICE 'El usuario con email % ya existe.', user_email;

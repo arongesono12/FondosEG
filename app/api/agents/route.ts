@@ -50,7 +50,10 @@ export async function GET() {
       });
     }
 
-    const result: AgentWithBalance[] = (data as any[] || []).map((user: any) => {
+    type AgentRow = AgentWithBalance & {
+      agent_balances?: { balance?: number; cash_balance?: number } | Array<{ balance?: number; cash_balance?: number }>;
+    };
+    const result: AgentWithBalance[] = ((data || []) as AgentRow[]).map((user) => {
       const balanceRecord = user.agent_balances;
       let balance = 0;
       let cashBalance = 0;

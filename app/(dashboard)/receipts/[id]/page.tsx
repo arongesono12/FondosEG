@@ -160,6 +160,11 @@ export default async function ReceiptPage({ params }: { params: Promise<{ id: st
     ['Fecha de emisión', formatDate(new Date().toISOString())],
   ];
 
+  // Reserved for the detailed receipt variant; the compact print view is the
+  // active presentation today.
+  void receiptFields;
+  void auditFields;
+
   const compactReceiptFields = [
     ['Servicio', receipt.service],
     ['Canal', receipt.channel],

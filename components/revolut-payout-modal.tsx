@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { PanelSkeleton } from '@/components/skeletons/app-skeletons';
-import { createRevolutPayoutForTransfer } from '@/services/transfer';
+import { createRevolutPayoutForTransfer } from '@/modules/transfers/http/client';
 import type { Transfer } from '@/types';
 import { formatCurrency, getStatusColor, getStatusText } from '@/lib/utils';
 

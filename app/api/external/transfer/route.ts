@@ -2,8 +2,8 @@ import { NextRequest } from 'next/server';
 import { z } from 'zod';
 import { authenticateAPIKey, requirePermission } from '@/lib/api-auth';
 import { generateTransferCode } from '@/lib/utils';
-import { createAgentTransferOperation } from '@/lib/server/financial-operations';
-import { persistIdempotencyResponse, readIdempotencyState } from '@/lib/server/api-idempotency';
+import { createAgentTransferOperation } from '@/modules/transfers/application';
+import { persistIdempotencyResponse, readIdempotencyState } from '@/modules/public-api/application/idempotency';
 import { createSandboxAgentTransfer } from '@/lib/server/public-api-sandbox';
 import { emitWebhookEvent } from '@/lib/server/webhook-outbox';
 import {
@@ -98,9 +98,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const idempotencyKey = request.headers.get('idempotency-key');
+    if (!idempotencyKey) {
+      return publicApiError(context, 'validation_error', 'El header idempotency-key es obligatorio', 400);
+    }
     const idempotencyState = await readIdempotencyState(
       auth.apiKey!.id,
-      request.headers.get('idempotency-key'),
+      idempotencyKey,
       body
     );
 
@@ -110,6 +114,10 @@ export async function POST(request: NextRequest) {
         environment: auth.apiKey!.environment,
         rateLimit: auth.rateLimit,
       });
+    }
+
+    if (idempotencyState?.processing) {
+      return publicApiError(context, 'idempotency_conflict', 'Una solicitud con esta clave sigue en proceso', 409);
     }
 
     if (idempotencyState?.cachedResponse) {

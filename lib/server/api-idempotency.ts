@@ -1,5 +1,6 @@
 import { createAdminClient } from '@/lib/supabase/admin';
 import { hashRequestPayload } from '@/lib/server/api-security';
+import { randomUUID } from 'crypto';
 
 export interface IdempotencyState {
   key: string;
@@ -9,6 +10,8 @@ export interface IdempotencyState {
     body: unknown;
   };
   conflictMessage?: string;
+  processing?: boolean;
+  lockToken?: string;
 }
 
 export async function readIdempotencyState(
@@ -23,22 +26,29 @@ export async function readIdempotencyState(
   const adminClient = createAdminClient();
   const requestHash = hashRequestPayload(body);
 
-  const { data, error } = await adminClient
-    .from('api_idempotency_keys')
-    .select('request_hash, response_status, response_body')
-    .eq('api_key_id', apiKeyId)
-    .eq('idempotency_key', idempotencyKey)
-    .maybeSingle();
+  if (idempotencyKey.length > 200) {
+    return { key: idempotencyKey, requestHash, conflictMessage: 'La clave de idempotencia es demasiado larga' };
+  }
+
+  const lockToken = randomUUID();
+  const { data, error } = await adminClient.rpc('claim_api_idempotency_key', {
+    p_api_key_id: apiKeyId,
+    p_idempotency_key: idempotencyKey,
+    p_request_hash: requestHash,
+    p_lock_token: lockToken,
+  });
 
   if (error) {
     throw new Error(`Idempotency lookup failed: ${error.message}`);
   }
 
-  if (!data) {
-    return { key: idempotencyKey, requestHash };
-  }
+  const result = data as {
+    state?: 'acquired' | 'conflict' | 'completed' | 'processing';
+    response_status?: number;
+    response_body?: unknown;
+  } | null;
 
-  if (data.request_hash !== requestHash) {
+  if (result?.state === 'conflict') {
     return {
       key: idempotencyKey,
       requestHash,
@@ -46,18 +56,26 @@ export async function readIdempotencyState(
     };
   }
 
-  if (data.response_status && data.response_body) {
+  if (result?.state === 'completed' && result.response_status && result.response_body) {
     return {
       key: idempotencyKey,
       requestHash,
       cachedResponse: {
-        status: Number(data.response_status),
-        body: data.response_body,
+        status: Number(result.response_status),
+        body: result.response_body,
       },
     };
   }
 
-  return { key: idempotencyKey, requestHash };
+  if (result?.state === 'processing') {
+    return { key: idempotencyKey, requestHash, processing: true };
+  }
+
+  if (result?.state !== 'acquired') {
+    throw new Error('Idempotency claim returned an invalid state');
+  }
+
+  return { key: idempotencyKey, requestHash, lockToken };
 }
 
 export async function persistIdempotencyResponse(
@@ -66,31 +84,24 @@ export async function persistIdempotencyResponse(
   responseStatus: number,
   responseBody: unknown
 ): Promise<void> {
-  if (!state) {
+  if (!state || !state.lockToken) {
     return;
   }
 
   const adminClient = createAdminClient();
-  const nowIso = new Date().toISOString();
-
-  const { error } = await adminClient
-    .from('api_idempotency_keys')
-    .upsert(
-      {
-        api_key_id: apiKeyId,
-        idempotency_key: state.key,
-        request_hash: state.requestHash,
-        response_status: responseStatus,
-        response_body: responseBody,
-        updated_at: nowIso,
-      },
-      {
-        onConflict: 'api_key_id,idempotency_key',
-      }
-    );
+  const { data, error } = await adminClient.rpc('complete_api_idempotency_key', {
+    p_api_key_id: apiKeyId,
+    p_idempotency_key: state.key,
+    p_lock_token: state.lockToken,
+    p_response_status: responseStatus,
+    p_response_body: responseBody,
+  });
 
   if (error) {
     throw new Error(`Idempotency persist failed: ${error.message}`);
+  }
+  if (data !== true) {
+    throw new Error('Idempotency claim was lost before completion');
   }
 }
 

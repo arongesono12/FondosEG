@@ -116,19 +116,18 @@ async function consumeRateLimit({
   const windowStartedAt = new Date(windowStartedAtMs).toISOString();
   const resetAt = new Date(windowStartedAtMs + windowMs).toISOString();
 
-  const { data, error } = await adminClient
-    .from('api_key_usage_windows')
-    .select('id, request_count')
-    .eq('api_key_id', apiKeyId)
-    .eq('window_started_at', windowStartedAt)
-    .maybeSingle();
+  const { data, error } = await adminClient.rpc('consume_api_rate_limit', {
+    p_api_key_id: apiKeyId,
+    p_window_started_at: windowStartedAt,
+    p_limit: rateLimit,
+  });
 
   if (error) {
     throw new Error(`Rate limit lookup failed: ${error.message}`);
   }
 
-  const currentCount = Number(data?.request_count || 0);
-  if (currentCount >= rateLimit) {
+  const currentCount = Number(data || 0);
+  if (currentCount > rateLimit) {
     const retryAfterSeconds = Math.max(1, Math.ceil((windowStartedAtMs + windowMs - now) / 1000));
     return {
       allowed: false,
@@ -139,27 +138,10 @@ async function consumeRateLimit({
     };
   }
 
-  const nextCount = currentCount + 1;
-  const write = data
-    ? adminClient
-        .from('api_key_usage_windows')
-        .update({ request_count: nextCount, updated_at: new Date().toISOString() })
-        .eq('id', data.id)
-    : adminClient.from('api_key_usage_windows').insert({
-        api_key_id: apiKeyId,
-        window_started_at: windowStartedAt,
-        request_count: nextCount,
-      });
-
-  const { error: writeError } = await write;
-  if (writeError) {
-    throw new Error(`Rate limit persist failed: ${writeError.message}`);
-  }
-
   return {
     allowed: true,
     limit: rateLimit,
-    remaining: Math.max(rateLimit - nextCount, 0),
+    remaining: Math.max(rateLimit - currentCount, 0),
     resetAt,
   };
 }

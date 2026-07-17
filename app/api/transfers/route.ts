@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { AuthzError, requireProfile, requireRole } from '@/lib/server/authz';
-import { createAgentTransferOperation } from '@/lib/server/financial-operations';
+import { createAgentTransferOperation } from '@/modules/transfers/application';
 import type { Transfer, TransferFormData } from '@/types';
 import { generateTransferCode, getPhoneLookupCandidates, normalizePhoneDigits } from '@/lib/utils';
 import { queueTransferNotifications, processNotificationOutbox } from '@/lib/server/notification-outbox';

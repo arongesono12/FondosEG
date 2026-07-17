@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Skeleton } from '@/components/ui/skeleton';
 import { getAgentBalance, getAgentTransactions, getAgents, topUpAgentBalance } from '@/services/agent';
-import { getTransfers } from '@/services/transfer';
+import { getTransfers } from '@/modules/transfers/http/client';
 import { fetchJSON } from '@/services/http';
 import { formatCurrency, formatDate, getStatusColor } from '@/lib/utils';
 import type { AgentBalance, AgentWithBalance, BalanceTransaction, ClientBalance, Transfer } from '@/types';

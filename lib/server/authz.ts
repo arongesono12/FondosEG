@@ -59,18 +59,8 @@ async function resolveAuthUser(): Promise<{ user: SupabaseUser | null; authError
     if (user) return { user, authError: null };
     return { user: null, authError: error };
   } catch (error) {
-    // Final fallback to session if getUser still failing
-    if (isAuthServiceUnavailableError(error)) {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user) {
-          console.warn('Falling back to session user after failed getUser() retries:', error);
-          return { user: session.user, authError: null };
-        }
-      } catch (sessionError) {
-        return { user: null, authError: sessionError };
-      }
-    }
+    // Authorization must fail closed. getSession() only reads local cookie
+    // state and is not a substitute for server-side token validation.
     return { user: null, authError: error };
   }
 }

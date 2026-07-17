@@ -131,7 +131,18 @@ export async function readJsonBody(request: NextRequest): Promise<
   | { success: false; details: { body: string[] } }
 > {
   try {
-    return { success: true, data: await request.json() };
+    const maxBytes = 64 * 1024;
+    const declaredLength = Number(request.headers.get('content-length') || 0);
+    if (declaredLength > maxBytes) {
+      return { success: false, details: { body: ['Payload demasiado grande'] } };
+    }
+
+    const rawBody = await request.text();
+    if (Buffer.byteLength(rawBody, 'utf8') > maxBytes) {
+      return { success: false, details: { body: ['Payload demasiado grande'] } };
+    }
+
+    return { success: true, data: JSON.parse(rawBody) };
   } catch {
     return {
       success: false,

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { AuthzError, requireProfile, requireRole } from '@/lib/server/authz';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { markAgentTransferPaidOut } from '@/lib/server/financial-operations';
+import { markAgentTransferPaidOut } from '@/modules/transfers/application';
 import { emitWebhookEvent } from '@/lib/server/webhook-outbox';
 import { saveInternalNotification } from '@/lib/server/notification-outbox';
 

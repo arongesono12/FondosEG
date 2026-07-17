@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Skeleton } from '@/components/ui/skeleton';
-import { correctTransfer, getAllTransfers, getTransfers } from '@/services/transfer';
+import { correctTransfer, getAllTransfers, getTransfers } from '@/modules/transfers/http/client';
 import { formatCurrency, formatDate, getStatusColor, getStatusText } from '@/lib/utils';
 import type { Transfer } from '@/types';
 import { Download, History, PencilLine, Search, TrendingUp, Wallet, XCircle } from 'lucide-react';

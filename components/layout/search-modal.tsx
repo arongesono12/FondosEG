@@ -10,7 +10,7 @@ import { Search, MapPin, User, ArrowRight } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ModalListSkeleton } from '@/components/skeletons/app-skeletons';
-import { searchTransfers } from '@/services/transfer';
+import { searchTransfers } from '@/modules/transfers/http/client';
 import { useAppStore } from '@/lib/store';
 import { formatCurrency } from '@/lib/utils';
 import { Transfer } from '@/types';

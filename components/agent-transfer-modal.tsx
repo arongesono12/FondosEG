@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAppStore } from '@/lib/store';
-import { createTransfer } from '@/services/transfer';
+import { createTransfer } from '@/modules/transfers/http/client';
 import { formatCurrency } from '@/lib/utils';
 import { calculateCommission } from '@/lib/financial';
 import { 

@@ -140,8 +140,6 @@ export async function GET() {
       const todayCommissionableRows = commissionableRows.filter((transfer) => isSameOrAfter(transfer.created_at, today));
       const monthCommissionableRows = commissionableRows.filter((transfer) => isSameOrAfter(transfer.created_at, monthStart));
       const yearCommissionableRows = commissionableRows.filter((transfer) => isSameOrAfter(transfer.created_at, yearStart));
-      const monthCompletedRows = completedTransfersRows.filter((transfer) => isSameOrAfter(transfer.created_at, monthStart));
-      const yearCompletedRows = completedTransfersRows.filter((transfer) => isSameOrAfter(transfer.created_at, yearStart));
       const recent7dCompletedRows = completedTransfersRows.filter((transfer) => isSameOrAfter(transfer.created_at, sevenDaysAgo));
       const recent30dCompletedRows = completedTransfersRows.filter((transfer) =>
         isSameOrAfter(transfer.created_at, thirtyDaysAgo)
@@ -266,8 +264,6 @@ export async function GET() {
     );
     const todayTransfersRows = normalizedWalletTransfers.filter((transfer) => isSameOrAfter(transfer.created_at, today));
     const todayCompletedRows = completedTransfersRows.filter((transfer) => isSameOrAfter(transfer.created_at, today));
-    const monthCompletedRows = completedTransfersRows.filter((transfer) => isSameOrAfter(transfer.created_at, monthStart));
-    const yearCompletedRows = completedTransfersRows.filter((transfer) => isSameOrAfter(transfer.created_at, yearStart));
     const recent7dCompletedRows = completedTransfersRows.filter((transfer) => isSameOrAfter(transfer.created_at, sevenDaysAgo));
     const recent30dCompletedRows = completedTransfersRows.filter((transfer) =>
       isSameOrAfter(transfer.created_at, thirtyDaysAgo)

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { AuthzError, requireProfile, requireRole } from '@/lib/server/authz';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { correctAgentTransferOperation } from '@/lib/server/financial-operations';
+import { correctAgentTransferOperation } from '@/modules/transfers/application';
 import { getPhoneLookupCandidates, normalizePhoneDigits } from '@/lib/utils';
 
 async function findRegisteredClientByPhone(adminClient: ReturnType<typeof createAdminClient>, phone: string) {

@@ -9,28 +9,12 @@ import {
   mapAuthErrorStatus,
   publicApiError,
   publicApiSuccess,
-  readJsonBody,
-  toPublicBusinessErrorMessage,
 } from '@/lib/server/public-api';
 
 const propertiesQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(100).default(50),
   offset: z.coerce.number().int().min(0).default(0),
   status: z.enum(['available', 'rented', 'inactive']).optional(),
-}).strict();
-
-const createPropertySchema = z.object({
-  code: z.string().trim().min(1).max(60),
-  title: z.string().trim().min(1).max(160),
-  description: z.string().trim().max(2000).optional(),
-  address: z.string().trim().max(300).optional(),
-  city: z.string().trim().max(100).optional(),
-  country: z.string().trim().max(80).optional(),
-  monthly_rent: z.coerce.number().min(0).max(10000000).default(0),
-  currency: z.string().trim().length(3).regex(/^[A-Z]{3}$/).default('XAF'),
-  status: z.enum(['available', 'rented', 'inactive']).default('available'),
-  owner_id: z.string().trim().uuid().optional(),
-  metadata: z.record(z.string(), z.unknown()).optional(),
 }).strict();
 
 export async function GET(request: NextRequest) {

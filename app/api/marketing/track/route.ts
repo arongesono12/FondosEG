@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { createAdminClient } from '@/lib/supabase/admin';
+import {
+  consumePublicEndpointRateLimit,
+  isSameOriginMutation,
+  readLimitedJson,
+} from '@/lib/server/public-endpoint-security';
 
 const allowedActions = new Set([
   'landing_audience_select',
@@ -17,7 +22,19 @@ function safeText(value: unknown, maxLength: number) {
 
 export async function POST(request: NextRequest) {
   try {
-    const body = (await request.json()) as Record<string, unknown>;
+    if (!isSameOriginMutation(request)) {
+      return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
+    }
+
+    const rateLimit = await consumePublicEndpointRateLimit(request, 'marketing-track', 60, 1);
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        { success: false, error: 'Too many requests' },
+        { status: 429, headers: { 'Retry-After': String(rateLimit.retryAfterSeconds) } }
+      );
+    }
+
+    const body = await readLimitedJson(request, 8 * 1024);
     const action = safeText(body.action, 80);
 
     if (!action || !allowedActions.has(action)) {
@@ -53,6 +70,15 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: true }, { status: 202 });
   } catch (error) {
     console.error('[POST /api/marketing/track]', error);
-    return NextResponse.json({ success: true }, { status: 202 });
+    if (error instanceof SyntaxError) {
+      return NextResponse.json({ success: false, error: 'Invalid JSON' }, { status: 400 });
+    }
+    if (error instanceof Error && error.message === 'payload_too_large') {
+      return NextResponse.json({ success: false, error: 'Payload too large' }, { status: 413 });
+    }
+    if (error instanceof Error && error.message === 'unsupported_media_type') {
+      return NextResponse.json({ success: false, error: 'Content-Type must be application/json' }, { status: 415 });
+    }
+    return NextResponse.json({ success: false, error: 'Tracking unavailable' }, { status: 503 });
   }
 }

@@ -11,6 +11,10 @@ export async function signUpAction(data: RegisterFormData) {
   const adminClient = createAdminClient();
   const normalizedEmail = data.email.toLowerCase().trim();
 
+  if (data.role !== 'cliente' && data.role !== 'gestor') {
+    return { success: false, error: 'El rol solicitado no está permitido para el registro público' };
+  }
+
   if (!isValidEmailFormat(normalizedEmail)) {
     return { success: false, error: 'El formato del correo electrónico es inválido' };
   }

@@ -27,7 +27,7 @@ import {
   markAllAdminNotificationsAsRead,
   markAllClientNotificationsAsRead,
   markAllNotificationsAsRead,
-} from '@/services/transfer';
+} from '@/modules/notifications/http/client';
 import { useAppStore } from '@/lib/store';
 import { formatDistanceToNow, format } from 'date-fns';
 import { es } from 'date-fns/locale';

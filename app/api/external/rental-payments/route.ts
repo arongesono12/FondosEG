@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { authenticateAPIKey, requirePermission } from '@/lib/api-auth';
 import { isAdminRole } from '@/lib/roles';
-import { persistIdempotencyResponse, readIdempotencyState } from '@/lib/server/api-idempotency';
+import { persistIdempotencyResponse, readIdempotencyState } from '@/modules/public-api/application/idempotency';
 import { emitWebhookEvent } from '@/lib/server/webhook-outbox';
 import {
   createRentalPaymentOperation,
@@ -194,9 +194,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const idempotencyKey = request.headers.get('idempotency-key');
+    if (!idempotencyKey) {
+      return publicApiError(context, 'validation_error', 'El header idempotency-key es obligatorio', 400);
+    }
     const idempotencyState = await readIdempotencyState(
       auth.apiKey!.id,
-      request.headers.get('idempotency-key'),
+      idempotencyKey,
       jsonBody.data
     );
 
@@ -206,6 +210,10 @@ export async function POST(request: NextRequest) {
         environment: auth.apiKey!.environment,
         rateLimit: auth.rateLimit,
       });
+    }
+
+    if (idempotencyState?.processing) {
+      return publicApiError(context, 'idempotency_conflict', 'Una solicitud con esta clave sigue en proceso', 409);
     }
 
     if (idempotencyState?.cachedResponse) {

@@ -338,6 +338,45 @@ const transferExample = `const response = await fetch(
   }
 );`;
 
+const heroTransferCurl = `curl -X POST https://api.fondoseg.com/v1/transfers \\
+  -H "Authorization: Bearer {API_KEY}" \\
+  -H "Content-Type: application/json" \\
+  -H "Idempotency-Key: 8f6e5b3c-2d4a-4c9e-9b91-1f2a3b4c5d6e" \\
+  -d '{
+    "amount": 15000.50,
+    "currency": "XAF",
+    "from_account_id": "acc_1234567890",
+    "to_account_id": "acc_9876543210",
+    "description": "Pago de alquiler - Mayo 2024"
+  }'`;
+
+const heroResponseJson = `{
+  "id": "trf_01J2X7H8Y9ZC3D4E5F6G7H8I9J",
+  "status": "completed",
+  "amount": 15000.50,
+  "currency": "XAF",
+  "created_at": "2024-05-20T14:33:21Z",
+  "reference": "ALQ-MAYO-2024-001"
+}`;
+
+const heroWebhookJson = `{
+  "event": "transfer.completed",
+  "data": {
+    "id": "trf_01J2X7H8Y9ZC3D4E5F6G7H8I9J",
+    "status": "completed",
+    "amount": 15000.50
+  }
+}`;
+
+const capabilityChips = [
+  { label: 'REST + JSON', icon: Code2, color: 'text-emerald-300' },
+  { label: 'Sandbox', icon: Package, color: 'text-amber-300' },
+  { label: 'Webhook', icon: Webhook, color: 'text-pink-300' },
+  { label: 'HMAC', icon: ShieldCheck, color: 'text-yellow-300' },
+  { label: 'SDK Ready', icon: Code2, color: 'text-fuchsia-300' },
+  { label: 'API Keys', icon: KeyRound, color: 'text-sky-300' },
+] as const;
+
 function CodeBlock({ code, label }: { code: string; label?: string }) {
   const [copied, setCopied] = useState(false);
 
@@ -376,70 +415,144 @@ function SectionTitle({ eyebrow, title, children }: { eyebrow: string; title: st
   );
 }
 
+function ApiHeroVisual() {
+  const [copied, setCopied] = useState(false);
+
+  async function copyHeroCode() {
+    await navigator.clipboard.writeText(heroTransferCurl);
+    setCopied(true);
+    window.setTimeout(() => setCopied(false), 1400);
+  }
+
+  return (
+    <div className="relative min-h-[610px] min-w-0 overflow-visible">
+      <div className="pointer-events-none absolute left-[12%] top-[72px] h-px w-[28%] bg-gradient-to-r from-white/40 via-emerald-400/55 to-emerald-400/20" />
+      <div className="pointer-events-none absolute left-[11.6%] top-[68px] h-2 w-2 rounded-full bg-white/55 shadow-[0_0_10px_rgba(255,255,255,.8)]" />
+      <div className="pointer-events-none absolute left-[40%] top-[72px] h-[92px] w-px bg-gradient-to-b from-emerald-400/25 to-pink-400/75" />
+      <div className="pointer-events-none absolute left-[39.65%] top-[160px] h-2 w-2 rounded-full bg-pink-400 shadow-[0_0_12px_rgba(244,114,182,.95)]" />
+      <div className="pointer-events-none absolute left-[53%] top-[302px] h-[42px] w-px bg-gradient-to-b from-pink-400/70 to-fuchsia-400/60" />
+      <div className="pointer-events-none absolute left-[52.65%] top-[340px] h-2 w-2 rounded-full bg-pink-400 shadow-[0_0_12px_rgba(244,114,182,.95)]" />
+      <div className="pointer-events-none absolute left-[75%] top-[309px] h-[34px] w-px bg-gradient-to-b from-pink-400/65 to-purple-400/75" />
+      <div className="pointer-events-none absolute left-[74.65%] top-[339px] h-2 w-2 rounded-full bg-purple-400 shadow-[0_0_12px_rgba(192,132,252,.95)]" />
+      <div className="pointer-events-none absolute right-0 top-[225px] h-px w-[17%] bg-gradient-to-l from-pink-400 via-fuchsia-400/70 to-transparent" />
+      <div className="pointer-events-none absolute right-0 top-[221px] h-2 w-2 rounded-full bg-pink-400 shadow-[0_0_12px_rgba(244,114,182,.95)]" />
+
+      <div className="absolute left-[12%] top-[32px] z-30 h-[270px] w-[72%] overflow-hidden rounded-2xl border border-pink-500/80 bg-[#10071a]/95 shadow-[0_24px_70px_rgba(15,3,25,.55),0_0_45px_rgba(236,72,153,.10)]">
+        <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
+          <div className="flex items-center gap-7 text-sm font-bold text-white">
+            <span className="flex items-center gap-2"><span className="h-3 w-3 rounded-full bg-emerald-400" /> cURL</span>
+            <span className="text-white/75">POST</span>
+            <code className="text-white">/v1/transfers</code>
+          </div>
+          <button onClick={copyHeroCode} className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-white/70 transition hover:border-pink-400/60 hover:text-white">
+            {copied ? <Check className="h-3.5 w-3.5 text-emerald-300" /> : <Copy className="h-3.5 w-3.5" />}
+            {copied ? 'Copiado' : 'Copy'}
+          </button>
+        </div>
+        <pre className="h-[212px] overflow-hidden px-6 py-4 text-[12px] leading-[19px] text-slate-200"><code>{heroTransferCurl}</code></pre>
+      </div>
+
+      <div className="absolute left-0 top-[332px] z-20 h-[238px] w-[44%] overflow-hidden rounded-2xl border border-pink-500/60 bg-[#080c19]/95 shadow-[0_22px_60px_rgba(3,7,18,.50),0_0_38px_rgba(236,72,153,.08)]">
+        <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
+          <span className="flex items-center gap-2 text-sm font-bold text-white"><span className="h-3 w-3 rounded-full bg-emerald-400" /> 200 OK</span>
+          <span className="flex items-center gap-1 text-xs font-semibold text-white/60">JSON <ChevronRight className="h-3.5 w-3.5 rotate-90" /></span>
+        </div>
+        <pre className="h-[180px] overflow-hidden px-6 py-4 text-[11px] leading-[18px] text-emerald-200"><code>{heroResponseJson}</code></pre>
+      </div>
+
+      <div className="absolute left-[48%] top-[332px] z-20 h-[252px] w-[48%] overflow-hidden rounded-2xl border border-purple-500/75 bg-[#080c19]/95 shadow-[0_22px_60px_rgba(3,7,18,.50),0_0_38px_rgba(168,85,247,.10)]">
+        <div className="border-b border-white/10 px-5 py-4">
+          <p className="flex items-center gap-2 text-sm font-bold text-white"><span className="h-3 w-3 rounded-full bg-purple-400" /> Webhook</p>
+          <p className="mt-1 text-xs font-semibold text-white/60">transfer.completed</p>
+        </div>
+        <pre className="h-[145px] overflow-hidden px-6 py-4 text-[11px] leading-[18px] text-sky-200"><code>{heroWebhookJson}</code></pre>
+        <div className="flex items-center justify-between border-t border-white/10 px-5 py-3 text-xs text-white/55">
+          <span>2024-05-20T14:33:21Z</span>
+          <span className="rounded-full border border-emerald-400/30 bg-emerald-400/10 px-3 py-1 font-bold text-emerald-300">Entregado ✓</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function ApiDocumentation() {
   const [language, setLanguage] = useState<keyof typeof examples>('typescript');
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <header className="sticky top-0 z-50 border-b border-border/40 bg-background/80 backdrop-blur-xl">
-        <div className="mx-auto flex h-16 max-w-[1500px] items-center justify-between px-4 lg:px-8">
+    <div className="min-h-screen bg-background text-foreground transition-colors duration-300">
+      <header className="sticky top-0 z-50 border-b border-border/40 bg-background/85 backdrop-blur-2xl transition-colors duration-300 dark:border-white/10 dark:bg-[#060b17]/90">
+        <div className="mx-auto flex h-[68px] max-w-[1500px] items-center justify-between px-4 lg:px-8">
           <div className="flex items-center gap-4">
             <Link href="/" aria-label="FondosEG inicio"><DashboardLogo size="md" priority /></Link>
-            <span className="hidden h-6 w-px bg-border sm:block" />
-            <span className="hidden text-sm font-bold text-muted-foreground sm:block">Documentación API</span>
+            <span className="hidden h-7 w-px bg-border sm:block dark:bg-white/10" />
+            <span className="hidden text-sm font-semibold text-muted-foreground sm:block">Documentación API</span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="hidden rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1 text-xs font-bold text-emerald-700 dark:text-emerald-300 sm:block">API v1 · Operativa</span>
+            <span className="hidden rounded-full border border-emerald-400/20 bg-emerald-400/10 px-4 py-2 text-xs font-bold text-emerald-300 shadow-[0_0_30px_rgba(16,185,129,0.12)] sm:block">API v1 – Operativa</span>
             <ThemeToggle />
-            <Button asChild className="hidden rounded-xl bg-brand-gradient font-bold text-white sm:inline-flex">
+            <Button asChild className="hidden rounded-2xl bg-brand-gradient px-6 font-bold text-white shadow-[0_14px_45px_rgba(236,72,153,0.35)] sm:inline-flex">
               <Link href="/developers-portal">Obtener credenciales <ArrowRight className="h-4 w-4" /></Link>
             </Button>
-            <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setMobileNavOpen(!mobileNavOpen)}>
+            <Button variant="ghost" size="icon" className="border border-border text-foreground dark:border-white/10 dark:text-white lg:hidden" onClick={() => setMobileNavOpen(!mobileNavOpen)}>
               {mobileNavOpen ? <X /> : <Menu />}
             </Button>
           </div>
         </div>
       </header>
 
-      <div className="mx-auto grid max-w-[1500px] lg:grid-cols-[240px_minmax(0,1fr)]">
-        <aside className={cn('border-r border-border/40 bg-background px-5 py-6 lg:sticky lg:top-16 lg:block lg:h-[calc(100vh-4rem)]', mobileNavOpen ? 'block' : 'hidden')}>
-          <p className="mb-3 px-3 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Guía de integración</p>
+      <div className="grid w-full lg:grid-cols-[240px_minmax(0,1fr)] lg:pl-[clamp(0px,10.5vw,240px)]">
+        <aside className={cn('border-r border-border/40 bg-background/95 px-5 py-8 transition-colors duration-300 dark:border-white/10 dark:bg-[#050b16]/95 lg:sticky lg:top-[68px] lg:block lg:h-[calc(100vh-68px)]', mobileNavOpen ? 'block' : 'hidden')}>
+          <p className="mb-5 px-3 text-[10px] font-bold uppercase tracking-[0.36em] text-muted-foreground">Guía de integración</p>
           <nav className="space-y-1">
             {sections.map((section) => (
-              <a key={section.id} href={`#${section.id}`} onClick={() => setMobileNavOpen(false)} className="group flex items-center justify-between rounded-xl px-3 py-2.5 text-sm font-semibold text-muted-foreground transition hover:bg-pink-500/10 hover:text-pink-600 dark:hover:text-pink-400">
+              <a key={section.id} href={`#${section.id}`} onClick={() => setMobileNavOpen(false)} className="group flex items-center justify-between rounded-xl px-3 py-3 text-[15px] font-medium text-muted-foreground transition hover:bg-accent hover:text-foreground dark:hover:bg-white/[0.04] dark:hover:text-white">
                 {section.label}<ChevronRight className="h-3.5 w-3.5 opacity-0 transition group-hover:opacity-100" />
               </a>
             ))}
           </nav>
-          <div className="mt-8 rounded-2xl border border-border/40 bg-card/60 p-4">
-            <BookOpen className="h-5 w-5 text-pink-500" />
-            <p className="mt-3 text-sm font-bold">Referencia completa</p>
-            <p className="mt-1 text-xs leading-5 text-muted-foreground">Especificación OpenAPI 3.1 lista para Postman, Insomnia o generación de clientes.</p>
-            <Link href="/api/docs/openapi.json" target="_blank" className="mt-3 flex items-center gap-1.5 text-xs font-bold text-pink-600 dark:text-pink-400">Abrir OpenAPI <ExternalLink className="h-3 w-3" /></Link>
+          <div className="mt-10 rounded-2xl border border-border/40 bg-card p-5 shadow-[0_20px_55px_rgba(2,6,23,0.08)] transition-colors duration-300 dark:border-white/10 dark:bg-[#071120]/80 dark:shadow-[0_20px_55px_rgba(0,0,0,0.22)]">
+            <BookOpen className="h-6 w-6 text-pink-400" />
+            <p className="mt-5 text-base font-bold text-foreground">Referencia completa</p>
+            <p className="mt-2 text-sm leading-6 text-muted-foreground">Especificación OpenAPI 3.1 lista para Postman, Insomnia o generación de clientes.</p>
+            <Link href="/api/docs/openapi.json" target="_blank" className="mt-5 flex items-center gap-1.5 text-sm font-bold text-pink-400">Abrir OpenAPI <ExternalLink className="h-3.5 w-3.5" /></Link>
           </div>
         </aside>
 
         <main className="min-w-0">
-          <section id="introduccion" className="relative overflow-hidden border-b border-border/40 px-5 py-16 sm:px-10 lg:px-14 lg:py-24">
-            <div className="pointer-events-none absolute -right-32 -top-36 h-[480px] w-[480px] rounded-full bg-pink-500/10 blur-3xl" />
-            <div className="relative max-w-5xl">
-              <div className="inline-flex items-center gap-2 rounded-full border border-pink-500/20 bg-pink-500/10 px-3 py-1.5 text-xs font-bold text-pink-700 dark:text-pink-300"><Zap className="h-3.5 w-3.5" /> FondosEG API v1</div>
-              <h1 className="mt-6 max-w-4xl text-4xl font-black tracking-[-0.04em] sm:text-5xl lg:text-6xl">Integra pagos y transferencias con una API clara y segura.</h1>
-              <p className="mt-6 max-w-3xl text-lg font-medium leading-8 text-muted-foreground">Conecta tu backend con FondosEG para consultar saldos, mover dinero, gestionar alquileres y recibir eventos en tiempo real. Empieza en pruebas y pasa a producción sin cambiar tu implementación.</p>
-              <div className="mt-8 flex flex-wrap gap-3">
-                <Button asChild size="lg" className="rounded-2xl bg-brand-gradient px-6 font-bold text-white"><Link href="#inicio-rapido">Empezar a integrar <ArrowRight /></Link></Button>
-                <Button asChild size="lg" variant="outline" className="rounded-2xl px-6 font-bold"><Link href="/api/docs/openapi.json" target="_blank">Ver OpenAPI <ExternalLink /></Link></Button>
+          <section id="introduccion" className="relative flex min-h-[calc(100vh-68px)] min-w-0 flex-col overflow-hidden border-b border-border/40 bg-background px-5 py-10 transition-colors duration-300 dark:border-white/10 dark:bg-[#020817] sm:px-8 lg:px-10 2xl:min-h-[875px] 2xl:px-14 2xl:py-12 2xl:pb-12">
+            <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(15,23,42,0.055)_1px,transparent_1px),linear-gradient(90deg,rgba(15,23,42,0.055)_1px,transparent_1px)] bg-[size:32px_32px] dark:bg-[linear-gradient(rgba(148,163,184,0.035)_1px,transparent_1px),linear-gradient(90deg,rgba(148,163,184,0.035)_1px,transparent_1px)]" />
+            <div className="pointer-events-none absolute inset-y-0 right-0 w-[52%] bg-linear-to-l from-pink-500/10 via-fuchsia-500/5 to-transparent dark:from-pink-600/18 dark:via-fuchsia-500/8" />
+            <div className="relative flex-1 2xl:grid 2xl:grid-cols-[minmax(0,650px)_minmax(0,1fr)] 2xl:grid-rows-[610px_auto] 2xl:gap-x-8">
+              <div className="min-w-0 max-w-[690px] 2xl:pt-[82px]">
+                <div className="inline-flex items-center gap-2 rounded-full border border-pink-500/35 bg-pink-500/10 px-4 py-2 text-sm font-bold text-pink-600 dark:border-pink-400/35 dark:bg-pink-400/10 dark:text-pink-200"><Zap className="h-4 w-4" /> FondosEG API v1</div>
+                <h1 className="mt-8 max-w-[740px] text-4xl font-black leading-[1.05] tracking-[-0.045em] text-foreground sm:text-5xl xl:text-[50px] 2xl:text-[56px]">Integra pagos y transferencias con una API clara y segura.</h1>
+                <p className="mt-7 max-w-[640px] text-base font-medium leading-8 text-muted-foreground 2xl:text-lg 2xl:leading-9">Conecta tu backend con FondosEG para consultar saldos, mover dinero, gestionar alquileres y recibir eventos en tiempo real. Empieza en pruebas y pasa a producción sin cambiar tu implementación.</p>
+                <div className="mt-8 flex flex-wrap gap-4">
+                  <Button asChild size="lg" className="h-14 rounded-2xl bg-brand-gradient px-7 font-bold text-white"><Link href="#inicio-rapido">Empezar a integrar <ArrowRight /></Link></Button>
+                  <Button asChild size="lg" variant="outline" className="h-14 rounded-2xl border-border/60 bg-card px-7 font-bold text-foreground hover:bg-accent dark:border-white/10 dark:bg-[#071120]/80 dark:text-white dark:hover:bg-white/10"><Link href="/api/docs/openapi.json" target="_blank">Ver OpenAPI <ExternalLink /></Link></Button>
+                </div>
+                <div className="mt-9 flex flex-wrap gap-2">
+                  {capabilityChips.map(({ label, icon: Icon, color }) => (
+                    <span key={label} className="inline-flex h-12 items-center gap-2 rounded-xl border border-border/60 bg-card px-4 text-sm font-semibold text-foreground transition-colors duration-300 dark:border-white/10 dark:bg-[#071120]/85 dark:text-white">
+                      <Icon className={cn('h-4 w-4', color)} />
+                      {label}
+                    </span>
+                  ))}
+                </div>
               </div>
-              <div className="mt-12 grid gap-4 sm:grid-cols-3">
+              <div className="hidden min-w-0 xl:mt-10 xl:block 2xl:col-start-2 2xl:row-start-1 2xl:mt-0 2xl:pt-[28px]">
+                <ApiHeroVisual />
+              </div>
+              <div className="relative mt-10 grid gap-4 sm:grid-cols-3 2xl:col-span-2 2xl:row-start-2 2xl:mt-0 2xl:w-[1048px]">
                 {[['REST + JSON', 'Interfaz estándar y predecible'], ['Entorno test', 'Prueba sin mover dinero real'], ['Webhooks HMAC', 'Eventos verificados y deduplicables']].map(([title, detail]) => (
-                  <div key={title} className="rounded-2xl border border-border/40 bg-card/50 p-5 backdrop-blur"><CheckCircle2 className="h-5 w-5 text-emerald-500" /><p className="mt-3 text-sm font-bold">{title}</p><p className="mt-1 text-xs leading-5 text-muted-foreground">{detail}</p></div>
+                  <div key={title} className="min-h-[120px] rounded-2xl border border-border/60 bg-card p-6 transition-colors duration-300 dark:border-white/10 dark:bg-[#071120]/85"><CheckCircle2 className="h-5 w-5 text-emerald-400" /><p className="mt-4 text-sm font-bold text-foreground">{title}</p><p className="mt-2 text-sm leading-5 text-muted-foreground">{detail}</p></div>
                 ))}
               </div>
             </div>
           </section>
 
-          <div className="divide-y divide-border/40">
+          <div className="divide-y divide-white/10 bg-background text-foreground">
             <section id="inicio-rapido" className="scroll-mt-20 px-5 py-16 sm:px-10 lg:px-14 lg:py-20">
               <SectionTitle eyebrow="Inicio rápido" title="Tu primera petición en cuatro pasos">La ruta recomendada separa credenciales, servidor y entornos desde el primer día.</SectionTitle>
               <div className="grid gap-4 md:grid-cols-2">
