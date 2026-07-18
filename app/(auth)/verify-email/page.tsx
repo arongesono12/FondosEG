@@ -14,6 +14,7 @@ import { Mail, CheckCircle2, AlertCircle, Loader2, ArrowLeft } from 'lucide-reac
 function VerifyEmailContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const successRedirect = searchParams.get('next') === '/developer-console' ? '/developer-console' : '/dashboard';
   
   const [userId, setUserId] = useState('');
   const [email, setEmail] = useState('');
@@ -143,10 +144,10 @@ function VerifyEmailContent() {
         </CardHeader>
         <CardFooter className="flex flex-col space-y-4 pt-2">
           <Button 
-            onClick={() => router.push('/dashboard')}
+            onClick={() => router.push(successRedirect)}
             className="w-full h-12 rounded-2xl text-base font-black uppercase tracking-widest bg-brand-gradient hover:opacity-90 text-white shadow-lg hover:shadow-primary/25 transition-all duration-300"
           >
-            Ir al dashboard
+            {successRedirect === '/developer-console' ? 'Ir a la consola' : 'Ir al dashboard'}
           </Button>
           <p className="text-sm text-center text-muted-foreground">
             Tu cuenta está confirmada y la sesión está activa

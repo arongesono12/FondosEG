@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { AuthzError, requireAuthUser } from '@/lib/server/authz';
+import { AuthzError, requireAuthUser, requireDeveloperAccess } from '@/lib/server/authz';
 import { createAdminClient } from '@/lib/supabase/admin';
 import {
   encryptWebhookSecret,
@@ -33,6 +33,7 @@ const subscriptionSelect = [
 export async function GET() {
   try {
     const user = await requireAuthUser();
+    await requireDeveloperAccess();
     const adminClient = createAdminClient();
 
     const { data, error } = await adminClient
@@ -58,6 +59,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const user = await requireAuthUser();
+    await requireDeveloperAccess();
     const payload = createWebhookSchema.safeParse(await request.json());
 
     if (!payload.success) {

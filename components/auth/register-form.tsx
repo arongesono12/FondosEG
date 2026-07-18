@@ -33,6 +33,8 @@ interface RegisterFormProps {
   loginLabel?: string;
   submitLabel?: string;
   defaultRole?: UserRole;
+  signupEndpoint?: string;
+  showRoleSelector?: boolean;
   prefill?: {
     name?: string;
     email?: string;
@@ -51,6 +53,8 @@ export function RegisterForm({
   loginLabel = 'Inicia sesión',
   submitLabel = 'Crear cuenta',
   defaultRole = 'gestor',
+  signupEndpoint = '/api/auth/signup',
+  showRoleSelector = true,
   prefill,
 }: RegisterFormProps) {
   const router = useRouter();
@@ -160,7 +164,7 @@ export function RegisterForm({
 
     setLoading(true);
     try {
-      const response = await fetch('/api/auth/signup', {
+      const response = await fetch(signupEndpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
@@ -174,6 +178,7 @@ export function RegisterForm({
           userId: result.user?.id || '',
           email: result.email || formData.email,
           name: result.name || formData.name,
+          next: successRedirect,
         });
         router.push(`/verify-email?${query.toString()}`);
       } else {
@@ -262,7 +267,7 @@ export function RegisterForm({
                 )}
               </div>
             </div>
-            <div className="space-y-2">
+            {showRoleSelector && <div className="space-y-2">
               <Label htmlFor="phone" className="text-foreground/80 dark:text-white/80">Teléfono</Label>
               <div className="relative">
                 <PhoneInput
@@ -276,7 +281,7 @@ export function RegisterForm({
                   <CheckCircle2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-green-500 z-10" />
                 )}
               </div>
-            </div>
+            </div>}
             <div className="space-y-2">
               <Label htmlFor="password" className="text-foreground/80 dark:text-white/80">Contraseña</Label>
               <div className="relative">
@@ -314,7 +319,7 @@ export function RegisterForm({
                 </p>
               )}
             </div>
-            <div className="space-y-2">
+            {showRoleSelector && <div className="space-y-2">
               <Label htmlFor="role" className="text-foreground/80 dark:text-white/80">Tipo de cuenta</Label>
               <Select value={formData.role} onValueChange={(value: UserRole) => setFormData({ ...formData, role: value })}>
                 <SelectTrigger className="bg-white dark:bg-[#1a1a1a] border border-border/50 dark:border-white/10 focus:ring-2 focus:ring-pink-500/50 focus:border-primary/50 dark:focus:border-white/20 transition-all h-11 px-4 rounded-xl text-foreground dark:text-white">
@@ -325,7 +330,7 @@ export function RegisterForm({
                   <SelectItem value="cliente">Cliente</SelectItem>
                 </SelectContent>
               </Select>
-            </div>
+            </div>}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="document_type" className="text-foreground/80 dark:text-white/80">Tipo documento</Label>

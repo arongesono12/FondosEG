@@ -2514,6 +2514,10 @@ dialog *,
     justify-content: center;
   }
 
+  .cookie-consent-toast .cookie-consent-primary {
+    box-shadow: 0 12px 28px rgba(236, 22, 116, .22);
+  }
+
   .dashboard-public-page main {
     padding-top: 12px !important;
   }

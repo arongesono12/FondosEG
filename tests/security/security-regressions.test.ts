@@ -29,5 +29,26 @@ test('tracked-secret extensions remain ignored', async () => {
 
 test('public signup rejects privileged roles in the server action', async () => {
   const source = await readFile(new URL('app/actions/auth.ts', root), 'utf8');
-  assert.match(source, /data\.role !== 'cliente' && data\.role !== 'gestor'/);
+  assert.match(source, /data\.role !== 'cliente'/);
+});
+
+test('dashboard and developer portal use independent product grants', async () => {
+  const migration = await readFile(new URL('supabase/migrations/20260718_separate_product_access.sql', root), 'utf8');
+  const apiKeys = await readFile(new URL('app/api/api-keys/route.ts', root), 'utf8');
+  assert.match(migration, /UNIQUE \(user_id, product\)/);
+  assert.match(migration, /WHERE role IN \('admin', 'superadmin'\)/);
+  assert.match(apiKeys, /requireDeveloperAccess\(\)/);
+  assert.match(apiKeys, /isApplicationAdmin \? requestedEnvironment : 'test'/);
+});
+
+test('CSP permits Next development tooling without weakening production', async () => {
+  const source = await readFile(new URL('next.config.ts', root), 'utf8');
+  assert.match(source, /isDevelopment \? " 'unsafe-eval'" : ""/);
+  assert.match(source, /process\.env\.NODE_ENV !== "production"/);
+});
+
+test('landing content is visible before client hydration', async () => {
+  const source = await readFile(new URL('components/marketing/motion-elements.tsx', root), 'utf8');
+  assert.doesNotMatch(source, /initial="hidden"/);
+  assert.match(source, /initial=\{false\}/);
 });

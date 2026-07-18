@@ -1,4 +1,13 @@
 export type UserRole = 'admin' | 'superadmin' | 'gestor' | 'cliente';
+export type AccessProduct = 'dashboard' | 'developer_portal';
+export type AccessRole = UserRole | 'developer';
+
+export interface AccountAccess {
+  user_id: string;
+  product: AccessProduct;
+  access_role: AccessRole;
+  status: 'pending' | 'active' | 'suspended';
+}
 export type TransferStatus = 'created' | 'available_for_pickup' | 'paid_out' | 'completed' | 'cancelled';
 export type TransferPayoutProvider = 'agent' | 'revolut';
 

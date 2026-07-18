@@ -10,7 +10,7 @@ export default async function DevelopersPortalLoginPage() {
   }
 
   if (user) {
-    redirect('/developers');
+    redirect('/developer-console');
   }
 
   return (
@@ -18,7 +18,7 @@ export default async function DevelopersPortalLoginPage() {
       <LoginForm
         title="Entrar al portal de APIs"
         description="Accede a tus credenciales, OpenAPI, SDK y webhooks de FondosEG."
-        successRedirect="/developers"
+        successRedirect="/developer-console"
         registerHref="/developers-portal/register"
         registerLabel="Crear cuenta de desarrollador"
       />

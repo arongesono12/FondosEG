@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { AuthzError, requireAuthUser } from '@/lib/server/authz';
+import { AuthzError, requireAuthUser, requireDeveloperAccess } from '@/lib/server/authz';
 import { createAdminClient } from '@/lib/supabase/admin';
 
 const eventTypes = ['transfer.created', 'transfer.paid_out', 'wallet_transfer.confirmed'] as const;
@@ -32,6 +32,7 @@ export async function PATCH(
 ) {
   try {
     const user = await requireAuthUser();
+    await requireDeveloperAccess();
     const { id } = await context.params;
     const payload = updateWebhookSchema.safeParse(await request.json());
 
@@ -80,6 +81,7 @@ export async function DELETE(
 ) {
   try {
     const user = await requireAuthUser();
+    await requireDeveloperAccess();
     const { id } = await context.params;
     const adminClient = createAdminClient();
 

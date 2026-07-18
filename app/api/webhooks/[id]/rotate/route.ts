@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { AuthzError, requireAuthUser } from '@/lib/server/authz';
+import { AuthzError, requireAuthUser, requireDeveloperAccess } from '@/lib/server/authz';
 import { createAdminClient } from '@/lib/supabase/admin';
 import {
   encryptWebhookSecret,
@@ -13,6 +13,7 @@ export async function POST(
 ) {
   try {
     const user = await requireAuthUser();
+    await requireDeveloperAccess();
     const { id } = await context.params;
     const adminClient = createAdminClient();
     const secret = generateWebhookSigningSecret();

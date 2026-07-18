@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { AuthzError, requireAuthUser } from '@/lib/server/authz';
+import { AuthzError, requireAuthUser, requireDeveloperAccess } from '@/lib/server/authz';
 import { normalizeApiEnvironment } from '@/lib/server/api-environments';
 import { generateApiSecret, getApiSecretPreview, hashApiSecret } from '@/lib/server/api-security';
 import { createAdminClient } from '@/lib/supabase/admin';
@@ -27,6 +27,7 @@ export async function POST(
 ) {
   try {
     const user = await requireAuthUser();
+    await requireDeveloperAccess();
     const { id } = await params;
     const adminClient = createAdminClient();
 

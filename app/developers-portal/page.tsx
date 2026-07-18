@@ -13,7 +13,7 @@ export default async function DevelopersPortalPage() {
   }
 
   if (user) {
-    redirect('/developers');
+    redirect('/developer-console');
   }
 
   return (
@@ -63,7 +63,7 @@ export default async function DevelopersPortalPage() {
             <BookOpen className="h-5 w-5 text-pink-500" />
             <p className="mt-4 text-sm font-semibold text-foreground">2. Consola</p>
             <p className="mt-2 text-sm leading-6 text-muted-foreground">
-              Tras autenticarse entra a `/developers`, donde genera credenciales y revisa uso.
+              Tras autenticarse entra a `/developer-console`, donde genera credenciales y revisa uso.
             </p>
           </div>
           <div className="rounded-2xl border border-border/60 bg-background/70 p-6 backdrop-blur">

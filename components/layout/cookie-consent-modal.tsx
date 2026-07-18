@@ -2,7 +2,15 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Cookie } from 'lucide-react';
+import {
+  ArrowLeft,
+  Check,
+  CheckCircle2,
+  Cookie,
+  Save,
+  Settings2,
+  ShieldCheck,
+} from 'lucide-react';
 
 export interface CookieConsentPreferences {
   essential: true;
@@ -38,15 +46,18 @@ export function CookieConsentModal({
 
   const content = showConfiguration
     ? {
-        title: 'Configura tus cookies',
+        title: 'Elige tus preferencias',
         description:
-          'Las esenciales siempre están activas porque mantienen la sesión, la seguridad y el acceso al dashboard. Las preferencias recuerdan ajustes visuales o configuraciones ligeras.',
+          'Las cookies esenciales siempre están activas. Tú decides si permites las que recuerdan ajustes visuales y preferencias de uso.',
       }
     : {
-        title: 'Usamos cookies para que FondosEG funcione correctamente',
+        title: 'Tu privacidad, bajo tu control',
         description:
-          'Guardamos datos pequeños para mantener tu sesión segura, recordar preferencias del dashboard y mejorar la estabilidad. Puedes aceptar todas, rechazar las opcionales o configurar tus preferencias.',
+          'Usamos cookies esenciales para mantener FondosEG seguro y, con tu permiso, cookies de preferencias para recordar cómo usas la plataforma.',
       };
+
+  const secondaryButton =
+    'cookie-consent-secondary flex min-h-11 items-center justify-center gap-2 rounded-xl border border-border/60 bg-background/70 px-3 text-sm font-semibold text-foreground transition-all hover:-translate-y-0.5 hover:bg-muted/60 active:translate-y-0';
 
   return (
     <div
@@ -67,67 +78,59 @@ export function CookieConsentModal({
             <p className="max-w-3xl text-xs font-medium leading-5 text-muted-foreground">{content.description}</p>
             {!showConfiguration && (
               <Link href="/landing/cookies" className="inline-flex text-xs font-semibold text-primary hover:underline">
-                Ver más información sobre cookies
+                Consulta nuestra política de cookies
               </Link>
             )}
           </div>
         </div>
 
         {!showConfiguration ? (
-          <div className="grid w-full gap-2 sm:grid-cols-3 lg:w-[520px]">
-            <button
-              type="button"
-              onClick={onRejectOptional}
-              className="h-11 rounded-xl border border-border/20 bg-background px-4 text-sm font-semibold text-foreground transition-colors hover:bg-muted/60"
-            >
-              Rechazar opcionales
-            </button>
-            <button
-              type="button"
-              onClick={() => setShowConfiguration(true)}
-              className="h-11 rounded-xl border border-border/20 bg-background px-4 text-sm font-semibold text-foreground transition-colors hover:bg-muted/60"
-            >
-              Configurar
-            </button>
+          <div className="cookie-consent-actions grid w-full grid-cols-3 gap-2.5 lg:w-[520px]">
             <button
               type="button"
               onClick={onAcceptAll}
-              className="h-11 rounded-xl bg-brand-gradient px-5 text-sm font-semibold text-white shadow-lg shadow-pink-500/20 transition-all hover:scale-[1.01] active:scale-[0.99]"
+              className="cookie-consent-primary flex min-h-11 items-center justify-center gap-2 rounded-xl bg-brand-gradient px-3 text-sm font-semibold text-white shadow-lg shadow-pink-500/20 transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-pink-500/25 active:translate-y-0"
             >
-              Aceptar cookies
+              <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
+              Aceptar todas
+            </button>
+            <button type="button" onClick={onRejectOptional} className={secondaryButton}>
+              <ShieldCheck className="h-4 w-4 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
+              Esenciales
+            </button>
+            <button type="button" onClick={() => setShowConfiguration(true)} className={secondaryButton}>
+              <Settings2 className="h-4 w-4 text-primary" aria-hidden="true" />
+              Personalizar
             </button>
           </div>
         ) : (
-          <div className="grid w-full gap-2 sm:grid-cols-3 lg:w-[520px]">
+          <div className="cookie-consent-actions grid w-full grid-cols-3 gap-2.5 lg:w-[520px]">
             <button
               type="button"
-              onClick={() =>
-                setPreferences((current) => ({
-                  ...current,
-                  preferences: !current.preferences,
-                }))
-              }
-              className={`h-11 rounded-xl border px-4 text-sm font-semibold transition-colors ${
+              aria-pressed={preferences.preferences}
+              onClick={() => setPreferences((current) => ({ ...current, preferences: !current.preferences }))}
+              className={`flex min-h-11 items-center justify-center gap-2 rounded-xl border px-3 text-center text-sm font-semibold transition-all ${
                 preferences.preferences
-                  ? 'border-pink-500 bg-pink-50 text-pink-700 dark:bg-pink-500/10 dark:text-pink-200'
-                  : 'border-border/20 bg-background text-foreground hover:bg-muted/60'
+                  ? 'border-pink-500/60 bg-pink-50 text-pink-800 shadow-sm shadow-pink-500/10 dark:bg-pink-500/10 dark:text-pink-100'
+                  : 'border-border/60 bg-background/70 text-foreground hover:bg-muted/60'
               }`}
             >
-              Preferencias {preferences.preferences ? 'activadas' : 'desactivadas'}
+              <Cookie className="h-4 w-4 shrink-0" aria-hidden="true" />
+              <span>Preferencias</span>
+              <span className={`flex items-center gap-1 rounded-full px-2 py-1 text-[10px] ${preferences.preferences ? 'bg-pink-500 text-white' : 'bg-muted text-muted-foreground'}`}>
+                {preferences.preferences && <Check className="h-3 w-3" aria-hidden="true" />}
+                {preferences.preferences ? 'Activadas' : 'Desactivadas'}
+              </span>
             </button>
-            <button
-              type="button"
-              onClick={() => setShowConfiguration(false)}
-              className="h-11 rounded-xl border border-border/20 bg-background px-4 text-sm font-semibold text-foreground transition-colors hover:bg-muted/60"
-            >
-              Volver
+            <button type="button" onClick={() => setShowConfiguration(false)} className={secondaryButton}>
+              <ArrowLeft className="h-4 w-4" aria-hidden="true" /> Atrás
             </button>
             <button
               type="button"
               onClick={() => onSaveConfiguration(preferences)}
-              className="h-11 rounded-xl bg-brand-gradient px-5 text-sm font-semibold text-white shadow-lg shadow-pink-500/20 transition-all hover:scale-[1.01] active:scale-[0.99]"
+              className="cookie-consent-primary flex min-h-11 items-center justify-center gap-2 rounded-xl bg-brand-gradient px-4 text-sm font-semibold text-white shadow-lg shadow-pink-500/20 transition-all hover:-translate-y-0.5 hover:shadow-xl active:translate-y-0"
             >
-              Guardar configuración
+              <Save className="h-4 w-4" aria-hidden="true" /> Guardar preferencias
             </button>
           </div>
         )}

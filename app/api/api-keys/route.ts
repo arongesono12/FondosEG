@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { AuthzError, requireAuthUser } from '@/lib/server/authz';
+import { AuthzError, requireAuthUser, requireDeveloperAccess } from '@/lib/server/authz';
 import { normalizeApiEnvironment } from '@/lib/server/api-environments';
 import { generateApiKey, generateApiSecret, getApiSecretPreview, hashApiSecret } from '@/lib/server/api-security';
 import { isTransientNetworkError } from '@/lib/network-errors';
-import { isAdminRole } from '@/lib/roles';
 import { createAdminClient } from '@/lib/supabase/admin';
 import type { ApiPermission, UserRole } from '@/types';
 
@@ -86,6 +85,7 @@ function publicApiKeyRecord(row: Record<string, unknown>) {
 export async function GET() {
   try {
     const user = await requireAuthUser();
+    await requireDeveloperAccess();
     const adminClient = createAdminClient();
     
     const { data: apiKeys, error } = await withSupabaseRetry(() =>
@@ -124,10 +124,13 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const user = await requireAuthUser();
+    const access = await requireDeveloperAccess();
 
     const body = await request.json();
     const { app_name, app_description, role_access = 'cliente', permissions } = body;
-    const environment = normalizeApiEnvironment(body?.environment);
+    const requestedEnvironment = normalizeApiEnvironment(body?.environment);
+    const isApplicationAdmin = access.access_role === 'admin' || access.access_role === 'superadmin';
+    const environment = isApplicationAdmin ? requestedEnvironment : 'test';
 
     if (!app_name) {
       return NextResponse.json(
@@ -137,25 +140,10 @@ export async function POST(request: NextRequest) {
     }
 
     const adminClient = createAdminClient();
-    const { data: profile, error: profileError } = await withSupabaseRetry(() =>
-      adminClient
-        .from('users')
-        .select('role')
-        .eq('id', user.id)
-        .single()
-    );
-
-    if (profileError || !profile) {
-      return NextResponse.json(
-        { error: 'No se pudo validar el perfil del usuario' },
-        { status: 401 }
-      );
-    }
-
     const requestedRole = String(role_access) as UserRole;
-    const allowedRoles: UserRole[] = isAdminRole(profile.role)
+    const allowedRoles: UserRole[] = isApplicationAdmin
       ? ['admin', 'superadmin', 'gestor', 'cliente']
-      : [profile.role as UserRole];
+      : ['cliente'];
 
     if (!allowedRoles.includes(requestedRole)) {
       return NextResponse.json(
@@ -221,6 +209,7 @@ export async function POST(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   try {
     const user = await requireAuthUser();
+    await requireDeveloperAccess();
 
     const { searchParams } = new URL(request.url);
     const keyId = searchParams.get('id');

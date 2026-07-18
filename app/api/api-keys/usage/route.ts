@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { AuthzError, requireAuthUser } from '@/lib/server/authz';
+import { AuthzError, requireAuthUser, requireDeveloperAccess } from '@/lib/server/authz';
 import { createAdminClient } from '@/lib/supabase/admin';
 
 export async function GET(request: NextRequest) {
   try {
     const user = await requireAuthUser();
+    await requireDeveloperAccess();
     const adminClient = createAdminClient();
     const { searchParams } = new URL(request.url);
     const requestedApiKeyId = searchParams.get('api_key_id');

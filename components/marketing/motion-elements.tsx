@@ -42,7 +42,7 @@ type MotionDivProps = HTMLMotionProps<'div'> & { children: ReactNode; className?
 
 export function FadeIn({ children, className, ...props }: MotionDivProps) {
   return (
-    <motion.div variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-80px' }} className={className} {...props}>
+    <motion.div variants={fadeUp} initial={false} whileInView="visible" viewport={{ once: true, margin: '-80px' }} className={className} {...props}>
       {children}
     </motion.div>
   );
@@ -50,7 +50,7 @@ export function FadeIn({ children, className, ...props }: MotionDivProps) {
 
 export function FadeInFast({ children, className, ...props }: MotionDivProps) {
   return (
-    <motion.div variants={fadeUpFast} initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-40px' }} className={className} {...props}>
+    <motion.div variants={fadeUpFast} initial={false} whileInView="visible" viewport={{ once: true, margin: '-40px' }} className={className} {...props}>
       {children}
     </motion.div>
   );
@@ -58,7 +58,7 @@ export function FadeInFast({ children, className, ...props }: MotionDivProps) {
 
 export function FadeInLeft({ children, className, ...props }: MotionDivProps) {
   return (
-    <motion.div variants={fadeLeft} initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-80px' }} className={className} {...props}>
+    <motion.div variants={fadeLeft} initial={false} whileInView="visible" viewport={{ once: true, margin: '-80px' }} className={className} {...props}>
       {children}
     </motion.div>
   );
@@ -66,7 +66,7 @@ export function FadeInLeft({ children, className, ...props }: MotionDivProps) {
 
 export function FadeInRight({ children, className, ...props }: MotionDivProps) {
   return (
-    <motion.div variants={fadeRight} initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-80px' }} className={className} {...props}>
+    <motion.div variants={fadeRight} initial={false} whileInView="visible" viewport={{ once: true, margin: '-80px' }} className={className} {...props}>
       {children}
     </motion.div>
   );
@@ -74,7 +74,7 @@ export function FadeInRight({ children, className, ...props }: MotionDivProps) {
 
 export function FadeInDown({ children, className, ...props }: MotionDivProps) {
   return (
-    <motion.div variants={fadeDown} initial="hidden" whileInView="visible" viewport={{ once: true }} className={className} {...props}>
+    <motion.div variants={fadeDown} initial={false} whileInView="visible" viewport={{ once: true }} className={className} {...props}>
       {children}
     </motion.div>
   );
@@ -82,7 +82,7 @@ export function FadeInDown({ children, className, ...props }: MotionDivProps) {
 
 export function StaggerContainer({ children, className, ...props }: MotionDivProps) {
   return (
-    <motion.div variants={stagger} initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-60px' }} className={className} {...props}>
+    <motion.div variants={stagger} initial={false} whileInView="visible" viewport={{ once: true, margin: '-60px' }} className={className} {...props}>
       {children}
     </motion.div>
   );
@@ -90,7 +90,7 @@ export function StaggerContainer({ children, className, ...props }: MotionDivPro
 
 export function StaggerContainerFast({ children, className, ...props }: MotionDivProps) {
   return (
-    <motion.div variants={staggerFast} initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-60px' }} className={className} {...props}>
+    <motion.div variants={staggerFast} initial={false} whileInView="visible" viewport={{ once: true, margin: '-60px' }} className={className} {...props}>
       {children}
     </motion.div>
   );

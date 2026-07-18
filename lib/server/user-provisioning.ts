@@ -90,6 +90,32 @@ async function ensureProfileAndBalance(
     throw new Error(profileError.message);
   }
 
+  const { error: dashboardAccessError } = await adminClient.from('account_access').upsert(
+    {
+      user_id: authUser.id,
+      product: 'dashboard',
+      access_role: input.role,
+      status: 'active',
+      updated_at: nowIso,
+    },
+    { onConflict: 'user_id,product' }
+  );
+  if (dashboardAccessError) throw new Error(dashboardAccessError.message);
+
+  if (input.role === 'admin' || input.role === 'superadmin') {
+    const { error: developerAccessError } = await adminClient.from('account_access').upsert(
+      {
+        user_id: authUser.id,
+        product: 'developer_portal',
+        access_role: input.role,
+        status: 'active',
+        updated_at: nowIso,
+      },
+      { onConflict: 'user_id,product' }
+    );
+    if (developerAccessError) throw new Error(developerAccessError.message);
+  }
+
   if (input.role === 'gestor') {
     const { error: balanceError } = await adminClient.from('agent_balances').upsert(
       {

@@ -11,7 +11,7 @@ export async function signUpAction(data: RegisterFormData) {
   const adminClient = createAdminClient();
   const normalizedEmail = data.email.toLowerCase().trim();
 
-  if (data.role !== 'cliente' && data.role !== 'gestor') {
+  if (data.role !== 'cliente') {
     return { success: false, error: 'El rol solicitado no está permitido para el registro público' };
   }
 
@@ -106,7 +106,12 @@ export async function verifyEmailCode(_userId: string, email: string, code: stri
     .update({ is_verified: true, updated_at: new Date().toISOString() })
     .eq('id', data.user.id);
 
-  if (profileError) {
+  const { error: developerProfileError } = await adminClient
+    .from('developer_profiles')
+    .update({ is_verified: true, updated_at: new Date().toISOString() })
+    .eq('user_id', data.user.id);
+
+  if (profileError || developerProfileError) {
     return { success: false, error: 'El correo fue confirmado, pero no se pudo actualizar el perfil.' };
   }
 
