@@ -376,7 +376,7 @@ export default function HistoryPage() {
       </Card>
 
       <Dialog open={!!editingTransfer} onOpenChange={(open) => !open && setEditingTransfer(null)}>
-        <DialogContent className="mobile-native-dialog max-w-2xl">
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Corregir envío de gestor</DialogTitle>
             <DialogDescription>

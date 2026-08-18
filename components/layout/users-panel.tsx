@@ -102,13 +102,14 @@ export function UsersPanel({ open, onClose }: UsersPanelProps) {
 
       {/* Slide-in Panel */}
       <aside
+        aria-hidden={!open}
         className={cn(
-          'fixed right-0 top-0 z-50 h-screen w-[360px] max-w-full bg-card border-l border-border/20 shadow-2xl flex flex-col transition-transform duration-300 ease-in-out',
-          open ? 'translate-x-0' : 'translate-x-full'
+          'dashboard-drawer fixed right-0 top-0 z-50 h-dvh w-[360px] max-w-full bg-card border-l border-border/20 shadow-2xl flex flex-col transition-transform duration-300 ease-in-out',
+          open ? 'translate-x-0' : 'translate-x-full pointer-events-none'
         )}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-5 border-b border-border/10">
+        <div className="dashboard-drawer-header flex items-center justify-between p-5 border-b border-border/10">
           <div className="flex items-center gap-2">
             <Users className="h-5 w-5 text-primary" />
             <h2 className="text-lg font-bold text-foreground">Usuarios</h2>

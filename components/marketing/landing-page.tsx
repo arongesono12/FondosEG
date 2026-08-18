@@ -132,7 +132,7 @@ export function LandingPage() {
   <FadeIn><section className="cta-section"><div><h2>Comienza con <span>FondosEG</span></h2><p>Crea tu cuenta gratis y comienza a mover tu dinero<br/>con velocidad, control y confianza.</p></div><form action="/register"><div><input type="email" name="email" placeholder="Correo electrónico" aria-label="Correo electrónico"/><button className="btn-primary">Comenzar gratis <ArrowRight /></button></div><p><span><Check/> Sin tarjeta de crédito</span><span><Check/> Configuración en minutos</span><span><Check/> Cancela cuando quieras</span></p></form></section></FadeIn>
 
   <Dialog open={demoOpen} onOpenChange={setDemoOpen}>
-    <DialogContent className="demo-dialog" aria-describedby="demo-description">
+    <DialogContent mobile="none" className="demo-dialog" aria-describedby="demo-description">
       <div className="demo-dialog-copy">
         <span>RECORRIDO DE LA PLATAFORMA</span>
         <DialogTitle>Descubre cómo funciona FondosEG</DialogTitle>

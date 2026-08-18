@@ -1225,7 +1225,7 @@ dialog *,
   border-bottom: 1px solid rgba(148, 163, 184, .14);
   background:
     radial-gradient(circle at 88% 0%, rgba(236, 22, 116, .12), transparent 36%),
-    color-mix(in srgb, hsl(var(--background)) 84%, transparent);
+    color-mix(in srgb, var(--background) 84%, transparent);
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
 }
@@ -1264,7 +1264,7 @@ dialog *,
   border: 0;
   border-radius: 0;
   background: transparent;
-  color: hsl(var(--foreground));
+  color: var(--foreground);
   box-shadow: none;
   transition: transform .18s ease, color .18s ease;
 }
@@ -1292,7 +1292,7 @@ dialog *,
   height: 18px;
   align-items: center;
   justify-content: center;
-  border: 2px solid hsl(var(--background));
+  border: 2px solid var(--background);
   border-radius: 999px;
   background: #f43f5e;
   color: white;
@@ -1315,7 +1315,7 @@ dialog *,
   box-shadow:
     0 12px 28px rgba(15, 23, 42, .08),
     inset 0 1px 0 rgba(255, 255, 255, .78);
-  color: hsl(var(--foreground));
+  color: var(--foreground);
 }
 
 .dark .dashboard-mobile-user-trigger {
@@ -1345,7 +1345,7 @@ dialog *,
 
 .dashboard-mobile-user-trigger small {
   margin-top: 2px;
-  color: hsl(var(--muted-foreground));
+  color: var(--muted-foreground);
   font-size: 10px;
   font-weight: 800;
   text-transform: capitalize;
@@ -1413,7 +1413,7 @@ dialog *,
   border: 0;
   border-radius: 0;
   background: transparent;
-  color: hsl(var(--muted-foreground));
+  color: var(--muted-foreground);
   font-size: 9.5px;
   font-weight: 800;
   line-height: 1;
@@ -1724,62 +1724,11 @@ dialog *,
   }
 }
 
+/* Contenido interno del flujo de transferencia en móvil.
+   La geometría a pantalla completa la aporta `.dialog-shell[data-mobile='fullscreen']`. */
 @media (max-width: 1023.98px) {
-  .agent-transfer-dialog {
-    position: fixed !important;
-    inset: 0 !important;
-    left: 0 !important;
-    top: 0 !important;
-    right: 0 !important;
-    bottom: 0 !important;
-    width: 100dvw !important;
-    max-width: none !important;
-    height: 100dvh !important;
-    max-height: 100dvh !important;
-    margin: 0 !important;
-    transform: none !important;
-    border: 0 !important;
-    border-radius: 0 !important;
-    background: hsl(var(--card)) !important;
-    color: hsl(var(--card-foreground)) !important;
-    backdrop-filter: none !important;
-    -webkit-backdrop-filter: none !important;
-    box-shadow: none !important;
-  }
-
-  .dark .agent-transfer-dialog {
-    background: #071225 !important;
-    box-shadow: none !important;
-  }
-
-  .agent-transfer-dialog > button,
-  .agent-transfer-confirm-dialog > button {
-    top: max(14px, env(safe-area-inset-top));
-    right: 14px;
-    width: 34px;
-    height: 34px;
-    display: grid;
-    place-items: center;
-    border-radius: 999px;
-    background: hsl(var(--muted) / .75);
-    opacity: 1;
-  }
-
   .agent-transfer-dialog [class*="p-6"] {
     padding: 18px !important;
-  }
-
-  .agent-transfer-dialog > div:first-child {
-    position: sticky;
-    top: 0;
-    z-index: 5;
-    padding-top: max(18px, env(safe-area-inset-top)) !important;
-    background: inherit;
-  }
-
-  .agent-transfer-dialog > div:nth-child(2) {
-    min-height: calc(100dvh - 88px);
-    padding-bottom: calc(110px + env(safe-area-inset-bottom)) !important;
   }
 
   .agent-transfer-form .grid {
@@ -1796,9 +1745,9 @@ dialog *,
   .agent-transfer-form textarea {
     min-height: 46px;
     border-radius: 16px !important;
-    border-color: hsl(var(--border) / .7) !important;
-    background: hsl(var(--background)) !important;
-    color: hsl(var(--foreground)) !important;
+    border-color: color-mix(in srgb, var(--border) 70%, transparent) !important;
+    background: var(--background) !important;
+    color: var(--foreground) !important;
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, .05);
   }
 
@@ -1806,7 +1755,7 @@ dialog *,
   .dark .agent-transfer-form select,
   .dark .agent-transfer-form textarea {
     background: rgba(2, 8, 23, .96) !important;
-    color: hsl(var(--foreground)) !important;
+    color: var(--foreground) !important;
   }
 
   .agent-transfer-form label,
@@ -1818,28 +1767,6 @@ dialog *,
     height: 50px !important;
     border-radius: 18px !important;
     font-size: 14px;
-  }
-
-  .agent-transfer-confirm-dialog {
-    left: 50% !important;
-    top: 50% !important;
-    width: calc(100vw - 28px) !important;
-    max-width: 430px !important;
-    max-height: min(82dvh, 680px) !important;
-    transform: translate(-50%, -50%) !important;
-    border: 1px solid rgba(148, 163, 184, .22) !important;
-    border-radius: 26px !important;
-    background: hsl(var(--card)) !important;
-    color: hsl(var(--card-foreground)) !important;
-    backdrop-filter: none !important;
-    -webkit-backdrop-filter: none !important;
-    box-shadow: 0 28px 90px rgba(15, 23, 42, .28) !important;
-    overflow-y: auto !important;
-  }
-
-  .dark .agent-transfer-confirm-dialog {
-    background: #071225 !important;
-    box-shadow: 0 28px 90px rgba(0, 0, 0, .62) !important;
   }
 
   .agent-transfer-confirm-dialog [class*="p-6"] {
@@ -1862,7 +1789,7 @@ dialog *,
     bottom: 0;
     margin: 0 -18px -18px;
     padding: 12px 18px 18px;
-    background: linear-gradient(180deg, transparent, hsl(var(--card)) 18%);
+    background: linear-gradient(180deg, transparent, var(--card) 18%);
   }
 
   .dark .agent-transfer-confirm-dialog .flex.gap-3.pt-2 {
@@ -1882,7 +1809,7 @@ dialog *,
 
 .agent-transfer-dialog {
   background: #ffffff !important;
-  color: hsl(var(--foreground)) !important;
+  color: var(--foreground) !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
 }
@@ -1912,7 +1839,7 @@ dialog *,
   border: 1px solid rgba(148, 163, 184, .22) !important;
   border-radius: 26px !important;
   background: #ffffff !important;
-  color: hsl(var(--foreground)) !important;
+  color: var(--foreground) !important;
   box-shadow: 0 28px 90px rgba(15, 23, 42, .28) !important;
 }
 
@@ -1930,50 +1857,6 @@ dialog *,
   background: rgba(2, 8, 23, .42);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
-}
-
-@media (max-width: 1023.98px) {
-  .agent-transfer-dialog.agent-transfer-dialog {
-    position: fixed !important;
-    inset: 0 !important;
-    left: 0 !important;
-    top: 0 !important;
-    right: 0 !important;
-    bottom: 0 !important;
-    translate: none !important;
-    transform: none !important;
-    width: 100vw !important;
-    width: 100dvw !important;
-    min-width: 100vw !important;
-    max-width: 100vw !important;
-    height: 100vh !important;
-    height: 100dvh !important;
-    min-height: 100vh !important;
-    max-height: 100dvh !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    border: 0 !important;
-    border-radius: 0 !important;
-    overflow-y: auto !important;
-    background: #ffffff !important;
-    box-shadow: none !important;
-  }
-
-  .dark .agent-transfer-dialog.agent-transfer-dialog {
-    background: #071225 !important;
-  }
-
-  .agent-transfer-dialog.agent-transfer-dialog[data-state='open'],
-  .agent-transfer-dialog.agent-transfer-dialog[data-state='closed'] {
-    transform: none !important;
-  }
-
-  .agent-transfer-dialog.agent-transfer-dialog > div:first-child {
-    position: sticky;
-    top: 0;
-    z-index: 5;
-    background: inherit;
-  }
 }
 
 .stat-card:hover .stat-icon {
@@ -2479,7 +2362,7 @@ dialog *,
     left: 10px !important;
     right: 10px !important;
     bottom: max(10px, env(safe-area-inset-bottom)) !important;
-    border: 1px solid hsl(var(--border) / .65) !important;
+    border: 1px solid color-mix(in srgb, var(--border) 65%, transparent) !important;
     border-radius: 24px !important;
     background: #ffffff !important;
     padding: 16px !important;
@@ -2522,75 +2405,40 @@ dialog *,
     padding-top: 12px !important;
   }
 
-  .dashboard-public-page main form,
-  .mobile-native-dialog form {
+  .dashboard-public-page main form {
     width: 100%;
   }
 
   .dashboard-public-page main input,
   .dashboard-public-page main select,
-  .dashboard-public-page main textarea,
-  .mobile-native-dialog input,
-  .mobile-native-dialog select,
-  .mobile-native-dialog textarea {
+  .dashboard-public-page main textarea {
     min-height: 46px;
     font-size: 16px !important;
     border-radius: 16px !important;
   }
 
-  .dashboard-public-page main textarea,
-  .mobile-native-dialog textarea {
+  .dashboard-public-page main textarea {
     min-height: 96px;
   }
 
-  .dashboard-public-page main label,
-  .mobile-native-dialog label {
+  .dashboard-public-page main label {
     line-height: 1.35;
   }
 
-  .dashboard-public-page main form button,
-  .mobile-native-dialog form button,
-  .mobile-native-dialog [class*="DialogFooter"] button {
+  .dashboard-public-page main form button {
     min-height: 46px;
   }
 
   .dashboard-public-page main .flex.gap-2,
-  .dashboard-public-page main .flex.gap-3,
-  .mobile-native-dialog .flex.gap-2,
-  .mobile-native-dialog .flex.gap-3 {
+  .dashboard-public-page main .flex.gap-3 {
     flex-wrap: wrap;
   }
 
   .dashboard-public-page main .flex.gap-2 > button,
-  .dashboard-public-page main .flex.gap-3 > button,
-  .mobile-native-dialog .flex.gap-2 > button,
-  .mobile-native-dialog .flex.gap-3 > button {
+  .dashboard-public-page main .flex.gap-3 > button {
     flex: 1 1 140px;
   }
 
-  .mobile-native-dialog {
-    background: #ffffff !important;
-    background-image: none !important;
-  }
-
-  .dark .mobile-native-dialog {
-    background: #071225 !important;
-    background-image: none !important;
-  }
-
-  .mobile-native-dialog > div:first-child {
-    position: sticky;
-    top: 0;
-    z-index: 3;
-    background: inherit !important;
-  }
-
-  .mobile-native-dialog > div:not(:first-child) {
-    padding-left: 18px !important;
-    padding-right: 18px !important;
-  }
-
-  .mobile-native-dialog [class*="grid-cols-"],
   .dashboard-public-page main [class*="grid-cols-"] {
     grid-template-columns: minmax(0, 1fr) !important;
   }
@@ -2598,38 +2446,27 @@ dialog *,
   .dashboard-public-page main [class*="bg-white/"],
   .dashboard-public-page main [class*="bg-card/"],
   .dashboard-public-page main [class*="bg-muted/"],
-  .dashboard-public-page main [class*="backdrop-blur"],
-  .mobile-native-dialog [class*="bg-white/"],
-  .mobile-native-dialog [class*="bg-card/"],
-  .mobile-native-dialog [class*="bg-muted/"],
-  .mobile-native-dialog [class*="backdrop-blur"] {
-    background-color: hsl(var(--card)) !important;
+  .dashboard-public-page main [class*="backdrop-blur"] {
+    background-color: var(--card) !important;
     background-image: none !important;
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
   }
 
   .dashboard-public-page main [class*="shadow-xl"],
-  .dashboard-public-page main [class*="shadow-2xl"],
-  .mobile-native-dialog [class*="shadow-xl"],
-  .mobile-native-dialog [class*="shadow-2xl"] {
+  .dashboard-public-page main [class*="shadow-2xl"] {
     box-shadow: 0 14px 34px rgba(15, 23, 42, .08) !important;
   }
 
   .dark .dashboard-public-page main [class*="shadow-xl"],
-  .dark .dashboard-public-page main [class*="shadow-2xl"],
-  .dark .mobile-native-dialog [class*="shadow-xl"],
-  .dark .mobile-native-dialog [class*="shadow-2xl"] {
+  .dark .dashboard-public-page main [class*="shadow-2xl"] {
     box-shadow: 0 16px 38px rgba(0, 0, 0, .24) !important;
   }
 
   .dashboard-public-page main [role="alert"],
   .dashboard-public-page main [class*="bg-red-"],
   .dashboard-public-page main [class*="bg-amber-"],
-  .dashboard-public-page main [class*="bg-green-"],
-  .mobile-native-dialog [class*="bg-red-"],
-  .mobile-native-dialog [class*="bg-amber-"],
-  .mobile-native-dialog [class*="bg-green-"] {
+  .dashboard-public-page main [class*="bg-green-"] {
     border-radius: 18px !important;
   }
 
@@ -2648,8 +2485,8 @@ dialog *,
     margin: 8px 0 10px;
     padding: 6px 10px;
     border-radius: 999px;
-    background: hsl(var(--muted));
-    color: hsl(var(--muted-foreground));
+    background: var(--muted);
+    color: var(--muted-foreground);
     font-size: 10px;
     font-weight: 900;
     letter-spacing: .02em;
@@ -2690,9 +2527,9 @@ dialog *,
   .wallet-movement-row {
     margin: 0 0 12px !important;
     overflow: hidden;
-    border: 1px solid hsl(var(--border) / .55) !important;
+    border: 1px solid color-mix(in srgb, var(--border) 55.00000000000001%, transparent) !important;
     border-radius: 22px !important;
-    background: hsl(var(--card)) !important;
+    background: var(--card) !important;
     box-shadow: 0 12px 28px rgba(15, 23, 42, .08);
   }
 
@@ -2712,12 +2549,12 @@ dialog *,
   }
 
   .wallet-movements-table td + td {
-    border-top: 1px solid hsl(var(--border) / .45) !important;
+    border-top: 1px solid color-mix(in srgb, var(--border) 45%, transparent) !important;
   }
 
   .wallet-movements-table td::before {
     content: attr(data-label);
-    color: hsl(var(--muted-foreground));
+    color: var(--muted-foreground);
     font-size: 10px;
     font-weight: 900;
     letter-spacing: .12em;
@@ -2793,9 +2630,9 @@ dialog *,
   .activity-record-row {
     margin: 0 0 12px !important;
     overflow: hidden;
-    border: 1px solid hsl(var(--border) / .55) !important;
+    border: 1px solid color-mix(in srgb, var(--border) 55.00000000000001%, transparent) !important;
     border-radius: 22px !important;
-    background: hsl(var(--card)) !important;
+    background: var(--card) !important;
     box-shadow: 0 12px 28px rgba(15, 23, 42, .08);
   }
 
@@ -2815,12 +2652,12 @@ dialog *,
   }
 
   .activity-records-table td + td {
-    border-top: 1px solid hsl(var(--border) / .45) !important;
+    border-top: 1px solid color-mix(in srgb, var(--border) 45%, transparent) !important;
   }
 
   .activity-records-table td::before {
     content: attr(data-label);
-    color: hsl(var(--muted-foreground));
+    color: var(--muted-foreground);
     font-size: 10px;
     font-weight: 900;
     letter-spacing: .12em;
@@ -2870,47 +2707,11 @@ dialog *,
   }
 }
 
-/* Native-feeling mobile transfer flow */
+/* Native-feeling mobile transfer flow.
+   El encabezado y el cuerpo usan `.dialog-header` / `.dialog-body`, así que la
+   geometría la aporta el sistema compartido de modales a pantalla completa. */
 @media (max-width: 1023.98px) {
-  .agent-transfer-dialog.agent-transfer-dialog {
-    position: fixed !important;
-    inset: 0 !important;
-    left: 0 !important;
-    top: 0 !important;
-    width: 100dvw !important;
-    max-width: 100dvw !important;
-    height: 100dvh !important;
-    max-height: 100dvh !important;
-    min-height: 100dvh !important;
-    transform: none !important;
-    border: 0 !important;
-    border-radius: 0 !important;
-    overflow: hidden !important;
-    background: hsl(var(--card)) !important;
-    box-shadow: none !important;
-  }
-
-  .dark .agent-transfer-dialog.agent-transfer-dialog {
-    background: #071225 !important;
-  }
-
-  .agent-transfer-dialog.agent-transfer-dialog[data-state='open'],
-  .agent-transfer-dialog.agent-transfer-dialog[data-state='closed'] {
-    transform: none !important;
-  }
-
-  .agent-transfer-header {
-    flex: none !important;
-    padding: max(18px, env(safe-area-inset-top)) 18px 18px !important;
-    background: inherit;
-  }
-
   .agent-transfer-body {
-    flex: 1 1 auto !important;
-    min-height: 0 !important;
-    overflow-y: auto !important;
-    -webkit-overflow-scrolling: touch;
-    overscroll-behavior: contain;
     padding: 18px 18px calc(140px + env(safe-area-inset-bottom)) !important;
     scroll-padding-bottom: calc(140px + env(safe-area-inset-bottom));
   }
@@ -2944,8 +2745,8 @@ dialog *,
     border: 0 !important;
     border-radius: 0 !important;
     overflow: hidden !important;
-    background: hsl(var(--card)) !important;
-    color: hsl(var(--card-foreground)) !important;
+    background: var(--card) !important;
+    color: var(--card-foreground) !important;
     box-shadow: none !important;
   }
 
@@ -2990,7 +2791,7 @@ dialog *,
     z-index: 3;
     margin: 0 -18px -18px;
     padding: 12px 18px calc(18px + env(safe-area-inset-bottom));
-    background: linear-gradient(180deg, transparent, hsl(var(--card)) 18%);
+    background: linear-gradient(180deg, transparent, var(--card) 18%);
   }
 
   .dark .agent-transfer-confirm-actions {
@@ -3008,220 +2809,12 @@ dialog *,
   }
 }
 
-/* Final override: keep search centered across the whole mobile/tablet dashboard range */
-@media (max-width: 1023.98px) {
-  .search-mobile-dialog.search-mobile-dialog {
-    position: fixed !important;
-    left: 50% !important;
-    top: 50% !important;
-    right: auto !important;
-    bottom: auto !important;
-    width: min(calc(100dvw - 24px), 640px) !important;
-    max-width: min(calc(100dvw - 24px), 640px) !important;
-    height: auto !important;
-    max-height: min(78dvh, 620px) !important;
-    min-height: 0 !important;
-    translate: none !important;
-    transform: translate(-50%, -50%) !important;
-    border-radius: 24px !important;
-    background-color: #ffffff !important;
-    background-image: none !important;
-    color: hsl(var(--foreground)) !important;
-  }
-
-  .dark .search-mobile-dialog.search-mobile-dialog {
-    background-color: #071225 !important;
-    background-image: none !important;
-  }
-
-  .search-mobile-dialog.search-mobile-dialog[data-state='open'],
-  .search-mobile-dialog.search-mobile-dialog[data-state='closed'] {
-    translate: none !important;
-    transform: translate(-50%, -50%) !important;
-  }
-}
-
-/* Mobile search should behave like a centered command palette, not a full page */
 @media (max-width: 640px) {
-  .search-mobile-dialog {
-    position: fixed !important;
-    left: 50% !important;
-    top: 50% !important;
-    width: calc(100vw - 24px) !important;
-    max-width: calc(100vw - 24px) !important;
-    max-height: min(78dvh, 620px) !important;
-    transform: translate(-50%, -50%) !important;
-    border: 1px solid hsl(var(--border) / .7) !important;
-    border-radius: 24px !important;
-    background: #ffffff !important;
-    color: hsl(var(--foreground)) !important;
-    box-shadow: 0 24px 70px rgba(15, 23, 42, .22) !important;
-    backdrop-filter: none !important;
-    -webkit-backdrop-filter: none !important;
-  }
-
-  .dark .search-mobile-dialog {
-    background: #071225 !important;
-    box-shadow: 0 24px 70px rgba(0, 0, 0, .55) !important;
-  }
-
-  .search-mobile-dialog[data-state='open'],
-  .search-mobile-dialog[data-state='closed'] {
-    transform: translate(-50%, -50%) !important;
-  }
-
-  .search-mobile-dialog > button {
-    top: 12px !important;
-    right: 12px !important;
-    width: 34px;
-    height: 34px;
-    display: grid;
-    place-items: center;
-    border-radius: 999px;
-    background: hsl(var(--muted)) !important;
-    opacity: 1;
-  }
-
-  .search-mobile-dialog > div:first-of-type {
-    padding: 18px 52px 18px 18px !important;
-    background: #ffffff !important;
-  }
-
-  .dark .search-mobile-dialog > div:first-of-type {
-    background: #071225 !important;
-  }
-
-  .search-mobile-dialog > div:first-of-type svg {
-    left: 30px !important;
-  }
-
-  .search-mobile-dialog input {
-    height: 50px !important;
-    background: #f8fafc !important;
-    border: 1px solid hsl(var(--border) / .7) !important;
-    border-radius: 18px !important;
-    font-size: 15px !important;
-  }
-
-  .dark .search-mobile-dialog input {
-    background: #020817 !important;
-  }
-
-  .search-mobile-dialog > div:nth-of-type(2) {
-    max-height: calc(min(78dvh, 620px) - 138px) !important;
-    overflow-y: auto !important;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  .search-mobile-dialog > div:last-child {
-    padding: 12px 16px !important;
-    background: #f8fafc !important;
-  }
-
-  .dark .search-mobile-dialog > div:last-child {
-    background: #020817 !important;
-  }
-}
-
-/* Shared native mobile behavior for dashboard modules */
-@media (max-width: 640px) {
-  .mobile-native-dialog {
-    position: fixed !important;
-    inset: 0 !important;
-    left: 0 !important;
-    top: 0 !important;
-    display: flex !important;
-    width: 100dvw !important;
-    max-width: 100dvw !important;
-    height: 100dvh !important;
-    max-height: 100dvh !important;
-    min-height: 100dvh !important;
-    transform: none !important;
-    grid-template-rows: auto minmax(0, 1fr);
-    flex-direction: column;
-    gap: 0 !important;
-    border: 0 !important;
-    border-radius: 0 !important;
-    overflow: hidden !important;
-    background: #ffffff !important;
-    color: hsl(var(--foreground)) !important;
-    box-shadow: none !important;
-    backdrop-filter: none !important;
-    -webkit-backdrop-filter: none !important;
-  }
-
-  .dark .mobile-native-dialog {
-    background: #071225 !important;
-  }
-
-  .mobile-native-dialog[data-state='open'],
-  .mobile-native-dialog[data-state='closed'] {
-    transform: none !important;
-  }
-
-  .mobile-native-dialog > button {
-    top: max(14px, env(safe-area-inset-top)) !important;
-    right: 14px !important;
-    z-index: 5;
-    width: 36px;
-    height: 36px;
-    display: grid;
-    place-items: center;
-    border-radius: 999px;
-    background: hsl(var(--muted)) !important;
-    color: hsl(var(--foreground)) !important;
-    opacity: 1;
-  }
-
-  .mobile-native-dialog > div:first-child {
-    flex: none;
-    padding: max(18px, env(safe-area-inset-top)) 18px 16px !important;
-    border-bottom: 1px solid hsl(var(--border) / .55);
-    background: inherit;
-    text-align: left;
-  }
-
-  .mobile-native-dialog > div:not(:first-child) {
-    min-height: 0;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    overscroll-behavior: contain;
-  }
-
-  .mobile-native-dialog > div:last-child {
-    padding-bottom: calc(20px + env(safe-area-inset-bottom)) !important;
-  }
-
-  .mobile-native-dialog input,
-  .mobile-native-dialog select,
-  .mobile-native-dialog textarea {
-    min-height: 46px;
-    border-radius: 16px !important;
-    background-color: #ffffff !important;
-    color: hsl(var(--foreground)) !important;
-  }
-
-  .dark .mobile-native-dialog input,
-  .dark .mobile-native-dialog select,
-  .dark .mobile-native-dialog textarea {
-    background-color: #020817 !important;
-  }
-
-  .mobile-native-dialog button:not([aria-label]):not([data-radix-collection-item]) {
-    min-height: 44px;
-  }
-
-  .mobile-native-dialog .grid[class*="grid-cols-2"],
-  .mobile-native-dialog .grid[class*="grid-cols-3"],
-  .mobile-native-dialog .grid[class*="grid-cols-4"] {
-    grid-template-columns: minmax(0, 1fr) !important;
-  }
-
   .dashboard-public-page main :has(> table) {
     margin-inline: -2px;
     border-radius: 22px;
-    border: 1px solid hsl(var(--border) / .5);
-    background: hsl(var(--card)) !important;
+    border: 1px solid color-mix(in srgb, var(--border) 50%, transparent);
+    background: var(--card) !important;
     box-shadow: none;
   }
 
@@ -3241,7 +2834,7 @@ dialog *,
 
   .dashboard-public-page main [class*="bg-card/"],
   .dashboard-public-page main [class*="backdrop-blur"] {
-    background-color: hsl(var(--card)) !important;
+    background-color: var(--card) !important;
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
   }
@@ -3410,6 +3003,307 @@ dialog *,
 .demo-preview p,
 .demo-chapters span {
   font-weight: 400;
+}
+
+/* =========================================================================
+   SISTEMA DE MODALES — fuente única de verdad
+   -------------------------------------------------------------------------
+   `.dialog-shell` es la raíz de todo `<DialogContent>`. El atributo
+   `data-mobile` decide su comportamiento por debajo de 1024px, el mismo
+   punto de corte en el que el dashboard cambia a su shell móvil
+   (cabecera + barra inferior), de modo que modal y shell son coherentes:
+
+     data-mobile="fullscreen"  → vista nativa a pantalla completa (por defecto)
+     data-mobile="centered"    → tarjeta centrada (confirmaciones breves)
+
+   Estructura opcional: `.dialog-header` / `.dialog-body` / `.dialog-footer`.
+   Si un modal declara `.dialog-body`, solo ese bloque hace scroll y la
+   cabecera/pie quedan fijos. Si no lo declara, se desplaza el contenedor
+   completo con la cabecera pegada arriba (comportamiento de reserva).
+   ========================================================================= */
+
+:root {
+  --dialog-surface: #ffffff;
+  --dialog-surface-sunken: #f8fafc;
+  --dialog-separator: rgba(15, 23, 42, .1);
+}
+
+.dark {
+  --dialog-surface: #071225;
+  --dialog-surface-sunken: #020817;
+  --dialog-separator: rgba(148, 163, 184, .18);
+}
+
+@keyframes dialog-overlay-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes dialog-overlay-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@keyframes dialog-card-in {
+  from { opacity: 0; transform: scale(.96); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes dialog-card-out {
+  from { opacity: 1; transform: none; }
+  to { opacity: 0; transform: scale(.96); }
+}
+
+@keyframes dialog-sheet-in {
+  from { opacity: .4; transform: translateY(2.5%); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes dialog-sheet-out {
+  from { opacity: 1; transform: none; }
+  to { opacity: 0; transform: translateY(2.5%); }
+}
+
+.dialog-overlay[data-state='open'] {
+  animation: dialog-overlay-in .18s ease-out;
+}
+
+.dialog-overlay[data-state='closed'] {
+  animation: dialog-overlay-out .15s ease-in;
+}
+
+.dialog-shell[data-state='open'] {
+  animation: dialog-card-in .18s ease-out;
+}
+
+.dialog-shell[data-state='closed'] {
+  animation: dialog-card-out .15s ease-in;
+}
+
+.dialog-body {
+  min-height: 0;
+}
+
+/* ---------- Móvil / tablet: modales a pantalla completa ---------- */
+@media (max-width: 1023.98px) {
+  .dialog-shell[data-mobile='fullscreen'] {
+    position: fixed;
+    inset: 0;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 50;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    width: 100vw;
+    width: 100dvw;
+    min-width: 0;
+    max-width: none;
+    height: 100vh;
+    height: 100dvh;
+    min-height: 0;
+    max-height: none;
+    margin: 0;
+    padding: 0;
+    translate: none;
+    transform: none;
+    border: 0;
+    border-radius: 0;
+    background-color: var(--dialog-surface);
+    background-image: none;
+    color: var(--foreground);
+    box-shadow: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
+  .dialog-shell[data-mobile='fullscreen'][data-state='open'] {
+    animation: dialog-sheet-in .2s ease-out;
+  }
+
+  .dialog-shell[data-mobile='fullscreen'][data-state='closed'] {
+    animation: dialog-sheet-out .15s ease-in;
+  }
+
+  /* Los hijos directos no se comprimen: el scroll lo gestiona el
+     contenedor o el `.dialog-body`, nunca un encogimiento del contenido. */
+  .dialog-shell[data-mobile='fullscreen'] > * {
+    flex: none;
+  }
+
+  /* Reserva: sin `.dialog-body` declarado, se desplaza todo el modal. */
+  .dialog-shell[data-mobile='fullscreen']:not(:has(> .dialog-body)) {
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Con `.dialog-body`, solo el cuerpo se desplaza. */
+  .dialog-shell[data-mobile='fullscreen']:has(> .dialog-body) {
+    overflow: hidden;
+  }
+
+  .dialog-shell[data-mobile='fullscreen'] > .dialog-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Cabecera pegada arriba, respetando el notch. */
+  .dialog-shell[data-mobile='fullscreen'] > .dialog-header {
+    position: sticky;
+    top: 0;
+    z-index: 4;
+    padding: max(16px, env(safe-area-inset-top)) 60px 14px 18px;
+    border-bottom: 1px solid var(--dialog-separator);
+    background-color: var(--dialog-surface);
+    text-align: left;
+  }
+
+  /* Bloques de contenido: márgenes laterales uniformes.
+     `.dialog-layer` marca hijos que se posicionan por su cuenta encima del
+     modal (paneles de confirmación) y quedan fuera de este flujo. */
+  .dialog-shell[data-mobile='fullscreen'] > *:not(.dialog-header):not(.dialog-close):not(.dialog-layer) {
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+
+  .dialog-shell[data-mobile='fullscreen'] > *:last-of-type:not(.dialog-header):not(.dialog-layer):not(.dialog-close) {
+    padding-bottom: calc(20px + env(safe-area-inset-bottom));
+  }
+
+  /* Aire entre la cabecera fija y el primer bloque de contenido. */
+  .dialog-shell[data-mobile='fullscreen'] > .dialog-header + *:not(.dialog-layer) {
+    padding-top: 16px;
+  }
+
+  /* Pie de acciones anclado al borde inferior. */
+  .dialog-shell[data-mobile='fullscreen'] > .dialog-footer {
+    position: sticky;
+    bottom: 0;
+    z-index: 4;
+    flex-direction: column-reverse;
+    gap: 10px;
+    padding: 14px 18px calc(14px + env(safe-area-inset-bottom));
+    border-top: 1px solid var(--dialog-separator);
+    background-color: var(--dialog-surface);
+  }
+
+  .dialog-shell[data-mobile='fullscreen'] > .dialog-footer > * {
+    width: 100%;
+    margin: 0;
+  }
+
+  /* Botón de cierre: fijo al viewport, fuera del área de scroll. */
+  .dialog-shell[data-mobile='fullscreen'] > .dialog-close {
+    position: fixed;
+    top: max(14px, env(safe-area-inset-top));
+    right: 14px;
+    z-index: 6;
+    display: grid;
+    place-items: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 999px;
+    background-color: var(--muted);
+    color: var(--foreground);
+    opacity: 1;
+  }
+
+  /* Superficies internas: sin cristal ni sombras profundas en móvil.
+     Los selectores exigen que la clase empiece la cadena o venga tras un
+     espacio, para no capturar variantes como `hover:bg-muted/50`. */
+  .dialog-shell[data-mobile='fullscreen'] [class^="bg-white/"],
+  .dialog-shell[data-mobile='fullscreen'] [class*=" bg-white/"],
+  .dialog-shell[data-mobile='fullscreen'] [class^="bg-card/"],
+  .dialog-shell[data-mobile='fullscreen'] [class*=" bg-card/"],
+  .dialog-shell[data-mobile='fullscreen'] [class^="bg-muted/"],
+  .dialog-shell[data-mobile='fullscreen'] [class*=" bg-muted/"],
+  .dialog-shell[data-mobile='fullscreen'] [class^="backdrop-blur"],
+  .dialog-shell[data-mobile='fullscreen'] [class*=" backdrop-blur"] {
+    background-color: var(--dialog-surface-sunken);
+    background-image: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
+  .dialog-shell[data-mobile='fullscreen'] [class^="shadow-xl"],
+  .dialog-shell[data-mobile='fullscreen'] [class*=" shadow-xl"],
+  .dialog-shell[data-mobile='fullscreen'] [class^="shadow-2xl"],
+  .dialog-shell[data-mobile='fullscreen'] [class*=" shadow-2xl"] {
+    box-shadow: none;
+  }
+
+  /* Rejillas densas a una columna. */
+  .dialog-shell[data-mobile='fullscreen'] [class*="grid-cols-2"],
+  .dialog-shell[data-mobile='fullscreen'] [class*="grid-cols-3"],
+  .dialog-shell[data-mobile='fullscreen'] [class*="grid-cols-4"] {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  /* Objetivos táctiles y campos legibles (16px evita el zoom de iOS). */
+  .dialog-shell input,
+  .dialog-shell select,
+  .dialog-shell textarea {
+    min-height: 46px;
+    font-size: 16px;
+    border-radius: 16px;
+  }
+
+  .dialog-shell textarea {
+    min-height: 96px;
+  }
+
+  .dialog-shell button:not([aria-label]):not([data-radix-collection-item]) {
+    min-height: 44px;
+  }
+
+  /* ---------- Paneles laterales (drawers) también a pantalla completa ---------- */
+  .dashboard-drawer {
+    width: 100vw;
+    width: 100dvw;
+    max-width: none;
+    border-left: 0;
+    box-shadow: none;
+    background-color: var(--dialog-surface);
+  }
+
+  .dashboard-drawer-header {
+    padding: max(16px, env(safe-area-inset-top)) 18px 14px;
+    border-bottom: 1px solid var(--dialog-separator);
+  }
+
+  .dashboard-drawer-body {
+    padding: 18px 18px calc(24px + env(safe-area-inset-bottom));
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* ---------- Móvil: modales que siguen siendo tarjeta centrada ---------- */
+  .dialog-shell[data-mobile='centered'] {
+    width: min(calc(100vw - 28px), 460px);
+    max-width: min(calc(100vw - 28px), 460px);
+    max-height: min(84dvh, 680px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 22px;
+    border-radius: 26px;
+    background-color: var(--dialog-surface);
+    background-image: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dialog-overlay[data-state],
+  .dialog-shell[data-state] {
+    animation: none;
+  }
 }
 
 @media print {

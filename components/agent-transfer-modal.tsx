@@ -6,9 +6,10 @@ import { createTransfer } from '@/modules/transfers/http/client';
 import { formatCurrency } from '@/lib/utils';
 import { calculateCommission } from '@/lib/financial';
 import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogBody,
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
@@ -275,7 +276,7 @@ export function AgentTransferModal({ open, onOpenChange, onSuccess }: AgentTrans
           </DialogDescription>
         </DialogHeader>
         
-        <div className="agent-transfer-body flex-1 overflow-y-auto p-6 space-y-4">
+        <DialogBody className="agent-transfer-body flex-1 overflow-y-auto p-6 space-y-4">
           {sent ? (
             <div className="text-center py-8">
               <div className="w-16 h-16 bg-green-100 dark:bg-green-900/20 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -587,11 +588,11 @@ export function AgentTransferModal({ open, onOpenChange, onSuccess }: AgentTrans
               </form>
             </>
           )}
-        </div>
+        </DialogBody>
 
         {/* Modal de Confirmación */}
         {showConfirm && (
-          <div className="agent-transfer-confirm-dialog max-w-md p-0 overflow-hidden outline-none">
+          <div className="dialog-layer agent-transfer-confirm-dialog max-w-md p-0 overflow-hidden outline-none">
             <DialogHeader className="agent-transfer-confirm-header p-6 border-b border-border/10 shrink-0">
               <DialogTitle className="flex items-center gap-2 text-xl font-bold text-foreground">
                 <CheckCircle2 className="h-5 w-5 text-green-500" /> Confirmar Transferencia

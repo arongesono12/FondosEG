@@ -1,9 +1,10 @@
 'use client';
 
 import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogBody,
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -170,8 +171,8 @@ export function NotificationModal({ open, onOpenChange }: NotificationModalProps
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="!left-0 !top-0 !h-[100dvh] !max-h-[100dvh] !w-screen !max-w-none !translate-x-0 !translate-y-0 !rounded-none border-0 bg-background/95 p-0 backdrop-blur-xl sm:!left-1/2 sm:!top-1/2 sm:!h-auto sm:!max-h-[80vh] sm:!w-full sm:!max-w-md sm:!-translate-x-1/2 sm:!-translate-y-1/2 sm:!rounded-[10px] sm:border sm:bg-white/40 sm:dark:bg-[#10121B]/40 overflow-hidden flex flex-col">
-          <DialogHeader className="px-5 pb-4 pt-[calc(1.25rem+env(safe-area-inset-top))] border-b border-border/10 shrink-0 text-left sm:p-6">
+        <DialogContent className="max-w-md max-h-[80vh] overflow-hidden p-0 flex flex-col">
+          <DialogHeader className="p-6 border-b border-border/10 shrink-0 text-left">
             <div className="flex items-center justify-between">
               <DialogTitle className="flex items-center gap-2 text-xl font-semibold text-foreground">
                 <Bell className="h-5 w-5 text-primary" /> Notificaciones
@@ -193,7 +194,7 @@ export function NotificationModal({ open, onOpenChange }: NotificationModalProps
             )}
           </DialogHeader>
           
-          <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3 pb-[calc(1rem+env(safe-area-inset-bottom))] sm:p-4">
+          <DialogBody className="flex-1 overflow-y-auto p-4 space-y-3">
             {loading ? (
               <div className="py-2">
                 <ModalListSkeleton rows={5} />
@@ -278,8 +279,8 @@ export function NotificationModal({ open, onOpenChange }: NotificationModalProps
                 </div>
               ))
             )}
-          </div>
-          
+          </DialogBody>
+
           <div className="hidden p-3 bg-muted/20 border-t border-border/5 justify-center shrink-0 sm:flex">
             <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">
               FondosEG Notification System
@@ -290,8 +291,8 @@ export function NotificationModal({ open, onOpenChange }: NotificationModalProps
 
       {/* Modal de Detalle de Notificación */}
       <Dialog open={!!selectedNotification} onOpenChange={(open) => !open && setSelectedNotification(null)}>
-        <DialogContent className="!left-0 !top-0 !h-[100dvh] !max-h-[100dvh] !w-screen !max-w-none !translate-x-0 !translate-y-0 !rounded-none border-0 bg-background/95 p-0 backdrop-blur-xl sm:!left-1/2 sm:!top-1/2 sm:!h-auto sm:!max-h-[88vh] sm:!w-full sm:!max-w-lg sm:!-translate-x-1/2 sm:!-translate-y-1/2 sm:!rounded-[10px] sm:border sm:bg-white/40 sm:dark:bg-[#10121B]/40 overflow-hidden outline-none flex flex-col">
-          <DialogHeader className="px-5 pb-4 pt-[calc(1.25rem+env(safe-area-inset-top))] border-b border-border/10 shrink-0 text-left sm:p-6">
+        <DialogContent className="max-w-lg max-h-[88vh] overflow-hidden p-0 outline-none flex flex-col">
+          <DialogHeader className="p-6 border-b border-border/10 shrink-0 text-left">
             <div className="flex items-center justify-between">
               <DialogTitle className="flex items-center gap-2 text-xl font-semibold text-foreground">
                 {selectedNotification?.is_read ? (
@@ -305,7 +306,7 @@ export function NotificationModal({ open, onOpenChange }: NotificationModalProps
           </DialogHeader>
           
           {selectedNotification && (
-            <div className="flex-1 overflow-y-auto px-5 py-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] space-y-5 sm:p-6">
+            <DialogBody className="flex-1 overflow-y-auto p-6 space-y-5">
               {/* Estado */}
               <div className={cn(
                 "p-4 rounded-2xl flex items-center gap-3",
@@ -417,7 +418,7 @@ export function NotificationModal({ open, onOpenChange }: NotificationModalProps
                   Cerrar
                 </Button>
               </div>
-            </div>
+            </DialogBody>
           )}
         </DialogContent>
       </Dialog>

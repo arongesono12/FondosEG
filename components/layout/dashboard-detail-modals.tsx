@@ -48,13 +48,14 @@ function Drawer({
         />
       )}
       <aside
+        aria-hidden={!open}
         className={cn(
-          'fixed right-0 top-0 z-50 h-screen w-[480px] max-w-full bg-card border-l border-border/20 shadow-2xl flex flex-col transition-transform duration-300 ease-in-out',
-          open ? 'translate-x-0' : 'translate-x-full'
+          'dashboard-drawer fixed right-0 top-0 z-50 h-dvh w-[480px] max-w-full bg-card border-l border-border/20 shadow-2xl flex flex-col transition-transform duration-300 ease-in-out',
+          open ? 'translate-x-0' : 'translate-x-full pointer-events-none'
         )}
       >
         {/* Header */}
-        <div className="flex items-start justify-between p-6 border-b border-border/10 shrink-0">
+        <div className="dashboard-drawer-header flex items-start justify-between p-6 border-b border-border/10 shrink-0">
           <div className="flex items-center gap-3">
             <div className="h-10 w-10 rounded-2xl bg-brand-gradient flex items-center justify-center text-white shadow-lg shadow-pink-500/20">
               <Icon className="h-5 w-5" />
@@ -72,7 +73,7 @@ function Drawer({
           </button>
         </div>
         {/* Scrollable Body */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-4">
+        <div className="dashboard-drawer-body flex-1 overflow-y-auto p-6 space-y-4">
           {children}
         </div>
       </aside>

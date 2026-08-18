@@ -111,7 +111,7 @@ export function VerifyTransferModal({ open, onOpenChange, onSuccess }: VerifyTra
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="mobile-native-dialog max-w-md p-0 overflow-hidden outline-none">
+      <DialogContent className="max-w-md p-0 overflow-hidden outline-none">
         {!transfer && !success && (
           <>
             <DialogHeader className="p-6 border-b border-border/10">

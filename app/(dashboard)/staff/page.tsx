@@ -383,7 +383,7 @@ export default function StaffPage() {
               Nuevo administrador
             </Button>
           </DialogTrigger>
-          <DialogContent className="mobile-native-dialog">
+          <DialogContent>
             <DialogHeader>
               <DialogTitle>Crear administrador</DialogTitle>
               <DialogDescription>
@@ -682,7 +682,7 @@ export default function StaffPage() {
       </Card>
 
       <Dialog open={!!selectedUser} onOpenChange={(open) => !open && setSelectedUser(null)}>
-        <DialogContent className="mobile-native-dialog max-h-[85vh] overflow-hidden sm:max-w-4xl">
+        <DialogContent className="max-h-[85vh] overflow-hidden sm:max-w-4xl">
           <DialogHeader>
             <DialogTitle>Movimientos del usuario</DialogTitle>
             {selectedUser ? (

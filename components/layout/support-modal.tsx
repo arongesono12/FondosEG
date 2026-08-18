@@ -114,7 +114,7 @@ export function SupportModal({ open, onOpenChange, requestType = 'general', defa
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="mobile-native-dialog max-w-md p-0 overflow-hidden outline-none">
+      <DialogContent className="max-w-md p-0 overflow-hidden outline-none">
         <DialogHeader className="p-6 border-b border-border/10">
           <DialogTitle className="flex items-center gap-2 text-xl font-semibold text-foreground">
             <MessageSquare className="h-5 w-5 text-primary" /> {titleMap[requestType]}

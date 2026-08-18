@@ -2,8 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { 
-  Dialog, 
-  DialogContent, 
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogBody,
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Search, MapPin, User, ArrowRight } from 'lucide-react';
@@ -52,24 +54,25 @@ export function SearchModal({ open, onOpenChange }: SearchModalProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="search-mobile-dialog max-w-2xl p-0 overflow-hidden outline-none max-h-[80vh] flex flex-col">
-        <DialogTitle className="sr-only">Buscador Global</DialogTitle>
+      <DialogContent className="max-w-2xl p-0 overflow-hidden outline-none max-h-[80vh] flex flex-col">
+        <DialogHeader className="p-6 border-b border-border/10 shrink-0">
+          <DialogTitle className="sr-only">Buscador Global</DialogTitle>
+          <div className="relative">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none" />
+            <Input
+              autoFocus
+              placeholder="Busca por código, nombre o ciudad..."
+              className="pl-12 pr-12 h-14 bg-transparent border-none text-xl font-bold placeholder:text-muted-foreground/50 focus-visible:ring-0"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+            />
+            {loading && (
+              <Skeleton className="absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 rounded-full" />
+            )}
+          </div>
+        </DialogHeader>
 
-        <div className="p-6 border-b border-border/10 relative">
-          <Search className="absolute left-10 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-          <Input 
-            autoFocus
-            placeholder="Busca por código, nombre o ciudad..." 
-            className="pl-12 h-14 bg-transparent border-none text-xl font-bold placeholder:text-muted-foreground/50 focus-visible:ring-0"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-          />
-          {loading && (
-            <Skeleton className="absolute right-10 top-1/2 h-5 w-5 -translate-y-1/2 rounded-full" />
-          )}
-        </div>
-
-        <div className="max-h-[60vh] overflow-y-auto p-4">
+        <DialogBody className="flex-1 overflow-y-auto p-4">
           {query.length <= 2 ? (
             <div className="py-12 text-center space-y-2">
               <p className="text-sm font-black text-muted-foreground uppercase tracking-widest">Escribe al menos 3 caracteres</p>
@@ -122,9 +125,9 @@ export function SearchModal({ open, onOpenChange }: SearchModalProps) {
               ))}
             </div>
           )}
-        </div>
+        </DialogBody>
 
-        <div className="p-4 bg-muted/20 border-t border-border/5 flex justify-between items-center px-8">
+        <div className="p-4 bg-muted/20 border-t border-border/5 flex justify-between items-center px-8 shrink-0">
           <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
             {results.length} resultados encontrados
           </p>

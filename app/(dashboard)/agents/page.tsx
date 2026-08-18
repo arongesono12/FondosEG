@@ -194,7 +194,7 @@ export default function AgentsPage() {
               Nuevo gestor
             </Button>
           </DialogTrigger>
-          <DialogContent className="mobile-native-dialog">
+          <DialogContent>
             <DialogHeader>
               <DialogTitle>Crear nuevo gestor</DialogTitle>
             </DialogHeader>
@@ -389,7 +389,7 @@ export default function AgentsPage() {
       </Card>
 
       <Dialog open={topUpOpen} onOpenChange={setTopUpOpen}>
-        <DialogContent className="mobile-native-dialog">
+        <DialogContent>
           <DialogHeader>
             <DialogTitle>Recargar saldo</DialogTitle>
           </DialogHeader>
@@ -430,7 +430,7 @@ export default function AgentsPage() {
       </Dialog>
 
       <Dialog open={successOpen} onOpenChange={setSuccessOpen}>
-        <DialogContent className="mobile-native-dialog">
+        <DialogContent>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-green-600">
               <CheckCircle className="h-5 w-5" />
@@ -458,7 +458,7 @@ export default function AgentsPage() {
       </Dialog>
 
       <Dialog open={resetOpen} onOpenChange={setResetOpen}>
-        <DialogContent className="mobile-native-dialog">
+        <DialogContent>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <RotateCcw className="h-5 w-5" />

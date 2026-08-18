@@ -400,7 +400,7 @@ export function RegisterForm({
       </div>
 
       <Dialog open={showSuccessModal} onOpenChange={setShowSuccessModal}>
-        <DialogContent className="sm:max-w-md text-center py-10 outline-none fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50">
+        <DialogContent mobile="centered" className="sm:max-w-md text-center py-10 outline-none">
           <DialogHeader className="flex flex-col items-center space-y-4">
             <div className="p-4 rounded-full bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 animate-in zoom-in duration-500">
               <CheckCircle2 className="h-16 w-16" />
