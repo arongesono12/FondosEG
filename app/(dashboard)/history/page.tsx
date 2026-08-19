@@ -38,7 +38,7 @@ function MetricTile({
         <div className="flex items-start justify-between gap-4">
           <div>
             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">{label}</p>
-            <p className="mt-2 text-2xl font-black text-foreground">{value}</p>
+            <p className="mt-2 text-[clamp(1.125rem,1.4vw+0.75rem,1.5rem)] font-black leading-tight tabular-nums text-foreground">{value}</p>
             <p className="mt-2 text-xs font-semibold text-muted-foreground">{hint}</p>
           </div>
           <div className={`flex h-11 w-11 items-center justify-center rounded-2xl border text-white shadow-lg ${tone}`}>
@@ -237,14 +237,14 @@ export default function HistoryPage() {
             </p>
           </div>
 
-          <Button onClick={exportToCsv} className="rounded-2xl bg-brand-gradient px-6 font-black text-white shadow-xl shadow-pink-500/20">
+          <Button onClick={exportToCsv} className="w-full shrink-0 rounded-2xl bg-brand-gradient px-6 font-black text-white shadow-xl shadow-pink-500/20 lg:w-auto">
             <Download className="mr-2 h-4 w-4" />
             Exportar CSV
           </Button>
         </div>
       </section>
 
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <MetricTile label="Completadas" value={String(completedTransfers.length)} hint="Operaciones cerradas" icon={History} tone="border-emerald-500/20 bg-emerald-500 shadow-emerald-500/20" />
         <MetricTile label="Pendientes" value={String(createdTransfers.length)} hint="En seguimiento o pago" icon={Wallet} tone="border-amber-500/20 bg-amber-500 shadow-amber-500/20" />
         <MetricTile label="Canceladas" value={String(cancelledTransfers.length)} hint="Requieren auditoría si crecen" icon={XCircle} tone="border-rose-500/20 bg-rose-500 shadow-rose-500/20" />
@@ -260,7 +260,7 @@ export default function HistoryPage() {
             </CardTitle>
 
             <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
-              <div className="relative min-w-[280px]">
+              <div className="relative w-full min-w-0 lg:min-w-[280px]">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   value={searchTerm}
@@ -293,7 +293,7 @@ export default function HistoryPage() {
         </CardHeader>
 
         <CardContent className="p-0">
-          <div className="activity-records-scroll overflow-x-auto">
+          <div className="activity-records-scroll">
             <Table className="activity-records-table">
               <TableHeader className="bg-muted/30">
                 <TableRow className="border-border/5 hover:bg-transparent">
@@ -438,6 +438,8 @@ export default function HistoryPage() {
               <Input
                 id="correction_amount"
                 type="number"
+                  inputMode="decimal"
+                  onWheel={(e) => e.currentTarget.blur()}
                 min="1"
                 step="0.01"
                 value={correctionForm.amount}

@@ -522,6 +522,8 @@ export function AgentTransferModal({ open, onOpenChange, onSuccess }: AgentTrans
                       id="amount"
                       name="amount"
                       type="number"
+                  inputMode="decimal"
+                  onWheel={(e) => e.currentTarget.blur()}
                       min="100"
                       step="100"
                       value={formData.amount}

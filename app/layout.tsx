@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import Script from "next/script";
 import "@fontsource/poppins/400.css";
 import "@fontsource/poppins/500.css";
@@ -24,6 +24,18 @@ export const metadata: Metadata = {
     ],
     apple: "/logo%20F/apple-icon.png?v=lfondoseg",
   },
+};
+
+// `viewportFit: cover` es lo que activa los `env(safe-area-inset-*)` del CSS:
+// sin él evalúan a 0px y el notch/home indicator tapan el contenido.
+// `resizes-content` hace que `100dvh` y los elementos fijos se encojan al abrir
+// el teclado virtual, que es lo que asume todo el shell móvil y los modales.
+// No se fija `maximumScale` ni `userScalable`: bloquear el zoom rompe accesibilidad.
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  interactiveWidget: "resizes-content",
 };
 
 export default function RootLayout({

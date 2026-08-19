@@ -59,14 +59,14 @@ export function PhoneInput({ value, onChange, placeholder = 'Número de teléfon
           <button
             type="button"
             onClick={() => setIsOpen(!isOpen)}
-            className="phone-country-trigger flex items-center gap-1 px-2 h-10 rounded-l-lg border border-r-0 transition-colors focus:ring-2 focus:ring-pink-500/50"
+            className="phone-country-trigger flex h-11 items-center gap-1 px-3 rounded-l-lg border border-r-0 transition-colors focus:ring-2 focus:ring-pink-500/50"
           >
             <span className="phone-country-prefix text-xs font-medium">{selectedCountry.prefix}</span>
             <ChevronDown className={`phone-country-chevron h-3 w-3 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
           </button>
           
           {isOpen && (
-            <div className="phone-country-menu absolute z-50 top-full left-0 mt-1 w-56 border rounded-lg shadow-xl overflow-hidden">
+            <div className="phone-country-menu absolute z-50 top-full left-0 mt-1 w-[min(18rem,calc(100vw-3rem))] max-w-[calc(100vw-3rem)] border rounded-lg shadow-xl overflow-hidden">
               <div className="phone-country-search-wrap p-2 border-b">
                 <div className="relative">
                   <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
@@ -75,18 +75,17 @@ export function PhoneInput({ value, onChange, placeholder = 'Número de teléfon
                     placeholder="Buscar..."
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    className="phone-country-search w-full h-8 pl-8 pr-2 rounded-md border text-xs focus:outline-none focus:ring-2 focus:ring-pink-500/50"
-                    autoFocus
+                    className="phone-country-search w-full h-11 pl-8 pr-2 rounded-md border text-base focus:outline-none focus:ring-2 focus:ring-pink-500/50"
                   />
                 </div>
               </div>
-              <div className="max-h-48 overflow-y-auto">
+              <div className="max-h-[45dvh] overflow-y-auto overscroll-contain">
                 {filteredCountries.map((country) => (
                   <button
                     key={country.code}
                     type="button"
                     onClick={() => handleCountrySelect(country.prefix)}
-                    className={`phone-country-option w-full flex items-center gap-2 px-2 py-1.5 transition-colors text-left ${
+                    className={`phone-country-option flex w-full min-h-11 items-center gap-2 px-3 transition-colors text-left ${
                       country.prefix === currentPrefix ? 'phone-country-option--selected' : ''
                     }`}
                   >
@@ -106,7 +105,7 @@ export function PhoneInput({ value, onChange, placeholder = 'Número de teléfon
           onChange={handleNumberChange}
           placeholder={placeholder}
           required={required}
-          className="phone-number-input flex-1 h-10 px-3 rounded-r-lg border text-sm focus:outline-none focus:ring-2 focus:ring-pink-500/50 transition-colors"
+          className="phone-number-input h-11 flex-1 px-3 rounded-r-lg border text-base focus:outline-none focus:ring-2 focus:ring-pink-500/50 transition-colors"
         />
       </div>
     </div>

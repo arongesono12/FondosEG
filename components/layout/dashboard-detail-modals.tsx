@@ -39,6 +39,19 @@ function Drawer({
   icon: React.ElementType;
   children: React.ReactNode;
 }) {
+  // No es un Dialog de Radix, así que no hereda el bloqueo de scroll: sin esto,
+  // un arrastre sobre el drawer propaga a <main> y el fondo se mueve detrás.
+  useEffect(() => {
+    if (!open) return;
+    const mainArea = document.querySelector('main');
+    if (!mainArea) return;
+    const previous = mainArea.style.overflow;
+    mainArea.style.overflow = 'hidden';
+    return () => {
+      mainArea.style.overflow = previous;
+    };
+  }, [open]);
+
   return (
     <>
       {open && (
@@ -67,9 +80,10 @@ function Drawer({
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-xl hover:bg-muted transition-colors text-muted-foreground hover:text-foreground mt-1"
+            aria-label="Cerrar panel"
+            className="-mr-2 grid h-11 w-11 shrink-0 place-items-center rounded-xl hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
           >
-            <X className="h-4 w-4" />
+            <X className="h-5 w-5" />
           </button>
         </div>
         {/* Scrollable Body */}
@@ -553,7 +567,7 @@ export function ComisionesModal({ open, onClose, userRole, stats, commissionStat
           </div>
 
           <p className="text-[10px] font-black text-muted-foreground uppercase tracking-wide mb-2">Comisiones por gestor</p>
-           <div className="space-y-2 max-h-[60vh] overflow-y-auto">
+           <div className="space-y-2">
              {(commissionStats?.agents || []).map((agent) => (
                <div key={agent.agent_id} className="flex items-center justify-between p-3 rounded-xl border border-border/10 hover:bg-muted/30">
                  <div className="flex items-center gap-3">
@@ -591,7 +605,7 @@ export function ComisionesModal({ open, onClose, userRole, stats, commissionStat
             <div className="p-5 rounded-2xl bg-sky-500/10 border border-sky-500/20">
               <p className="text-[10px] font-black uppercase text-sky-500">Mes actual</p>
               <p className="text-2xl font-black text-foreground">{fmt(stats?.monthlyCommission || 0)}</p>
-              <p className="text-[10px] text-muted-foreground mt-1">ComisiÃ³n acumulada del mes en curso</p>
+              <p className="text-[10px] text-muted-foreground mt-1">Comisión acumulada del mes en curso</p>
             </div>
             <div className="p-5 rounded-2xl bg-violet-500/10 border border-violet-500/20">
               <p className="text-[10px] font-black uppercase text-violet-500">Anual</p>

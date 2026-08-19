@@ -82,6 +82,19 @@ export function UsersPanel({ open, onClose }: UsersPanelProps) {
     if (open) loadUsers();
   }, [open]);
 
+  // No es un Dialog de Radix: sin esto, un arrastre sobre el panel propaga a
+  // <main> y el fondo se desplaza detrás.
+  useEffect(() => {
+    if (!open) return;
+    const mainArea = document.querySelector('main');
+    if (!mainArea) return;
+    const previous = mainArea.style.overflow;
+    mainArea.style.overflow = 'hidden';
+    return () => {
+      mainArea.style.overflow = previous;
+    };
+  }, [open]);
+
   const filtered = users.filter((u) => {
     if (filter === 'online') return u.isOnline;
     if (filter === 'offline') return !u.isOnline;

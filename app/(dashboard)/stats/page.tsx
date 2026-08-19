@@ -52,14 +52,14 @@ function StatChip({
   tone: string;
 }) {
   return (
-    <Card className="glass-premium border-border/10 bg-card/40 shadow-xl shadow-black/5">
+    <Card className="glass-premium min-w-0 border-border/10 bg-card/40 shadow-xl shadow-black/5">
       <CardContent className="flex items-center gap-4 p-5">
         <div className={cn('flex h-12 w-12 items-center justify-center rounded-2xl border text-white shadow-lg', tone)}>
           <Icon className="h-5 w-5" />
         </div>
         <div className="space-y-1">
           <p className="text-[10px] font-black uppercase tracking-[0.22em] text-muted-foreground">{label}</p>
-          <p className="text-2xl font-black text-foreground">{value}</p>
+          <p className="text-[clamp(1.125rem,1.4vw+0.75rem,1.5rem)] font-black leading-tight tabular-nums text-foreground">{value}</p>
           <p className="text-xs font-semibold text-muted-foreground">{hint}</p>
         </div>
       </CardContent>
@@ -149,13 +149,13 @@ export default function StatsPage() {
     return (
       <div className="space-y-6">
         <Skeleton className="h-36 w-full rounded-4xl" />
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <Skeleton className="h-28" />
           <Skeleton className="h-28" />
           <Skeleton className="h-28" />
           <Skeleton className="h-28" />
         </div>
-        <div className="grid gap-6 xl:grid-cols-[1.35fr_0.95fr]">
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,0.95fr)]">
           <Skeleton className="h-96" />
           <Skeleton className="h-96" />
         </div>
@@ -175,12 +175,12 @@ export default function StatsPage() {
             Esta vista avanzada está orientada a dirección y gestores. Desde tu perfil puedes seguir saldo, movimientos y confirmaciones de forma clara.
           </p>
           <div className="mt-6 flex gap-3">
-            <Link href="/dashboard">
-              <Button className="rounded-2xl bg-brand-gradient px-6 font-black text-white">Volver al panel</Button>
-            </Link>
-            <Link href="/history">
-              <Button variant="outline" className="rounded-2xl px-6 font-black">Ver historial</Button>
-            </Link>
+            <Button asChild className="rounded-2xl bg-brand-gradient px-6 font-black text-white">
+              <Link href="/dashboard">Volver al panel</Link>
+            </Button>
+            <Button asChild variant="outline" className="rounded-2xl px-6 font-black">
+              <Link href="/history">Ver historial</Link>
+            </Button>
           </div>
         </section>
       </div>
@@ -218,15 +218,15 @@ export default function StatsPage() {
         </div>
       </section>
 
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatChip label="Volumen total" value={fmt(stats?.monthlyVolume ?? 0)} hint="Acumulado de 30 días" icon={TrendingUp} tone="border-sky-500/20 bg-sky-500 shadow-sky-500/20" />
         <StatChip label="Operaciones" value={String(totalOps)} hint={`${stats?.todayTransfers ?? 0} registradas hoy`} icon={BarChart3} tone="border-indigo-500/20 bg-indigo-500 shadow-indigo-500/20" />
         <StatChip label="Ticket promedio" value={fmt(stats?.averageTicket ?? 0)} hint="Promedio por envío completado" icon={CreditCard} tone="border-fuchsia-500/20 bg-fuchsia-500 shadow-fuchsia-500/20" />
         <StatChip label={isAdmin ? 'Gestores activos' : 'Clientes únicos'} value={String(isAdmin ? stats?.activeAgents ?? 0 : stats?.totalClients ?? 0)} hint={isAdmin ? 'Participando en la red' : 'Atendidos en el período'} icon={Users} tone="border-emerald-500/20 bg-emerald-500 shadow-emerald-500/20" />
       </section>
 
-      <section className="grid gap-6 xl:grid-cols-[1.35fr_0.95fr]">
-        <Card className="glass-premium border-border/10 bg-card/40 shadow-xl shadow-black/5">
+      <section className="grid gap-6 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,0.95fr)]">
+        <Card className="glass-premium min-w-0 border-border/10 bg-card/40 shadow-xl shadow-black/5">
           <CardHeader className="border-b border-border/5 pb-5">
             <CardTitle className="flex items-center gap-2 text-xl font-black text-foreground">
               <BarChart3 className="h-5 w-5 text-primary" />
@@ -234,13 +234,14 @@ export default function StatsPage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-5 p-6">
-            <div className="h-80 w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={chartData}>
+            <div className="h-64 w-full min-w-0 sm:h-80">
+              <ResponsiveContainer width="100%" height="100%" debounce={120}>
+                <LineChart data={chartData} margin={{ top: 8, right: 12, bottom: 0, left: -12 }}>
                   <CartesianGrid strokeDasharray="4 4" vertical={false} stroke="rgba(148,163,184,0.18)" />
                   <XAxis dataKey="date" tick={{ fontSize: 11, fill: 'currentColor', fontWeight: 800 }} axisLine={false} tickLine={false} className="text-muted-foreground" />
                   <YAxis tick={{ fontSize: 11, fill: 'currentColor', fontWeight: 800 }} axisLine={false} tickLine={false} className="text-muted-foreground" />
                   <Tooltip
+                    wrapperStyle={{ zIndex: 20, outline: 'none' }}
                     contentStyle={{
                       backgroundColor: 'var(--card)',
                       borderRadius: '18px',
@@ -258,21 +259,21 @@ export default function StatsPage() {
             <div className="grid gap-4 md:grid-cols-3">
               <div className="rounded-3xl border border-border/10 bg-background/70 p-4">
                 <p className="text-[10px] font-black uppercase tracking-[0.18em] text-muted-foreground">Semana actual</p>
-                <p className="mt-2 text-2xl font-black text-foreground">{fmt(stats?.weeklyVolume ?? 0)}</p>
+                <p className="mt-2 text-2xl font-black tabular-nums text-foreground">{fmt(stats?.weeklyVolume ?? 0)}</p>
               </div>
               <div className="rounded-3xl border border-border/10 bg-background/70 p-4">
                 <p className="text-[10px] font-black uppercase tracking-[0.18em] text-muted-foreground">Hoy</p>
-                <p className="mt-2 text-2xl font-black text-foreground">{fmt(stats?.todayVolume ?? 0)}</p>
+                <p className="mt-2 text-2xl font-black tabular-nums text-foreground">{fmt(stats?.todayVolume ?? 0)}</p>
               </div>
               <div className="rounded-3xl border border-border/10 bg-background/70 p-4">
                 <p className="text-[10px] font-black uppercase tracking-[0.18em] text-muted-foreground">Comisión media</p>
-                <p className="mt-2 text-2xl font-black text-foreground">{fmt(stats?.commissionPerTransfer ?? 0)}</p>
+                <p className="mt-2 text-2xl font-black tabular-nums text-foreground">{fmt(stats?.commissionPerTransfer ?? 0)}</p>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="glass-premium border-border/10 bg-card/40 shadow-xl shadow-black/5">
+        <Card className="glass-premium min-w-0 border-border/10 bg-card/40 shadow-xl shadow-black/5">
           <CardHeader className="border-b border-border/5 pb-5">
             <CardTitle className="flex items-center gap-2 text-xl font-black text-foreground">
               <PieChartIcon className="h-5 w-5 text-primary" />
@@ -280,8 +281,8 @@ export default function StatsPage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-5 p-6">
-            <div className="h-72">
-              <ResponsiveContainer width="100%" height="100%">
+            <div className="h-64 min-w-0 sm:h-72">
+              <ResponsiveContainer width="100%" height="100%" debounce={120}>
                 <PieChart>
                   <Pie
                     data={isAdmin ? concentrationData : statusData}
@@ -298,6 +299,7 @@ export default function StatsPage() {
                     ))}
                   </Pie>
                   <Tooltip
+                    wrapperStyle={{ zIndex: 20, outline: 'none' }}
                     contentStyle={{
                       backgroundColor: 'var(--card)',
                       borderRadius: '18px',
@@ -327,8 +329,8 @@ export default function StatsPage() {
         </Card>
       </section>
 
-      <section className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
-        <Card className="glass-premium border-border/10 bg-card/40 shadow-xl shadow-black/5">
+      <section className="grid gap-6 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
+        <Card className="glass-premium min-w-0 border-border/10 bg-card/40 shadow-xl shadow-black/5">
           <CardHeader className="border-b border-border/5 pb-5">
             <CardTitle className="flex items-center gap-2 text-xl font-black text-foreground">
               <ShieldCheck className="h-5 w-5 text-primary" />
@@ -349,32 +351,32 @@ export default function StatsPage() {
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="rounded-3xl border border-border/10 bg-background/70 p-4">
                 <p className="text-[10px] font-black uppercase tracking-[0.18em] text-muted-foreground">Pendientes</p>
-                <p className="mt-2 text-2xl font-black text-foreground">{stats?.pendingTransfers ?? 0}</p>
+                <p className="mt-2 text-2xl font-black tabular-nums text-foreground">{stats?.pendingTransfers ?? 0}</p>
               </div>
               <div className="rounded-3xl border border-border/10 bg-background/70 p-4">
                 <p className="text-[10px] font-black uppercase tracking-[0.18em] text-muted-foreground">Canceladas</p>
-                <p className="mt-2 text-2xl font-black text-foreground">{stats?.cancelledTransfers ?? 0}</p>
+                <p className="mt-2 text-2xl font-black tabular-nums text-foreground">{stats?.cancelledTransfers ?? 0}</p>
               </div>
               <div className="rounded-3xl border border-border/10 bg-background/70 p-4">
                 <p className="text-[10px] font-black uppercase tracking-[0.18em] text-muted-foreground">Float utilizado</p>
-                <p className="mt-2 text-2xl font-black text-foreground">{stats?.floatUtilization ?? 0}%</p>
+                <p className="mt-2 text-2xl font-black tabular-nums text-foreground">{stats?.floatUtilization ?? 0}%</p>
               </div>
               <div className="rounded-3xl border border-border/10 bg-background/70 p-4">
                 <p className="text-[10px] font-black uppercase tracking-[0.18em] text-muted-foreground">Cobertura</p>
-                <p className="mt-2 text-2xl font-black text-foreground">{(stats?.liquidityCoverageDays ?? 0).toFixed(1)} días</p>
+                <p className="mt-2 text-2xl font-black tabular-nums text-foreground">{(stats?.liquidityCoverageDays ?? 0).toFixed(1)} días</p>
               </div>
             </div>
 
-            <Link href="/dashboard">
-              <Button variant="outline" className="w-full rounded-2xl font-black">
+            <Button asChild variant="outline" className="w-full rounded-2xl font-black">
+              <Link href="/dashboard">
                 Volver al panel
                 <ArrowUpRight className="ml-2 h-4 w-4" />
-              </Button>
-            </Link>
+              </Link>
+            </Button>
           </CardContent>
         </Card>
 
-        <Card className="glass-premium border-border/10 bg-card/40 shadow-xl shadow-black/5">
+        <Card className="glass-premium min-w-0 border-border/10 bg-card/40 shadow-xl shadow-black/5">
           <CardHeader className="border-b border-border/5 pb-5">
             <CardTitle className="flex items-center gap-2 text-xl font-black text-foreground">
               <Sparkles className="h-5 w-5 text-primary" />
@@ -430,11 +432,11 @@ export default function StatsPage() {
                   </div>
                   <div className="mt-4 flex items-center justify-between">
                     <p className="text-lg font-black text-foreground">{fmt(transfer.amount)}</p>
-                    <Link href="/history">
-                      <Button variant="ghost" className="rounded-xl font-bold text-muted-foreground hover:text-foreground">
+                    <Button asChild variant="ghost" className="rounded-xl font-bold text-muted-foreground hover:text-foreground">
+              <Link href="/history">
                         Ver historial
-                      </Button>
-                    </Link>
+                      </Link>
+            </Button>
                   </div>
                 </div>
               ))
@@ -445,7 +447,7 @@ export default function StatsPage() {
 
       {isAdmin && (
         <section className="grid gap-6">
-          <Card className="glass-premium border-border/10 bg-card/40 shadow-xl shadow-black/5">
+          <Card className="glass-premium min-w-0 border-border/10 bg-card/40 shadow-xl shadow-black/5">
             <CardHeader className="border-b border-border/5 pb-5">
               <CardTitle className="flex items-center gap-2 text-xl font-black text-foreground">
                 <ShieldCheck className="h-5 w-5 text-primary" />

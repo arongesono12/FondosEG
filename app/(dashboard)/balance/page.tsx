@@ -50,7 +50,7 @@ function SummaryCard({
         <div className="flex items-start justify-between gap-4">
           <div>
             <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">{label}</p>
-            <p className="mt-2 text-2xl font-bold text-foreground">{value}</p>
+            <p className="mt-2 text-[clamp(1.125rem,1.4vw+0.75rem,1.5rem)] font-bold leading-tight tabular-nums text-foreground">{value}</p>
             <p className="mt-2 text-xs font-medium text-muted-foreground">{hint}</p>
           </div>
           <div className={`flex h-11 w-11 items-center justify-center rounded-2xl border text-white shadow-lg ${tone}`}>
@@ -164,7 +164,7 @@ export default function BalancePage() {
     return (
       <div className="space-y-6">
         <Skeleton className="h-36 w-full rounded-4xl" />
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <Skeleton className="h-28" />
           <Skeleton className="h-28" />
           <Skeleton className="h-28" />
@@ -188,7 +188,7 @@ export default function BalancePage() {
           </p>
         </section>
 
-        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+        <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5">
           <SummaryCard label="Float de red" value={formatCurrency(totalNetworkFloat)} hint="Saldo agregado de gestores" icon={Landmark} tone="border-sky-500/20 bg-sky-500 shadow-sky-500/20" />
           <SummaryCard label="Efectivo en red" value={formatCurrency(totalNetworkCash)} hint="Caja total declarada" icon={Banknote} tone="border-emerald-500/20 bg-emerald-500 shadow-emerald-500/20" />
           <SummaryCard label="Gestores activos" value={String(agents.filter((agent) => agent.is_active).length)} hint="Con cuenta habilitada" icon={Wallet} tone="border-emerald-500/20 bg-emerald-500 shadow-emerald-500/20" />
@@ -204,8 +204,8 @@ export default function BalancePage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <Table>
+            <div className="activity-records-scroll">
+              <Table className="activity-records-table" wrapperClassName="is-stacked">
                 <TableHeader className="bg-muted/30">
                   <TableRow className="border-border/5 hover:bg-transparent">
                     <TableHead className="pl-8 py-4 text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">Gestor</TableHead>
@@ -221,13 +221,13 @@ export default function BalancePage() {
                   {agents.map((agent) => {
                     const lowFloat = Number(agent.balance || 0) < 25000;
                     return (
-                      <TableRow key={agent.id} className="border-border/5 hover:bg-muted/30">
-                        <TableCell className="pl-8 py-4">
+                      <TableRow key={agent.id} className="activity-record-row border-border/5 hover:bg-muted/30">
+                        <TableCell data-label="Gestor" className="pl-8 py-4">
                           <p className="text-sm font-bold text-foreground">{agent.name}</p>
                           <p className="text-[10px] font-semibold uppercase text-muted-foreground">{agent.email}</p>
                         </TableCell>
-                        <TableCell className="text-xs font-semibold text-muted-foreground">{agent.phone}</TableCell>
-                        <TableCell>
+                        <TableCell data-label="Contacto" className="text-xs font-semibold text-muted-foreground">{agent.phone}</TableCell>
+                        <TableCell data-label="Estado">
                           <div className="flex flex-col gap-2">
                             <Badge className={`w-fit rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] ${agent.is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-muted text-muted-foreground'}`}>
                               {agent.is_active ? 'Activo' : 'Inactivo'}
@@ -239,19 +239,19 @@ export default function BalancePage() {
                             )}
                           </div>
                         </TableCell>
-                        <TableCell className="text-right">
-                          <p className="text-base font-bold text-foreground">{formatCurrency(agent.balance)}</p>
+                        <TableCell data-label="Float" className="text-right">
+                          <p className="text-base font-bold tabular-nums text-foreground">{formatCurrency(agent.balance)}</p>
                         </TableCell>
-                        <TableCell className="text-right">
-                          <p className="text-base font-bold text-foreground">{formatCurrency(agent.cash_balance || 0)}</p>
+                        <TableCell data-label="Efectivo" className="text-right">
+                          <p className="text-base font-bold tabular-nums text-foreground">{formatCurrency(agent.cash_balance || 0)}</p>
                         </TableCell>
-                        <TableCell className="text-right">
-                          <p className="text-base font-bold text-foreground">{formatCurrency(agent.topup_total || 0)}</p>
+                        <TableCell data-label="Total recargado" className="text-right">
+                          <p className="text-base font-bold tabular-nums text-foreground">{formatCurrency(agent.topup_total || 0)}</p>
                           {agent.last_topup_at && (
                             <p className="text-[10px] font-semibold uppercase text-muted-foreground">{formatDate(agent.last_topup_at)}</p>
                           )}
                         </TableCell>
-                        <TableCell className="pr-8 text-right">
+                        <TableCell data-label="Acción" className="pr-8 text-right">
                           <Button
                             variant="outline"
                             className="rounded-xl font-bold"
@@ -275,7 +275,7 @@ export default function BalancePage() {
         </Card>
 
         <Dialog open={successOpen} onOpenChange={setSuccessOpen}>
-          <DialogContent className="max-w-md">
+          <DialogContent mobile="centered" className="max-w-md">
             <DialogHeader className="items-center text-center">
               <div className="flex h-20 w-20 items-center justify-center rounded-full bg-emerald-100">
                 <CheckCircle className="h-10 w-10 text-emerald-600" />
@@ -293,7 +293,7 @@ export default function BalancePage() {
         </Dialog>
 
         <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
-          <DialogContent className="max-w-md">
+          <DialogContent mobile="centered" className="max-w-md">
             <DialogHeader>
               <DialogTitle className="text-xl font-bold text-foreground">Recargar saldo a gestor</DialogTitle>
               <DialogDescription className="text-sm font-semibold text-muted-foreground">
@@ -308,6 +308,8 @@ export default function BalancePage() {
                 <Input
                   id="topup-amount"
                   type="number"
+                  inputMode="decimal"
+                  onWheel={(e) => e.currentTarget.blur()}
                   min="1"
                   step="0.01"
                   value={topUpAmount}
@@ -319,7 +321,7 @@ export default function BalancePage() {
               {selectedAgent && (
                 <div className="rounded-2xl border border-border/10 bg-background/70 p-4">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Saldo actual</p>
-                  <p className="mt-2 text-2xl font-bold text-foreground">{formatCurrency(selectedAgent.balance)}</p>
+                  <p className="mt-2 text-2xl font-bold tabular-nums text-foreground">{formatCurrency(selectedAgent.balance)}</p>
                 </div>
               )}
             </div>
@@ -342,7 +344,7 @@ export default function BalancePage() {
         </Dialog>
 
         <Dialog open={finalConfirmOpen} onOpenChange={setFinalConfirmOpen}>
-          <DialogContent className="max-w-md">
+          <DialogContent mobile="centered" className="max-w-md">
             <DialogHeader className="text-center">
               <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900/30">
                 <AlertCircle className="h-8 w-8 text-amber-600 dark:text-amber-400" />
@@ -430,7 +432,7 @@ export default function BalancePage() {
           </p>
         </section>
 
-        <section className="grid gap-4 md:grid-cols-4">
+        <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <SummaryCard label="Saldo disponible" value={formatCurrency(currentAgentBalance)} hint="Float utilizable ahora mismo" icon={Wallet} tone="border-emerald-500/20 bg-emerald-500 shadow-emerald-500/20" />
           <SummaryCard label="Saldo en efectivo" value={formatCurrency(currentAgentCash)} hint="Caja física disponible" icon={Banknote} tone="border-amber-500/20 bg-amber-500 shadow-amber-500/20" />
           <SummaryCard label="Total recargado" value={formatCurrency(totalTopups)} hint="Recargas acumuladas en cuenta" icon={TrendingUp} tone="border-sky-500/20 bg-sky-500 shadow-sky-500/20" />
@@ -445,7 +447,7 @@ export default function BalancePage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="p-0">
-            <div className="wallet-movements-scroll overflow-x-auto">
+            <div className="wallet-movements-scroll">
               <Table className="wallet-movements-table">
                 <TableHeader className="bg-muted/30">
                   <TableRow className="border-border/5 hover:bg-transparent">
@@ -507,7 +509,7 @@ export default function BalancePage() {
         </p>
       </section>
 
-      <section className="grid gap-4 md:grid-cols-4">
+      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <SummaryCard label="Monedas activas" value={String(currencySnapshots.length)} hint="Balances abiertos en cuenta" icon={Banknote} tone="border-sky-500/20 bg-sky-500 shadow-sky-500/20" />
         <SummaryCard label="Saldo principal" value={primaryClientCurrency ? formatCurrency(primaryClientCurrency.available, primaryClientCurrency.currency) : '0 XAF'} hint="Disponible en tu moneda principal" icon={Wallet} tone="border-emerald-500/20 bg-emerald-500 shadow-emerald-500/20" />
         <SummaryCard label="Reservado" value={primaryClientCurrency ? formatCurrency(primaryClientCurrency.reserved, primaryClientCurrency.currency) : '0 XAF'} hint="Pendiente de confirmación o liberación" icon={Clock3} tone="border-amber-500/20 bg-amber-500 shadow-amber-500/20" />
@@ -578,7 +580,7 @@ export default function BalancePage() {
       </Card>
 
       <Dialog open={successOpen} onOpenChange={setSuccessOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent mobile="centered" className="max-w-md">
           <DialogHeader className="items-center text-center">
             <div className="flex h-20 w-20 items-center justify-center rounded-full bg-emerald-100">
               <CheckCircle className="h-10 w-10 text-emerald-600" />
@@ -596,7 +598,7 @@ export default function BalancePage() {
       </Dialog>
 
       <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent mobile="centered" className="max-w-md">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold text-foreground">Recargar saldo a gestor</DialogTitle>
             <DialogDescription className="text-sm font-semibold text-muted-foreground">
@@ -611,6 +613,8 @@ export default function BalancePage() {
               <Input
                 id="topup-amount"
                 type="number"
+                  inputMode="decimal"
+                  onWheel={(e) => e.currentTarget.blur()}
                 min="1"
                 step="0.01"
                 value={topUpAmount}
@@ -622,7 +626,7 @@ export default function BalancePage() {
             {selectedAgent && (
               <div className="rounded-2xl border border-border/10 bg-background/70 p-4">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Saldo actual</p>
-                <p className="mt-2 text-2xl font-bold text-foreground">{formatCurrency(selectedAgent.balance)}</p>
+                <p className="mt-2 text-2xl font-bold tabular-nums text-foreground">{formatCurrency(selectedAgent.balance)}</p>
               </div>
             )}
           </div>
@@ -645,7 +649,7 @@ export default function BalancePage() {
       </Dialog>
 
       <Dialog open={finalConfirmOpen} onOpenChange={setFinalConfirmOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent mobile="centered" className="max-w-md">
           <DialogHeader className="text-center">
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900/30">
               <AlertCircle className="h-8 w-8 text-amber-600 dark:text-amber-400" />

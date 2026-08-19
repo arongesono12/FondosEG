@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { 
   Dialog,
   DialogContent,
@@ -29,6 +29,16 @@ export function SearchModal({ open, onOpenChange }: SearchModalProps) {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<Transfer[]>([]);
   const [loading, setLoading] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // `autoFocus` no abre el teclado en Safari iOS: el campo queda con cursor
+  // pero sin teclado y hay que tocarlo otra vez. Enfocar tras la animación de
+  // apertura sí funciona en iOS y Android.
+  useEffect(() => {
+    if (!open) return;
+    const timer = window.setTimeout(() => inputRef.current?.focus(), 220);
+    return () => window.clearTimeout(timer);
+  }, [open]);
 
   useEffect(() => {
     const timer = setTimeout(async () => {
@@ -60,7 +70,9 @@ export function SearchModal({ open, onOpenChange }: SearchModalProps) {
           <div className="relative">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none" />
             <Input
-              autoFocus
+              ref={inputRef}
+              inputMode="search"
+              enterKeyHint="search"
               placeholder="Busca por código, nombre o ciudad..."
               className="pl-12 pr-12 h-14 bg-transparent border-none text-xl font-bold placeholder:text-muted-foreground/50 focus-visible:ring-0"
               value={query}

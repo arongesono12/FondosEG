@@ -50,12 +50,12 @@ function MetricCard({
   tone: string;
 }) {
   return (
-    <Card className="glass-premium overflow-hidden border-border/10 bg-card/40 shadow-xl shadow-black/5">
+    <Card className="glass-premium min-w-0 overflow-hidden border-border/10 bg-card/40 shadow-xl shadow-black/5">
       <CardContent className="p-5">
         <div className="flex items-start justify-between gap-4">
           <div className="space-y-2">
             <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">{title}</p>
-            <p className="text-2xl font-bold text-foreground">{value}</p>
+            <p className="text-[clamp(1.125rem,1.4vw+0.75rem,1.5rem)] font-bold leading-tight tabular-nums text-foreground">{value}</p>
             <p className="text-xs font-medium text-muted-foreground">{hint}</p>
           </div>
           <div className={cn('flex h-11 w-11 items-center justify-center rounded-2xl border text-white shadow-lg', tone)}>
@@ -163,13 +163,13 @@ export default function DashboardPage() {
     return (
       <div className="space-y-6">
         <Skeleton className="h-40 w-full rounded-4xl" />
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <Skeleton className="h-28" />
           <Skeleton className="h-28" />
           <Skeleton className="h-28" />
           <Skeleton className="h-28" />
         </div>
-        <div className="grid gap-6 xl:grid-cols-[1.4fr_1fr]">
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
           <Skeleton className="h-80" />
           <Skeleton className="h-80" />
         </div>
@@ -208,12 +208,12 @@ export default function DashboardPage() {
           </div>
 
           <div className="grid gap-3 sm:grid-cols-2">
-            <Link href={primaryAction.href}>
-              <Button className="h-14 w-full rounded-2xl bg-brand-gradient px-6 text-base font-bold text-white shadow-xl shadow-pink-500/20 hover:scale-[1.01]">
+            <Button asChild className="h-14 w-full rounded-2xl bg-brand-gradient px-6 text-base font-bold text-white shadow-xl shadow-pink-500/20 hover:scale-[1.01]">
+              <Link href={primaryAction.href}>
                 <PrimaryIcon className="mr-2 h-5 w-5" />
                 {primaryAction.label}
-              </Button>
-            </Link>
+              </Link>
+            </Button>
             <Button
               variant="outline"
               className="h-14 rounded-2xl border-border/20 bg-white/60 px-6 text-base font-bold backdrop-blur-md dark:bg-white/5"
@@ -229,7 +229,7 @@ export default function DashboardPage() {
         </div>
       </section>
 
-      <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <MetricCard title={isClient ? 'Saldo disponible' : 'Float disponible'} value={fmt(availableBalance)} hint={isClient ? 'Fondos listos para usar' : 'Liquidez inmediata para operar'} icon={Wallet} tone="border-emerald-500/20 bg-emerald-500 shadow-emerald-500/20" />
         <MetricCard title={isClient ? 'Saldo retenido' : 'Exposición en tránsito'} value={fmt(reservedBalance)} hint={isClient ? 'Importe reservado por operaciones pendientes' : 'Capital comprometido en envíos no liquidados'} icon={Clock3} tone="border-amber-500/20 bg-amber-500 shadow-amber-500/20" />
         <MetricCard title="Volumen 7 días" value={fmt(stats?.weeklyVolume ?? 0)} hint={`${stats?.todayTransfers ?? 0} operaciones registradas hoy`} icon={TrendingUp} tone="border-sky-500/20 bg-sky-500 shadow-sky-500/20" />
@@ -237,8 +237,8 @@ export default function DashboardPage() {
       </section>
 
       {isSuperAdmin && marketingStats && (
-        <section className="grid grid-cols-1 gap-6 xl:grid-cols-[1.1fr_0.9fr]">
-          <Card className="glass-premium overflow-hidden border-border/10 bg-card/40 shadow-xl shadow-black/5">
+        <section className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
+          <Card className="glass-premium min-w-0 overflow-hidden border-border/10 bg-card/40 shadow-xl shadow-black/5">
             <CardHeader className="border-b border-border/5 pb-5">
               <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                 <div>
@@ -259,27 +259,27 @@ export default function DashboardPage() {
               <div className="grid gap-4 md:grid-cols-3 xl:grid-cols-6">
                 <div className="rounded-3xl border border-sky-500/20 bg-sky-500/10 p-4">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-sky-700 dark:text-sky-300">Eventos</p>
-                  <p className="mt-2 text-2xl font-bold text-foreground">{marketingStats.totals.total_events}</p>
+                  <p className="mt-2 text-2xl font-bold tabular-nums text-foreground">{marketingStats.totals.total_events}</p>
                 </div>
                 <div className="rounded-3xl border border-emerald-500/20 bg-emerald-500/10 p-4">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-emerald-700 dark:text-emerald-300">CTA clicks</p>
-                  <p className="mt-2 text-2xl font-bold text-foreground">{marketingStats.totals.cta_clicks}</p>
+                  <p className="mt-2 text-2xl font-bold tabular-nums text-foreground">{marketingStats.totals.cta_clicks}</p>
                 </div>
                 <div className="rounded-3xl border border-fuchsia-500/20 bg-fuchsia-500/10 p-4">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-fuchsia-700 dark:text-fuchsia-300">Form submits</p>
-                  <p className="mt-2 text-2xl font-bold text-foreground">{marketingStats.totals.form_submits}</p>
+                  <p className="mt-2 text-2xl font-bold tabular-nums text-foreground">{marketingStats.totals.form_submits}</p>
                 </div>
                 <div className="rounded-3xl border border-amber-500/20 bg-amber-500/10 p-4">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-amber-700 dark:text-amber-300">Cambios audiencia</p>
-                  <p className="mt-2 text-2xl font-bold text-foreground">{marketingStats.totals.audience_switches}</p>
+                  <p className="mt-2 text-2xl font-bold tabular-nums text-foreground">{marketingStats.totals.audience_switches}</p>
                 </div>
                 <div className="rounded-3xl border border-violet-500/20 bg-violet-500/10 p-4">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-violet-700 dark:text-violet-300">7 días</p>
-                  <p className="mt-2 text-2xl font-bold text-foreground">{marketingStats.totals.events_7d}</p>
+                  <p className="mt-2 text-2xl font-bold tabular-nums text-foreground">{marketingStats.totals.events_7d}</p>
                 </div>
                 <div className="rounded-3xl border border-rose-500/20 bg-rose-500/10 p-4">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-rose-700 dark:text-rose-300">30 días</p>
-                  <p className="mt-2 text-2xl font-bold text-foreground">{marketingStats.totals.events_30d}</p>
+                  <p className="mt-2 text-2xl font-bold tabular-nums text-foreground">{marketingStats.totals.events_30d}</p>
                 </div>
               </div>
 
@@ -321,7 +321,7 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
 
-          <Card className="glass-premium overflow-hidden border-border/10 bg-card/40 shadow-xl shadow-black/5">
+          <Card className="glass-premium min-w-0 overflow-hidden border-border/10 bg-card/40 shadow-xl shadow-black/5">
             <CardHeader className="border-b border-border/5 pb-5">
               <CardTitle className="flex items-center gap-2 text-xl font-bold text-foreground">
                 <BarChart3 className="h-5 w-5 text-primary" />
@@ -381,7 +381,7 @@ export default function DashboardPage() {
 
       {!isClient && (
         <section className="grid grid-cols-1 gap-6">
-          <Card className="glass-premium overflow-hidden border-border/10 bg-card/40 shadow-xl shadow-black/5">
+          <Card className="glass-premium min-w-0 overflow-hidden border-border/10 bg-card/40 shadow-xl shadow-black/5">
             <CardHeader className="border-b border-border/5 pb-5">
               <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
                 <div>
@@ -399,32 +399,35 @@ export default function DashboardPage() {
             <CardContent className="space-y-4 p-6">
               {isAdmin ? (
                 <>
-                  <div className="grid gap-4 md:grid-cols-4">
+                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                     <div className="rounded-3xl border border-emerald-500/20 bg-emerald-500/10 p-5">
                       <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-emerald-700 dark:text-emerald-300">Hoy</p>
-                      <p className="mt-2 text-2xl font-bold text-foreground">{fmt(commissionStats?.todayCommission ?? 0)}</p>
+                      <p className="mt-2 text-2xl font-bold tabular-nums text-foreground">{fmt(commissionStats?.todayCommission ?? 0)}</p>
                     </div>
                     <div className="rounded-3xl border border-sky-500/20 bg-sky-500/10 p-5">
                       <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-sky-700 dark:text-sky-300">Mes actual</p>
-                      <p className="mt-2 text-2xl font-bold text-foreground">{fmt(commissionStats?.monthCommission ?? 0)}</p>
+                      <p className="mt-2 text-2xl font-bold tabular-nums text-foreground">{fmt(commissionStats?.monthCommission ?? 0)}</p>
                     </div>
                     <div className="rounded-3xl border border-violet-500/20 bg-violet-500/10 p-5">
                       <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-violet-700 dark:text-violet-300">Año actual</p>
-                      <p className="mt-2 text-2xl font-bold text-foreground">{fmt(commissionStats?.yearCommission ?? 0)}</p>
+                      <p className="mt-2 text-2xl font-bold tabular-nums text-foreground">{fmt(commissionStats?.yearCommission ?? 0)}</p>
                     </div>
                     <div className="rounded-3xl border border-fuchsia-500/20 bg-fuchsia-500/10 p-5">
                       <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-fuchsia-700 dark:text-fuchsia-300">Acumulado</p>
-                      <p className="mt-2 text-2xl font-bold text-foreground">{fmt(commissionStats?.totalCommission ?? 0)}</p>
+                      <p className="mt-2 text-2xl font-bold tabular-nums text-foreground">{fmt(commissionStats?.totalCommission ?? 0)}</p>
                     </div>
                   </div>
 
+                  {/* Tabla en escritorio, lista de tarjetas etiquetadas por debajo de lg.
+                      `lg:contents` saca el <dl> del flujo en escritorio y deja que sus
+                      cuatro hijos ocupen directamente las columnas 2-5 de la rejilla. */}
                   <div className="overflow-hidden rounded-3xl border border-border/10 bg-background/70">
-                    <div className="grid grid-cols-[1.6fr_repeat(4,1fr)] gap-3 border-b border-border/10 px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                    <div className="hidden grid-cols-[1.6fr_repeat(4,minmax(0,1fr))] gap-3 border-b border-border/10 px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground lg:grid">
                       <span>Gestor</span>
-                      <span>Hoy</span>
-                      <span>Mes</span>
-                      <span>Año</span>
-                      <span>Acumulado</span>
+                      <span className="text-right">Hoy</span>
+                      <span className="text-right">Mes</span>
+                      <span className="text-right">Año</span>
+                      <span className="text-right">Acumulado</span>
                     </div>
                     <div className="divide-y divide-border/10">
                       {(commissionStats?.agents || []).length === 0 ? (
@@ -435,16 +438,25 @@ export default function DashboardPage() {
                         (commissionStats?.agents || []).map((agent) => (
                           <div
                             key={agent.agent_id}
-                            className="grid grid-cols-[1.6fr_repeat(4,1fr)] gap-3 px-4 py-4 text-sm"
+                            className="px-4 py-4 text-sm lg:grid lg:grid-cols-[1.6fr_repeat(4,minmax(0,1fr))] lg:items-center lg:gap-3"
                           >
-                            <div>
-                              <p className="font-bold text-foreground">{agent.agent_name}</p>
+                            <div className="min-w-0">
+                              <p className="truncate font-bold text-foreground">{agent.agent_name}</p>
                               <p className="text-xs font-medium text-muted-foreground">{agent.transfer_count} envíos con comisión</p>
                             </div>
-                            <p className="font-semibold text-foreground">{fmt(agent.today_commission)}</p>
-                            <p className="font-semibold text-foreground">{fmt(agent.month_commission)}</p>
-                            <p className="font-semibold text-foreground">{fmt(agent.year_commission)}</p>
-                            <p className="font-bold text-emerald-600">{fmt(agent.total_commission)}</p>
+                            <dl className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2 sm:grid-cols-4 lg:mt-0 lg:contents">
+                              {([
+                                ['Hoy', agent.today_commission, 'text-foreground'],
+                                ['Mes', agent.month_commission, 'text-foreground'],
+                                ['Año', agent.year_commission, 'text-foreground'],
+                                ['Acumulado', agent.total_commission, 'text-emerald-600'],
+                              ] as const).map(([label, value, tone]) => (
+                                <div key={label} className="min-w-0 lg:text-right">
+                                  <dt className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground lg:hidden">{label}</dt>
+                                  <dd className={cn('truncate font-semibold tabular-nums', tone)}>{fmt(value)}</dd>
+                                </div>
+                              ))}
+                            </dl>
                           </div>
                         ))
                       )}
@@ -452,25 +464,25 @@ export default function DashboardPage() {
                   </div>
                 </>
               ) : (
-                <div className="grid gap-4 md:grid-cols-4">
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                   <div className="rounded-3xl border border-emerald-500/20 bg-emerald-500/10 p-5">
                     <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-emerald-700 dark:text-emerald-300">Hoy</p>
-                    <p className="mt-2 text-2xl font-bold text-foreground">{fmt(stats?.todayCommission ?? 0)}</p>
+                    <p className="mt-2 text-2xl font-bold tabular-nums text-foreground">{fmt(stats?.todayCommission ?? 0)}</p>
                     <p className="mt-1 text-xs font-medium text-muted-foreground">Comisión generada hoy</p>
                   </div>
                   <div className="rounded-3xl border border-sky-500/20 bg-sky-500/10 p-5">
                     <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-sky-700 dark:text-sky-300">Mes actual</p>
-                    <p className="mt-2 text-2xl font-bold text-foreground">{fmt(stats?.monthlyCommission ?? 0)}</p>
+                    <p className="mt-2 text-2xl font-bold tabular-nums text-foreground">{fmt(stats?.monthlyCommission ?? 0)}</p>
                     <p className="mt-1 text-xs font-medium text-muted-foreground">Comisión acumulada del mes</p>
                   </div>
                   <div className="rounded-3xl border border-violet-500/20 bg-violet-500/10 p-5">
                     <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-violet-700 dark:text-violet-300">Año actual</p>
-                    <p className="mt-2 text-2xl font-bold text-foreground">{fmt(stats?.yearlyCommission ?? 0)}</p>
+                    <p className="mt-2 text-2xl font-bold tabular-nums text-foreground">{fmt(stats?.yearlyCommission ?? 0)}</p>
                     <p className="mt-1 text-xs font-medium text-muted-foreground">Comisión acumulada del año</p>
                   </div>
                   <div className="rounded-3xl border border-fuchsia-500/20 bg-fuchsia-500/10 p-5">
                     <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-fuchsia-700 dark:text-fuchsia-300">Acumulado</p>
-                    <p className="mt-2 text-2xl font-bold text-foreground">{fmt(stats?.totalCommission ?? 0)}</p>
+                    <p className="mt-2 text-2xl font-bold tabular-nums text-foreground">{fmt(stats?.totalCommission ?? 0)}</p>
                     <p className="mt-1 text-xs font-medium text-muted-foreground">Total histórico generado</p>
                   </div>
                 </div>
@@ -480,8 +492,8 @@ export default function DashboardPage() {
         </section>
       )}
 
-      <section className="grid grid-cols-1 gap-6 xl:grid-cols-[1.45fr_0.95fr]">
-        <Card className="glass-premium overflow-hidden border-border/10 bg-card/40 shadow-xl shadow-black/5">
+      <section className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1.45fr)_minmax(0,0.95fr)]">
+        <Card className="glass-premium min-w-0 overflow-hidden border-border/10 bg-card/40 shadow-xl shadow-black/5">
           <CardHeader className="border-b border-border/5 pb-5">
             <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
               <div>
@@ -496,10 +508,10 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent className="space-y-5 p-6">
             <div className={cn('grid gap-4', isClient ? 'md:grid-cols-3' : 'md:grid-cols-4')}>
-              <div className="rounded-3xl border border-border/10 bg-background/70 p-5"><p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">Capital operativo</p><p className="mt-2 text-2xl font-bold text-foreground">{fmt(stats?.totalBalance ?? 0)}</p></div>
-              <div className="rounded-3xl border border-border/10 bg-background/70 p-5"><p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">{isClient ? 'Volumen 30 días' : 'Recarga proyectada 24h'}</p><p className="mt-2 text-2xl font-bold text-foreground">{fmt(isClient ? (stats?.monthlyVolume ?? 0) : (stats?.projectedTopups24h ?? 0))}</p></div>
-              <div className="rounded-3xl border border-border/10 bg-background/70 p-5"><p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">{isClient ? 'Confirmación' : 'Cobertura de float'}</p><p className="mt-2 text-2xl font-bold text-foreground">{isClient ? `${settlementRate}%` : `${(stats?.liquidityCoverageDays ?? 0).toFixed(1)} días`}</p></div>
-              {!isClient && <div className="rounded-3xl border border-border/10 bg-background/70 p-5"><p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">Utilización del float</p><p className="mt-2 text-2xl font-bold text-foreground">{stats?.floatUtilization ?? 0}%</p></div>}
+              <div className="rounded-3xl border border-border/10 bg-background/70 p-5"><p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">Capital operativo</p><p className="mt-2 text-2xl font-bold tabular-nums text-foreground">{fmt(stats?.totalBalance ?? 0)}</p></div>
+              <div className="rounded-3xl border border-border/10 bg-background/70 p-5"><p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">{isClient ? 'Volumen 30 días' : 'Recarga proyectada 24h'}</p><p className="mt-2 text-2xl font-bold tabular-nums text-foreground">{fmt(isClient ? (stats?.monthlyVolume ?? 0) : (stats?.projectedTopups24h ?? 0))}</p></div>
+              <div className="rounded-3xl border border-border/10 bg-background/70 p-5"><p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">{isClient ? 'Confirmación' : 'Cobertura de float'}</p><p className="mt-2 text-2xl font-bold tabular-nums text-foreground">{isClient ? `${settlementRate}%` : `${(stats?.liquidityCoverageDays ?? 0).toFixed(1)} días`}</p></div>
+              {!isClient && <div className="rounded-3xl border border-border/10 bg-background/70 p-5"><p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">Utilización del float</p><p className="mt-2 text-2xl font-bold tabular-nums text-foreground">{stats?.floatUtilization ?? 0}%</p></div>}
             </div>
 
             {!isClient && trend.length > 0 && (
@@ -508,13 +520,13 @@ export default function DashboardPage() {
                   <div><p className="text-sm font-bold text-foreground">Pulso de volumen</p><p className="text-xs font-medium text-muted-foreground">Últimos 7 días cerrados</p></div>
                   <div className="text-right"><p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">Volumen 30 días</p><p className="text-lg font-bold text-foreground">{fmt(stats?.monthlyVolume ?? 0)}</p></div>
                 </div>
-                <div className="grid grid-cols-7 gap-3">
+                <div className="-mx-1 grid grid-cols-7 gap-1.5 px-1 sm:gap-3">
                   {trend.map((item) => (
-                    <div key={item.date} className="flex flex-col items-center gap-3">
-                      <div className="flex h-40 w-full items-end rounded-3xl bg-muted/30 p-2">
+                    <div key={item.date} className="flex min-w-0 flex-col items-center gap-2 sm:gap-3">
+                      <div className="flex h-24 w-full items-end rounded-2xl bg-muted/30 p-1.5 sm:h-40 sm:rounded-3xl sm:p-2">
                         <div className="w-full rounded-2xl bg-linear-to-t from-sky-500 via-cyan-400 to-emerald-400 shadow-lg shadow-sky-500/20" style={{ height: `${Math.max(Math.round((item.total_amount / maxTrend) * 100), item.total_amount > 0 ? 12 : 4)}%` }} title={fmt(item.total_amount)} />
                       </div>
-                      <div className="text-center"><p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">{formatDateShort(item.date).slice(0, 5)}</p><p className="mt-1 text-xs font-semibold text-foreground">{item.transfer_count}</p></div>
+                      <div className="min-w-0 text-center"><p className="truncate text-[9px] font-semibold text-muted-foreground sm:text-[10px] sm:uppercase sm:tracking-[0.16em]">{formatDateShort(item.date).slice(0, 5)}</p><p className="mt-1 text-[11px] font-semibold tabular-nums text-foreground sm:text-xs">{item.transfer_count}</p></div>
                     </div>
                   ))}
                 </div>
@@ -523,7 +535,7 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        <Card className="glass-premium overflow-hidden border-border/10 bg-card/40 shadow-xl shadow-black/5">
+        <Card className="glass-premium min-w-0 overflow-hidden border-border/10 bg-card/40 shadow-xl shadow-black/5">
           <CardHeader className="border-b border-border/5 pb-5">
             <CardTitle className="flex items-center gap-2 text-xl font-bold text-foreground"><ShieldCheck className="h-5 w-5 text-primary" /> Salud operativa</CardTitle>
           </CardHeader>
@@ -537,10 +549,10 @@ export default function DashboardPage() {
               <div><div className="mb-2 flex items-center justify-between"><span className="text-xs font-semibold text-foreground">Canceladas</span><span className="text-xs font-semibold text-rose-600 dark:text-rose-400">{cancelledRate}%</span></div><div className="h-2 overflow-hidden rounded-full bg-muted/30"><div className="h-full rounded-full bg-rose-500" style={{ width: `${Math.min(cancelledRate, 100)}%` }} /></div></div>
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
-              <div className="rounded-3xl border border-border/10 bg-background/70 p-4"><p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">{isAdmin ? 'Gestores activos' : isGestor ? 'Clientes atendidos' : 'Confirmadas'}</p><p className="mt-2 text-2xl font-bold text-foreground">{isAdmin ? stats?.activeAgents ?? 0 : isGestor ? stats?.totalClients ?? 0 : stats?.completedTransfers ?? 0}</p></div>
-              <div className="rounded-3xl border border-border/10 bg-background/70 p-4"><p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">{isClient ? 'Saldo retenido' : 'Bajo umbral'}</p><p className="mt-2 text-2xl font-bold text-foreground">{isClient ? fmt(reservedBalance) : stats?.agentsBelowThreshold ?? 0}</p></div>
-              <div className="rounded-3xl border border-border/10 bg-background/70 p-4"><p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">{isClient ? 'Pendientes' : 'Disponibles para pago'}</p><p className="mt-2 text-2xl font-bold text-foreground">{isClient ? stats?.pendingTransfers ?? 0 : stats?.pickupReadyTransfers ?? 0}</p></div>
-              <div className="rounded-3xl border border-border/10 bg-background/70 p-4"><p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">{isClient ? 'Ticket medio' : 'Clientes únicos'}</p><p className="mt-2 text-2xl font-bold text-foreground">{isClient ? fmt(stats?.averageTicket ?? 0) : stats?.totalClients ?? 0}</p></div>
+              <div className="rounded-3xl border border-border/10 bg-background/70 p-4"><p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">{isAdmin ? 'Gestores activos' : isGestor ? 'Clientes atendidos' : 'Confirmadas'}</p><p className="mt-2 text-2xl font-bold tabular-nums text-foreground">{isAdmin ? stats?.activeAgents ?? 0 : isGestor ? stats?.totalClients ?? 0 : stats?.completedTransfers ?? 0}</p></div>
+              <div className="rounded-3xl border border-border/10 bg-background/70 p-4"><p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">{isClient ? 'Saldo retenido' : 'Bajo umbral'}</p><p className="mt-2 text-2xl font-bold tabular-nums text-foreground">{isClient ? fmt(reservedBalance) : stats?.agentsBelowThreshold ?? 0}</p></div>
+              <div className="rounded-3xl border border-border/10 bg-background/70 p-4"><p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">{isClient ? 'Pendientes' : 'Disponibles para pago'}</p><p className="mt-2 text-2xl font-bold tabular-nums text-foreground">{isClient ? stats?.pendingTransfers ?? 0 : stats?.pickupReadyTransfers ?? 0}</p></div>
+              <div className="rounded-3xl border border-border/10 bg-background/70 p-4"><p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">{isClient ? 'Ticket medio' : 'Clientes únicos'}</p><p className="mt-2 text-2xl font-bold tabular-nums text-foreground">{isClient ? fmt(stats?.averageTicket ?? 0) : stats?.totalClients ?? 0}</p></div>
             </div>
             {!isClient && (stats?.agentsBelowThreshold ?? 0) > 0 && (
               <div className="rounded-3xl border border-amber-500/20 bg-amber-500/10 p-4 text-amber-700 dark:text-amber-300">
@@ -551,12 +563,14 @@ export default function DashboardPage() {
         </Card>
       </section>
 
-      <section className="grid grid-cols-1 gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-        <Card className="glass-premium overflow-hidden border-border/10 bg-card/40 shadow-xl shadow-black/5">
+      <section className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
+        <Card className="glass-premium min-w-0 overflow-hidden border-border/10 bg-card/40 shadow-xl shadow-black/5">
           <CardHeader className="border-b border-border/5 pb-5">
             <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
               <CardTitle className="flex items-center gap-2 text-xl font-bold text-foreground"><History className="h-5 w-5 text-primary" /> Operaciones recientes</CardTitle>
-              <Link href="/history"><Button variant="ghost" className="rounded-xl font-semibold text-muted-foreground hover:text-foreground">Ver historial completo<ArrowUpRight className="ml-2 h-4 w-4" /></Button></Link>
+              <Button asChild variant="ghost" className="rounded-xl font-semibold text-muted-foreground hover:text-foreground">
+              <Link href="/history">Ver historial completo<ArrowUpRight className="ml-2 h-4 w-4" /></Link>
+            </Button>
             </div>
           </CardHeader>
           <CardContent className="space-y-3 p-6">
@@ -586,7 +600,7 @@ export default function DashboardPage() {
         </Card>
 
         <div className="space-y-6">
-          <Card className="glass-premium overflow-hidden border-border/10 bg-card/40 shadow-xl shadow-black/5">
+          <Card className="glass-premium min-w-0 overflow-hidden border-border/10 bg-card/40 shadow-xl shadow-black/5">
             <CardHeader className="border-b border-border/5 pb-5">
               <CardTitle className="flex items-center gap-2 text-xl font-bold text-foreground">{isAdmin ? <Users className="h-5 w-5 text-primary" /> : <Sparkles className="h-5 w-5 text-primary" />}{isAdmin ? ' Top gestores por volumen' : ' Resumen ejecutivo'}</CardTitle>
             </CardHeader>
@@ -601,14 +615,14 @@ export default function DashboardPage() {
                 </div>
               )) : (
                 <>
-                  <div className="rounded-3xl border border-border/10 bg-background/70 p-5"><p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Volumen del mes</p><p className="mt-2 text-2xl font-bold text-foreground">{fmt(stats?.monthlyVolume ?? 0)}</p></div>
+                  <div className="rounded-3xl border border-border/10 bg-background/70 p-5"><p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Volumen del mes</p><p className="mt-2 text-2xl font-bold tabular-nums text-foreground">{fmt(stats?.monthlyVolume ?? 0)}</p></div>
                   <div className="rounded-3xl border border-border/10 bg-background/70 p-5"><p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Meta de consistencia</p><div className="mt-3 flex items-center justify-between"><p className="text-2xl font-bold text-foreground">{settlementRate}%</p><Target className="h-5 w-5 text-emerald-500" /></div></div>
                 </>
               )}
             </CardContent>
           </Card>
 
-          <Card className="glass-premium overflow-hidden border-border/10 bg-card/40 shadow-xl shadow-black/5">
+          <Card className="glass-premium min-w-0 overflow-hidden border-border/10 bg-card/40 shadow-xl shadow-black/5">
             <CardHeader className="border-b border-border/5 pb-5">
               <CardTitle className="flex items-center gap-2 text-xl font-bold text-foreground"><BarChart3 className="h-5 w-5 text-primary" /> Acciones rápidas</CardTitle>
             </CardHeader>

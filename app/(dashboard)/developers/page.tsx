@@ -390,7 +390,7 @@ const event = parseFondosEGWebhookBody(rawBody);`;
     return (
       <div className="space-y-6">
         <Skeleton className="h-40 w-full rounded-4xl" />
-        <div className="grid gap-6 xl:grid-cols-[0.95fr_1.25fr]">
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.25fr)]">
           <Skeleton className="h-96 rounded-4xl" />
           <Skeleton className="h-96 rounded-4xl" />
         </div>
@@ -462,7 +462,7 @@ const event = parseFondosEGWebhookBody(rawBody);`;
         </section>
       )}
 
-      <section className="grid gap-6 xl:grid-cols-[0.95fr_1.25fr]">
+      <section className="grid gap-6 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.25fr)]">
         <Card className="glass-premium overflow-hidden border-border/10 bg-card/40 shadow-xl shadow-black/5">
           <CardHeader className="border-b border-border/5 pb-5">
             <CardTitle className="flex items-center gap-2 text-xl font-bold text-foreground">
@@ -715,7 +715,7 @@ const event = parseFondosEGWebhookBody(rawBody);`;
               <div className="grid gap-3 sm:grid-cols-3">
                 <div className="rounded-3xl border border-border/10 bg-background/70 p-4">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Requests</p>
-                  <p className="mt-2 text-2xl font-bold text-foreground">{usageLoading ? '...' : usage?.summary.total ?? 0}</p>
+                  <p className="mt-2 text-2xl font-bold tabular-nums text-foreground">{usageLoading ? '...' : usage?.summary.total ?? 0}</p>
                 </div>
                 <div className="rounded-3xl border border-border/10 bg-background/70 p-4">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Exitosos</p>
@@ -753,7 +753,7 @@ const event = parseFondosEGWebhookBody(rawBody);`;
         </div>
       </section>
 
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {endpointDocs.map((endpoint) => (
           <div key={`${endpoint.method}-${endpoint.path}`} className="rounded-3xl border border-border/10 bg-background/70 p-5 shadow-sm">
             <div className="flex items-center justify-between gap-3">

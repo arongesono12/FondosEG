@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn, getInitials } from '@/lib/utils';
 import { useAppStore } from '@/lib/store';
@@ -33,7 +33,9 @@ import {
   AlertTriangle,
   FileText,
   ShieldCheck,
+  MoreHorizontal,
 } from 'lucide-react';
+import { UsersPanel } from './users-panel';
 import { SearchModal } from './search-modal';
 import { NotificationModal } from './notification-modal';
 import { SettingsModal } from './settings-modal';
@@ -154,6 +156,7 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
   const [scrolled, setScrolled] = useState(false);
   const [notificationCount, setNotificationCount] = useState(0);
   const [lowBalance, setLowBalance] = useState(false);
+  const [usersPanelOpen, setUsersPanelOpen] = useState(false);
   
   const isDark = mounted && resolvedTheme === 'dark';
 
@@ -181,13 +184,34 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
     const mainArea = document.querySelector('main');
     if (!mainArea) return;
 
+    // Listener pasivo + rAF: el handler cambia la altura de la cabecera, así que
+    // sin acotarlo provoca layout en cada evento de scroll.
+    let frame = 0;
     const handleScroll = () => {
-      setScrolled(mainArea.scrollTop > 10);
+      if (frame) return;
+      frame = window.requestAnimationFrame(() => {
+        setScrolled(mainArea.scrollTop > 10);
+        frame = 0;
+      });
     };
 
-    mainArea.addEventListener('scroll', handleScroll);
-    return () => mainArea.removeEventListener('scroll', handleScroll);
+    mainArea.addEventListener('scroll', handleScroll, { passive: true });
+    return () => {
+      mainArea.removeEventListener('scroll', handleScroll);
+      if (frame) window.cancelAnimationFrame(frame);
+    };
   }, []);
+
+  // El documento no hace scroll (`.dashboard-public-page` es `overflow: hidden`):
+  // el contenedor desplazable real es `<main>`, y como pertenece al layout
+  // conserva su posición entre navegaciones.
+  const scrollMainToTop = useCallback(() => {
+    document.querySelector('main')?.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
+
+  useEffect(() => {
+    document.querySelector('main')?.scrollTo({ top: 0 });
+  }, [pathname]);
 
   useEffect(() => {
     async function loadNotificationCount() {
@@ -275,6 +299,13 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
         { href: '/history', label: 'Actividad', icon: History },
       ];
 
+  // La barra inferior aloja 4 destinos + un quinto hueco (Buscar, o "Más" si
+  // sobran destinos). Con 8 elementos —el caso de superadmin— cada objetivo
+  // caería a 44px en una pantalla de 360px y el desbordamiento quedaba oculto
+  // tras un scroll horizontal sin ninguna señal visual.
+  const primaryNavItems = navItems.slice(0, 4);
+  const overflowNavItems = navItems.slice(4);
+
   const userMenuDropdown = (avatarClassName?: string, showMobileName = false) => (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -325,6 +356,12 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
             <UserCog className="mr-2 h-4 w-4" />
             <span>Mi Perfil</span>
           </DropdownMenuItem>
+          {isAdminRole(user?.role) && (
+            <DropdownMenuItem onClick={() => setUsersPanelOpen(true)}>
+              <Users className="mr-2 h-4 w-4" />
+              <span>Usuarios conectados</span>
+            </DropdownMenuItem>
+          )}
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={() => router.push('/landing/privacidad')}>
             <ShieldCheck className="mr-2 h-4 w-4" />
@@ -364,12 +401,18 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={() => setSettingsOpen(true)}>
           <Settings className="mr-2 h-4 w-4" />
-          <span>ConfiguraciÃ³n</span>
+          <span>Configuración</span>
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => router.push('/profile')}>
           <UserCog className="mr-2 h-4 w-4" />
           <span>Mi Perfil</span>
         </DropdownMenuItem>
+        {isAdminRole(user?.role) && (
+          <DropdownMenuItem onClick={() => setUsersPanelOpen(true)}>
+            <Users className="mr-2 h-4 w-4" />
+            <span>Usuarios conectados</span>
+          </DropdownMenuItem>
+        )}
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={() => router.push('/landing/privacidad')}>
           <ShieldCheck className="mr-2 h-4 w-4" />
@@ -377,12 +420,12 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => router.push('/landing/terminos')}>
           <FileText className="mr-2 h-4 w-4" />
-          <span>TÃ©rminos y condiciones</span>
+          <span>Términos y condiciones</span>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleSignOut} className="text-rose-500 focus:text-rose-500 focus:bg-rose-500/10">
           <LogOut className="mr-2 h-4 w-4" />
-          <span>Cerrar sesiÃ³n</span>
+          <span>Cerrar sesión</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
       )}
@@ -396,7 +439,7 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
       <div className={cn(
         "mx-auto w-full relative flex flex-col",
         "lg:max-w-[1440px] lg:h-[calc(100vh-4rem)] lg:rounded-[2.5rem] lg:shadow-xl lg:shadow-slate-200/20 dark:lg:shadow-black/20 lg:border lg:border-border/10",
-        "h-screen lg:h-auto"
+        "h-dvh lg:h-auto"
       )}>
         {/* Top Header Navigation - rounded top corners to match container */}
         <header className={cn(
@@ -411,7 +454,7 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
               href="/" 
               className="flex items-center gap-2"
               onClick={() => {
-                window.scrollTo({ top: 0, behavior: 'smooth' });
+                scrollMainToTop();
               }}
             >
               <DashboardLogo
@@ -545,6 +588,12 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
                     <UserCog className="mr-2 h-4 w-4" />
                     <span>Mi Perfil</span>
                   </DropdownMenuItem>
+                  {isAdminRole(user?.role) && (
+                    <DropdownMenuItem onClick={() => setUsersPanelOpen(true)}>
+                      <Users className="mr-2 h-4 w-4" />
+                      <span>Usuarios conectados</span>
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => router.push('/landing/privacidad')}>
                     <ShieldCheck className="mr-2 h-4 w-4" />
@@ -570,7 +619,7 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
             href="/dashboard"
             className="dashboard-mobile-brand"
             aria-label="FondosEG dashboard"
-            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            onClick={scrollMainToTop}
           >
             <DashboardLogo priority size="sm" labelClassName="text-lg" />
           </Link>
@@ -601,20 +650,21 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
         </header>
 
         {/* Content Area */}
-        <main className="flex-1 min-h-0 overflow-y-auto scrollbar-hide bg-transparent p-4 pb-28 lg:p-10">
+        <main className="flex-1 min-h-0 overflow-y-auto overscroll-y-contain scrollbar-hide bg-transparent p-4 pb-28 lg:p-10">
           {children}
         </main>
 
-        <nav className="dashboard-mobile-bottom-bar lg:hidden" aria-label="NavegaciÃ³n principal del dashboard">
+        <nav className="dashboard-mobile-bottom-bar lg:hidden" aria-label="Navegación principal del dashboard">
           <div className="dashboard-mobile-bottom-scroll">
-            {navItems.map((item) => {
+            {primaryNavItems.map((item) => {
               const isActive = pathname === item.href;
               const Icon = item.icon;
               return (
                 <Link
                   key={item.href}
                   href={item.href}
-                  onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                  onClick={scrollMainToTop}
+                  aria-current={isActive ? 'page' : undefined}
                   className={cn("dashboard-mobile-action", isActive && "is-active")}
                 >
                   <Icon className="h-5 w-5" />
@@ -622,14 +672,48 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
                 </Link>
               );
             })}
-            <button type="button" className="dashboard-mobile-action" onClick={() => setSearchOpen(true)}>
-              <Search className="h-5 w-5" />
-              <span>Buscar</span>
-            </button>
+            {overflowNavItems.length > 0 ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    type="button"
+                    className={cn(
+                      "dashboard-mobile-action",
+                      overflowNavItems.some((item) => item.href === pathname) && "is-active"
+                    )}
+                  >
+                    <MoreHorizontal className="h-5 w-5" />
+                    <span>Más</span>
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent side="top" align="end" sideOffset={12} className="w-56 rounded-2xl">
+                  {overflowNavItems.map((item) => {
+                    const Icon = item.icon;
+                    return (
+                      <DropdownMenuItem key={item.href} onClick={() => router.push(item.href)}>
+                        <Icon className="mr-2 h-4 w-4" />
+                        <span>{item.label}</span>
+                      </DropdownMenuItem>
+                    );
+                  })}
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => setSearchOpen(true)}>
+                    <Search className="mr-2 h-4 w-4" />
+                    <span>Buscar</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <button type="button" className="dashboard-mobile-action" onClick={() => setSearchOpen(true)}>
+                <Search className="h-5 w-5" />
+                <span>Buscar</span>
+              </button>
+            )}
           </div>
         </nav>
 
         {/* Modals */}
+        <UsersPanel open={usersPanelOpen} onClose={() => setUsersPanelOpen(false)} />
         <SearchModal open={searchOpen} onOpenChange={setSearchOpen} />
         <NotificationModal open={notificationsOpen} onOpenChange={setNotificationsOpen} />
         <SettingsModal open={settingsOpen} onOpenChange={setSettingsOpen} />

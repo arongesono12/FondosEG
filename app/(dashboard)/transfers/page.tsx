@@ -136,7 +136,7 @@ export default function TransfersPage() {
       </div>
 
       {/* Stats Grid */}
-      <div className={`grid grid-cols-1 ${user?.role === 'gestor' ? 'md:grid-cols-2 lg:grid-cols-5' : user?.role === 'cliente' ? 'md:grid-cols-2' : 'md:grid-cols-2 lg:grid-cols-4'} gap-4`}>
+      <div className={`grid grid-cols-1 ${user?.role === 'gestor' ? 'sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5' : user?.role === 'cliente' ? 'sm:grid-cols-2' : 'md:grid-cols-2 lg:grid-cols-4'} gap-4`}>
         {/* Card: Nueva Transferencia (Solo gestores) */}
         {user?.role === 'gestor' && (
           <Card className="transfer-action-card bg-brand-gradient border-0 rounded-3xl p-6 cursor-pointer hover:shadow-xl transition-all text-white" onClick={() => setAgentTransferOpen(true)}>
@@ -146,7 +146,7 @@ export default function TransfersPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-bold">Enviar dinero</p>
+              <p className="text-xl font-bold tabular-nums sm:text-2xl">Enviar dinero</p>
               <p className="text-xs text-white/70 mt-1">A clientes y beneficiarios</p>
               <Button variant="ghost" className="transfer-mobile-action text-xs font-bold text-white mt-2 p-0 h-auto">
                 Iniciar <ArrowUpRight className="h-3 w-3 ml-1" />
@@ -234,7 +234,7 @@ export default function TransfersPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold">{formatBalance(stats?.todayTransfers || 0)}</p>
+            <p className="text-xl font-bold tabular-nums sm:text-2xl">{formatBalance(stats?.todayTransfers || 0)}</p>
             <p className="text-xs text-muted-foreground mt-1">transacciones hoy</p>
             <Button variant="ghost" className="transfer-mobile-action text-xs font-bold text-primary mt-2 p-0 h-auto">
               Ver todo <ArrowUpRight className="h-3 w-3 ml-1" />
@@ -253,7 +253,7 @@ export default function TransfersPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold">{recentTransfers.length}</p>
+            <p className="text-xl font-bold tabular-nums sm:text-2xl">{recentTransfers.length}</p>
             <p className="text-xs text-muted-foreground mt-1">transferencias totales</p>
             <Button variant="ghost" className="transfer-mobile-action text-xs font-bold text-primary mt-2 p-0 h-auto">
               Ver todo <ArrowUpRight className="h-3 w-3 ml-1" />
@@ -271,7 +271,7 @@ export default function TransfersPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold">{formatBalance(totalWeekly)}</p>
+            <p className="text-xl font-bold tabular-nums sm:text-2xl">{formatBalance(totalWeekly)}</p>
             <p className="text-xs text-muted-foreground mt-1">últimos 7 días</p>
             <Button variant="ghost" className="transfer-mobile-action text-xs font-bold text-primary mt-2 p-0 h-auto">
               Ver todo <ArrowUpRight className="h-3 w-3 ml-1" />
@@ -288,7 +288,7 @@ export default function TransfersPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold">24/7</p>
+            <p className="text-xl font-bold tabular-nums sm:text-2xl">24/7</p>
             <p className="text-xs text-muted-foreground mt-1">asistencia disponible</p>
             <Button variant="ghost" className="transfer-mobile-action text-xs font-bold text-primary mt-2 p-0 h-auto">
               Contactar <ArrowUpRight className="h-3 w-3 ml-1" />
@@ -303,8 +303,8 @@ export default function TransfersPage() {
           <CardTitle className="text-lg font-bold">Últimas Transferencias</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto">
-            <table className="w-full">
+          <div className="activity-records-scroll table-scroll is-stacked">
+            <table className="activity-records-table w-full">
               <thead>
                 <tr className="border-b border-border/10">
                   <th className="text-left py-3 px-4 text-xs font-bold text-muted-foreground uppercase">Código</th>
@@ -317,17 +317,17 @@ export default function TransfersPage() {
               </thead>
               <tbody>
                 {recentTransfers.slice(0, 10).map((transfer) => (
-                  <tr key={transfer.id} className="border-b border-border/5 hover:bg-muted/30">
-                    <td className="py-3 px-4 text-sm font-bold">{transfer.transfer_code || 'N/A'}</td>
-                    <td className="py-3 px-4 text-sm">{transfer.sender_name || 'N/A'}</td>
-                    <td className="py-3 px-4 text-sm">{transfer.receiver_name || 'N/A'}</td>
-                    <td className="py-3 px-4 text-sm font-bold">{formatBalance(transfer.amount)}</td>
-                    <td className="py-3 px-4">
+                  <tr key={transfer.id} className="activity-record-row border-b border-border/5 hover:bg-muted/30">
+                    <td data-label="Código" className="py-3 px-4 text-sm font-bold">{transfer.transfer_code || 'N/A'}</td>
+                    <td data-label="Remitente" className="py-3 px-4 text-sm">{transfer.sender_name || 'N/A'}</td>
+                    <td data-label="Destinatario" className="py-3 px-4 text-sm">{transfer.receiver_name || 'N/A'}</td>
+                    <td data-label="Monto" className="py-3 px-4 text-sm font-bold tabular-nums">{formatBalance(transfer.amount)}</td>
+                    <td data-label="Estado" className="py-3 px-4">
                       <Badge className={getStatusColor(transfer.status)}>
                         {getStatusText(transfer.status)}
                       </Badge>
                     </td>
-                    <td className="py-3 px-4 text-xs text-muted-foreground">
+                    <td data-label="Fecha" className="py-3 px-4 text-xs text-muted-foreground">
                       {formatDateShort(transfer.created_at)}
                     </td>
                   </tr>
@@ -340,25 +340,25 @@ export default function TransfersPage() {
 
       {/* Modal: Flujo del Día */}
       <Dialog open={showDailyModal} onOpenChange={setShowDailyModal}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="max-w-2xl lg:max-h-[80dvh] lg:overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold flex items-center gap-2">
               <TrendingUp className="h-5 w-5" /> Flujo del Día
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
               <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-2xl">
                 <p className="text-xs font-bold text-muted-foreground uppercase">Transacciones Hoy</p>
-                <p className="text-2xl font-bold">{stats?.todayTransfers || 0}</p>
+                <p className="text-xl font-bold tabular-nums sm:text-2xl">{stats?.todayTransfers || 0}</p>
               </div>
               <div className="p-4 bg-purple-50 dark:bg-purple-900/20 rounded-2xl">
                 <p className="text-xs font-bold text-muted-foreground uppercase">Monto Enviado</p>
-                <p className="text-2xl font-bold">{formatBalance(stats?.totalSent || 0)}</p>
+                <p className="text-xl font-bold tabular-nums sm:text-2xl">{formatBalance(stats?.totalSent || 0)}</p>
               </div>
               <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-2xl">
                 <p className="text-xs font-bold text-muted-foreground uppercase">Comisión Hoy</p>
-                <p className="text-2xl font-bold">{formatBalance(stats?.todayCommission || 0)}</p>
+                <p className="text-xl font-bold tabular-nums sm:text-2xl">{formatBalance(stats?.todayCommission || 0)}</p>
               </div>
             </div>
           </div>
@@ -367,7 +367,7 @@ export default function TransfersPage() {
 
       {/* Modal: Envíos de Gestores */}
       <Dialog open={showAgentsModal} onOpenChange={setShowAgentsModal}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="max-w-2xl lg:max-h-[80dvh] lg:overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold flex items-center gap-2">
               <Users className="h-5 w-5" /> Envíos de Gestores
@@ -399,41 +399,45 @@ export default function TransfersPage() {
 
       {/* Modal: Volumen Semanal */}
       <Dialog open={showWeeklyModal} onOpenChange={setShowWeeklyModal}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="max-w-2xl lg:max-h-[80dvh] lg:overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold flex items-center gap-2">
               <BarChart3 className="h-5 w-5" /> Volumen Semanal
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
               <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-2xl">
                 <p className="text-xs font-bold text-muted-foreground uppercase">Esta Semana</p>
-                <p className="text-2xl font-bold">{formatBalance(totalWeekly)}</p>
+                <p className="text-xl font-bold tabular-nums sm:text-2xl">{formatBalance(totalWeekly)}</p>
               </div>
               <div className="p-4 bg-purple-50 dark:bg-purple-900/20 rounded-2xl">
                 <p className="text-xs font-bold text-muted-foreground uppercase">Este Mes</p>
-                <p className="text-2xl font-bold">{formatBalance(totalMonthly)}</p>
+                <p className="text-xl font-bold tabular-nums sm:text-2xl">{formatBalance(totalMonthly)}</p>
               </div>
               <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-2xl">
                 <p className="text-xs font-bold text-muted-foreground uppercase">Promedio Diario</p>
-                <p className="text-2xl font-bold">{formatBalance(avgDaily)}</p>
+                <p className="text-xl font-bold tabular-nums sm:text-2xl">{formatBalance(avgDaily)}</p>
               </div>
             </div>
             
             {/* Bar Chart */}
-            <div className="h-48 flex items-end justify-between gap-2 px-4">
-              {dailyStats.slice(-14).map((day, idx) => (
-                <div key={idx} className="flex-1 flex flex-col items-center gap-2">
-                  <div 
-                    className="w-full bg-brand-gradient rounded-t-md" 
-                    style={{ height: `${Math.max((day.total_amount / (avgDaily * 2 || 1)) * 100, 5)}%` }}
-                  />
-                  <span className="text-[10px] text-muted-foreground">
-                    {formatDayOfMonth(day.date)}
-                  </span>
-                </div>
-              ))}
+            {/* 14 barras en 292px darían 13px por barra con las etiquetas
+                solapadas: se le da ancho mínimo y scroll horizontal propio. */}
+            <div className="-mx-2 overflow-x-auto overscroll-x-contain px-2">
+              <div className="flex h-48 min-w-[520px] items-end justify-between gap-2">
+                {dailyStats.slice(-14).map((day, idx) => (
+                  <div key={idx} className="flex min-w-[28px] flex-1 flex-col items-center gap-2">
+                    <div
+                      className="w-full bg-brand-gradient rounded-t-md"
+                      style={{ height: `${Math.max((day.total_amount / (avgDaily * 2 || 1)) * 100, 5)}%` }}
+                    />
+                    <span className="text-[10px] tabular-nums text-muted-foreground">
+                      {formatDayOfMonth(day.date)}
+                    </span>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </DialogContent>

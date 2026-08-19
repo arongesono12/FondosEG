@@ -216,6 +216,8 @@ export function WalletTransferModal({ open, onOpenChange, onSuccess }: WalletTra
                 <Input
                   id="amount"
                   type="number"
+                  inputMode="decimal"
+                  onWheel={(e) => e.currentTarget.blur()}
                   placeholder="0"
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}

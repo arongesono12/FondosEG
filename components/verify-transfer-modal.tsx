@@ -2,9 +2,10 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogBody,
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
@@ -124,7 +125,7 @@ export function VerifyTransferModal({ open, onOpenChange, onSuccess }: VerifyTra
               </DialogDescription>
             </DialogHeader>
             
-            <div className="p-6 space-y-3 max-h-[60vh] overflow-y-auto">
+            <DialogBody className="p-6 space-y-3 lg:max-h-[60dvh] lg:overflow-y-auto">
               {pendingTransfers.length === 0 ? (
                 <div className="text-center py-8">
                   <QrCode className="h-12 w-12 mx-auto text-muted-foreground/30" />
@@ -151,7 +152,7 @@ export function VerifyTransferModal({ open, onOpenChange, onSuccess }: VerifyTra
                   </button>
                 ))
               )}
-            </div>
+            </DialogBody>
           </>
         )}
 

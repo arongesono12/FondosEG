@@ -1,11 +1,19 @@
 import * as React from "react"
 import { cn } from "@/lib/utils"
 
+/**
+ * El contenedor lleva la clase `table-scroll` para que el CSS pueda apuntar al
+ * nodo que realmente se desplaza. Antes las páginas añadían un segundo `div`
+ * con `overflow-x: auto` por fuera, lo que producía dos contenedores de scroll
+ * concéntricos y dejaba el aviso "Desliza para ver más" en el nodo equivocado.
+ * Pasa `wrapperClassName="is-stacked"` cuando la tabla se convierte en tarjetas
+ * y por tanto ya no se desplaza.
+ */
 const Table = React.forwardRef<
   HTMLTableElement,
-  React.HTMLAttributes<HTMLTableElement>
->(({ className, ...props }, ref) => (
-  <div className="relative w-full overflow-auto">
+  React.HTMLAttributes<HTMLTableElement> & { wrapperClassName?: string }
+>(({ className, wrapperClassName, ...props }, ref) => (
+  <div className={cn("table-scroll relative w-full overflow-x-auto", wrapperClassName)}>
     <table
       ref={ref}
       className={cn("w-full caption-bottom text-sm", className)}

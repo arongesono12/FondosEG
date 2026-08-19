@@ -113,7 +113,14 @@ export function LoginForm({
               </Label>
               <Input
                 id="email"
+                name="email"
                 type="email"
+                inputMode="email"
+                autoComplete="username"
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
+                enterKeyHint="next"
                 placeholder="correo@ejemplo.com"
                 className="auth-card-input border focus:ring-2 focus:ring-pink-500/30 focus:border-pink-500/50 transition-all duration-300 h-12 px-4 rounded-xl shadow-inner"
                 value={email}
@@ -128,7 +135,10 @@ export function LoginForm({
               <div className="relative">
                 <Input
                   id="password"
+                  name="password"
                   type={showPassword ? 'text' : 'password'}
+                  autoComplete="current-password"
+                  enterKeyHint="go"
                   placeholder="••••••••"
                   className="auth-card-input border focus:ring-2 focus:ring-pink-500/30 focus:border-pink-500/50 transition-all duration-300 h-12 px-4 pr-10 rounded-xl shadow-inner"
                   value={password}
@@ -137,7 +147,8 @@ export function LoginForm({
                 />
                 <button
                   type="button"
-                  className="auth-card-eye absolute right-3 top-1/2 -translate-y-1/2 transition-colors"
+                  aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                  className="auth-card-eye absolute right-1 top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center transition-colors"
                   onClick={() => setShowPassword(!showPassword)}
                 >
                   {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}

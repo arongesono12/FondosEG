@@ -175,8 +175,8 @@ export default function AgentsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0">
           <h1 className="text-3xl font-bold">Gestores</h1>
           <p className="text-muted-foreground">
             Administra los gestores del sistema
@@ -189,7 +189,7 @@ export default function AgentsPage() {
           }
         }}>
           <DialogTrigger asChild>
-            <Button className="gap-2 bg-linear-to-r from-pink-500 to-rose-600 hover:from-pink-600 hover:to-rose-700 text-white shadow-lg shadow-pink-500/25">
+            <Button className="w-full shrink-0 gap-2 bg-linear-to-r from-pink-500 to-rose-600 hover:from-pink-600 hover:to-rose-700 text-white shadow-lg shadow-pink-500/25 sm:w-auto">
               <Plus className="h-4 w-4" />
               Nuevo gestor
             </Button>
@@ -287,8 +287,8 @@ export default function AgentsPage() {
             />
           </div>
         </CardHeader>
-        <CardContent>
-          <Table>
+        <CardContent className="activity-records-scroll">
+          <Table className="activity-records-table" wrapperClassName="is-stacked">
             <TableHeader>
               <TableRow>
                 <TableHead>Gestor</TableHead>
@@ -309,8 +309,8 @@ export default function AgentsPage() {
                 </TableRow>
               ) : (
                 filteredAgents.map((agent) => (
-                  <TableRow key={agent.id}>
-                    <TableCell>
+                  <TableRow key={agent.id} className="activity-record-row">
+                    <TableCell data-label="Gestor">
                       <div className="flex items-center gap-3">
                         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
                           <Users className="h-5 w-5" />
@@ -321,7 +321,7 @@ export default function AgentsPage() {
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell>
+                    <TableCell data-label="Contacto">
                       <div className="space-y-1">
                         <div className="flex items-center gap-2 text-sm">
                           <Mail className="h-3 w-3" />
@@ -333,25 +333,29 @@ export default function AgentsPage() {
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell>
-                      <Badge 
-                        variant={agent.is_active ? 'default' : 'secondary'}
-                        className="cursor-pointer"
+                    <TableCell data-label="Estado">
+                      <button
+                        type="button"
                         onClick={() => handleToggleStatus(agent.id, agent.is_active)}
+                        aria-pressed={agent.is_active}
+                        aria-label={agent.is_active ? `Desactivar a ${agent.name}` : `Activar a ${agent.name}`}
+                        className="inline-flex min-h-[32px] items-center rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                       >
-                        {agent.is_active ? 'Activo' : 'Inactivo'}
-                      </Badge>
+                        <Badge variant={agent.is_active ? 'default' : 'secondary'}>
+                          {agent.is_active ? 'Activo' : 'Inactivo'}
+                        </Badge>
+                      </button>
                     </TableCell>
-                    <TableCell className="text-right font-medium">
+                    <TableCell data-label="Saldo" className="text-right font-medium tabular-nums">
                       {formatCurrency(agent.balance)}
                     </TableCell>
-                    <TableCell className="text-right font-medium">
+                    <TableCell data-label="Efectivo" className="text-right font-medium tabular-nums">
                       {formatCurrency(agent.cash_balance || 0)}
                     </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
+                    <TableCell data-label="Registro" className="text-sm text-muted-foreground">
                       {formatDate(agent.created_at)}
                     </TableCell>
-                    <TableCell className="text-right">
+                    <TableCell data-label="Acciones" className="text-right">
                       <div className="flex gap-2 justify-end">
                         <Button 
                           variant="outline" 
@@ -389,7 +393,7 @@ export default function AgentsPage() {
       </Card>
 
       <Dialog open={topUpOpen} onOpenChange={setTopUpOpen}>
-        <DialogContent>
+        <DialogContent mobile="centered">
           <DialogHeader>
             <DialogTitle>Recargar saldo</DialogTitle>
           </DialogHeader>
@@ -404,6 +408,8 @@ export default function AgentsPage() {
                 <Input
                   id="topup_amount"
                   type="number"
+                  inputMode="decimal"
+                  onWheel={(e) => e.currentTarget.blur()}
                   min="1"
                   step="0.01"
                   placeholder="0.00"
@@ -430,7 +436,7 @@ export default function AgentsPage() {
       </Dialog>
 
       <Dialog open={successOpen} onOpenChange={setSuccessOpen}>
-        <DialogContent>
+        <DialogContent mobile="centered">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-green-600">
               <CheckCircle className="h-5 w-5" />
@@ -458,7 +464,7 @@ export default function AgentsPage() {
       </Dialog>
 
       <Dialog open={resetOpen} onOpenChange={setResetOpen}>
-        <DialogContent>
+        <DialogContent mobile="centered">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <RotateCcw className="h-5 w-5" />
@@ -476,6 +482,8 @@ export default function AgentsPage() {
                 <Input
                   id="reset_amount"
                   type="number"
+                  inputMode="decimal"
+                  onWheel={(e) => e.currentTarget.blur()}
                   min="0"
                   step="0.01"
                   placeholder="0.00"

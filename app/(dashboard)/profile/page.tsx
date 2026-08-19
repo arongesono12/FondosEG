@@ -476,7 +476,7 @@ export default function ProfilePage() {
         </>
       )}
       <Dialog open={Boolean(avatarDraftUrl)} onOpenChange={(open) => !open && !isUploadingAvatar && closeAvatarCropper()}>
-        <DialogContent className="max-w-md rounded-3xl border-border/20 bg-background p-5">
+        <DialogContent mobile="centered" className="max-w-md rounded-3xl border-border/20 bg-background p-5">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-xl font-semibold text-foreground">
               <ImageIcon className="h-5 w-5 text-primary" />
@@ -488,7 +488,7 @@ export default function ProfilePage() {
           </DialogHeader>
 
           <div className="space-y-5">
-            <div className="mx-auto h-64 w-64 overflow-hidden rounded-full border-4 border-primary/20 bg-muted shadow-inner">
+            <div className="mx-auto aspect-square w-[min(16rem,68vw)] overflow-hidden rounded-full border-4 border-primary/20 bg-muted shadow-inner">
               {avatarDraftUrl && (
                 <img
                   src={avatarDraftUrl}

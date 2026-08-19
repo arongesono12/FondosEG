@@ -217,12 +217,15 @@ export function RegisterForm({
                 {error}
               </div>
             )}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="name" className="text-foreground/80 dark:text-white/80">Nombre completo</Label>
                 <div className="relative">
                   <Input
                     id="name"
+                    name="name"
+                    autoComplete="name"
+                    enterKeyHint="next"
                     placeholder="Juan Pérez"
                     className={getFieldClass('name', 'bg-white dark:bg-[#1a1a1a] border border-border/50 dark:border-white/10 focus:ring-2 focus:ring-pink-500/50 focus:border-primary/50 dark:focus:border-white/20 transition-all h-11 px-4 rounded-xl text-foreground dark:text-white placeholder:text-muted-foreground dark:placeholder:text-white/50')}
                     value={formData.name}
@@ -240,6 +243,13 @@ export function RegisterForm({
                 <div className="relative">
                   <Input
                     id="email"
+                    name="email"
+                    autoComplete="username"
+                    inputMode="email"
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    spellCheck={false}
+                    enterKeyHint="next"
                     type="email"
                     placeholder="correo@gmail.com"
                     className={getFieldClass('email', 'bg-white dark:bg-[#1a1a1a] border border-border/50 dark:border-white/10 focus:ring-2 focus:ring-pink-500/50 focus:border-primary/50 dark:focus:border-white/20 transition-all h-11 px-4 rounded-xl text-foreground dark:text-white placeholder:text-muted-foreground dark:placeholder:text-white/50')}
@@ -287,6 +297,9 @@ export function RegisterForm({
               <div className="relative">
                 <Input
                   id="password"
+                  name="password"
+                  autoComplete="new-password"
+                  enterKeyHint="go"
                   type={showPassword ? 'text' : 'password'}
                   placeholder="••••••••"
                   className={`bg-white dark:bg-[#1a1a1a] border border-border/50 dark:border-white/10 focus:ring-2 focus:ring-pink-500/50 focus:border-primary/50 dark:focus:border-white/20 transition-all h-11 px-4 pr-16 rounded-xl text-foreground dark:text-white placeholder:text-muted-foreground dark:placeholder:text-white/50 ${passwordError ? 'border-red-500 focus:ring-red-500/50' : ''}`}
@@ -331,7 +344,7 @@ export function RegisterForm({
                 </SelectContent>
               </Select>
             </div>}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="document_type" className="text-foreground/80 dark:text-white/80">Tipo documento</Label>
                 <Select value={formData.document_type} onValueChange={(value) => setFormData({ ...formData, document_type: value })}>
@@ -357,7 +370,7 @@ export function RegisterForm({
                 />
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="country" className="text-foreground/80 dark:text-white/80">País</Label>
                 <Select value={formData.country} onValueChange={(value) => setFormData({ ...formData, country: value })}>
@@ -377,6 +390,9 @@ export function RegisterForm({
                 <Label htmlFor="city" className="text-foreground/80 dark:text-white/80">Ciudad</Label>
                 <Input
                   id="city"
+                  name="city"
+                  autoComplete="address-level2"
+                  enterKeyHint="next"
                   placeholder="Su ciudad"
                   className="bg-white dark:bg-[#1a1a1a] border border-border/50 dark:border-white/10 focus:ring-2 focus:ring-pink-500/50 focus:border-primary/50 dark:focus:border-white/20 transition-all h-11 px-4 rounded-xl text-foreground dark:text-white placeholder:text-muted-foreground dark:placeholder:text-white/50"
                   value={formData.city}

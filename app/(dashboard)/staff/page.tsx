@@ -435,71 +435,71 @@ export default function StaffPage() {
         </div>
       )}
 
-      <div className="grid gap-4 md:grid-cols-3 xl:grid-cols-6">
-        <Card className="rounded-3xl">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-sm font-black uppercase tracking-[0.18em] text-muted-foreground">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
+        <Card className="min-w-0 rounded-3xl">
+          <CardHeader className="p-4 pb-0">
+            <CardTitle className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.12em] text-muted-foreground">
               <ShieldCheck className="h-4 w-4" />
               Admins activos
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-black">{activeAdmins}</p>
+          <CardContent className="p-4 pt-2">
+            <p className="text-2xl font-black tabular-nums">{activeAdmins}</p>
           </CardContent>
         </Card>
-        <Card className="rounded-3xl">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-sm font-black uppercase tracking-[0.18em] text-muted-foreground">
+        <Card className="min-w-0 rounded-3xl">
+          <CardHeader className="p-4 pb-0">
+            <CardTitle className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.12em] text-muted-foreground">
               <Power className="h-4 w-4" />
               Admins inactivos
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-black">{inactiveAdmins}</p>
+          <CardContent className="p-4 pt-2">
+            <p className="text-2xl font-black tabular-nums">{inactiveAdmins}</p>
           </CardContent>
         </Card>
-        <Card className="rounded-3xl">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-sm font-black uppercase tracking-[0.18em] text-muted-foreground">
+        <Card className="min-w-0 rounded-3xl">
+          <CardHeader className="p-4 pb-0">
+            <CardTitle className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.12em] text-muted-foreground">
               <Users className="h-4 w-4" />
               Gestores
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-black">{managedAgents}</p>
+          <CardContent className="p-4 pt-2">
+            <p className="text-2xl font-black tabular-nums">{managedAgents}</p>
           </CardContent>
         </Card>
-        <Card className="rounded-3xl">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-sm font-black uppercase tracking-[0.18em] text-muted-foreground">
+        <Card className="min-w-0 rounded-3xl">
+          <CardHeader className="p-4 pb-0">
+            <CardTitle className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.12em] text-muted-foreground">
               <Users className="h-4 w-4" />
               Clientes
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-black">{managedClients}</p>
+          <CardContent className="p-4 pt-2">
+            <p className="text-2xl font-black tabular-nums">{managedClients}</p>
           </CardContent>
         </Card>
-        <Card className="rounded-3xl">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-sm font-black uppercase tracking-[0.18em] text-muted-foreground">
+        <Card className="min-w-0 rounded-3xl">
+          <CardHeader className="p-4 pb-0">
+            <CardTitle className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.12em] text-muted-foreground">
               <Wallet className="h-4 w-4" />
               Usuarios activos
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-black">{managedActive}</p>
+          <CardContent className="p-4 pt-2">
+            <p className="text-2xl font-black tabular-nums">{managedActive}</p>
           </CardContent>
         </Card>
-        <Card className="rounded-3xl">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-sm font-black uppercase tracking-[0.18em] text-muted-foreground">
+        <Card className="min-w-0 rounded-3xl">
+          <CardHeader className="p-4 pb-0">
+            <CardTitle className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.12em] text-muted-foreground">
               <Activity className="h-4 w-4" />
               Acciones staff
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-black">{activity.length}</p>
+          <CardContent className="p-4 pt-2">
+            <p className="text-2xl font-black tabular-nums">{activity.length}</p>
           </CardContent>
         </Card>
       </div>
@@ -508,8 +508,8 @@ export default function StaffPage() {
         <CardHeader>
           <CardTitle>Equipo administrativo</CardTitle>
         </CardHeader>
-        <CardContent>
-          <Table>
+        <CardContent className="activity-records-scroll">
+          <Table className="activity-records-table" wrapperClassName="is-stacked">
             <TableHeader>
               <TableRow>
                 <TableHead>Nombre</TableHead>
@@ -522,29 +522,29 @@ export default function StaffPage() {
             </TableHeader>
             <TableBody>
               {staff.map((member) => (
-                <TableRow key={member.id}>
-                  <TableCell>
+                <TableRow key={member.id} className="activity-record-row">
+                  <TableCell data-label="Nombre">
                     <div>
                       <p className="font-bold">{member.name}</p>
                       <p className="text-xs text-muted-foreground">{member.email}</p>
                     </div>
                   </TableCell>
-                  <TableCell>
+                  <TableCell data-label="Rol">
                     <Badge variant="outline">{getRoleLabel(member.role)}</Badge>
                   </TableCell>
-                  <TableCell>
+                  <TableCell data-label="Estado">
                     <Badge variant={member.is_active ? 'default' : 'secondary'}>
                       {member.is_active ? 'Activo' : 'Inactivo'}
                     </Badge>
                   </TableCell>
-                  <TableCell>
+                  <TableCell data-label="Actividad">
                     <div>
                       <p className="font-semibold">{member.action_count} acciones</p>
                       <p className="text-xs text-muted-foreground">{member.last_action || 'Sin actividad'}</p>
                     </div>
                   </TableCell>
-                  <TableCell>{formatDate(member.created_at)}</TableCell>
-                  <TableCell className="text-right">
+                  <TableCell data-label="Alta">{formatDate(member.created_at)}</TableCell>
+                  <TableCell data-label="Acciones" className="text-right">
                     {member.role === 'admin' ? (
                       <Button type="button" variant="outline" size="sm" className="rounded-xl font-black" onClick={() => handleToggleStatus(member)}>
                         {member.is_active ? 'Desactivar' : 'Activar'}
@@ -590,8 +590,8 @@ export default function StaffPage() {
             </Select>
           </div>
         </CardHeader>
-        <CardContent>
-          <Table>
+        <CardContent className="activity-records-scroll">
+          <Table className="activity-records-table" wrapperClassName="is-stacked">
             <TableHeader>
               <TableRow>
                 <TableHead>Usuario</TableHead>
@@ -612,23 +612,23 @@ export default function StaffPage() {
                 </TableRow>
               ) : (
                 filteredManagedUsers.map((member) => (
-                  <TableRow key={member.id}>
-                    <TableCell>
+                  <TableRow key={member.id} className="activity-record-row">
+                    <TableCell data-label="Usuario">
                       <div>
                         <p className="font-bold">{member.name}</p>
                         <p className="text-xs text-muted-foreground">{member.email}</p>
                         <p className="text-xs text-muted-foreground">{member.phone}</p>
                       </div>
                     </TableCell>
-                    <TableCell>
+                    <TableCell data-label="Rol">
                       <Badge variant="outline">{getRoleLabel(member.role)}</Badge>
                     </TableCell>
-                    <TableCell>
+                    <TableCell data-label="Estado">
                       <Badge variant={member.is_active ? 'default' : 'secondary'}>
                         {member.is_active ? 'Activo' : 'Inactivo'}
                       </Badge>
                     </TableCell>
-                    <TableCell>
+                    <TableCell data-label="Último movimiento">
                       {member.last_movement_at ? (
                         <div>
                           <p className="font-semibold">{member.last_movement_label || 'Movimiento reciente'}</p>
@@ -638,11 +638,11 @@ export default function StaffPage() {
                         <span className="text-xs font-semibold text-muted-foreground">Sin movimientos registrados</span>
                       )}
                     </TableCell>
-                    <TableCell>
-                      <p className="font-semibold">{member.movement_count}</p>
+                    <TableCell data-label="Movimientos">
+                      <p className="font-semibold tabular-nums">{member.movement_count}</p>
                     </TableCell>
-                    <TableCell>{formatDate(member.created_at)}</TableCell>
-                    <TableCell className="text-right">
+                    <TableCell data-label="Alta">{formatDate(member.created_at)}</TableCell>
+                    <TableCell data-label="Acciones" className="text-right">
                       <Button type="button" variant="outline" size="sm" className="rounded-xl font-black" onClick={() => openUserMovements(member)}>
                         <Eye className="mr-2 h-4 w-4" />
                         Ver movimientos
@@ -694,7 +694,7 @@ export default function StaffPage() {
             )}
           </DialogHeader>
 
-          <div className="grid gap-4 md:grid-cols-4">
+          <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
             <div className="rounded-2xl border border-border/10 p-4">
               <p className="text-xs font-black uppercase tracking-[0.18em] text-muted-foreground">Rol</p>
               <p className="mt-2 font-bold text-foreground">{selectedUser ? getRoleLabel(selectedUser.role) : '-'}</p>
@@ -716,7 +716,7 @@ export default function StaffPage() {
           </div>
 
           <div className="mt-2 overflow-y-auto pr-1">
-            <div className="mb-4 grid gap-3 md:grid-cols-[1.2fr_1fr_1fr_1fr_1fr]">
+            <div className="mb-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-[1.2fr_repeat(4,minmax(0,1fr))]">
               <div className="relative">
                 <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
