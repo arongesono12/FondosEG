@@ -20,6 +20,16 @@ const iconSizeClasses: Record<DashboardLogoSize, string> = {
   xl: 'h-16 w-16',
 };
 
+// Se pide al optimizador el tamaño que realmente se pinta (x2 para pantallas
+// de alta densidad). Antes se pedían siempre 144px para un icono de 32px, lo
+// que generaba varias variantes distintas del mismo archivo.
+const iconIntrinsicSize: Record<DashboardLogoSize, number> = {
+  sm: 64,
+  md: 96,
+  lg: 112,
+  xl: 128,
+};
+
 const labelSizeClasses: Record<DashboardLogoSize, string> = {
   sm: 'text-xl',
   md: 'text-2xl',
@@ -42,8 +52,8 @@ export function DashboardLogo({
           <Image
             src="/logo fondosEG/LFondosEG.png"
             alt="FondosEG"
-            width={144}
-            height={144}
+            width={iconIntrinsicSize[size]}
+            height={iconIntrinsicSize[size]}
             priority={priority}
             className="object-contain w-full h-full"
           />

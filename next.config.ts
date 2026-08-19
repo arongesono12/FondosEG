@@ -2,6 +2,32 @@ import type { NextConfig } from "next";
 
 const isDevelopment = process.env.NODE_ENV !== "production";
 
+// Los avatares se sirven desde Supabase Storage, no desde el propio origen.
+// Se deriva del entorno para que cada despliegue apunte a su propio proyecto
+// en lugar de llevar el host incrustado en el código.
+const supabaseOrigin = (() => {
+  const rawUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  if (!rawUrl) return null;
+  try {
+    return new URL(rawUrl).origin;
+  } catch {
+    return null;
+  }
+})();
+
+if (!supabaseOrigin) {
+  // Sin esta variable en tiempo de compilación la CSP se queda restrictiva y
+  // los avatares vuelven a bloquearse en silencio. Mejor que se vea en el log.
+  console.warn(
+    "[csp] NEXT_PUBLIC_SUPABASE_URL no está definida al compilar: " +
+      "img-src no incluirá Supabase Storage y los avatares se bloquearán."
+  );
+}
+
+const imgSrc = ["'self'", "data:", "blob:", supabaseOrigin]
+  .filter(Boolean)
+  .join(" ");
+
 const securityHeaders = [
   { key: "Content-Security-Policy", value: [
     "default-src 'self'",
@@ -11,7 +37,7 @@ const securityHeaders = [
     "form-action 'self'",
     `script-src 'self' 'unsafe-inline'${isDevelopment ? " 'unsafe-eval'" : ""}`,
     "style-src 'self' 'unsafe-inline'",
-    "img-src 'self' data: blob:",
+    `img-src ${imgSrc}`,
     "font-src 'self' data:",
     "connect-src 'self' https: wss:",
     "worker-src 'self' blob:",

@@ -458,7 +458,6 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
               }}
             >
               <DashboardLogo
-                priority
                 size="md"
                 labelClassName="text-xl md:text-2xl"
               />
@@ -621,7 +620,7 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
             aria-label="FondosEG dashboard"
             onClick={scrollMainToTop}
           >
-            <DashboardLogo priority size="sm" labelClassName="text-lg" />
+            <DashboardLogo size="sm" labelClassName="text-lg" />
           </Link>
           <div className="dashboard-mobile-header-actions">
             <button
