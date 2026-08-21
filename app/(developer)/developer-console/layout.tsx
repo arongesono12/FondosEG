@@ -7,8 +7,16 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { getOptionalAuthState, getProductAccess } from '@/lib/server/authz';
 import type { User } from '@/types';
 
+// Misma razón que en el dashboard: la consola exige sesión en cada petición.
+export const dynamic = 'force-dynamic';
+
 export default async function DeveloperConsoleLayout({ children }: { children: React.ReactNode }) {
-  const { user: authUser, serviceUnavailable } = await getOptionalAuthState();
+  const { user: authUser, serviceUnavailable, needsOnboarding } = await getOptionalAuthState();
+
+  // Identidad de Clerk sin perfil interno: primero completa el alta guiada.
+  if (needsOnboarding) {
+    redirect('/onboarding');
+  }
   if (serviceUnavailable) redirect('/developers-portal/login?error=service');
   if (!authUser) redirect('/developers-portal/login');
 

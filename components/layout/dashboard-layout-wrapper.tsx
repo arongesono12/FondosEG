@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useState, useEffect, useCallback } from 'react';
+import { useClerk } from '@clerk/nextjs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn, getInitials } from '@/lib/utils';
 import { useAppStore } from '@/lib/store';
@@ -142,6 +143,7 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
   const { user, setUser } = useAppStore();
   const pathname = usePathname();
   const router = useRouter();
+  const { signOut } = useClerk();
   const { resolvedTheme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -262,14 +264,10 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
   }, [user?.id, user?.role]);
 
   const handleSignOut = async () => {
-    try {
-      await fetch('/api/auth/signout', { method: 'POST' });
-    } catch {
-      // Continue with local sign-out so a transient network failure does not
-      // leave the user trapped in the dashboard UI.
-    }
+    // Se limpia el estado local antes de que Clerk navegue, para que el shell
+    // no repinte con el usuario anterior durante la redirección.
     setUser(null);
-    router.push('/login');
+    await signOut({ redirectUrl: '/login' });
   };
 
   const persistCookieConsent = (status: CookieConsentStatus, preferences: CookieConsentPreferences) => {

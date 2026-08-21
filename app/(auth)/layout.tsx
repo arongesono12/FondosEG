@@ -8,10 +8,17 @@ export default async function AuthLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { user, serviceUnavailable } = await getOptionalAuthState();
+  const { user, serviceUnavailable, needsOnboarding } = await getOptionalAuthState();
 
   if (serviceUnavailable) {
     return <ServiceUnavailableScreen retryHref="/login" />;
+  }
+
+  // Ya autenticado en Clerk pero sin perfil interno. Sin este caso el usuario
+  // volvería a ver el formulario de acceso justo después de entrar con Google,
+  // como si el login no hubiera funcionado.
+  if (needsOnboarding) {
+    redirect('/onboarding');
   }
 
   if (user) {

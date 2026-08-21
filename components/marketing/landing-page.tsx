@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { UserButton, useAuth } from '@clerk/nextjs';
 import {
   ArrowRight, BadgeCheck, BarChart3, BookOpen, Check, ChevronDown, CircleDollarSign,
   Clock3, Code2, Eye, Facebook, Headphones, Linkedin, LockKeyhole, Mail,
@@ -42,6 +43,7 @@ const trust = [
 ];
 
 function Header() {
+  const { isSignedIn } = useAuth();
   const [open, setOpen] = useState(false);
   const [resourcesOpen, setResourcesOpen] = useState(false);
   const [mobileResourcesOpen, setMobileResourcesOpen] = useState(false);
@@ -78,11 +80,24 @@ function Header() {
           {resourcesOpen && <div className="resources-menu" role="menu"><Link role="menuitem" href="/documentation" onClick={() => setResourcesOpen(false)}><BookOpen /> <span><strong>Documentación</strong><small>Guías, API y recursos técnicos</small></span><ArrowRight /></Link></div>}
         </div>
       </nav>
-      <div className="landing-actions"><ThemeToggle /><Link className="btn-secondary" href="/login">Entrar</Link><Link className="btn-primary" href="/register">Comenzar gratis <ArrowRight /></Link>
+      <div className="landing-actions"><ThemeToggle />
+        {/* Hasta que Clerk resuelve la sesión se muestran los enlaces públicos:
+            evita un hueco durante la carga y no filtra estado de sesión. */}
+        {isSignedIn ? (
+          <>
+            <Link className="btn-secondary" href="/dashboard">Ir al dashboard</Link>
+            <UserButton />
+          </>
+        ) : (
+          <>
+            <Link className="btn-secondary" href="/login">Entrar</Link>
+            <Link className="btn-primary" href="/register">Comenzar gratis <ArrowRight /></Link>
+          </>
+        )}
         <button className="menu-button" onClick={() => setOpen(!open)} aria-label="Abrir menú">{open ? <X /> : <Menu />}</button>
       </div>
     </div>
-    {open && <nav className="mobile-menu"><Link href="/landing/gestores">Gestores</Link><Link href="/landing/aliados">Aliados</Link><Link href="/landing/developers">Developers</Link><button type="button" onClick={() => setMobileResourcesOpen(current => !current)}>Recursos <ChevronDown className={cn(mobileResourcesOpen && 'rotate-180')} /></button>{mobileResourcesOpen && <Link className="mobile-submenu-link" href="/documentation"><BookOpen /> Documentación</Link>}<Link href="/login">Entrar</Link></nav>}
+    {open && <nav className="mobile-menu"><Link href="/landing/gestores">Gestores</Link><Link href="/landing/aliados">Aliados</Link><Link href="/landing/developers">Developers</Link><button type="button" onClick={() => setMobileResourcesOpen(current => !current)}>Recursos <ChevronDown className={cn(mobileResourcesOpen && 'rotate-180')} /></button>{mobileResourcesOpen && <Link className="mobile-submenu-link" href="/documentation"><BookOpen /> Documentación</Link>}{isSignedIn ? <Link href="/dashboard">Ir al dashboard</Link> : <Link href="/login">Entrar</Link>}</nav>}
   </header>;
 }
 

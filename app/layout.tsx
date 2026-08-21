@@ -1,5 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import Script from "next/script";
+import { ClerkProvider } from "@clerk/nextjs";
+import { esES } from "@clerk/localizations";
+import { clerkAppearance } from "@/lib/clerk-appearance";
 import "@fontsource/poppins/400.css";
 import "@fontsource/poppins/500.css";
 import "@fontsource/poppins/600.css";
@@ -50,15 +53,25 @@ export default function RootLayout({
           {themeScript}
         </Script>
       </head>
+      {/* `ClerkProvider` va DENTRO de <body>, no envolviendo <html>. */}
       <body suppressHydrationWarning className="font-sans antialiased">
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange={false}
+        <ClerkProvider
+          localization={esES}
+          // Sin esto, cualquier redirección iniciada por Clerk lleva a su
+          // página alojada en accounts.dev en lugar de a las pantallas propias.
+          signInUrl="/login"
+          signUpUrl="/register"
+          appearance={clerkAppearance}
         >
-          {children}
-        </ThemeProvider>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange={false}
+          >
+            {children}
+          </ThemeProvider>
+        </ClerkProvider>
       </body>
     </html>
   );

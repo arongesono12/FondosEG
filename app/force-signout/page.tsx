@@ -1,25 +1,23 @@
 'use client';
 
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect, useRef } from 'react';
+import { useClerk } from '@clerk/nextjs';
 import { Skeleton } from '@/components/ui/skeleton';
 
+/**
+ * Salida de emergencia: cierra la sesión de Clerk y devuelve al login.
+ * Sirve como escape cuando el shell del dashboard queda en un estado
+ * inconsistente y el usuario no encuentra el botón de salir.
+ */
 export default function ForceSignOutPage() {
-  const router = useRouter();
+  const { signOut } = useClerk();
+  const started = useRef(false);
 
   useEffect(() => {
-    const handleSignOut = async () => {
-      console.log('Forcing sign out...');
-      try {
-        await fetch('/api/auth/signout', { method: 'POST' });
-      } catch {
-        // Aun si falla la red, mandamos al usuario al login para recuperar el flujo.
-      }
-      router.push('/login');
-      router.refresh();
-    };
-    handleSignOut();
-  }, [router]);
+    if (started.current) return;
+    started.current = true;
+    void signOut({ redirectUrl: '/login' });
+  }, [signOut]);
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-background">

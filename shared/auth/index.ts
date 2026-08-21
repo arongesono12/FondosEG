@@ -6,9 +6,12 @@ export {
   getOptionalAuthUser,
   requireAuthUser,
   requireAuthUserId,
+  requireDashboardAccess,
+  requireDeveloperAccess,
+  requireProductAccess,
   requireProfile,
   requireRole,
   requireSelfOrAdmin,
   requireSuperAdmin,
+  type AuthUser,
 } from '@/lib/server/authz';
-

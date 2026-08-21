@@ -3589,3 +3589,390 @@ dialog *,
     margin-top: 8px !important;
   }
 }
+
+/* ============================================================
+   Pantallas de acceso (Clerk) — glassmorphism premium
+   Los tokens los consume lib/clerk-appearance.ts vía var().
+   ============================================================ */
+
+:root {
+  --auth-primary: #ec4899;
+  --auth-primary-strong: #e11d48;
+  --auth-surface: rgba(255, 255, 255, .82);
+  --auth-surface-2: rgba(255, 255, 255, .55);
+  --auth-fg: #0f172a;
+  --auth-muted: rgba(15, 23, 42, .04);
+  --auth-muted-fg: #475569;
+  --auth-input: rgba(255, 255, 255, .75);
+  --auth-border: rgba(15, 23, 42, .10);
+  --auth-ring: rgba(236, 72, 153, .45);
+  --auth-shadow: 0 30px 80px -20px rgba(15, 23, 42, .28);
+  --auth-glow: rgba(236, 72, 153, .22);
+}
+
+.dark {
+  --auth-surface: rgba(15, 23, 42, .72);
+  --auth-surface-2: rgba(30, 41, 59, .45);
+  --auth-fg: #f8fafc;
+  --auth-muted: rgba(248, 250, 252, .05);
+  /* slate-400 sobre slate-900: 6.96:1, holgado sobre el mínimo AA de 4.5:1 */
+  --auth-muted-fg: #94a3b8;
+  --auth-input: rgba(2, 6, 23, .45);
+  --auth-border: rgba(148, 163, 184, .18);
+  --auth-ring: rgba(244, 114, 182, .55);
+  --auth-shadow: 0 30px 90px -20px rgba(0, 0, 0, .65);
+  --auth-glow: rgba(244, 114, 182, .18);
+}
+
+.auth-screen {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+/* Halo de marca detrás de la tarjeta: da profundidad sin competir con el
+   contenido. Se pinta bajo la tarjeta, nunca encima. */
+.auth-card-premium {
+  position: relative;
+  border: 1px solid var(--auth-border);
+  border-radius: 1.5rem;
+  background: linear-gradient(160deg, var(--auth-surface) 0%, var(--auth-surface-2) 100%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  backdrop-filter: blur(18px) saturate(140%);
+  box-shadow: var(--auth-shadow);
+  overflow: hidden;
+}
+
+.auth-card-premium::before {
+  content: '';
+  position: absolute;
+  inset: -40% 50% auto -40%;
+  height: 340px;
+  background: radial-gradient(circle at 30% 30%, var(--auth-glow), transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Reflejo superior de 1px: el detalle que separa un cristal creíble de un
+   simple fondo translúcido. */
+.auth-card-premium::after {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .55), transparent);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.auth-card-inner {
+  position: relative;
+  z-index: 2;
+}
+
+.auth-title {
+  font-size: clamp(1.5rem, 1.35rem + 0.7vw, 1.75rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  color: var(--auth-fg);
+}
+
+.auth-subtitle {
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: var(--auth-muted-fg);
+}
+
+.auth-label {
+  font-weight: 500;
+  color: var(--auth-fg);
+}
+
+.auth-input {
+  min-height: 46px;
+  border-radius: 0.875rem;
+  transition: border-color .2s ease, box-shadow .2s ease;
+}
+
+.auth-input:focus-visible {
+  outline: none;
+  border-color: var(--auth-primary);
+  box-shadow: 0 0 0 3px var(--auth-ring);
+}
+
+/* 48px de alto y sin transform en hover: el skill avisa de que escalar
+   desplaza el layout. Se anima sombra y brillo, que no reflowean. */
+.auth-submit {
+  min-height: 48px;
+  border-radius: 0.875rem;
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: .01em;
+  cursor: pointer;
+  background-image: linear-gradient(135deg, var(--auth-primary), var(--auth-primary-strong));
+  box-shadow: 0 10px 24px -8px var(--auth-glow);
+  transition: box-shadow .22s ease, filter .22s ease;
+}
+
+.auth-submit:hover {
+  filter: brightness(1.06);
+  box-shadow: 0 16px 34px -10px var(--auth-glow);
+}
+
+.auth-submit:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--auth-ring), 0 16px 34px -10px var(--auth-glow);
+}
+
+.auth-social {
+  min-height: 46px;
+  border-radius: 0.875rem;
+  cursor: pointer;
+  transition: background-color .2s ease, border-color .2s ease;
+}
+
+.auth-divider {
+  color: var(--auth-muted-fg);
+}
+
+.auth-footer-action {
+  color: var(--auth-muted-fg);
+}
+
+.auth-footer-link {
+  font-weight: 600;
+  color: var(--auth-primary);
+  cursor: pointer;
+  transition: color .2s ease;
+}
+
+.auth-footer-link:hover {
+  color: var(--auth-primary-strong);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-input,
+  .auth-submit,
+  .auth-social,
+  .auth-footer-link {
+    transition: none;
+  }
+}
+
+/* ============================================================
+   Alta guiada (onboarding) — 3 pasos
+   Reutiliza los tokens --auth-* definidos arriba.
+   ============================================================ */
+
+.onboarding-steps {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  margin-bottom: 1.75rem;
+  list-style: none;
+  padding: 0;
+}
+
+.onboarding-step {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.onboarding-step-dot {
+  display: grid;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  flex-shrink: 0;
+  border-radius: 999px;
+  border: 1px solid var(--auth-border);
+  font-size: .8125rem;
+  font-weight: 600;
+  color: var(--auth-muted-fg);
+  transition: background-color .2s ease, border-color .2s ease, color .2s ease;
+}
+
+.onboarding-step-label {
+  font-size: .8125rem;
+  color: var(--auth-muted-fg);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.onboarding-step[data-state='current'] .onboarding-step-dot {
+  border-color: var(--auth-primary);
+  background: var(--auth-primary);
+  color: #fff;
+}
+
+.onboarding-step[data-state='current'] .onboarding-step-label {
+  color: var(--auth-fg);
+  font-weight: 600;
+}
+
+.onboarding-step[data-state='done'] .onboarding-step-dot {
+  border-color: var(--auth-primary);
+  color: var(--auth-primary);
+}
+
+/* En móvil sólo se lee la etiqueta del paso activo: tres etiquetas no caben
+   sin truncarse hasta ser inútiles. */
+@media (max-width: 30rem) {
+  .onboarding-step:not([data-state='current']) .onboarding-step-label {
+    display: none;
+  }
+}
+
+.onboarding-panel {
+  display: flex;
+  flex-direction: column;
+  gap: .75rem;
+  border: 0;
+  padding: 0;
+  margin: 0;
+}
+
+.onboarding-grid {
+  display: grid;
+  gap: 1rem;
+  margin-top: .5rem;
+}
+
+@media (min-width: 40rem) {
+  .onboarding-grid { grid-template-columns: 1fr 1fr; }
+  .onboarding-grid .sm\:col-span-2 { grid-column: span 2; }
+}
+
+.onboarding-roles {
+  display: grid;
+  gap: .875rem;
+  margin-top: .75rem;
+}
+
+@media (min-width: 40rem) {
+  .onboarding-roles { grid-template-columns: 1fr 1fr; }
+}
+
+.onboarding-role {
+  display: flex;
+  flex-direction: column;
+  gap: .375rem;
+  padding: 1.125rem;
+  border: 1px solid var(--auth-border);
+  border-radius: 1rem;
+  background: var(--auth-input);
+  cursor: pointer;
+  transition: border-color .2s ease, box-shadow .2s ease, background-color .2s ease;
+}
+
+.onboarding-role:hover { border-color: var(--auth-primary); }
+
+.onboarding-role[data-selected='true'] {
+  border-color: var(--auth-primary);
+  box-shadow: 0 0 0 3px var(--auth-ring);
+}
+
+/* El foco del radio oculto se refleja en la tarjeta: sin esto, navegar con
+   teclado no muestra dónde estás. */
+.onboarding-role:has(input:focus-visible) {
+  box-shadow: 0 0 0 3px var(--auth-ring);
+}
+
+.onboarding-role-icon { width: 1.5rem; height: 1.5rem; color: var(--auth-primary); }
+.onboarding-role-title { font-weight: 600; color: var(--auth-fg); }
+.onboarding-role-desc { font-size: .875rem; line-height: 1.5; color: var(--auth-muted-fg); }
+
+.onboarding-role-note {
+  margin-top: .25rem;
+  font-size: .75rem;
+  font-weight: 500;
+  color: var(--auth-primary);
+}
+
+.onboarding-summary {
+  display: grid;
+  gap: .125rem;
+  margin-top: .5rem;
+  border: 1px solid var(--auth-border);
+  border-radius: 1rem;
+  overflow: hidden;
+}
+
+.onboarding-summary > div {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: .5rem;
+  padding: .75rem 1rem;
+  background: var(--auth-input);
+}
+
+.onboarding-summary dt { font-size: .875rem; color: var(--auth-muted-fg); }
+.onboarding-summary dd { font-size: .875rem; font-weight: 500; color: var(--auth-fg); text-align: right; }
+
+.onboarding-verified {
+  margin-left: .375rem;
+  font-size: .6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  color: #10b981;
+}
+
+.onboarding-notice {
+  margin-top: .75rem;
+  padding: .875rem 1rem;
+  border: 1px solid var(--auth-border);
+  border-left: 3px solid var(--auth-primary);
+  border-radius: .75rem;
+  font-size: .875rem;
+  line-height: 1.55;
+  color: var(--auth-muted-fg);
+  background: var(--auth-muted);
+}
+
+.onboarding-error {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  margin-bottom: 1rem;
+  padding: .75rem 1rem;
+  border: 1px solid rgba(225, 29, 72, .35);
+  border-radius: .75rem;
+  font-size: .875rem;
+  color: #e11d48;
+  background: rgba(225, 29, 72, .08);
+}
+
+.onboarding-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 1.75rem;
+}
+
+.pending-badge {
+  display: grid;
+  place-items: center;
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 999px;
+  color: var(--auth-primary);
+  background: var(--auth-muted);
+  border: 1px solid var(--auth-border);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .onboarding-role,
+  .onboarding-step-dot {
+    transition: none;
+  }
+}

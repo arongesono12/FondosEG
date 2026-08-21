@@ -1,9 +1,34 @@
-import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { getAuthErrorMessage, isAuthServiceUnavailableError } from '@/lib/supabase/auth-errors';
 import type { AccessProduct, AccountAccess, User, UserRole } from '@/types';
-import type { User as SupabaseUser } from '@supabase/supabase-js';
 import { isAdminRole, isSuperAdminRole } from '@/lib/roles';
+import {
+  getClerkIdentity,
+  resolveInternalUser,
+  syncFromClerk,
+  type ClerkIdentity,
+} from '@/lib/server/clerk-identity';
+
+/**
+ * Frontera de autenticación y autorización.
+ *
+ * La identidad la provee Clerk; el rol, el acceso por producto y el perfil
+ * siguen viviendo en Supabase. La API pública de este módulo no ha cambiado con
+ * la migración, así que las rutas de `app/api/**` no necesitan tocarse.
+ *
+ * `AuthUser.id` es SIEMPRE el UUID interno de `public.users`, nunca el id de
+ * Clerk. Todo lo que ya consultaba por ese id sigue siendo correcto.
+ */
+
+export interface AuthUser {
+  /** UUID interno de `public.users`. */
+  id: string;
+  /** Identificador de Clerk (`user_...`). */
+  clerkUserId: string;
+  email: string;
+  /** Compatibilidad con el consumo previo de `user_metadata`. */
+  user_metadata: { name?: string; avatar_url?: string };
+}
 
 export class AuthzError extends Error {
   status: number;
@@ -44,55 +69,100 @@ async function withRetry<T>(
   throw lastError;
 }
 
-async function resolveAuthUser(): Promise<{ user: SupabaseUser | null; authError: unknown | null }> {
-  const supabase = await createClient();
-  
-  try {
-    const { data: { user }, error } = await withRetry(async () => {
-      const result = await supabase.auth.getUser();
-      if (result.error && isAuthServiceUnavailableError(result.error)) {
-        throw result.error; // Trigger retry
-      }
-      return result;
-    });
+function toAuthUser(profile: User, identity: ClerkIdentity): AuthUser {
+  return {
+    id: profile.id,
+    clerkUserId: identity.clerkUserId,
+    email: profile.email || identity.email,
+    user_metadata: {
+      name: profile.name || identity.name,
+      avatar_url: profile.avatar_url || identity.imageUrl || undefined,
+    },
+  };
+}
 
-    if (user) return { user, authError: null };
-    return { user: null, authError: error };
+/**
+ * Resuelve la sesión de Clerk al perfil interno, aprovisionándolo si es la
+ * primera visita. Devuelve el error en lugar de lanzarlo para que las capas
+ * superiores decidan entre "no autenticado" y "servicio caído".
+ */
+async function resolveAuthUser(): Promise<{
+  user: AuthUser | null;
+  profile: User | null;
+  authError: unknown | null;
+  /** Identidad válida en Clerk que todavía no ha completado el alta guiada. */
+  needsOnboarding: boolean;
+}> {
+  try {
+    const identity = await withRetry(() => getClerkIdentity());
+    if (!identity) {
+      return { user: null, profile: null, authError: null, needsOnboarding: false };
+    }
+
+    const profile = await withRetry(() => resolveInternalUser(identity));
+    if (!profile) {
+      return { user: null, profile: null, authError: null, needsOnboarding: true };
+    }
+
+    return {
+      user: toAuthUser(profile, identity),
+      profile,
+      authError: null,
+      needsOnboarding: false,
+    };
   } catch (error) {
-    // Authorization must fail closed. getSession() only reads local cookie
-    // state and is not a substitute for server-side token validation.
-    return { user: null, authError: error };
+    // La autorización falla cerrada.
+    return { user: null, profile: null, authError: error, needsOnboarding: false };
   }
 }
 
 export async function getOptionalAuthState(): Promise<{
-  user: SupabaseUser | null;
+  user: AuthUser | null;
   serviceUnavailable: boolean;
+  /**
+   * Hay sesión de Clerk pero aún no hay perfil interno: el usuario debe
+   * completar `/onboarding` antes de poder entrar a ninguna parte.
+   */
+  needsOnboarding: boolean;
 }> {
-  const { user, authError } = await resolveAuthUser();
+  const { user, authError, needsOnboarding } = await resolveAuthUser();
 
   if (user) {
-    return { user, serviceUnavailable: false };
+    return { user, serviceUnavailable: false, needsOnboarding: false };
+  }
+
+  if (needsOnboarding) {
+    return { user: null, serviceUnavailable: false, needsOnboarding: true };
   }
 
   if (authError && isAuthServiceUnavailableError(authError)) {
-    console.error('Unable to resolve authenticated user because Supabase auth is unreachable:', authError);
-    return { user: null, serviceUnavailable: true };
+    console.error('No se pudo resolver el usuario autenticado:', authError);
+    return { user: null, serviceUnavailable: true, needsOnboarding: false };
   }
 
-  return { user: null, serviceUnavailable: false };
+  if (authError) {
+    console.error('Error resolviendo la identidad:', authError);
+  }
+
+  return { user: null, serviceUnavailable: false, needsOnboarding: false };
 }
 
-export async function getOptionalAuthUser(): Promise<SupabaseUser | null> {
+export async function getOptionalAuthUser(): Promise<AuthUser | null> {
   const { user } = await getOptionalAuthState();
   return user;
 }
 
-export async function requireAuthUser(): Promise<SupabaseUser> {
-  const { user, authError } = await resolveAuthUser();
+export async function requireAuthUser(): Promise<AuthUser> {
+  const { user, authError, needsOnboarding } = await resolveAuthUser();
 
   if (user) {
     return user;
+  }
+
+  // Autenticado en Clerk pero sin perfil: no puede operar todavía. 403 y no
+  // 401, porque el problema no es quién es sino que le falta completar el alta.
+  if (needsOnboarding) {
+    throw new AuthzError('Onboarding required', 403);
   }
 
   if (authError) {
@@ -129,10 +199,10 @@ export async function getProductAccess(
     const message = typeof error === 'object' && error && 'message' in error ? String(error.message) : '';
     const accessTableMissing = code === '42P01' || code === 'PGRST205' || message.includes('account_access');
 
-    // Safe deployment bridge: existing financial accounts keep Dashboard access,
-    // while only existing administrators may enter the developer portal. This
-    // avoids taking the app down if code reaches an environment just before its
-    // database migration, without broadening developer access.
+    // Puente de despliegue seguro: las cuentas financieras existentes conservan
+    // acceso al Dashboard y sólo los administradores entran al portal de
+    // desarrolladores, para no tumbar la app si el código llega a un entorno
+    // justo antes de su migración de base de datos.
     if (accessTableMissing) {
       const { data: legacyProfile, error: legacyError } = await adminClient
         .from('users')
@@ -171,33 +241,16 @@ export function requireDeveloperAccess() {
 }
 
 export async function requireProfile(): Promise<User> {
-  const userId = await requireAuthUserId();
-  const adminClient = createAdminClient();
-  let profile: User | null = null;
-  let error: unknown = null;
+  const { user, profile, authError } = await resolveAuthUser();
 
-  try {
-    const result = await withRetry(async () => {
-      const res = await adminClient.from('users').select('*').eq('id', userId).single();
-      if (res.error && isAuthServiceUnavailableError(res.error)) {
-        throw res.error; // Trigger retry
-      }
-      return res;
-    });
-    profile = (result.data as User | null) ?? null;
-    error = result.error;
-  } catch (queryError) {
-    if (isAuthServiceUnavailableError(queryError)) {
-      throw new AuthServiceError(getAuthErrorMessage(queryError));
+  if (authError) {
+    if (isAuthServiceUnavailableError(authError)) {
+      throw new AuthServiceError(getAuthErrorMessage(authError));
     }
-    throw queryError;
+    throw new AuthzError(getAuthErrorMessage(authError, 'Unauthorized'), 401);
   }
 
-  if (error && isAuthServiceUnavailableError(error)) {
-    throw new AuthServiceError(getAuthErrorMessage(error));
-  }
-
-  if (error || !profile) {
+  if (!user || !profile) {
     throw new AuthzError('Unauthorized', 401);
   }
 
@@ -205,7 +258,12 @@ export async function requireProfile(): Promise<User> {
     throw new AuthzError('Account disabled', 403);
   }
 
-  return profile as User;
+  const identity = await getClerkIdentity();
+  if (!identity) {
+    throw new AuthzError('Unauthorized', 401);
+  }
+
+  return syncFromClerk(profile, identity);
 }
 
 export function requireRole(profile: User, roles: UserRole | UserRole[]): void {

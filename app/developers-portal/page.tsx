@@ -5,8 +5,15 @@ import { DashboardLogo } from '@/components/layout/dashboard-logo';
 import { Button } from '@/components/ui/button';
 import { getOptionalAuthState } from '@/lib/server/authz';
 
+// Redirige según haya sesión o no, así que se resuelve por petición.
+export const dynamic = 'force-dynamic';
+
 export default async function DevelopersPortalPage() {
-  const { user, serviceUnavailable } = await getOptionalAuthState();
+  const { user, serviceUnavailable, needsOnboarding } = await getOptionalAuthState();
+
+  if (needsOnboarding) {
+    redirect('/onboarding');
+  }
 
   if (serviceUnavailable) {
     redirect('/login');

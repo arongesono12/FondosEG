@@ -24,7 +24,67 @@ if (!supabaseOrigin) {
   );
 }
 
-const imgSrc = ["'self'", "data:", "blob:", supabaseOrigin]
+// Clerk sirve su SDK desde el "Frontend API" de la instancia: en desarrollo
+// `<slug>.clerk.accounts.dev`, en producción `clerk.<tu-dominio>`. Si la CSP no
+// lo incluye, el navegador bloquea `clerk.browser.js` y no hay login posible.
+//
+// El host NO se pide en una variable aparte: la propia publishable key ya lo
+// lleva codificado en base64 (`pk_live_<base64("clerk.midominio.com$")>`), así
+// que se deriva de ella. Dos variables que deben coincidir acaban
+// desincronizándose al cambiar de claves; una sola no puede.
+function decodeClerkFrontendHost(publishableKey?: string): string | null {
+  if (!publishableKey) return null;
+  const encoded = publishableKey.replace(/^pk_(test|live)_/, "");
+  if (encoded === publishableKey) return null;
+  try {
+    const decoded = Buffer.from(encoded, "base64").toString("utf8");
+    // El valor decodificado termina en `$`, que no forma parte del host.
+    const host = decoded.replace(/\$+$/, "").trim();
+    return /^[a-z0-9.-]+\.[a-z]{2,}$/i.test(host) ? `https://${host}` : null;
+  } catch {
+    return null;
+  }
+}
+
+const clerkFrontendOrigin = (() => {
+  // Override manual, sólo necesario si sirves Clerk tras un proxy propio.
+  const rawUrl = process.env.NEXT_PUBLIC_CLERK_FRONTEND_API_URL;
+  if (rawUrl) {
+    try {
+      return new URL(rawUrl.startsWith("http") ? rawUrl : `https://${rawUrl}`).origin;
+    } catch {
+      /* cae al valor derivado de la clave */
+    }
+  }
+  return decodeClerkFrontendHost(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
+})();
+
+if (!clerkFrontendOrigin) {
+  console.warn(
+    "[csp] No se pudo determinar el Frontend API de Clerk: " +
+      "script-src lo bloqueará y el login no cargará. " +
+      "Revisa NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY."
+  );
+}
+
+// `*.clerk.accounts.dev` es el Frontend API; `*.accounts.dev` (sin el prefijo
+// `clerk.`) es el Account Portal alojado, al que Clerk redirige en algunos
+// flujos de instancias de desarrollo. Sólo se permite fuera de producción:
+// es un dominio exclusivo de instancias dev y ampliarlo en producción sería
+// abrir la política sin motivo.
+const clerkHosts = [
+  "https://*.clerk.accounts.dev",
+  "https://*.clerk.com",
+  isDevelopment ? "https://*.accounts.dev" : null,
+  clerkFrontendOrigin,
+]
+  .filter(Boolean)
+  .join(" ");
+
+// Turnstile es el bot-protection de Clerk: necesita cargar script e iframe.
+const turnstileHost = "https://challenges.cloudflare.com";
+
+const imgSrc = ["'self'", "data:", "blob:", "https://img.clerk.com", supabaseOrigin]
   .filter(Boolean)
   .join(" ");
 
@@ -35,11 +95,12 @@ const securityHeaders = [
     "object-src 'none'",
     "frame-ancestors 'none'",
     "form-action 'self'",
-    `script-src 'self' 'unsafe-inline'${isDevelopment ? " 'unsafe-eval'" : ""}`,
+    `script-src 'self' 'unsafe-inline' ${clerkHosts} ${turnstileHost}${isDevelopment ? " 'unsafe-eval'" : ""}`,
     "style-src 'self' 'unsafe-inline'",
     `img-src ${imgSrc}`,
     "font-src 'self' data:",
     "connect-src 'self' https: wss:",
+    `frame-src 'self' ${clerkHosts} ${turnstileHost}`,
     "worker-src 'self' blob:",
     "upgrade-insecure-requests",
   ].join("; ") },
