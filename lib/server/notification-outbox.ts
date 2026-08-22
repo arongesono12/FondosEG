@@ -114,17 +114,28 @@ export async function queueTransferNotifications(input: QueueTransferNotificatio
   ]);
 }
 
-export async function queueWalletVerificationInternal(input: {
+/**
+ * Avisa al beneficiario de que tiene una orden pendiente de cobro.
+ *
+ * IMPORTANTE: este aviso NO puede contener el código de confirmación. El código
+ * es un vale al portador que custodia el emisor y entrega en mano (por QR o de
+ * viva voz) cuando decide liquidar la orden. Si el beneficiario lo recibiera por
+ * este canal podría cobrar sin que el emisor se lo hubiera entregado, y el paso
+ * de entrega dejaría de controlar nada.
+ *
+ * Por eso `code` no forma parte de la entrada: no se puede filtrar lo que no se
+ * recibe.
+ */
+export async function queueWalletPendingNotice(input: {
   transferId: string;
   phone: string;
   senderName: string;
   receiverName: string;
   amount: number;
   currency: string;
-  code: string;
 }): Promise<void> {
-  const message = `FondosEG: Su código de verificación para el envío de ${input.amount} ${input.currency} de ${input.senderName} es: ${input.code}.\n\nNo comparta este código con nadie.`;
-  
+  const message = `FondosEG: ${input.senderName} le ha enviado ${input.amount} ${input.currency} a su billetera digital.\n\nPara recibirlo, pida el código de confirmación a ${input.senderName} e introdúzcalo en la aplicación. La orden caduca en 24 horas.`;
+
   await saveInternalNotification({
     transferId: input.transferId,
     phone: input.phone,

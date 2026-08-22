@@ -287,7 +287,12 @@ export interface WalletTransfer {
   receiver_phone: string;
   amount: number;
   currency: string;
-  verification_code: string;
+  /**
+   * Vale al portador que custodia el emisor y entrega en mano al beneficiario.
+   * Opcional porque las respuestas dirigidas al beneficiario lo omiten: sólo
+   * está presente para quien creó la transferencia.
+   */
+  verification_code?: string;
   status: 'pending' | 'confirmed' | 'cancelled' | 'expired';
   notes?: string;
   expires_at?: string;

@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { 
   QrCode, 
   Loader2, 
@@ -37,6 +38,7 @@ export function VerifyTransferModal({ open, onOpenChange, onSuccess }: VerifyTra
   const [success, setSuccess] = useState(false);
   const [pendingTransfers, setPendingTransfers] = useState<WalletTransfer[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
+  const lastAttemptedCode = useRef<string | null>(null);
 
   useEffect(() => {
     if (!open) {
@@ -44,6 +46,7 @@ export function VerifyTransferModal({ open, onOpenChange, onSuccess }: VerifyTra
       setTransfer(null);
       setSuccess(false);
       setError(null);
+      lastAttemptedCode.current = null;
     }
   }, [open]);
 
@@ -53,15 +56,28 @@ export function VerifyTransferModal({ open, onOpenChange, onSuccess }: VerifyTra
       try {
         const res = await fetch('/api/wallet-transfer?type=pending');
         const data = await res.json();
-        setPendingTransfers(data || []);
+        // En error la ruta devuelve `{ error }`, no un array. Asignarlo al
+        // estado rompía el render con "pendingTransfers.map is not a function".
+        if (!res.ok || !Array.isArray(data)) {
+          setError('No se pudieron cargar las transferencias pendientes');
+          setPendingTransfers([]);
+          return;
+        }
+        setPendingTransfers(data);
       } catch (err) {
         console.error('Error fetching pending:', err);
+        setError('Error de conexión al cargar las transferencias pendientes');
       }
     }
     fetchPendingTransfers();
   }, [user, open]);
 
   const handleVerify = useCallback(async () => {
+    if (!transfer?.id) {
+      setError('Selecciona primero la transferencia que quieres confirmar');
+      return;
+    }
+
     if (verificationCode.length !== 6) {
       setError('El código debe tener 6 dígitos');
       return;
@@ -77,7 +93,7 @@ export function VerifyTransferModal({ open, onOpenChange, onSuccess }: VerifyTra
         body: JSON.stringify({
           action: 'confirm',
           verification_code: verificationCode,
-          transfer_id: transfer?.id,
+          transfer_id: transfer.id,
         }),
       });
 
@@ -98,15 +114,29 @@ export function VerifyTransferModal({ open, onOpenChange, onSuccess }: VerifyTra
   }, [verificationCode, transfer, onSuccess]);
 
   useEffect(() => {
-    if (verificationCode.length === 6 && !transfer) {
+    // La guarda pedía `!transfer`, justo lo contrario de lo que necesita
+    // `handleVerify`, que envía `transfer.id`. Con una transferencia
+    // seleccionada, completar los 6 dígitos confirma automáticamente.
+    //
+    // `lastAttemptedCode` es imprescindible: sin él, un código incorrecto
+    // dejaría `loading` en false con los 6 dígitos aún puestos y el efecto se
+    // relanzaría en bucle contra el servidor.
+    if (
+      verificationCode.length === 6 &&
+      transfer &&
+      !loading &&
+      lastAttemptedCode.current !== verificationCode
+    ) {
+      lastAttemptedCode.current = verificationCode;
       handleVerify();
     }
-  }, [verificationCode, transfer, handleVerify]);
+  }, [verificationCode, transfer, loading, handleVerify]);
 
   const handleSelectTransfer = (t: WalletTransfer) => {
     setTransfer(t);
     setVerificationCode('');
     setError(null);
+    lastAttemptedCode.current = null;
     setTimeout(() => inputRef.current?.focus(), 100);
   };
 
@@ -164,7 +194,8 @@ export function VerifyTransferModal({ open, onOpenChange, onSuccess }: VerifyTra
                 Confirmar Transferencia
               </DialogTitle>
               <DialogDescription className="text-sm text-muted-foreground">
-                Ingresa el código de 6 dígitos para confirmar
+                Pide el código de 6 dígitos a {transfer.sender_name} e
+                introdúcelo para recibir el dinero
               </DialogDescription>
             </DialogHeader>
             
@@ -182,13 +213,16 @@ export function VerifyTransferModal({ open, onOpenChange, onSuccess }: VerifyTra
               </div>
 
               <div className="space-y-2">
-                <Label>Código de verificación</Label>
+                <Label htmlFor="verification-code">Código de verificación</Label>
                 <Input
+                  id="verification-code"
                   ref={inputRef}
                   value={verificationCode}
                   onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
                   placeholder="Ingresa los 6 dígitos"
                   className="text-center text-2xl font-bold tracking-[0.5em] h-14"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
                   maxLength={6}
                   autoFocus
                 />
@@ -207,6 +241,8 @@ export function VerifyTransferModal({ open, onOpenChange, onSuccess }: VerifyTra
                   onClick={() => {
                     setTransfer(null);
                     setVerificationCode('');
+                    setError(null);
+                    lastAttemptedCode.current = null;
                   }}
                   className="flex-1"
                 >
@@ -249,13 +285,5 @@ export function VerifyTransferModal({ open, onOpenChange, onSuccess }: VerifyTra
         )}
       </DialogContent>
     </Dialog>
-  );
-}
-
-function Label({ children }: { children: React.ReactNode }) {
-  return (
-    <label className="text-sm font-semibold text-foreground">
-      {children}
-    </label>
   );
 }

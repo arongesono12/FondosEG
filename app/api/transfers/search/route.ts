@@ -51,6 +51,7 @@ export async function GET(request: NextRequest) {
       .limit(limit);
 
     interface WalletLog {
+      sender_id?: string;
       sender_name?: string;
       receiver_name?: string;
       sender_phone?: string;
@@ -74,7 +75,11 @@ export async function GET(request: NextRequest) {
           String(t.receiver_name || '').toLowerCase().includes(token) ||
           String(t.sender_phone || '').includes(query) ||
           String(t.receiver_phone || '').includes(query) ||
-          String(t.verification_code || '').includes(query)
+          // Sólo el emisor puede buscar por el código de confirmación: es el
+          // vale al portador que él custodia y entrega en mano. Ofrecérselo
+          // también al beneficiario convertía este buscador en un oráculo de
+          // subcadenas con el que reconstruirlo sin que se lo entregasen.
+          (t.sender_id === profile.id && String(t.verification_code || '').includes(query))
         );
       })
       .map((t) => ({

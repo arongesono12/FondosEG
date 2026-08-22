@@ -18,6 +18,7 @@ import {
   Loader2, 
   CheckCircle2, 
   AlertCircle,
+  Check,
   Copy,
   QrCode,
 } from 'lucide-react';
@@ -36,7 +37,7 @@ interface WalletTransferModalProps {
 type Step = 'form' | 'qr' | 'success';
 
 export function WalletTransferModal({ open, onOpenChange, onSuccess }: WalletTransferModalProps) {
-  const { user, preferredCurrency } = useAppStore();
+  const { user } = useAppStore();
   const [step, setStep] = useState<Step>('form');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -47,8 +48,12 @@ export function WalletTransferModal({ open, onOpenChange, onSuccess }: WalletTra
   const [transfer, setTransfer] = useState<WalletTransfer | null>(null);
   const [balance, setBalance] = useState(0);
   const [complianceConsent, setComplianceConsent] = useState(false);
-
-  const currency = preferredCurrency || 'XAF';
+  const [copied, setCopied] = useState(false);
+  // La billetera opera en su propia divisa, que se lee del saldo real. La
+  // preferencia de visualización del usuario no puede decidir la divisa de la
+  // operación: no hay conversión en ninguna capa, así que usarla mostraba saldo
+  // 0 y bloqueaba el envío con "Saldo insuficiente" teniendo fondos de sobra.
+  const [currency, setCurrency] = useState('XAF');
 
   useEffect(() => {
     if (!open) {
@@ -60,6 +65,7 @@ export function WalletTransferModal({ open, onOpenChange, onSuccess }: WalletTra
       setTransfer(null);
       setError(null);
       setComplianceConsent(false);
+      setCopied(false);
     }
   }, [open]);
 
@@ -68,15 +74,22 @@ export function WalletTransferModal({ open, onOpenChange, onSuccess }: WalletTra
       if (!user) return;
       try {
         const res = await fetch(`/api/balance?userId=${user.id}`);
+        if (!res.ok) {
+          setError('No se pudo consultar tu saldo disponible');
+          return;
+        }
         const data = await res.json();
-        const bal = data.balances?.find((b: { currency: string; balance: number }) => b.currency === currency);
-        setBalance(bal?.balance || 0);
+        // `client_balances.client_id` es UNIQUE: hay como mucho una fila de
+        // saldo por cliente, y es ella la que fija la divisa de la billetera.
+        const wallet = Array.isArray(data.balances) ? data.balances[0] : null;
+        setBalance(Number(wallet?.balance) || 0);
+        setCurrency(wallet?.currency || 'XAF');
       } catch (err) {
         console.error('Error fetching balance:', err);
       }
     }
     fetchBalance();
-  }, [user, currency]);
+  }, [user]);
 
   const handleSubmit = async () => {
     if (!receiverPhone || !receiverName || !amount) {
@@ -134,8 +147,9 @@ export function WalletTransferModal({ open, onOpenChange, onSuccess }: WalletTra
     if (!transfer) return;
 
     setLoading(true);
+    setError(null);
     try {
-      await fetch('/api/wallet-transfer', {
+      const res = await fetch('/api/wallet-transfer', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -143,17 +157,38 @@ export function WalletTransferModal({ open, onOpenChange, onSuccess }: WalletTra
           transfer_id: transfer.id,
         }),
       });
+
+      const data = await res.json();
+
+      // Cerrar el diálogo pase lo que pase daba por anulada una orden que seguía
+      // viva y cobrable durante 24 horas.
+      if (!res.ok || !data.success) {
+        setError(data.error || 'No se pudo cancelar la transferencia');
+        return;
+      }
+
       onOpenChange(false);
     } catch (err) {
       console.error('Error cancelling:', err);
+      setError('Error de conexión al cancelar la transferencia');
     } finally {
       setLoading(false);
     }
   };
 
-  const copyCode = () => {
-    if (transfer) {
-      navigator.clipboard.writeText(transfer.verification_code);
+  // El código sólo viaja en la respuesta de creación, que va dirigida al emisor.
+  // Los listados lo omiten para que el beneficiario no pueda leerlo, así que el
+  // tipo lo declara opcional.
+  const verificationCode = transfer?.verification_code ?? '';
+
+  const copyCode = async () => {
+    if (!verificationCode) return;
+    try {
+      await navigator.clipboard.writeText(verificationCode);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      setError('No se pudo copiar el código. Cópialo manualmente.');
     }
   };
 
@@ -163,7 +198,7 @@ export function WalletTransferModal({ open, onOpenChange, onSuccess }: WalletTra
     currency: transfer.currency,
     sender_name: transfer.sender_name,
     receiver_name: transfer.receiver_name,
-    verification_code: transfer.verification_code,
+    verification_code: verificationCode,
   }) : '';
 
   return (
@@ -195,7 +230,7 @@ export function WalletTransferModal({ open, onOpenChange, onSuccess }: WalletTra
                 <Label htmlFor="receiverPhone">Teléfono del destinatario</Label>
                 <Input
                   id="receiverPhone"
-                  placeholder="+237 6XX XXX XXX"
+                  placeholder="+240 XXX XXX XXX"
                   value={receiverPhone}
                   onChange={(e) => setReceiverPhone(e.target.value)}
                 />
@@ -313,14 +348,20 @@ export function WalletTransferModal({ open, onOpenChange, onSuccess }: WalletTra
                 </p>
                 <div className="flex items-center gap-2">
                   <p className="text-2xl font-bold tracking-[0.5em]">
-                    {transfer.verification_code}
+                    {verificationCode}
                   </p>
-                  <Button variant="ghost" size="icon" onClick={copyCode}>
-                    <Copy className="h-4 w-4" />
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={copyCode}
+                    aria-label={copied ? 'Código copiado' : 'Copiar código de verificación'}
+                  >
+                    {copied ? <Check className="h-4 w-4 text-green-600" /> : <Copy className="h-4 w-4" />}
                   </Button>
                 </div>
-                <p className="text-[10px] text-muted-foreground">
-                  Comparte este código con el destinatario
+                <p className="text-[10px] text-amber-600 dark:text-amber-500 text-center">
+                  Entrégalo únicamente al destinatario: quien tenga este código
+                  puede cobrar la transferencia.
                 </p>
               </div>
 
@@ -355,7 +396,8 @@ export function WalletTransferModal({ open, onOpenChange, onSuccess }: WalletTra
             <div>
                <p className="text-lg font-bold">Transferencia creada</p>
               <p className="text-sm text-muted-foreground mt-1">
-                El destinatario recibirá un QR para confirmar la transferencia
+                Hemos avisado al destinatario. Entrégale el código de
+                confirmación para que pueda cobrarla.
               </p>
             </div>
             <div className="p-4 rounded-xl bg-muted/50 space-y-2">

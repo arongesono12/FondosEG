@@ -18,7 +18,9 @@ export async function POST(request: NextRequest) {
     }
 
     if (action === 'confirm') {
-      const result = await confirmWalletTransfer(data);
+      // El actor viaja como argumento, nunca desde el cuerpo: sólo el
+      // beneficiario de la orden puede liquidarla.
+      const result = await confirmWalletTransfer(data, user.id);
       return NextResponse.json(result);
     }
 

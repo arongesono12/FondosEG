@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx tsc *)",
+      "Bash(timeout 100 npx -y ctx7@latest docs /supabase/supabase \"resource embedding one-to-one relationship unique constraint returns single object not array\")",
+      "Bash(break)",
+      "Bash(node \"C:/Users/ARONGE~1/AppData/Local/Temp/claude/c--Users-Aron-G-Esono-Desktop-Proyectos-FondosEG/15c434a3-4b6c-4bba-9761-2c098c014f09/scratchpad/probe.mjs\" \".env.local\")",
+      "Bash(node \"C:/Users/ARONGE~1/AppData/Local/Temp/claude/c--Users-Aron-G-Esono-Desktop-Proyectos-FondosEG/15c434a3-4b6c-4bba-9761-2c098c014f09/scratchpad/probe2.mjs\" \".env.local\")",
+      "Bash(node \"C:/Users/ARONGE~1/AppData/Local/Temp/claude/c--Users-Aron-G-Esono-Desktop-Proyectos-FondosEG/15c434a3-4b6c-4bba-9761-2c098c014f09/scratchpad/probe3.mjs\" \".env.local\")",
+      "Bash(npm test *)",
+      "Bash(npx eslint *)",
+      "Bash(echo \"EXIT=$?\")",
+      "Bash(echo \"LINT_EXIT=$?\")"
+    ]
+  }
+}
