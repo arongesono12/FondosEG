@@ -6,6 +6,8 @@ import { getOptionalAuthState, getProductAccess } from '@/lib/server/authz';
 import { getAuthErrorMessage, isAuthServiceUnavailableError } from '@/lib/supabase/auth-errors';
 import { DashboardLayoutWrapper } from '@/components/layout/dashboard-layout-wrapper';
 import { AppProvider } from '@/components/providers/app-provider';
+import { ensureProductAccessAndBalances } from '@/lib/server/clerk-identity';
+import type { User } from '@/types';
 
 // Todo lo que cuelga del dashboard depende de la sesión de Clerk, que se lee
 // de las cabeceras de la petición. Sin esto, Next intenta prerenderizar estas
@@ -42,6 +44,27 @@ export default async function DashboardLayout({
 
   try {
     dashboardAccess = await getProductAccess('dashboard', authUser.id);
+
+    // Autorreparación de un alta a medias: existe el perfil pero no su fila de
+    // `account_access`, porque el alta falló entre ambas escrituras. Sin esto
+    // el usuario queda encerrado para siempre — /onboarding lo manda al
+    // dashboard por tener perfil, y el dashboard a /forbidden por no tener
+    // acceso, sin forma de repetir el alta.
+    if (!dashboardAccess) {
+      const { data: orphanProfile } = await adminClient
+        .from('users')
+        .select('*')
+        .eq('id', authUser.id)
+        .maybeSingle();
+
+      if (orphanProfile) {
+        const profile = orphanProfile as User;
+        console.warn('Perfil sin account_access, reaprovisionando:', profile.id);
+        await ensureProductAccessAndBalances(profile);
+        dashboardAccess = await getProductAccess('dashboard', authUser.id);
+      }
+    }
+
     if (!dashboardAccess || dashboardAccess.status !== 'active') {
       developerAccess = await getProductAccess('developer_portal', authUser.id);
     }
@@ -68,9 +91,10 @@ export default async function DashboardLayout({
     throw error;
   }
 
-  // Gestor que ya completó el alta pero espera el visto bueno de un
-  // administrador. No es un "prohibido": es un trámite en curso, y decírselo
-  // así evita que crea que su cuenta ha fallado.
+  // El registro ya no produce cuentas en espera: se activan al completar el
+  // alta. Esta rama cubre el único caso que queda — que un administrador haya
+  // puesto la cuenta en 'pending' a mano para retenerla. No es un "prohibido",
+  // es un trámite en curso, y decírselo así evita que crea que algo ha fallado.
   if (dashboardAccess?.status === 'pending') {
     return <PendingApprovalScreen role={dashboardAccess.access_role} />;
   }

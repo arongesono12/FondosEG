@@ -34,7 +34,7 @@ const ROLE_OPTIONS = [
     icon: Briefcase,
     title: 'Gestor (Agente)',
     description: 'Opera transferencias para terceros y gestiona un saldo de caja propio.',
-    note: 'Requiere aprobación de un administrador',
+    note: 'Acceso inmediato',
   },
 ];
 
@@ -92,10 +92,15 @@ export function OnboardingFlow({ defaultName, email }: OnboardingFlowProps) {
         return;
       }
 
-      // Un gestor entra pendiente de aprobación: el layout del dashboard lo
-      // detecta y muestra la pantalla de revisión, así que basta con navegar.
-      router.push('/dashboard');
+      // `refresh()` antes de `push()`: descarta la carga RSC cacheada de
+      // /dashboard, que se generó cuando este usuario todavía no tenía perfil
+      // y por tanto lleva dentro la redirección a /onboarding. Invertir el
+      // orden hace que el usuario rebote al formulario recién completado.
+      //
+      // La cuenta queda activa sea cual sea el rol, así que el dashboard que
+      // se carga a continuación ya es el que corresponde a ese rol.
       router.refresh();
+      router.push('/dashboard');
     });
   };
 
@@ -265,12 +270,11 @@ export function OnboardingFlow({ defaultName, email }: OnboardingFlowProps) {
               <div><dt>País y ciudad</dt><dd>{data.country} · {data.city}</dd></div>
             </dl>
 
-            {data.role === 'gestor' && (
-              <p className="onboarding-notice">
-                Las cuentas de gestor las revisa un administrador antes de activarse.
-                Podrás entrar en cuanto aprueben tu solicitud.
-              </p>
-            )}
+            <p className="onboarding-notice">
+              {data.role === 'gestor'
+                ? 'Al confirmar entrarás a tu panel de gestor, con tu saldo de caja y las herramientas para operar transferencias.'
+                : 'Al confirmar entrarás a tu panel de cliente, listo para enviar y recibir dinero.'}
+            </p>
           </div>
         )}
 

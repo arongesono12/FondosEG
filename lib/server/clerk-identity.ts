@@ -42,13 +42,13 @@ export interface OnboardingInput {
 }
 
 /**
- * Un `gestor` mueve dinero y tiene saldo de caja, así que no puede
- * auto-activarse: entra como `pending` y un administrador lo aprueba. El
- * `cliente` no tiene ese poder y se activa al instante.
+ * El alta guiada activa la cuenta directamente, sea cual sea el rol elegido:
+ * el usuario entra a su dashboard y opera según ese rol sin pasos intermedios.
+ *
+ * `account_access.status` sigue admitiendo 'pending' y 'suspended' para que un
+ * administrador pueda retener o bloquear una cuenta desde la base de datos —
+ * el layout del dashboard lo respeta— pero el registro ya no los produce.
  */
-export function accessStatusForRole(role: UserRole): 'active' | 'pending' {
-  return role === 'gestor' ? 'pending' : 'active';
-}
 
 function primaryEmail(clerkUser: ClerkUser): string | null {
   const primary = clerkUser.emailAddresses.find(
@@ -225,7 +225,7 @@ export async function completeOnboarding(
   }
 
   const user = created as User;
-  await ensureProductAccessAndBalances(user, accessStatusForRole(user.role));
+  await ensureProductAccessAndBalances(user);
   return user;
 }
 
@@ -233,10 +233,7 @@ export async function completeOnboarding(
  * Garantiza el acceso al dashboard y las filas de saldo que el resto de la
  * aplicación da por hechas para cada rol.
  */
-export async function ensureProductAccessAndBalances(
-  user: User,
-  status: 'active' | 'pending' = 'active'
-): Promise<void> {
+export async function ensureProductAccessAndBalances(user: User): Promise<void> {
   const adminClient = createAdminClient();
   const nowIso = new Date().toISOString();
 
@@ -245,16 +242,12 @@ export async function ensureProductAccessAndBalances(
       user_id: user.id,
       product: 'dashboard',
       access_role: user.role,
-      status,
+      status: 'active',
       updated_at: nowIso,
     },
     { onConflict: 'user_id,product' }
   );
   if (accessError) throw new Error(accessError.message);
-
-  // Un gestor sin aprobar no recibe saldo de caja: la fila de agent_balances
-  // se crea cuando un administrador activa su acceso, no antes.
-  if (status === 'pending') return;
 
   if (user.role === 'admin' || user.role === 'superadmin') {
     const { error: developerAccessError } = await adminClient.from('account_access').upsert(

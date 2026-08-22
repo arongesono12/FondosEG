@@ -39,12 +39,9 @@ test('self-service signup can never self-assign a privileged role', async () => 
     'OnboardingInput.role debe seguir restringido a cliente|gestor'
   );
 
-  // Y un gestor —que mueve dinero de terceros— nunca se auto-activa.
-  assert.match(
-    source,
-    /role === 'gestor' \? 'pending' : 'active'/,
-    'el rol gestor debe quedar pendiente de aprobación'
-  );
+  // Nota: por decisión de producto, `gestor` se activa al instante igual que
+  // `cliente`. Lo que NO puede ocurrir es que el alta conceda un rol de
+  // administración, y de eso se ocupa la comprobación de arriba.
 
   // La promoción sólo se lee de `publicMetadata`, que el cliente no puede
   // escribir.

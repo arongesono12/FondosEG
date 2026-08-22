@@ -1,7 +1,8 @@
 'use server';
 
+import { revalidatePath } from 'next/cache';
+
 import {
-  accessStatusForRole,
   completeOnboarding,
   getClerkIdentity,
   resolveInternalUser,
@@ -16,7 +17,6 @@ export interface OnboardingResult {
   error?: string;
   /** Campo que ha fallado, para que el formulario devuelva al paso correcto. */
   field?: keyof OnboardingInput;
-  status?: 'active' | 'pending';
 }
 
 /**
@@ -53,6 +53,19 @@ function validate(input: OnboardingInput): { field: keyof OnboardingInput; error
   return null;
 }
 
+/**
+ * Invalida el árbol de layouts tras crear el perfil.
+ *
+ * Sin esto, `router.push('/dashboard')` sirve la carga RSC que se generó ANTES
+ * del alta —cuando el layout aún resolvía `needsOnboarding` y redirigía a
+ * `/onboarding`—, y el usuario rebota al formulario que acaba de completar.
+ * Se invalida el layout raíz porque el estado de sesión afecta a todas las
+ * ramas, no sólo al dashboard.
+ */
+function revalidateAuthenticatedTree() {
+  revalidatePath('/', 'layout');
+}
+
 export async function completeOnboardingAction(input: OnboardingInput): Promise<OnboardingResult> {
   const identity = await getClerkIdentity();
   if (!identity) {
@@ -62,7 +75,8 @@ export async function completeOnboardingAction(input: OnboardingInput): Promise<
   const existing = await resolveInternalUser(identity);
   if (existing) {
     // Ya tenía perfil (doble envío, o cuenta anterior a Clerk reconectada).
-    return { success: true, status: accessStatusForRole(existing.role) };
+    revalidateAuthenticatedTree();
+    return { success: true };
   }
 
   const invalid = validate(input);
@@ -71,8 +85,9 @@ export async function completeOnboardingAction(input: OnboardingInput): Promise<
   }
 
   try {
-    const user = await completeOnboarding(identity, input);
-    return { success: true, status: accessStatusForRole(user.role) };
+    await completeOnboarding(identity, input);
+    revalidateAuthenticatedTree();
+    return { success: true };
   } catch (error) {
     const message = error instanceof Error ? error.message : '';
     if (message.includes('teléfono')) {
