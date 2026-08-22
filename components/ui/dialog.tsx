@@ -10,9 +10,17 @@ const DialogClose = DialogPrimitive.Close
 
 /**
  * Cómo se comporta el modal por debajo del breakpoint móvil del dashboard (<1024px):
- *  - `fullscreen`: ocupa toda la pantalla como una vista nativa (por defecto).
- *  - `centered`: se mantiene como tarjeta centrada (confirmaciones cortas, avisos).
+ *  - `centered`: tarjeta centrada en la pantalla (POR DEFECTO).
+ *  - `fullscreen`: ocupa toda la pantalla como una vista nativa.
  *  - `none`: sin reglas compartidas; el modal aporta su propio diseño móvil.
+ *
+ * El valor por defecto es `centered`: en móvil TODAS las ventanas emergentes
+ * se presentan como la misma tarjeta centrada que la de acceso. Hoy ningún
+ * modal declara `fullscreen`; se mantiene como opción explícita por si alguna
+ * vista futura necesita de verdad ocupar la pantalla completa. Antes de
+ * usarlo, ten en cuenta que la tarjeta centrada ya limita su altura y
+ * desplaza el `<DialogBody>` por dentro, así que el contenido largo cabe.
+ *
  * La geometría vive en `app/globals.css` bajo `.dialog-shell[data-mobile='…']`.
  */
 type DialogMobileMode = "fullscreen" | "centered" | "none"
@@ -38,22 +46,25 @@ const DialogContent = React.forwardRef<
     mobile?: DialogMobileMode
     hideClose?: boolean
   }
->(({ className, children, mobile = "fullscreen", hideClose = false, ...props }, ref) => (
+>(({ className, children, mobile = "centered", hideClose = false, ...props }, ref) => (
   <DialogPortal>
     <DialogOverlay />
     <DialogPrimitive.Content
       ref={ref}
       data-mobile={mobile}
       className={cn(
-        "dialog-shell fixed left-1/2 top-1/2 z-50 grid w-full max-w-lg -translate-x-1/2 -translate-y-1/2 gap-4 bg-white/40 dark:bg-[#10121B]/40 border border-white/18 backdrop-blur-[2px] p-8 shadow-2xl shadow-slate-200/50 dark:shadow-black/20 sm:rounded-[10px]",
+        // La superficie (fondo, borde, radio, sombra) la aporta `.dialog-shell`
+        // en globals.css, que comparte tokens con `<Card>` y con la tarjeta de
+        // acceso. Aquí sólo queda el posicionamiento y el espaciado.
+        "dialog-shell fixed left-1/2 top-1/2 z-50 grid w-full max-w-lg -translate-x-1/2 -translate-y-1/2 gap-4 p-8",
         className
       )}
       {...props}
     >
       {children}
       {!hideClose && (
-        <DialogPrimitive.Close className="dialog-close absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none">
-          <X className="h-4 w-4" />
+        <DialogPrimitive.Close className="dialog-close absolute right-3 top-3 ring-offset-background focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none">
+          <X className="h-[18px] w-[18px]" />
           <span className="sr-only">Cerrar</span>
         </DialogPrimitive.Close>
       )}
@@ -68,7 +79,12 @@ const DialogHeader = ({
 }: React.HTMLAttributes<HTMLDivElement>) => (
   <div
     className={cn(
-      "dialog-header flex flex-col space-y-1.5 text-center sm:text-left",
+      // Alineado a la izquierda también en móvil: centrar el encabezado va
+      // contra el sesgo de lectura hacia la izquierda (NN/g, 2024) y, ahora
+      // que `centered` es el modo por defecto, `text-center` habría pasado a
+      // aplicarse a la mayoría de los modales. Además es como se alinea la
+      // tarjeta de acceso.
+      "dialog-header flex flex-col space-y-1.5 text-left",
       className
     )}
     {...props}

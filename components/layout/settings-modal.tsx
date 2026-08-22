@@ -46,7 +46,7 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md overflow-hidden border border-white/25 bg-white/95 p-0 shadow-2xl shadow-black/20 outline-none backdrop-blur-none dark:border-white/10 dark:bg-[#10131c]/95">
+      <DialogContent className="max-w-md overflow-hidden p-0 outline-none">
         <DialogHeader className="p-6 border-b border-border/10">
           <DialogTitle className="flex items-center gap-2 text-xl font-semibold text-foreground">
             <Settings className="h-5 w-5 text-primary" /> Configuración

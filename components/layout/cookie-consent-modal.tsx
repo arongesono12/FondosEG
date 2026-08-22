@@ -63,7 +63,7 @@ export function CookieConsentModal({
     <div
       aria-label="Preferencias de cookies"
       role="region"
-      className="cookie-consent-toast fixed inset-x-0 bottom-0 z-[70] border-t border-border/20 bg-white/95 px-4 py-4 shadow-[0_-18px_50px_rgba(15,23,42,0.12)] backdrop-blur-xl dark:bg-slate-950/95 dark:shadow-[0_-18px_50px_rgba(0,0,0,0.35)]"
+      className="cookie-consent-toast fixed inset-x-0 bottom-0 z-[70] border-t border-border/20 px-4 py-4 shadow-[0_-18px_50px_rgba(15,23,42,0.12)] dark:shadow-[0_-18px_50px_rgba(0,0,0,0.35)]"
       onKeyDown={(event) => {
         if (event.key === 'Escape') event.preventDefault();
       }}

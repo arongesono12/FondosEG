@@ -7,16 +7,40 @@
   --font-fondoseg-secondary: "Roboto", sans-serif;
   --background: hsl(220 33% 98%);
   --foreground: hsl(224 71.4% 4.1%);
-  --card: hsl(0 0% 100% / 0.72);
-  --card-foreground: hsl(224 71.4% 4.1%);
-  --popover: hsl(0 0% 100% / 0.8);
-  --popover-foreground: hsl(224 71.4% 4.1%);
+
+  /* ---------------------------------------------------------------------
+     SISTEMA DE SUPERFICIES — fuente única para tarjetas, modales y toasts.
+     Toda superficie de contenido es OPACA: una tarjeta translúcida sobre un
+     fondo con gradientes deja el texto sobre un contraste impredecible, que
+     es justo lo que el mínimo AA de 4.5:1 no puede garantizar. Sólo el velo
+     (`.dialog-overlay`) sigue siendo translúcido, porque su función es
+     precisamente dejar ver que hay contenido debajo.
+     --------------------------------------------------------------------- */
+  --surface: hsl(0 0% 100%);
+  --surface-2: hsl(210 40% 98%);
+  --surface-fg: hsl(224 71.4% 4.1%);
+  --surface-border: hsl(215 25% 89%);
+  /* En claro la superficie ya es blanca: un reflejo blanco no pinta nada.
+     El remate tiene que ser una línea oscura para que se vea. */
+  --surface-highlight: rgba(15, 23, 42, .06);
+  --surface-glow: rgba(236, 72, 153, .14);
+  --surface-shadow: 0 30px 80px -20px rgba(15, 23, 42, .28);
+
+  --card: var(--surface);
+  --card-foreground: var(--surface-fg);
+  --popover: var(--surface);
+  --popover-foreground: var(--surface-fg);
   --primary: hsl(346 80% 55%); /* Brand Red/Pink */
   --primary-foreground: hsl(0 0% 100%);
   --secondary: hsl(220 14.3% 95.9%);
   --secondary-foreground: hsl(220.9 39.3% 11%);
   --muted: hsl(220 14.3% 95.9%);
-  --muted-foreground: hsl(220 8.9% 46.1%);
+  /* hsl(220 8.9% 46.1%) daba 4.27:1 sobre la zona teñida por el halo de
+     marca: por debajo del mínimo AA de 4.5:1, y es el color de
+     `DialogDescription` y de todos los subtítulos. Este valor sube a 6.24:1
+     y además coincide con `--auth-muted-fg`, así que la descripción de un
+     modal y la de la tarjeta de acceso son ya literalmente el mismo color. */
+  --muted-foreground: hsl(215 19% 35%);
   --accent: hsl(346 80% 55% / 0.1);
   --accent-foreground: hsl(346 80% 55%);
   --destructive: hsl(0 84.2% 60.2%);
@@ -41,16 +65,31 @@
 .dark {
   --background: hsl(224 71% 4%);
   --foreground: hsl(210 20% 98%);
-  --card: hsl(224 71% 7% / 0.56);
-  --card-foreground: hsl(210 20% 98%);
-  --popover: hsl(224 71% 4% / 0.9);
-  --popover-foreground: hsl(210 20% 98%);
+
+  /* Contraparte oscura del sistema de superficies. `--surface` es un punto
+     por encima de `--background` para que la tarjeta se despegue del fondo
+     sin recurrir a transparencia. */
+  --surface: hsl(217 60% 9%);
+  --surface-2: hsl(222 60% 6%);
+  --surface-fg: hsl(210 20% 98%);
+  /* 25% 22% quedaba a 1.51:1 de la propia superficie: la tarjeta se perdía
+     contra el fondo y solo la sombra la separaba. A 20% 40% son 3.0:1. */
+  --surface-border: hsl(215 20% 40%);
+  --surface-highlight: rgba(255, 255, 255, .16);
+  --surface-glow: rgba(244, 114, 182, .14);
+  --surface-shadow: 0 30px 90px -20px rgba(0, 0, 0, .65);
+
+  --card: var(--surface);
+  --card-foreground: var(--surface-fg);
+  --popover: var(--surface);
+  --popover-foreground: var(--surface-fg);
   --primary: hsl(346 80% 55%);
   --primary-foreground: hsl(0 0% 100%);
   --secondary: hsl(222.2 47.4% 11.2%);
   --secondary-foreground: hsl(210 20% 98%);
   --muted: hsl(222.2 47.4% 11.2%);
-  --muted-foreground: hsl(215.4 16.3% 56.9%);
+  /* 4.58:1 sobre el halo dejaba sin margen; este sube a 5.94:1. */
+  --muted-foreground: hsl(215 20% 65%);
   --accent: hsl(346 80% 55% / 0.2);
   --accent-foreground: hsl(210 20% 98%);
   --destructive: hsl(0 62.8% 30.6%);
@@ -104,62 +143,66 @@
 
 }
 
-@layer utilities {
+/* =========================================================================
+   SUPERFICIE COMPARTIDA — una sola declaración para las tres piezas
+   -------------------------------------------------------------------------
+   `.glass` (que es lo que usa `<Card>`), `.dialog-shell` (raíz de todo
+   `<DialogContent>`) y `.auth-card-premium` (la tarjeta de acceso) son la
+   MISMA superficie. Se declaran juntas a propósito: mientras eran tres
+   bloques que se imitaban a mano, volvían a separarse en cuanto alguien
+   tocaba uno.
 
+   Sin pseudo-elementos. El halo de marca y el reflejo superior son una capa
+   de `background-image` y una sombra `inset`, no un `::before`/`::after`.
+   Eso importa por tres razones concretas:
+     - las capas de fondo las recorta `border-radius` sola, sin necesidad de
+       `overflow: hidden` (que en un modal recortaría los menús flotantes de
+       los `select` y los `dropdown`);
+     - desaparece la regla `> * { position: relative }` que hacía falta para
+       levantar el contenido sobre el halo, y que rompía el posicionamiento
+       de cualquier hijo `absolute` — el botón de cerrar, sin ir más lejos;
+     - cada elemento tiene un solo `::before`, así que dos reglas que lo
+       usaran para cosas distintas se pisaban en silencio.
+
+   Va en `@layer components` para que las utilidades de Tailwind del sitio de
+   uso sigan ganando: así `className="bg-…"` continúa siendo una vía de
+   escape predecible en lugar de depender de qué regla está más abajo. */
+@layer components {
+  .glass,
+  .glass-premium,
+  .dialog-shell,
+  .auth-card-premium {
+    position: relative;
+    border: 1px solid var(--surface-border);
+    border-radius: var(--radius);
+    background-color: var(--surface);
+    background-image:
+      radial-gradient(120% 80% at 12% -10%, var(--surface-glow), transparent 60%),
+      linear-gradient(160deg, var(--surface) 0%, var(--surface-2) 100%);
+    color: var(--surface-fg);
+    box-shadow:
+      var(--surface-shadow),
+      inset 0 1px 0 0 var(--surface-highlight);
+  }
+
+  /* El recorte NO va en la regla compartida: `.dialog-shell` no puede
+     recortar, o se comería los menús flotantes (`select`, `dropdown`) que se
+     abren dentro de un modal. Las tarjetas sí lo necesitan para que su
+     contenido respete las esquinas redondeadas. */
   .glass,
   .glass-premium {
-    position: relative;
     overflow: hidden;
-    backdrop-filter: blur(18px);
-    -webkit-backdrop-filter: blur(18px);
-    border: 1px solid var(--glass-border);
-    box-shadow: var(--glass-shadow);
-    background-image:
-      radial-gradient(900px circle at 0% 0%, var(--glass-radial), transparent 55%),
-      radial-gradient(800px circle at 100% 0%, rgba(255, 255, 255, 0.08), transparent 60%),
-      linear-gradient(180deg, var(--glass-overlay-top), var(--glass-overlay-bottom));
   }
 
   .glass:hover,
   .glass-premium:hover {
-    box-shadow: var(--glass-shadow-hover);
+    box-shadow:
+      var(--glass-shadow-hover),
+      inset 0 1px 0 0 var(--surface-highlight);
   }
+}
 
-  .glass::before,
-  .glass-premium::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 1px;
-    background: linear-gradient(
-      90deg,
-      transparent,
-      var(--glass-glow),
-      transparent
-    );
-    z-index: 1;
-    pointer-events: none;
-  }
-
-  .glass::after,
-  .glass-premium::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 1px;
-    height: 100%;
-    background: linear-gradient(
-      180deg,
-      var(--glass-edge-strong),
-      transparent,
-      var(--glass-edge-soft)
-    );
-    z-index: 1;
-    pointer-events: none;
-  }
+@layer utilities {
 
   .bg-brand-gradient {
     @apply bg-linear-to-br from-pink-500 to-rose-600;
@@ -676,6 +719,17 @@ dialog *,
 .demo-chapters b { color: #41a4ff; }
 .demo-dialog-actions { display: flex; justify-content: flex-end; gap: 12px; padding: 0 28px 25px; }
 .demo-dialog-actions .demo-button { color: #f8fafc; background: transparent; }
+
+/* El modal de demo declara `mobile="none"`, así que no recibe la geometría
+   compartida. Con `overflow: hidden` y el tope de altura del sistema, en un
+   teléfono en horizontal el final del contenido quedaba recortado y sin forma
+   de llegar a él. En vertical se mantiene el recorte lateral. */
+@media (max-width: 1023.98px) {
+  .demo-dialog {
+    overflow: hidden auto;
+    overscroll-behavior: contain;
+  }
+}
 
 @media (max-width: 620px) {
   .demo-dialog-copy { padding: 22px 20px 15px; }
@@ -1790,11 +1844,7 @@ dialog *,
     bottom: 0;
     margin: 0 -18px -18px;
     padding: 12px 18px 18px;
-    background: linear-gradient(180deg, transparent, var(--card) 18%);
-  }
-
-  .dark .agent-transfer-confirm-dialog .flex.gap-3.pt-2 {
-    background: linear-gradient(180deg, transparent, #071225 18%);
+    background: linear-gradient(180deg, transparent, var(--surface-2) 18%);
   }
 }
 
@@ -1808,26 +1858,14 @@ dialog *,
   }
 }
 
-.agent-transfer-dialog {
-  background: #ffffff !important;
-  color: var(--foreground) !important;
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
-}
+/* La superficie ya no se repinta aquí: la aporta `.dialog-shell`, que es la
+   misma pieza que la tarjeta de acceso. Los `background: #ffffff !important`
+   y el `::before` de respaldo que había antes existían para tapar la
+   translucidez del sistema anterior; con una superficie opaca sobran, y el
+   `::before` además chocaba con el reflejo superior compartido. */
 
-.dark .agent-transfer-dialog {
-  background: #071225 !important;
-}
-
-.agent-transfer-dialog::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  border-radius: inherit;
-  background: inherit;
-}
-
+/* El panel de confirmación se apila sobre el modal: se le da la misma
+   superficie que a la tarjeta, con los tokens compartidos. */
 .agent-transfer-dialog .agent-transfer-confirm-dialog {
   position: absolute !important;
   left: 50% !important;
@@ -1837,16 +1875,12 @@ dialog *,
   max-height: min(calc(100% - 24px), 680px) !important;
   transform: translate(-50%, -50%) !important;
   overflow-y: auto !important;
-  border: 1px solid rgba(148, 163, 184, .22) !important;
-  border-radius: 26px !important;
-  background: #ffffff !important;
-  color: var(--foreground) !important;
-  box-shadow: 0 28px 90px rgba(15, 23, 42, .28) !important;
-}
-
-.dark .agent-transfer-dialog .agent-transfer-confirm-dialog {
-  background: #071225 !important;
-  box-shadow: 0 28px 90px rgba(0, 0, 0, .62) !important;
+  border: 1px solid var(--surface-border) !important;
+  border-radius: 1.5rem !important;
+  background-color: var(--surface) !important;
+  background-image: linear-gradient(160deg, var(--surface) 0%, var(--surface-2) 100%) !important;
+  color: var(--surface-fg) !important;
+  box-shadow: var(--surface-shadow) !important;
 }
 
 .agent-transfer-dialog:has(.agent-transfer-confirm-dialog)::after {
@@ -2359,24 +2393,6 @@ dialog *,
 
 /* Dashboard mobile-native polish pass: forms, toasts, panels and dense modules */
 @media (max-width: 767.98px) {
-  .cookie-consent-toast {
-    left: max(10px, env(safe-area-inset-left)) !important;
-    right: max(10px, env(safe-area-inset-right)) !important;
-    bottom: max(10px, env(safe-area-inset-bottom)) !important;
-    border: 1px solid color-mix(in srgb, var(--border) 65%, transparent) !important;
-    border-radius: 24px !important;
-    background: #ffffff !important;
-    padding: 16px !important;
-    box-shadow: 0 24px 70px rgba(15, 23, 42, .22) !important;
-    backdrop-filter: none !important;
-    -webkit-backdrop-filter: none !important;
-  }
-
-  .dark .cookie-consent-toast {
-    background: #071225 !important;
-    box-shadow: 0 24px 70px rgba(0, 0, 0, .55) !important;
-  }
-
   .cookie-consent-toast > div {
     gap: 14px !important;
   }
@@ -2727,9 +2743,11 @@ dialog *,
    El encabezado y el cuerpo usan `.dialog-header` / `.dialog-body`, así que la
    geometría la aporta el sistema compartido de modales a pantalla completa. */
 @media (max-width: 1023.98px) {
+  /* En tarjeta centrada no hay pie anclado al viewport, así que la reserva
+     de 140px que exigía el modo a pantalla completa dejaría un hueco muerto
+     al final del formulario. */
   .agent-transfer-body {
-    padding: 18px 18px calc(140px + env(safe-area-inset-bottom)) !important;
-    scroll-padding-bottom: calc(140px + env(safe-area-inset-bottom));
+    padding: 4px 2px 8px !important;
   }
 
   .agent-transfer-form {
@@ -2745,30 +2763,30 @@ dialog *,
     box-shadow: 0 14px 32px rgba(236, 72, 153, .28) !important;
   }
 
+  /* Tarjeta centrada, igual que el resto de ventanas emergentes en móvil. */
   .agent-transfer-confirm-dialog {
     position: fixed !important;
-    inset: 0 !important;
-    left: 0 !important;
-    top: 0 !important;
+    left: 50% !important;
+    top: 50% !important;
+    inset: auto !important;
     z-index: 80 !important;
     display: flex !important;
-    width: 100dvw !important;
-    max-width: 100dvw !important;
-    height: 100dvh !important;
-    max-height: 100dvh !important;
-    transform: none !important;
+    width: min(calc(100vw - 28px), 430px) !important;
+    max-width: min(calc(100vw - 28px), 430px) !important;
+    height: auto !important;
+    max-height: min(
+      calc(100dvh - 32px - env(safe-area-inset-top) - env(safe-area-inset-bottom)),
+      680px
+    ) !important;
+    transform: translate(-50%, -50%) !important;
     flex-direction: column;
-    border: 0 !important;
-    border-radius: 0 !important;
     overflow: hidden !important;
-    background: var(--card) !important;
-    color: var(--card-foreground) !important;
-    box-shadow: none !important;
-  }
-
-  .dark .agent-transfer-confirm-dialog {
-    background: #071225 !important;
-    box-shadow: none !important;
+    border: 1px solid var(--surface-border) !important;
+    border-radius: 1.5rem !important;
+    background-color: var(--surface) !important;
+    background-image: linear-gradient(160deg, var(--surface) 0%, var(--surface-2) 100%) !important;
+    color: var(--surface-fg) !important;
+    box-shadow: var(--surface-shadow) !important;
   }
 
   .agent-transfer-dialog:has(.agent-transfer-confirm-dialog)::after {
@@ -2777,8 +2795,7 @@ dialog *,
 
   .agent-transfer-confirm-header {
     flex: none !important;
-    padding: max(18px, env(safe-area-inset-top)) 18px 18px !important;
-    background: inherit;
+    padding: 18px 18px 14px !important;
   }
 
   .agent-transfer-confirm-body {
@@ -2787,7 +2804,7 @@ dialog *,
     overflow-y: auto !important;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior: contain;
-    padding: 18px 18px calc(118px + env(safe-area-inset-bottom)) !important;
+    padding: 4px 18px 18px !important;
   }
 
   .agent-transfer-confirm-dialog .space-y-3 > div {
@@ -2806,12 +2823,8 @@ dialog *,
     bottom: 0;
     z-index: 3;
     margin: 0 -18px -18px;
-    padding: 12px 18px calc(18px + env(safe-area-inset-bottom));
-    background: linear-gradient(180deg, transparent, var(--card) 18%);
-  }
-
-  .dark .agent-transfer-confirm-actions {
-    background: linear-gradient(180deg, transparent, #071225 18%);
+    padding: 12px 18px 18px;
+    background: linear-gradient(180deg, transparent, var(--surface-2) 18%);
   }
 }
 
@@ -2856,28 +2869,20 @@ dialog *,
   }
 }
 
-/* Solid mobile transfer form surfaces */
+/* Superficies internas del flujo de transferencia en móvil.
+   El contenedor (`.agent-transfer-dialog`) y el panel de confirmación quedan
+   FUERA de esta lista a propósito: su fondo es el del sistema compartido. Lo
+   que se neutraliza aquí es el de los bloques internos, que deben dejar ver
+   el gradiente de la tarjeta en lugar de taparlo con un rectángulo blanco. */
 @media (max-width: 1023.98px) {
-  .agent-transfer-dialog.agent-transfer-dialog,
   .agent-transfer-header,
   .agent-transfer-body,
-  .agent-transfer-confirm-dialog,
   .agent-transfer-confirm-header,
   .agent-transfer-confirm-body {
-    background-color: #ffffff !important;
+    background-color: transparent !important;
     background-image: none !important;
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
-  }
-
-  .dark .agent-transfer-dialog.agent-transfer-dialog,
-  .dark .agent-transfer-header,
-  .dark .agent-transfer-body,
-  .dark .agent-transfer-confirm-dialog,
-  .dark .agent-transfer-confirm-header,
-  .dark .agent-transfer-confirm-body {
-    background-color: #071225 !important;
-    background-image: none !important;
   }
 
   .agent-transfer-body > div:not(.text-center),
@@ -2940,13 +2945,8 @@ dialog *,
     background-image: none !important;
   }
 
-  .agent-transfer-confirm-actions,
-  .dark .agent-transfer-confirm-actions {
-    background: #ffffff !important;
-  }
-
-  .dark .agent-transfer-confirm-actions {
-    background: #071225 !important;
+  .agent-transfer-confirm-actions {
+    background: linear-gradient(180deg, transparent, var(--surface-2) 18%) !important;
   }
 }
 
@@ -3021,6 +3021,36 @@ dialog *,
   font-weight: 400;
 }
 
+/* ---------- Aviso de cookies ----------
+   No es un modal, pero sí una ventana emergente, así que comparte superficie
+   con el resto: opaca y con los mismos tokens. En móvil se despega de los
+   bordes y se presenta como tarjeta flotante. */
+.cookie-consent-toast {
+  background-color: var(--surface) !important;
+  background-image: linear-gradient(160deg, var(--surface) 0%, var(--surface-2) 100%) !important;
+  color: var(--surface-fg);
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
+@media (max-width: 1023.98px) {
+  .cookie-consent-toast {
+    left: max(10px, env(safe-area-inset-left)) !important;
+    right: max(10px, env(safe-area-inset-right)) !important;
+    bottom: max(10px, env(safe-area-inset-bottom)) !important;
+    border: 1px solid var(--surface-border) !important;
+    border-radius: var(--radius) !important;
+    padding: 16px !important;
+    box-shadow: var(--surface-shadow) !important;
+  }
+
+  /* El aviso flota sobre el contenido: sin esta reserva, el final de la
+     página queda inalcanzable mientras está abierto. */
+  body:has(.cookie-consent-toast) .dashboard-public-page main {
+    padding-bottom: calc(180px + env(safe-area-inset-bottom));
+  }
+}
+
 /* =========================================================================
    SISTEMA DE MODALES — fuente única de verdad
    -------------------------------------------------------------------------
@@ -3038,16 +3068,19 @@ dialog *,
    completo con la cabecera pegada arriba (comportamiento de reserva).
    ========================================================================= */
 
+/* Los tokens del modal se derivan del sistema de superficies compartido, para
+   que el modo a pantalla completa y los cajones laterales sigan siendo la
+   misma pieza que la tarjeta de acceso en lugar de un blanco suelto. */
 :root {
-  --dialog-surface: #ffffff;
-  --dialog-surface-sunken: #f8fafc;
-  --dialog-separator: rgba(15, 23, 42, .1);
+  --dialog-surface: var(--surface);
+  --dialog-surface-sunken: var(--surface-2);
+  --dialog-separator: var(--surface-border);
 }
 
 .dark {
-  --dialog-surface: #071225;
-  --dialog-surface-sunken: #020817;
-  --dialog-separator: rgba(148, 163, 184, .18);
+  --dialog-surface: var(--surface);
+  --dialog-surface-sunken: var(--surface-2);
+  --dialog-separator: var(--surface-border);
 }
 
 @keyframes dialog-overlay-in {
@@ -3098,6 +3131,52 @@ dialog *,
 
 .dialog-body {
   min-height: 0;
+}
+
+/* La superficie del modal (fondo, borde, radio, halo y reflejo) la aporta el
+   bloque SUPERFICIE COMPARTIDA de la cabecera de este archivo, donde
+   `.dialog-shell` se declara junto a `.glass` y `.auth-card-premium`.
+   Aquí quedan solo las piezas propias del modal. */
+@layer components {
+  /* Sin tope de altura, seis modales que combinan `overflow-hidden` con
+     contenido largo recortaban el final sin forma de llegar a él
+     (WCAG 2.1 SC 1.4.10 y SC 2.1.1). En `@layer components` para que un
+     `max-h-*` declarado en el sitio de uso siga mandando. */
+  .dialog-shell {
+    max-height: min(88dvh, 900px);
+  }
+
+  /* ---------- Botón de cierre ----------
+     El icono mide 18px, así que sin caja propia el objetivo pulsable se
+     quedaba en el tamaño del glifo: por debajo del mínimo de 24×24 de
+     WCAG 2.2 SC 2.5.8 y muy lejos de los 44×44 recomendados. */
+  .dialog-close {
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 999px;
+    color: var(--surface-fg);
+    background-color: transparent;
+    transition: background-color .15s ease-out;
+  }
+
+  .dialog-close:hover {
+    background-color: var(--muted);
+  }
+
+  /* En pantalla táctil se sube a 44×44. */
+  @media (pointer: coarse) {
+    .dialog-close {
+      width: 44px;
+      height: 44px;
+    }
+  }
+
+  /* Reserva para que un título largo no pase por debajo del botón. */
+  .dialog-shell:not([data-mobile='fullscreen']) > .dialog-header {
+    padding-right: 44px;
+  }
 }
 
 /* ---------- Móvil / tablet: modales a pantalla completa ---------- */
@@ -3315,20 +3394,63 @@ dialog *,
     -webkit-overflow-scrolling: touch;
   }
 
-  /* ---------- Móvil: modales que siguen siendo tarjeta centrada ---------- */
+  /* ---------- Móvil: tarjeta centrada (modo por defecto) ----------
+     Aquí SOLO se ajusta la geometría. La superficie se hereda del bloque
+     compartido, que es literalmente la misma pieza que la tarjeta de acceso.
+     Repintar el fondo aquí —como se hacía con `background-image: none`— era
+     justo lo que rompía la unificación precisamente en móvil. */
   .dialog-shell[data-mobile='centered'] {
-    width: min(calc(100vw - 28px), 460px);
-    max-width: min(calc(100vw - 28px), 460px);
-    max-height: min(84dvh, 680px);
+    /* `viewportFit: "cover"` en `layout.tsx` hace que estos insets dejen de
+       ser cero: sin descontarlos, la tarjeta se mete bajo el notch o bajo la
+       barra de gestos. El margen real es dos veces el inset mayor, porque la
+       tarjeta está centrada. */
+    --dialog-gutter-x: max(14px, env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px));
+    --dialog-gutter-y: max(16px, env(safe-area-inset-top, 0px), env(safe-area-inset-bottom, 0px));
+
+    width: min(460px, calc(100dvw - (2 * var(--dialog-gutter-x))));
+    max-width: min(460px, calc(100dvw - (2 * var(--dialog-gutter-x))));
+    max-height: min(680px, calc(100dvh - (2 * var(--dialog-gutter-y))));
+
+    overflow-y: auto;
+    overflow-x: hidden;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    /* Al tabular hacia un campo que queda fuera de vista, el navegador lo
+       pega al borde redondeado. Este colchón lo evita (WCAG 2.2 SC 2.4.11). */
+    scroll-padding: 20px;
+  }
+
+  /* Solo los modales que no traen su propio relleno. `:not(.p-0)` es literal
+     a propósito: `[class*="p-0"]` cazaría también `gap-0`. Sin esta guarda,
+     los nueve modales que pasan `p-0` y rellenan por dentro con `p-6`
+     acumulaban 22 + 24 px de margen en una tarjeta de ~347 px. */
+  .dialog-shell[data-mobile='centered']:not(.p-0) {
+    padding: 20px;
+  }
+
+  /* Con `.dialog-body`, la tarjeta no se desplaza: solo el cuerpo. Así el
+     botón de cerrar —que es `absolute`— nunca se va con el scroll, que es la
+     otra mitad de SC 2.4.11. Mismo contrato que el modo pantalla completa. */
+  .dialog-shell[data-mobile='centered']:has(> .dialog-body) {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .dialog-shell[data-mobile='centered']:has(> .dialog-body) > .dialog-header,
+  .dialog-shell[data-mobile='centered']:has(> .dialog-body) > .dialog-footer {
+    flex: none;
+  }
+
+  .dialog-shell[data-mobile='centered']:has(> .dialog-body) > .dialog-body {
+    flex: 1 1 auto;
+    min-height: 0;
     overflow-y: auto;
     overscroll-behavior: contain;
-    padding: 22px;
-    border-radius: 26px;
-    background-color: var(--dialog-surface);
-    background-image: none;
-    -webkit-backdrop-filter: none;
-    backdrop-filter: none;
+    -webkit-overflow-scrolling: touch;
+    scroll-padding-block: 16px;
   }
+
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -3464,8 +3586,14 @@ dialog *,
     padding-bottom: 8px;
   }
 
+  /* Teléfono en horizontal: quedan ~390px de alto, así que se recupera todo
+     el espacio posible sin llegar a meterse bajo las áreas seguras. */
   .dialog-shell[data-mobile='centered'] {
-    max-height: calc(100dvh - 24px);
+    max-height: calc(100dvh - (2 * var(--dialog-gutter-y)));
+  }
+
+  .dialog-shell[data-mobile='centered']:not(.p-0) {
+    padding: 16px;
   }
 }
 
@@ -3596,32 +3724,31 @@ dialog *,
    ============================================================ */
 
 :root {
+  /* Los tokens de SUPERFICIE se derivan del sistema compartido: son la misma
+     pieza que `<Card>` y que los modales, así que no pueden tener valores
+     propios sin volver a separarse. Se conservan como alias porque
+     `lib/clerk-appearance.ts` los pasa a Clerk por nombre.
+     Los tokens de CONTROL (primario, foco, campo) sí son propios del acceso
+     y se quedan con su valor. */
+  --auth-surface: var(--surface);
+  --auth-surface-2: var(--surface-2);
+  --auth-fg: var(--surface-fg);
+  --auth-border: var(--surface-border);
+  --auth-shadow: var(--surface-shadow);
+  --auth-glow: var(--surface-glow);
+  --auth-muted-fg: var(--muted-foreground);
+
   --auth-primary: #ec4899;
   --auth-primary-strong: #e11d48;
-  --auth-surface: rgba(255, 255, 255, .82);
-  --auth-surface-2: rgba(255, 255, 255, .55);
-  --auth-fg: #0f172a;
   --auth-muted: rgba(15, 23, 42, .04);
-  --auth-muted-fg: #475569;
   --auth-input: rgba(255, 255, 255, .75);
-  --auth-border: rgba(15, 23, 42, .10);
   --auth-ring: rgba(236, 72, 153, .45);
-  --auth-shadow: 0 30px 80px -20px rgba(15, 23, 42, .28);
-  --auth-glow: rgba(236, 72, 153, .22);
 }
 
 .dark {
-  --auth-surface: rgba(15, 23, 42, .72);
-  --auth-surface-2: rgba(30, 41, 59, .45);
-  --auth-fg: #f8fafc;
   --auth-muted: rgba(248, 250, 252, .05);
-  /* slate-400 sobre slate-900: 6.96:1, holgado sobre el mínimo AA de 4.5:1 */
-  --auth-muted-fg: #94a3b8;
   --auth-input: rgba(2, 6, 23, .45);
-  --auth-border: rgba(148, 163, 184, .18);
   --auth-ring: rgba(244, 114, 182, .55);
-  --auth-shadow: 0 30px 90px -20px rgba(0, 0, 0, .65);
-  --auth-glow: rgba(244, 114, 182, .18);
 }
 
 .auth-screen {
@@ -3634,42 +3761,24 @@ dialog *,
 
 /* Halo de marca detrás de la tarjeta: da profundidad sin competir con el
    contenido. Se pinta bajo la tarjeta, nunca encima. */
+/* La tarjeta de acceso toma su superficie del bloque SUPERFICIE COMPARTIDA,
+   el mismo que `<Card>` y que los modales. Aquí solo queda el recorte.
+
+   Se retira `backdrop-filter: blur(18px) saturate(140%)`: era lo último que
+   separaba esta tarjeta de las demás. Con un fondo opaco no aporta nada
+   visible, y sí traía dos problemas — el contraste del texto dependía de qué
+   hubiera detrás (y por tanto de que nadie tocara el fondo de la página), y
+   `backdrop-filter` crea un bloque contenedor para descendientes `fixed`, lo
+   que descoloca los desplegables de Clerk que no se portalizan. */
 .auth-card-premium {
-  position: relative;
-  border: 1px solid var(--auth-border);
-  border-radius: 1.5rem;
-  background: linear-gradient(160deg, var(--auth-surface) 0%, var(--auth-surface-2) 100%);
-  -webkit-backdrop-filter: blur(18px) saturate(140%);
-  backdrop-filter: blur(18px) saturate(140%);
-  box-shadow: var(--auth-shadow);
   overflow: hidden;
 }
 
-.auth-card-premium::before {
-  content: '';
-  position: absolute;
-  inset: -40% 50% auto -40%;
-  height: 340px;
-  background: radial-gradient(circle at 30% 30%, var(--auth-glow), transparent 70%);
-  pointer-events: none;
-  z-index: 0;
-}
-
-/* Reflejo superior de 1px: el detalle que separa un cristal creíble de un
-   simple fondo translúcido. */
-.auth-card-premium::after {
-  content: '';
-  position: absolute;
-  inset: 0 0 auto 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .55), transparent);
-  pointer-events: none;
-  z-index: 1;
-}
-
+/* `.auth-card-inner` ya no necesita elevarse sobre ningún pseudo-elemento; se
+   conserva porque lo referencian `clerk-appearance.ts`, `onboarding-flow.tsx`
+   y `pending-approval-screen.tsx`. */
 .auth-card-inner {
   position: relative;
-  z-index: 2;
 }
 
 .auth-title {
