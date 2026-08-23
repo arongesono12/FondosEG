@@ -1,5 +1,6 @@
 import { createAdminClient } from '@/lib/supabase/admin';
-import { getAuthErrorMessage, isAuthServiceUnavailableError } from '@/lib/supabase/auth-errors';
+import { getAuthErrorMessage, isAuthServiceUnavailableError, isRetryableAuthError } from '@/lib/supabase/auth-errors';
+import { describeClerkError } from '@/lib/clerk-errors';
 import type { AccessProduct, AccountAccess, User, UserRole } from '@/types';
 import { isAdminRole, isSuperAdminRole } from '@/lib/roles';
 import {
@@ -57,9 +58,16 @@ async function withRetry<T>(
       return await operation();
     } catch (error) {
       lastError = error;
-      if (isAuthServiceUnavailableError(error) && attempt < maxAttempts) {
+      // Solo se reintenta lo que puede salir bien al repetir. Un fallo
+      // permanente (clave inválida) seguiría siendo "servicio no disponible"
+      // de cara al usuario, pero repetirlo tres veces no arregla nada y
+      // multiplica las llamadas contra un límite de cuota ya agotado.
+      if (isRetryableAuthError(error) && attempt < maxAttempts) {
         const delay = initialDelayMs * Math.pow(2, attempt - 1);
-        console.warn(`Auth retry attempt ${attempt}/${maxAttempts} after error:`, error instanceof Error ? error.message : 'Unknown');
+        console.warn(
+          `Auth retry attempt ${attempt}/${maxAttempts} after error:`,
+          describeClerkError(error) ?? (error instanceof Error ? error.message : 'Unknown')
+        );
         await new Promise((resolve) => setTimeout(resolve, delay));
         continue;
       }
@@ -136,12 +144,15 @@ export async function getOptionalAuthState(): Promise<{
   }
 
   if (authError && isAuthServiceUnavailableError(authError)) {
-    console.error('No se pudo resolver el usuario autenticado:', authError);
+    console.error(
+      'No se pudo resolver el usuario autenticado:',
+      describeClerkError(authError) ?? authError
+    );
     return { user: null, serviceUnavailable: true, needsOnboarding: false };
   }
 
   if (authError) {
-    console.error('Error resolviendo la identidad:', authError);
+    console.error('Error resolviendo la identidad:', describeClerkError(authError) ?? authError);
   }
 
   return { user: null, serviceUnavailable: false, needsOnboarding: false };

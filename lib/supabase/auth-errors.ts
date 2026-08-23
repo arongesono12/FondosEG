@@ -1,8 +1,29 @@
 import { isAuthRetryableFetchError } from '@supabase/supabase-js';
 import { isTransientNetworkError } from '@/lib/network-errors';
+import { isClerkServiceError, isClerkTransientError } from '@/lib/clerk-errors';
 
+/**
+ * Fallo que puede resolverse repitiendo la petición. Es el subconjunto de
+ * `isAuthServiceUnavailableError` sobre el que merece la pena reintentar:
+ * insistir contra un error permanente solo gasta cuota y, con las claves de
+ * desarrollo de Clerk, empeora un 429.
+ */
+export function isRetryableAuthError(error: unknown): boolean {
+  return (
+    isAuthRetryableFetchError(error) ||
+    isTransientNetworkError(error) ||
+    isClerkTransientError(error)
+  );
+}
+
+/**
+ * El servicio de identidad no está en condiciones de responder. Incluye los
+ * fallos de Clerk que NO son reintentables (una clave secreta inválida, por
+ * ejemplo): siguen siendo un problema del servicio, no un usuario sin sesión,
+ * y hay que tratarlos como tal o se expulsa al usuario a `/login`.
+ */
 export function isAuthServiceUnavailableError(error: unknown): boolean {
-  return isAuthRetryableFetchError(error) || isTransientNetworkError(error);
+  return isRetryableAuthError(error) || isClerkServiceError(error);
 }
 
 export function isInvalidRefreshTokenError(error: unknown): boolean {

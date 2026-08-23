@@ -204,15 +204,20 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
     };
   }, []);
 
-  // El documento no hace scroll (`.dashboard-public-page` es `overflow: hidden`):
-  // el contenedor desplazable real es `<main>`, y como pertenece al layout
-  // conserva su posición entre navegaciones.
+  // El contenedor desplazable NO es el mismo en los dos tamaños:
+  //   - Móvil: `<main>`, porque la carcasa mide el alto exacto de la pantalla
+  //     y `.dashboard-public-page` es `overflow: hidden`.
+  //   - Escritorio: el documento, para que la barra de scroll salga en el
+  //     borde de la ventana y no dentro de la tarjeta.
+  // Se actúa sobre los dos: el que no esté desplazándose ignora la llamada.
   const scrollMainToTop = useCallback(() => {
     document.querySelector('main')?.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
 
   useEffect(() => {
     document.querySelector('main')?.scrollTo({ top: 0 });
+    window.scrollTo({ top: 0 });
   }, [pathname]);
 
   useEffect(() => {
@@ -436,7 +441,11 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
       {/* Mobile: Full screen card | Desktop: Max width card with rounded top corners */}
       <div className={cn(
         "mx-auto w-full relative flex flex-col",
-        "lg:max-w-[1440px] lg:h-[calc(100vh-4rem)] lg:rounded-[2.5rem] lg:shadow-xl lg:shadow-slate-200/20 dark:lg:shadow-black/20 lg:border lg:border-border/10",
+        // `min-h` y no `h`: en escritorio la tarjeta ocupa como mínimo el alto
+        // de la ventana —el aspecto de siempre— pero puede crecer con el
+        // contenido, que es lo que permite que el scroll lo lleve el
+        // documento y la barra siga en el borde de la ventana.
+        "lg:max-w-[1440px] lg:min-h-[calc(100vh-4rem)] lg:rounded-[2.5rem] lg:shadow-xl lg:shadow-slate-200/20 dark:lg:shadow-black/20 lg:border lg:border-border/10",
         "h-dvh lg:h-auto"
       )}>
         {/* Top Header Navigation - rounded top corners to match container */}
@@ -647,7 +656,22 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
         </header>
 
         {/* Content Area */}
-        <main className="flex-1 min-h-0 overflow-y-auto overscroll-y-contain scrollbar-hide bg-transparent p-4 pb-28 lg:p-10">
+        {/*
+          Móvil: `<main>` es el contenedor desplazable, porque la carcasa mide
+          exactamente el alto de la pantalla y la barra inferior es fija.
+
+          Escritorio: el que se desplaza es el DOCUMENTO, así que la barra
+          vuelve al borde de la ventana en lugar de aparecer dentro de la
+          tarjeta. Para eso `main` deja de ser contenedor de scroll
+          (`lg:overflow-visible`); si se quedara en `overflow-y-auto` con
+          `overscroll-contain`, se tragaría la rueda del ratón sin nada que
+          desplazar, que era el fallo original.
+
+          Se retira `scrollbar-hide`: no está definida en ninguna parte —ni
+          como utilidad ni por plugin—, así que nunca ocultó nada. Era la
+          razón de que la barra interna se viera al hacer scroll aquí.
+        */}
+        <main className="flex-1 min-h-0 overflow-y-auto overscroll-y-contain lg:overflow-visible lg:overscroll-auto bg-transparent p-4 pb-28 lg:p-10">
           {children}
         </main>
 
