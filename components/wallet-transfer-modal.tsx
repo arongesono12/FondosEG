@@ -25,6 +25,7 @@ import {
 import { QRGenerator, generateQRData } from '@/components/ui/qr-generator';
 import { useAppStore } from '@/lib/store';
 import { formatCurrency } from '@/lib/utils';
+import { getAvailableClientBalance } from '@/lib/financial';
 import type { WalletTransfer } from '@/types';
 import { PAYMENT_REGULATION } from '@/lib/compliance';
 
@@ -82,7 +83,14 @@ export function WalletTransferModal({ open, onOpenChange, onSuccess }: WalletTra
         // `client_balances.client_id` es UNIQUE: hay como mucho una fila de
         // saldo por cliente, y es ella la que fija la divisa de la billetera.
         const wallet = Array.isArray(data.balances) ? data.balances[0] : null;
-        setBalance(Number(wallet?.balance) || 0);
+        // DISPONIBLE, no bruto: al crear una orden el importe queda retenido
+        // en `reserved_balance` hasta que el beneficiario la confirme o el
+        // emisor la anule. Mostrar el saldo bruto dejaría enviar dinero ya
+        // comprometido, y el servidor lo rechazaría con "Saldo insuficiente"
+        // sobre una cifra que en pantalla parecía suficiente.
+        setBalance(
+          getAvailableClientBalance(Number(wallet?.balance) || 0, Number(wallet?.reserved_balance) || 0)
+        );
         setCurrency(wallet?.currency || 'XAF');
       } catch (err) {
         console.error('Error fetching balance:', err);

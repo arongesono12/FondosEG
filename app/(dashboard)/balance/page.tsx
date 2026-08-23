@@ -14,6 +14,7 @@ import { getAgentBalance, getAgentTransactions, getAgents, topUpAgentBalance } f
 import { getTransfers } from '@/modules/transfers/http/client';
 import { fetchJSON } from '@/services/http';
 import { formatCurrency, formatDate, getStatusColor } from '@/lib/utils';
+import { getAvailableClientBalance } from '@/lib/financial';
 import type { AgentBalance, AgentWithBalance, BalanceTransaction, ClientBalance, Transfer } from '@/types';
 import { isAdminRole } from '@/lib/roles';
 import {
@@ -152,7 +153,7 @@ export default function BalancePage() {
 
   const currencySnapshots = clientBalances.map((item) => ({
     currency: item.currency,
-    available: Math.max(Number(item.balance || 0) - Number(item.reserved_balance || 0), 0),
+    available: getAvailableClientBalance(Number(item.balance || 0), Number(item.reserved_balance || 0)),
     reserved: Number(item.reserved_balance || 0),
     gross: Number(item.balance || 0),
   }));

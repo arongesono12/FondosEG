@@ -4,10 +4,42 @@ import type { WalletTransfer, CreateWalletTransferData, ConfirmWalletTransferDat
 import { queueWalletPendingNotice, queueWalletConfirmationInternal } from '@/lib/server/notification-outbox';
 import { emitWebhookEvent } from '@/lib/server/webhook-outbox';
 import { PAYMENT_REGULATION } from '@/lib/compliance';
+import { getAvailableClientBalance } from '@/lib/financial';
 import { assertComplianceInfrastructure, recordPaymentConsent } from '@/lib/server/compliance-events';
 import { getPhoneLookupCandidates, normalizePhoneDigits } from '@/lib/utils';
+import {
+  cancelWalletTransferOperation,
+  confirmWalletTransferOperation,
+  createWalletTransferHold,
+} from '@/lib/server/financial-operations';
 
 type AdminClient = ReturnType<typeof createAdminClient>;
+
+/**
+ * Traduce los `RAISE EXCEPTION` de las RPC a mensajes para el usuario.
+ *
+ * Las funciones de PostgreSQL lanzan en inglés y sin contexto. Devolverlos tal
+ * cual dejaría al emisor con un "Insufficient balance" delante de un flujo de
+ * dinero en español.
+ */
+function translateRpcError(error: unknown, fallback: string): string {
+  const raw = error instanceof Error ? error.message : String(error ?? '');
+  const table: Array<[RegExp, string]> = [
+    [/monto inv[aá]lido/i, 'El importe debe ser un número mayor que cero'],
+    [/insufficient balance/i, 'Saldo insuficiente para realizar esta transferencia'],
+    [/sender balance not found/i, 'Tu billetera todavía no tiene saldo disponible'],
+    [/reserved balance is insufficient/i, 'Los fondos retenidos para esta orden ya no están disponibles'],
+    [/transfer not found/i, 'No se ha encontrado la transferencia'],
+    [/transfer is not pending/i, 'Esta transferencia ya no está pendiente'],
+    [/transfer has expired/i, 'La transferencia ha caducado'],
+    [/invalid verification code/i, 'El código de verificación no es correcto'],
+    [/transfer cannot be cancelled/i, 'Esta transferencia ya no se puede cancelar'],
+  ];
+  for (const [pattern, message] of table) {
+    if (pattern.test(raw)) return message;
+  }
+  return fallback;
+}
 
 function generateVerificationCode(): string {
   // `Math.random()` no es un CSPRNG: su estado interno se puede reconstruir
@@ -180,35 +212,50 @@ export async function createWalletTransfer(
     };
   }
 
-  if (Number(senderBalance.balance) < amount) {
+  // Saldo DISPONIBLE, no saldo bruto: lo ya retenido por otras órdenes
+  // pendientes no se puede volver a comprometer. Es la misma cuenta que hace
+  // la RPC; se adelanta aquí sólo para dar un mensaje mejor que su excepción.
+  const availableBalance = getAvailableClientBalance(
+    Number(senderBalance.balance),
+    Number(senderBalance.reserved_balance ?? 0)
+  );
+  if (availableBalance < amount) {
     return { success: false, error: 'Saldo insuficiente para realizar esta transferencia' };
   }
 
   const verificationCode = generateVerificationCode();
 
-  const { data: transfer, error: transferError } = await adminClient
-    .from('wallet_transfers')
-    .insert({
-      sender_id: senderId,
-      receiver_id: receiver.id,
-      sender_name: sender.name,
-      sender_phone: sender.phone,
-      receiver_name: data.receiver_name,
+  // La creación pasa por `create_wallet_transfer_hold`: en una sola transacción
+  // bloquea la fila del saldo (`FOR UPDATE`), retiene el importe en
+  // `reserved_balance`, inserta la orden y deja el asiento en
+  // `financial_events`. Hacerlo a mano —como antes— permitía que dos órdenes
+  // simultáneas del mismo emisor superasen su saldo, porque ninguna veía la
+  // retención de la otra.
+  let transfer: WalletTransfer;
+  try {
+    const result = await createWalletTransferHold({
+      senderId,
+      receiverId: receiver.id,
+      senderName: sender.name,
+      senderPhone: sender.phone,
+      receiverName: data.receiver_name,
       // Se guarda el teléfono canónico del beneficiario, no el que se tecleó,
       // para que el registro no herede el formato de entrada.
-      receiver_phone: receiver.phone ?? data.receiver_phone,
+      receiverPhone: receiver.phone ?? data.receiver_phone,
       amount,
       currency,
-      verification_code: verificationCode,
-      status: 'pending',
+      verificationCode,
+      // El envoltorio ya normaliza `undefined` a NULL antes de la RPC.
       notes: data.notes,
-    })
-    .select()
-    .single();
-
-  if (transferError) {
-    console.error('No se pudo registrar la transferencia de billetera:', transferError);
-    return { success: false, error: 'No se pudo registrar la transferencia. Inténtalo de nuevo.' };
+      originChannel: 'dashboard',
+    });
+    transfer = result.transfer as unknown as WalletTransfer;
+  } catch (holdError) {
+    console.error('No se pudo registrar la transferencia de billetera:', holdError);
+    return {
+      success: false,
+      error: translateRpcError(holdError, 'No se pudo registrar la transferencia. Inténtalo de nuevo.'),
+    };
   }
 
   try {
@@ -229,10 +276,15 @@ export async function createWalletTransfer(
     // dejar constancia, la orden no puede quedarse viva y cobrable 24 horas
     // mientras el emisor ve un error y cree que no ha pasado nada.
     console.error('No se pudo registrar el consentimiento de pago:', consentError);
-    await adminClient
-      .from('wallet_transfers')
-      .update({ status: 'cancelled' })
-      .eq('id', transfer.id);
+    // Se anula por la RPC, no con un UPDATE de `status`: ahora hay fondos
+    // RETENIDOS detrás de la orden. Marcarla como anulada sin liberar la
+    // reserva dejaría ese importe bloqueado en la billetera del emisor para
+    // siempre, sin ninguna orden viva que lo justifique.
+    try {
+      await cancelWalletTransferOperation(transfer.id, senderId);
+    } catch (releaseError) {
+      console.error('No se pudo liberar la retención de la orden anulada:', releaseError);
+    }
     return {
       success: false,
       error: 'No se pudo registrar la evidencia de consentimiento. La orden ha sido anulada.',
@@ -288,140 +340,33 @@ export async function confirmWalletTransfer(
     return { success: false, error: 'No estás autorizado a confirmar esta transferencia' };
   }
 
-  if (transfer.status !== 'pending') {
-    return { success: false, error: 'Esta transferencia ya no está pendiente' };
-  }
-
-  if (transfer.verification_code !== data.verification_code) {
-    return { success: false, error: 'El código de verificación no es correcto' };
-  }
-
-  const hoursDiff = (Date.now() - new Date(transfer.created_at).getTime()) / (1000 * 60 * 60);
-
-  if (hoursDiff > 24) {
-    await adminClient
-      .from('wallet_transfers')
-      .update({ status: 'expired' })
-      .eq('id', transfer.id)
-      .eq('status', 'pending');
-    return { success: false, error: 'La transferencia ha caducado' };
-  }
-
-  const amount = Number(transfer.amount);
-
-  const { data: senderBalance, error: senderBalanceError } = await adminClient
-    .from('client_balances')
-    .select('*')
-    .eq('client_id', transfer.sender_id)
-    .maybeSingle();
-
-  if (senderBalanceError) {
-    console.error('No se pudo leer el saldo del emisor:', senderBalanceError);
-    return { success: false, error: 'No se pudo completar la transferencia. Inténtalo de nuevo.' };
-  }
-
-  if (!senderBalance) {
-    return { success: false, error: 'El emisor ya no tiene una billetera activa' };
-  }
-
-  if (Number(senderBalance.balance) < amount) {
-    return { success: false, error: 'El emisor ya no tiene saldo suficiente' };
-  }
-
-  const { data: receiverBalance, error: receiverBalanceError } = await adminClient
-    .from('client_balances')
-    .select('*')
-    .eq('client_id', transfer.receiver_id)
-    .maybeSingle();
-
-  if (receiverBalanceError) {
-    console.error('No se pudo leer el saldo del beneficiario:', receiverBalanceError);
-    return { success: false, error: 'No se pudo completar la transferencia. Inténtalo de nuevo.' };
-  }
-
-  // Se reclama la transferencia ANTES de mover dinero. El filtro por
-  // `status = 'pending'` hace que, de dos peticiones concurrentes, sólo una pase
-  // de `pending` a `confirmed`: un doble clic no puede cobrar dos veces.
-  const { data: claimed, error: claimError } = await adminClient
-    .from('wallet_transfers')
-    .update({ status: 'confirmed', confirmed_at: new Date().toISOString() })
-    .eq('id', transfer.id)
-    .eq('status', 'pending')
-    .select()
-    .maybeSingle();
-
-  if (claimError) {
-    console.error('No se pudo confirmar la transferencia:', claimError);
-    return { success: false, error: 'No se pudo completar la transferencia. Inténtalo de nuevo.' };
-  }
-
-  if (!claimed) {
-    return { success: false, error: 'Esta transferencia ya ha sido procesada' };
-  }
-
-  const releaseClaim = async () => {
-    await adminClient
-      .from('wallet_transfers')
-      .update({ status: 'pending', confirmed_at: null })
-      .eq('id', transfer.id);
-  };
-
-  // Compare-and-swap sobre el saldo leído: si otra operación lo ha modificado
-  // entre la lectura y la escritura, no coincide ninguna fila y abortamos en
-  // lugar de pisar el valor ajeno (que era el doble gasto por carrera).
-  const { data: debited, error: debitError } = await adminClient
-    .from('client_balances')
-    .update({ balance: Number(senderBalance.balance) - amount })
-    .eq('id', senderBalance.id)
-    .eq('balance', senderBalance.balance)
-    .select('id')
-    .maybeSingle();
-
-  if (debitError || !debited) {
-    if (debitError) console.error('No se pudo debitar el saldo del emisor:', debitError);
-    await releaseClaim();
-    return { success: false, error: 'No se pudo completar la transferencia. Vuelve a intentarlo.' };
-  }
-
-  let creditFailed = false;
-
-  if (receiverBalance) {
-    const { data: credited, error: creditError } = await adminClient
-      .from('client_balances')
-      .update({ balance: Number(receiverBalance.balance) + amount })
-      .eq('id', receiverBalance.id)
-      .eq('balance', receiverBalance.balance)
-      .select('id')
-      .maybeSingle();
-
-    if (creditError) console.error('No se pudo abonar el saldo al beneficiario:', creditError);
-    creditFailed = Boolean(creditError) || !credited;
-  } else {
-    // `client_id` es UNIQUE, así que este INSERT sólo es válido si el
-    // beneficiario no tenía fila de saldo. La divisa es la de la transferencia,
-    // ya validada contra la billetera del emisor al crearla.
-    const { error: insertError } = await adminClient
-      .from('client_balances')
-      .insert({
-        client_id: transfer.receiver_id,
-        currency: transfer.currency,
-        balance: amount,
-      });
-
-    if (insertError) console.error('No se pudo crear el saldo del beneficiario:', insertError);
-    creditFailed = Boolean(insertError);
-  }
-
-  if (creditFailed) {
-    // Sin transacción de base de datos esto es compensación, no atomicidad: se
-    // revierte el débito y la orden vuelve a quedar pendiente. La garantía real
-    // exige mover el flujo a la RPC `confirm_wallet_transfer_operation`.
-    await adminClient
-      .from('client_balances')
-      .update({ balance: senderBalance.balance })
-      .eq('id', senderBalance.id);
-    await releaseClaim();
-    return { success: false, error: 'No se pudo completar la transferencia. Vuelve a intentarlo.' };
+  // A partir de aquí manda `confirm_wallet_transfer_operation`. En UNA sola
+  // transacción bloquea las dos filas de saldo (`FOR UPDATE`), comprueba
+  // estado, caducidad, código y retención, debita al emisor, abona al
+  // beneficiario, marca la orden y escribe los dos asientos contables.
+  //
+  // Lo anterior era una secuencia de UPDATE sueltos con compensación a mano:
+  // si el abono fallaba tras el débito, se intentaba devolver el dinero con
+  // otra escritura que también podía fallar, y entonces el importe
+  // desaparecía. Aquí o se hace todo o no se hace nada.
+  //
+  // La comprobación de que el actor es el beneficiario se queda ARRIBA, en
+  // este servicio: la RPC usa `p_actor_user_id` sólo para el asiento y no
+  // autoriza a nadie.
+  let claimed: WalletTransfer;
+  try {
+    const result = await confirmWalletTransferOperation(
+      transfer.id,
+      data.verification_code ?? null,
+      actorUserId
+    );
+    claimed = result.transfer as unknown as WalletTransfer;
+  } catch (rpcError) {
+    console.error('No se pudo confirmar la transferencia:', rpcError);
+    return {
+      success: false,
+      error: translateRpcError(rpcError, 'No se pudo completar la transferencia. Vuelve a intentarlo.'),
+    };
   }
 
   const [confirmedTransfer] = await attachParties(adminClient, [claimed as WalletTransfer]);
@@ -570,25 +515,20 @@ export async function cancelWalletTransfer(
     return { success: false, error: 'Esta transferencia ya no se puede cancelar' };
   }
 
-  // Nota: la tabla desplegada no tiene la columna `cancelled_at` que declara
-  // `20240326_create_wallet_transfers.sql`, así que aquí sólo se escribe
-  // `status`. Al aplicar la migración de convergencia de esquema, añadir
-  // también la marca temporal.
-  const { data: cancelled, error: cancelError } = await adminClient
-    .from('wallet_transfers')
-    .update({ status: 'cancelled' })
-    .eq('id', transferId)
-    .eq('status', 'pending')
-    .select('id')
-    .maybeSingle();
-
-  if (cancelError) {
-    console.error('No se pudo cancelar la transferencia:', cancelError);
-    return { success: false, error: 'No se pudo cancelar la transferencia. Inténtalo de nuevo.' };
-  }
-
-  if (!cancelled) {
-    return { success: false, error: 'Esta transferencia ya ha sido procesada' };
+  // La anulación va por `cancel_wallet_transfer_operation`: además de marcar
+  // la orden, LIBERA la retención de `reserved_balance` y deja el asiento
+  // contable, todo en la misma transacción. Un UPDATE de `status` a secas
+  // dejaría el importe bloqueado en la billetera del emisor sin ninguna orden
+  // viva que lo respaldase. La RPC escribe también `cancelled_at`, que ya
+  // existe en la tabla.
+  try {
+    await cancelWalletTransferOperation(transferId, userId);
+  } catch (rpcError) {
+    console.error('No se pudo cancelar la transferencia:', rpcError);
+    return {
+      success: false,
+      error: translateRpcError(rpcError, 'No se pudo cancelar la transferencia. Inténtalo de nuevo.'),
+    };
   }
 
   return { success: true };
