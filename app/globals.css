@@ -156,8 +156,8 @@
    de `background-image` y una sombra `inset`, no un `::before`/`::after`.
    Eso importa por tres razones concretas:
      - las capas de fondo las recorta `border-radius` sola, sin necesidad de
-       `overflow: hidden` (que en un modal recortaría los menús flotantes de
-       los `select` y los `dropdown`);
+       `overflow: hidden`, así que cada superficie decide su recorte según lo
+       que necesite en lugar de heredarlo de la regla compartida;
      - desaparece la regla `> * { position: relative }` que hacía falta para
        levantar el contenido sobre el halo, y que rompía el posicionamiento
        de cualquier hijo `absolute` — el botón de cerrar, sin ir más lejos;
@@ -185,10 +185,10 @@
       inset 0 1px 0 0 var(--surface-highlight);
   }
 
-  /* El recorte NO va en la regla compartida: `.dialog-shell` no puede
-     recortar, o se comería los menús flotantes (`select`, `dropdown`) que se
-     abren dentro de un modal. Las tarjetas sí lo necesitan para que su
-     contenido respete las esquinas redondeadas. */
+  /* El recorte no va en la regla compartida porque cada superficie lo
+     resuelve distinto: la tarjeta lo quiere en los dos ejes, y el modal
+     necesita recortar en horizontal pero DESPLAZAR en vertical (ver CONTRATO
+     DE DESPLAZAMIENTO, más abajo). */
   .glass,
   .glass-premium {
     overflow: hidden;
@@ -3133,6 +3133,56 @@ dialog *,
   min-height: 0;
 }
 
+/* ---------- Contrato de desplazamiento del modal ----------
+   El tope de altura por sí solo no basta: nueve modales pasan
+   `overflow-hidden` en su `className`, así que al llegar al tope el contenido
+   se RECORTA en lugar de poder desplazarse. En el formulario de envío entre
+   clientes eso dejaba fuera de la pantalla la casilla de consentimiento y el
+   botón de enviar —que está deshabilitado hasta marcarla—, de modo que la
+   operación era literalmente imposible de completar en un portátil.
+
+   Dos modos, según la estructura que declare el modal:
+     - Con `.dialog-body`: cabecera y pie fijos, y solo el cuerpo se desplaza.
+     - Sin `.dialog-body`: se desplaza la carcasa entera (reserva).
+
+   Estas reglas van SIN capa a propósito: tienen que ganar a la utilidad
+   `overflow-hidden` de Tailwind, que vive en `@layer utilities`.
+
+   `overflow-x: hidden` conserva el recorte lateral que esos modales buscaban
+   con `overflow-hidden`. No hay riesgo de cortar menús flotantes: `Select` y
+   `DropdownMenu` se renderizan con `Portal` fuera del diálogo, y los `select`
+   nativos los dibuja el sistema operativo. El comentario que antes advertía de
+   ese riesgo en este archivo era incorrecto. */
+.dialog-shell:not(:has(> .dialog-body)) {
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  /* Al tabular a un campo fuera de vista, evita que quede pegado al borde
+     redondeado o bajo el botón de cerrar (WCAG 2.2 SC 2.4.11). */
+  scroll-padding: 20px;
+}
+
+.dialog-shell:has(> .dialog-body) {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.dialog-shell:has(> .dialog-body) > .dialog-header,
+.dialog-shell:has(> .dialog-body) > .dialog-footer {
+  flex: none;
+}
+
+.dialog-shell:has(> .dialog-body) > .dialog-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  scroll-padding-block: 16px;
+}
+
 /* La superficie del modal (fondo, borde, radio, halo y reflejo) la aporta el
    bloque SUPERFICIE COMPARTIDA de la cabecera de este archivo, donde
    `.dialog-shell` se declara junto a `.glass` y `.auth-card-premium`.
@@ -3410,14 +3460,8 @@ dialog *,
     width: min(460px, calc(100dvw - (2 * var(--dialog-gutter-x))));
     max-width: min(460px, calc(100dvw - (2 * var(--dialog-gutter-x))));
     max-height: min(680px, calc(100dvh - (2 * var(--dialog-gutter-y))));
-
-    overflow-y: auto;
-    overflow-x: hidden;
-    overscroll-behavior: contain;
-    -webkit-overflow-scrolling: touch;
-    /* Al tabular hacia un campo que queda fuera de vista, el navegador lo
-       pega al borde redondeado. Este colchón lo evita (WCAG 2.2 SC 2.4.11). */
-    scroll-padding: 20px;
+    /* El desplazamiento no se declara aquí: lo aporta el CONTRATO DE
+       DESPLAZAMIENTO, que ya cubre todos los tamaños. */
   }
 
   /* Solo los modales que no traen su propio relleno. `:not(.p-0)` es literal
@@ -3426,29 +3470,6 @@ dialog *,
      acumulaban 22 + 24 px de margen en una tarjeta de ~347 px. */
   .dialog-shell[data-mobile='centered']:not(.p-0) {
     padding: 20px;
-  }
-
-  /* Con `.dialog-body`, la tarjeta no se desplaza: solo el cuerpo. Así el
-     botón de cerrar —que es `absolute`— nunca se va con el scroll, que es la
-     otra mitad de SC 2.4.11. Mismo contrato que el modo pantalla completa. */
-  .dialog-shell[data-mobile='centered']:has(> .dialog-body) {
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-  }
-
-  .dialog-shell[data-mobile='centered']:has(> .dialog-body) > .dialog-header,
-  .dialog-shell[data-mobile='centered']:has(> .dialog-body) > .dialog-footer {
-    flex: none;
-  }
-
-  .dialog-shell[data-mobile='centered']:has(> .dialog-body) > .dialog-body {
-    flex: 1 1 auto;
-    min-height: 0;
-    overflow-y: auto;
-    overscroll-behavior: contain;
-    -webkit-overflow-scrolling: touch;
-    scroll-padding-block: 16px;
   }
 
 }
