@@ -11,6 +11,7 @@ import {
   cancelWalletTransferOperation,
   confirmWalletTransferOperation,
   createWalletTransferHold,
+  releaseExpiredClientWithdrawals,
 } from '@/lib/server/financial-operations';
 
 type AdminClient = ReturnType<typeof createAdminClient>;
@@ -151,6 +152,16 @@ export async function createWalletTransfer(
   }
 
   await assertComplianceInfrastructure();
+
+  // Los códigos de retiro caducados siguen reteniendo saldo hasta que se
+  // liberan. Sin este barrido, un vale que el emisor nunca llegó a cobrar le
+  // bloquearía sus propios envíos con un "Saldo insuficiente" que ya no
+  // responde a ninguna orden viva.
+  try {
+    await releaseExpiredClientWithdrawals(senderId);
+  } catch (expiryError) {
+    console.error('No se pudieron liberar los retiros caducados:', expiryError);
+  }
 
   const { data: sender, error: senderError } = await adminClient
     .from('users')

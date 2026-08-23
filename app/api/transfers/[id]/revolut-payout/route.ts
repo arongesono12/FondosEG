@@ -44,6 +44,19 @@ export async function POST(_request: NextRequest, context: { params: Promise<{ i
       );
     }
 
+    // El envío a un cliente registrado ya se liquidó contra su billetera.
+    // Abrirle además un payout externo pagaría el mismo dinero dos veces.
+    if (transfer.receiver_user_id) {
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            'Este envío se acreditó en la billetera del beneficiario. Debe retirarlo él desde la aplicación.',
+        },
+        { status: 409 }
+      );
+    }
+
     if (!['created', 'available_for_pickup'].includes(transfer.status)) {
       return NextResponse.json(
         { success: false, error: 'La transferencia no está disponible para payout externo.' },

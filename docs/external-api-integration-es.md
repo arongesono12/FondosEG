@@ -210,6 +210,7 @@ Respuesta:
     "receiver_phone": "222999888",
     "destination_city": "Malabo",
     "status": "available_for_pickup",
+    "settled_to_wallet": false,
     "created_at": "2026-04-06T10:30:00.000Z"
   }
 }
@@ -218,7 +219,13 @@ Respuesta:
 Notas operativas:
 
 - el backend valida saldo del gestor
-- la transferencia se crea como `available_for_pickup`
+- el estado depende del beneficiario:
+  - sin cuenta en FondosEG: `available_for_pickup` y `settled_to_wallet: false`. El
+    `transfer_code` es el vale que se presenta en ventanilla.
+  - con cuenta en FondosEG: `completed` y `settled_to_wallet: true`. El importe se abona
+    en su billetera al crear el envio y el `transfer_code` queda solo como referencia: no
+    autoriza ninguna entrega de efectivo. Si el titular quiere billetes, genera el mismo
+    su codigo de retiro desde su panel.
 - la comision del envio se calcula internamente y se guarda en `commission_amount`
 - el gestor ve esa comision en el dashboard y en el modal de envio dentro del panel
 

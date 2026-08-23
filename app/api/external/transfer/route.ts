@@ -3,6 +3,8 @@ import { z } from 'zod';
 import { authenticateAPIKey, requirePermission } from '@/lib/api-auth';
 import { generateTransferCode } from '@/lib/utils';
 import { createAgentTransferOperation } from '@/modules/transfers/application';
+import { createAdminClient } from '@/lib/supabase/admin';
+import { findRegisteredClientByPhone } from '@/lib/server/client-recipient';
 import { persistIdempotencyResponse, readIdempotencyState } from '@/modules/public-api/application/idempotency';
 import { createSandboxAgentTransfer } from '@/lib/server/public-api-sandbox';
 import { emitWebhookEvent } from '@/lib/server/webhook-outbox';
@@ -170,6 +172,10 @@ export async function POST(request: NextRequest) {
     }
 
     const transferCode = generateTransferCode();
+    const registeredReceiver = await findRegisteredClientByPhone(
+      createAdminClient(),
+      receiver_phone
+    );
 
     const { transfer } = await createAgentTransferOperation({
       agentId: user_id,
@@ -188,8 +194,14 @@ export async function POST(request: NextRequest) {
       amount: Number(amount),
       currency,
       notes,
+      receiverUserId: registeredReceiver?.id ?? null,
     });
 
+    // El estado lo decide la operación, no esta ruta: un envío a un beneficiario
+    // con cuenta nace `completed` porque se liquida contra su billetera, y
+    // anunciarlo como `available_for_pickup` mandaría al integrador (y a su
+    // usuario) a una ventanilla donde ya no hay nada que cobrar.
+    const settledStatus = String((transfer as { status?: string }).status || 'available_for_pickup');
     const responseBody = {
       success: true,
       data: {
@@ -200,7 +212,8 @@ export async function POST(request: NextRequest) {
         receiver_name,
         receiver_phone,
         destination_city,
-        status: 'available_for_pickup',
+        status: settledStatus,
+        settled_to_wallet: Boolean((transfer as { receiver_user_id?: string }).receiver_user_id),
         created_at: (transfer as { created_at: string }).created_at,
       },
       request_id: context.requestId,
@@ -215,7 +228,7 @@ export async function POST(request: NextRequest) {
             transfer_code: transferCode,
             amount: Number(amount),
             currency,
-            status: 'available_for_pickup',
+            status: settledStatus,
             sender_name,
             sender_phone,
             receiver_name,

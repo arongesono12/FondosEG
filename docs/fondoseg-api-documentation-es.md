@@ -496,6 +496,7 @@ HTTP/1.1 201 Created
     "receiver_phone": "+240111111111",
     "destination_city": "Malabo",
     "status": "available_for_pickup",
+    "settled_to_wallet": false,
     "created_at": "2026-05-31T18:20:00.000Z"
   },
   "request_id": "4b3c3b3d-3f0c-4ed7-bd2b-3b3f0c4ed7bd"
@@ -505,7 +506,11 @@ HTTP/1.1 201 Created
 Reglas de negocio:
 
 - el gestor debe tener saldo suficiente;
-- la transferencia queda con estado `available_for_pickup`;
+- si el beneficiario NO tiene cuenta, la transferencia queda `available_for_pickup` y se
+  cobra en ventanilla con el `transfer_code`;
+- si el beneficiario SI tiene cuenta, la transferencia nace `completed` con
+  `settled_to_wallet: true`: el importe se abona en su billetera y el `transfer_code` deja
+  de ser cobrable. El retiro en efectivo lo inicia el titular desde su panel;
 - FondosEG calcula comisiones internamente;
 - se emite webhook `transfer.created` si hay suscripciones activas.
 - si la credencial es `test`, FondosEG valida el payload y devuelve una transferencia simulada con `sandbox: true`.

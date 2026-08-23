@@ -98,3 +98,22 @@ export function generateQRData(transfer: QRData): string {
   const jsonStr = JSON.stringify(transfer);
   return `FondosEG://transfer/${btoa(jsonStr)}`;
 }
+
+interface WithdrawalQRData {
+  withdrawal_id: string;
+  withdrawal_code: string;
+  amount: number;
+  currency: string;
+  client_name: string;
+  expires_at?: string;
+}
+
+/**
+ * Vale de retiro emitido por el propio cliente. Se codifica bajo un espacio de
+ * nombres distinto al de las transferencias para que el gestor que lo escanea
+ * sepa contra qué flujo tiene que resolverlo.
+ */
+export function generateWithdrawalQRData(withdrawal: WithdrawalQRData): string {
+  const jsonStr = JSON.stringify(withdrawal);
+  return `FondosEG://withdrawal/${btoa(jsonStr)}`;
+}

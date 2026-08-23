@@ -324,6 +324,47 @@ export interface ConfirmWalletTransferData {
   verification_code: string;
 }
 
+export type ClientWithdrawalStatus = 'pending' | 'paid_out' | 'cancelled' | 'expired';
+
+/**
+ * Retiro de efectivo emitido por el propio titular del saldo.
+ *
+ * Es el único documento que autoriza a un gestor a entregar efectivo con cargo
+ * a una billetera de cliente. Mientras está `pending`, el importe permanece
+ * retenido en `client_balances.reserved_balance`.
+ */
+export interface ClientWithdrawal {
+  id: string;
+  client_id: string;
+  withdrawal_code: string;
+  amount: number;
+  currency: string;
+  status: ClientWithdrawalStatus;
+  destination_city?: string | null;
+  notes?: string | null;
+  reserved_at?: string;
+  expires_at?: string;
+  released_at?: string;
+  paid_out_at?: string;
+  paid_out_by?: string | null;
+  cancelled_at?: string;
+  created_at: string;
+  updated_at?: string;
+  client?: {
+    name: string;
+    phone?: string;
+    document_type?: string;
+    document_number?: string;
+  };
+}
+
+export interface CreateClientWithdrawalData {
+  amount: number;
+  currency?: string;
+  destination_city?: string;
+  notes?: string;
+}
+
 export type ApiPermission = 'balance' | 'transfer' | 'history' | 'properties' | 'payments';
 export type ApiEnvironment = 'test' | 'production';
 

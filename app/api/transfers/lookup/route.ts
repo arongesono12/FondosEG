@@ -20,10 +20,26 @@ export async function GET(request: NextRequest) {
       .from('transfers')
       .select('*, agent:users!transfers_agent_id_fkey(name, phone)')
       .eq('transfer_code', code)
-      .in('status', ['created', 'available_for_pickup'])
-      .single();
+      .maybeSingle();
 
     if (error || !data) {
+      return NextResponse.json({ error: 'Transferencia no encontrada o no disponible' }, { status: 404 });
+    }
+
+    // Un envío acreditado a una cuenta ya está liquidado: el dinero está en la
+    // billetera del beneficiario y sólo él puede sacarlo, con un código de
+    // retiro que emite desde su panel. Pagarlo aquí sería entregarlo dos veces.
+    if (data.receiver_user_id) {
+      return NextResponse.json(
+        {
+          error:
+            'Este envío se acreditó en la billetera del beneficiario. Debe generar su propio código de retiro desde la aplicación.',
+        },
+        { status: 409 }
+      );
+    }
+
+    if (!['created', 'available_for_pickup'].includes(data.status)) {
       return NextResponse.json({ error: 'Transferencia no encontrada o no disponible' }, { status: 404 });
     }
 

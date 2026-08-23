@@ -14,13 +14,15 @@ import { getAgentBalance, getAgentTransactions, getAgents, topUpAgentBalance } f
 import { getTransfers } from '@/modules/transfers/http/client';
 import { fetchJSON } from '@/services/http';
 import { formatCurrency, formatDate, getStatusColor } from '@/lib/utils';
-import { getAvailableClientBalance } from '@/lib/financial';
-import type { AgentBalance, AgentWithBalance, BalanceTransaction, ClientBalance, Transfer } from '@/types';
+import { getAvailableClientBalance, getWithdrawalStatusLabel } from '@/lib/financial';
+import { ClientWithdrawalModal } from '@/components/client-withdrawal-modal';
+import type { AgentBalance, AgentWithBalance, BalanceTransaction, ClientBalance, ClientWithdrawal, Transfer } from '@/types';
 import { isAdminRole } from '@/lib/roles';
 import {
   AlertCircle,
   ArrowDownUp,
   Banknote,
+  HandCoins,
   CheckCircle,
   Clock3,
   History,
@@ -97,6 +99,8 @@ export default function BalancePage() {
 
   const [clientBalances, setClientBalances] = useState<ClientBalance[]>([]);
   const [clientTransfers, setClientTransfers] = useState<Transfer[]>([]);
+  const [withdrawals, setWithdrawals] = useState<ClientWithdrawal[]>([]);
+  const [withdrawalOpen, setWithdrawalOpen] = useState(false);
 
   const isAdmin = isAdminRole(user?.role);
   const isGestor = user?.role === 'gestor';
@@ -123,10 +127,18 @@ export default function BalancePage() {
         return;
       }
 
+      // Los retiros se piden PRIMERO: ese endpoint libera las retenciones
+      // caducadas, así que el saldo que se lea después ya no descuenta vales
+      // muertos.
+      const withdrawalsData = await fetchJSON<ClientWithdrawal[]>('/api/withdrawals').catch((error) => {
+        console.error('Error loading withdrawals:', error);
+        return [] as ClientWithdrawal[];
+      });
       const [balancesData, transfersData] = await Promise.all([
         fetchJSON<BalanceResponse>(`/api/balance?userId=${encodeURIComponent(user.id)}`),
         getTransfers(50),
       ]);
+      setWithdrawals(withdrawalsData);
       setClientBalances(balancesData.balances || []);
       setClientTransfers(transfersData);
     } catch (error) {
@@ -506,14 +518,14 @@ export default function BalancePage() {
         </Badge>
         <h1 className="mt-4 text-3xl font-bold tracking-tight text-foreground md:text-4xl">Saldos por moneda y actividad</h1>
         <p className="mt-3 max-w-2xl text-sm font-semibold leading-6 text-muted-foreground">
-          Consulta tus fondos disponibles, importes retenidos y el historial de transferencias de billetera y operaciones personales.
+          Tus fondos son tuyos desde que entran: úsalos en la app o genera tu propio código para retirarlos en efectivo con cualquier gestor.
         </p>
       </section>
 
       <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <SummaryCard label="Monedas activas" value={String(currencySnapshots.length)} hint="Balances abiertos en cuenta" icon={Banknote} tone="border-sky-500/20 bg-sky-500 shadow-sky-500/20" />
         <SummaryCard label="Saldo principal" value={primaryClientCurrency ? formatCurrency(primaryClientCurrency.available, primaryClientCurrency.currency) : '0 XAF'} hint="Disponible en tu moneda principal" icon={Wallet} tone="border-emerald-500/20 bg-emerald-500 shadow-emerald-500/20" />
-        <SummaryCard label="Reservado" value={primaryClientCurrency ? formatCurrency(primaryClientCurrency.reserved, primaryClientCurrency.currency) : '0 XAF'} hint="Pendiente de confirmación o liberación" icon={Clock3} tone="border-amber-500/20 bg-amber-500 shadow-amber-500/20" />
+        <SummaryCard label="Reservado" value={primaryClientCurrency ? formatCurrency(primaryClientCurrency.reserved, primaryClientCurrency.currency) : '0 XAF'} hint="Retenido por códigos de retiro u órdenes pendientes" icon={Clock3} tone="border-amber-500/20 bg-amber-500 shadow-amber-500/20" />
         <SummaryCard label="Confirmadas" value={String(confirmedClientTransfers)} hint={`${pendingClientTransfers} pendientes`} icon={CheckCircle} tone="border-fuchsia-500/20 bg-fuchsia-500 shadow-fuchsia-500/20" />
       </section>
 
@@ -541,6 +553,50 @@ export default function BalancePage() {
               </div>
             </div>
           ))}
+        </CardContent>
+      </Card>
+
+      <Card className="glass-premium overflow-hidden border-border/10 bg-card/40 shadow-xl shadow-black/5">
+        <CardHeader className="flex flex-row items-center justify-between gap-4 border-b border-border/5 pb-5">
+          <CardTitle className="flex items-center gap-2 text-xl font-bold text-foreground">
+            <HandCoins className="h-5 w-5 text-primary" />
+            Retiros en efectivo
+          </CardTitle>
+          <Button className="rounded-xl font-bold" onClick={() => setWithdrawalOpen(true)}>
+            Generar código
+          </Button>
+        </CardHeader>
+        <CardContent className="space-y-3 p-6">
+          {withdrawals.length === 0 ? (
+            <div className="rounded-3xl border border-dashed border-border/20 bg-background/50 px-6 py-10 text-center text-sm font-bold text-muted-foreground">
+              Tus fondos son tuyos desde que entran. Genera un código cuando quieras cobrarlos en efectivo.
+            </div>
+          ) : (
+            withdrawals.slice(0, 10).map((withdrawal) => (
+              <div key={withdrawal.id} className="rounded-3xl border border-border/10 bg-background/70 p-4">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="text-sm font-bold tracking-[0.12em] text-foreground">{withdrawal.withdrawal_code}</p>
+                    <p className="mt-1 text-[10px] font-semibold text-muted-foreground">
+                      {withdrawal.destination_city ? `${withdrawal.destination_city} · ` : ''}
+                      {formatDate(withdrawal.created_at)}
+                    </p>
+                    {withdrawal.status === 'pending' && withdrawal.expires_at && (
+                      <p className="mt-1 text-[10px] font-semibold text-amber-600 dark:text-amber-400">
+                        Retenido hasta {formatDate(withdrawal.expires_at)}
+                      </p>
+                    )}
+                  </div>
+                  <Badge className={`rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] ${withdrawal.status === 'paid_out' ? 'bg-emerald-100 text-emerald-700' : withdrawal.status === 'pending' ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-600'}`}>
+                    {getWithdrawalStatusLabel(withdrawal.status)}
+                  </Badge>
+                </div>
+                <p className="mt-4 text-lg font-bold text-foreground">
+                  {formatCurrency(Number(withdrawal.amount), withdrawal.currency)}
+                </p>
+              </div>
+            ))
+          )}
         </CardContent>
       </Card>
 
@@ -579,6 +635,12 @@ export default function BalancePage() {
           )}
         </CardContent>
       </Card>
+
+      <ClientWithdrawalModal
+        open={withdrawalOpen}
+        onOpenChange={setWithdrawalOpen}
+        onSuccess={loadData}
+      />
 
       <Dialog open={successOpen} onOpenChange={setSuccessOpen}>
         <DialogContent mobile="centered" className="max-w-md">

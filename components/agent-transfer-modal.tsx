@@ -116,6 +116,10 @@ export function AgentTransferModal({ open, onOpenChange, onSuccess }: AgentTrans
   const { user } = useAppStore();
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
+  // Un envío a un beneficiario CON cuenta se liquida en su billetera al
+  // crearse: no hay nada que retirar en ventanilla, así que el mensaje de
+  // cierre no puede mandar a nadie a buscar un gestor.
+  const [settledToWallet, setSettledToWallet] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [error, setError] = useState('');
   const [balance, setBalance] = useState<number>(0);
@@ -219,6 +223,7 @@ export function AgentTransferModal({ open, onOpenChange, onSuccess }: AgentTrans
 
       if (result.success) {
         setShowConfirm(false);
+        setSettledToWallet(Boolean(result.transfer?.receiver_user_id));
         setSent(true);
         setTimeout(() => {
           setSent(false);
@@ -240,6 +245,7 @@ export function AgentTransferModal({ open, onOpenChange, onSuccess }: AgentTrans
           setCustomCity(false);
           setCustomCountry(false);
           setComplianceConsent(false);
+          setSettledToWallet(false);
           onOpenChange(false);
           onSuccess?.();
         }, 2000);
@@ -282,8 +288,14 @@ export function AgentTransferModal({ open, onOpenChange, onSuccess }: AgentTrans
               <div className="w-16 h-16 bg-green-100 dark:bg-green-900/20 rounded-full flex items-center justify-center mx-auto mb-4">
                 <CheckCircle2 className="h-8 w-8 text-green-600" />
               </div>
-              <p className="text-lg font-bold text-foreground">Transferencia registrada</p>
-              <p className="text-sm text-muted-foreground">El dinero queda disponible para retiro en otro gestor</p>
+              <p className="text-lg font-bold text-foreground">
+                {settledToWallet ? 'Dinero entregado' : 'Transferencia registrada'}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                {settledToWallet
+                  ? 'El beneficiario tiene cuenta: el importe ya está en su billetera y él decide cuándo retirarlo'
+                  : 'El dinero queda disponible para retiro en otro gestor'}
+              </p>
             </div>
           ) : (
             <>

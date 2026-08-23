@@ -105,6 +105,53 @@ export function getAvailableClientBalance(balance: number, reservedBalance: numb
   return Math.max(Number(balance || 0) - Number(reservedBalance || 0), 0);
 }
 
+/**
+ * Vigencia del código de retiro emitido por un cliente.
+ *
+ * Más largo que las 24 h de una orden entre billeteras: aquí el titular tiene
+ * que desplazarse físicamente hasta un gestor, y un vale caducado a mitad de
+ * camino sólo obliga a repetir el trámite. El importe sigue retenido mientras
+ * tanto, así que el riesgo de alargarlo es de liquidez del propio titular.
+ */
+export const CLIENT_WITHDRAWAL_EXPIRY_HOURS = 72;
+
+export type ClientWithdrawalLifecycleStatus = 'pending' | 'paid_out' | 'cancelled' | 'expired';
+
+export function normalizeWithdrawalStatus(status?: string | null): ClientWithdrawalLifecycleStatus {
+  switch (status) {
+    case 'paid_out':
+      return 'paid_out';
+    case 'cancelled':
+      return 'cancelled';
+    case 'expired':
+      return 'expired';
+    default:
+      return 'pending';
+  }
+}
+
+export function getWithdrawalStatusLabel(status?: string | null): string {
+  switch (normalizeWithdrawalStatus(status)) {
+    case 'paid_out':
+      return 'Retirado';
+    case 'cancelled':
+      return 'Anulado';
+    case 'expired':
+      return 'Caducado';
+    default:
+      return 'Disponible';
+  }
+}
+
+export function isWithdrawalRedeemable(withdrawal: {
+  status?: string | null;
+  expires_at?: string | null;
+}): boolean {
+  if (normalizeWithdrawalStatus(withdrawal.status) !== 'pending') return false;
+  if (!withdrawal.expires_at) return true;
+  return new Date(withdrawal.expires_at).getTime() > Date.now();
+}
+
 export function estimateProjectedTopups24h(
   averageDailyOutflow: number,
   currentAvailableFloat: number,

@@ -44,6 +44,16 @@ interface DirectWalletTransferPayload {
   originChannel?: string;
 }
 
+interface CreateClientWithdrawalPayload {
+  clientId: string;
+  withdrawalCode: string;
+  amount: number;
+  currency: string;
+  destinationCity?: string | null;
+  notes?: string | null;
+  expiresInHours?: number;
+}
+
 interface CorrectAgentTransferPayload {
   transferId: string;
   actorUserId: string;
@@ -264,6 +274,92 @@ export async function confirmWalletTransferOperation(
     sender_available_balance: number;
     sender_reserved_balance: number;
   }>(data);
+}
+
+/**
+ * Emite un código de retiro contra el saldo del propio cliente.
+ *
+ * La RPC bloquea la fila del saldo, comprueba el DISPONIBLE (no el bruto) y
+ * retiene el importe en la misma transacción en la que crea el vale. Sin esa
+ * atomicidad, dos códigos emitidos a la vez podrían comprometer el mismo dinero.
+ */
+export async function createClientWithdrawalOperation(payload: CreateClientWithdrawalPayload) {
+  const adminClient = createAdminClient();
+  const { data, error } = await adminClient.rpc('create_client_withdrawal_operation', {
+    p_client_id: payload.clientId,
+    p_withdrawal_code: payload.withdrawalCode,
+    p_amount: payload.amount,
+    p_currency: payload.currency,
+    p_destination_city: payload.destinationCity ?? null,
+    p_notes: payload.notes ?? null,
+    p_expires_in_hours: payload.expiresInHours ?? null,
+  });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return extractRpcData<{
+    withdrawal: Record<string, unknown>;
+    available_balance: number;
+    reserved_balance: number;
+  }>(data);
+}
+
+export async function payOutClientWithdrawalOperation(withdrawalId: string, agentId: string) {
+  const adminClient = createAdminClient();
+  const { data, error } = await adminClient.rpc('pay_out_client_withdrawal_operation', {
+    p_withdrawal_id: withdrawalId,
+    p_agent_id: agentId,
+  });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return extractRpcData<{
+    withdrawal: Record<string, unknown>;
+    client_balance: number;
+    client_reserved_balance: number;
+    agent_new_balance: number;
+    agent_new_cash: number;
+  }>(data);
+}
+
+export async function cancelClientWithdrawalOperation(withdrawalId: string, actorUserId: string) {
+  const adminClient = createAdminClient();
+  const { data, error } = await adminClient.rpc('cancel_client_withdrawal_operation', {
+    p_withdrawal_id: withdrawalId,
+    p_actor_user_id: actorUserId,
+  });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return extractRpcData<{
+    withdrawal: Record<string, unknown>;
+    available_balance: number;
+    reserved_balance: number;
+  }>(data);
+}
+
+/**
+ * Libera las retenciones de los códigos caducados. Se invoca antes de listar o
+ * de consultar saldo para que el cliente nunca vea retenido un importe que ya
+ * no respalda ningún vale vivo.
+ */
+export async function releaseExpiredClientWithdrawals(clientId?: string | null) {
+  const adminClient = createAdminClient();
+  const { data, error } = await adminClient.rpc('release_expired_client_withdrawals', {
+    p_client_id: clientId ?? null,
+  });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return Number(data ?? 0);
 }
 
 export async function cancelWalletTransferOperation(transferId: string, actorUserId: string) {

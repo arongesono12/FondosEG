@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
         currency: transfer.currency,
         destinationCity: transfer.destination_city,
         receiverUserId: transfer.receiver_user_id,
-        creditedToWallet: Boolean(transfer.receiver_user_id && transfer.wallet_credited_at),
+        settledToWallet: Boolean(transfer.receiver_user_id && transfer.wallet_credited_at),
       });
 
       const stats = await processNotificationOutbox(5);

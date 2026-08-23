@@ -30,7 +30,7 @@ interface QueueTransferNotificationsInput {
   currency: string;
   destinationCity?: string | null;
   receiverUserId?: string | null;
-  creditedToWallet?: boolean;
+  settledToWallet?: boolean;
 }
 
 function formatPhoneNumber(phone: string): string {
@@ -94,7 +94,7 @@ export async function queueTransferNotifications(input: QueueTransferNotificatio
     amount: input.amount,
     currency: input.currency,
     destinationCity: input.destinationCity,
-    creditedToWallet: input.creditedToWallet,
+    settledToWallet: input.settledToWallet,
   });
 
   await Promise.all([

@@ -26,12 +26,14 @@ import {
   Wallet,
   QrCode,
   Send,
+  HandCoins,
 } from 'lucide-react';
 import { SupportModal } from '@/components/layout/support-modal';
 import { WalletTransferModal } from '@/components/wallet-transfer-modal';
 import { VerifyTransferModal } from '@/components/verify-transfer-modal';
 import { AgentPayoutModal } from '@/components/agent-payout-modal';
 import { AgentTransferModal } from '@/components/agent-transfer-modal';
+import { ClientWithdrawalModal } from '@/components/client-withdrawal-modal';
 import { RevolutPayoutModal } from '@/components/revolut-payout-modal';
 import { isAdminRole } from '@/lib/roles';
 
@@ -51,6 +53,7 @@ export default function TransfersPage() {
   const [agentTransferOpen, setAgentTransferOpen] = useState(false);
   const [agentPayoutOpen, setAgentPayoutOpen] = useState(false);
   const [revolutPayoutOpen, setRevolutPayoutOpen] = useState(false);
+  const [withdrawalOpen, setWithdrawalOpen] = useState(false);
   
   const displayCurrency = preferredCurrency || 'XAF';
 
@@ -186,6 +189,24 @@ export default function TransfersPage() {
               <p className="text-xs text-blue-500 mt-1">Confirma transferencias recibidas</p>
               <Button variant="ghost" className="transfer-mobile-action text-xs font-bold text-blue-600 mt-2 p-0 h-auto">
                 Ver pendientes <ArrowUpRight className="h-3 w-3 ml-1" />
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Card: Retirar Efectivo (Solo clientes) */}
+        {user?.role === 'cliente' && (
+          <Card className="transfer-action-card bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800 rounded-3xl p-6 cursor-pointer hover:shadow-lg transition-all" onClick={() => setWithdrawalOpen(true)}>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-bold text-amber-600 dark:text-amber-400 flex items-center gap-2">
+                <HandCoins className="h-4 w-4" /> Retirar Efectivo
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-bold text-amber-600 dark:text-amber-400">Tu código</p>
+              <p className="text-xs text-amber-500 mt-1">Genera tu código y cóbralo en un gestor</p>
+              <Button variant="ghost" className="transfer-mobile-action text-xs font-bold text-amber-600 mt-2 p-0 h-auto">
+                Generar <ArrowUpRight className="h-3 w-3 ml-1" />
               </Button>
             </CardContent>
           </Card>
@@ -483,6 +504,13 @@ export default function TransfersPage() {
       <RevolutPayoutModal
         open={revolutPayoutOpen}
         onOpenChange={setRevolutPayoutOpen}
+        onSuccess={refreshData}
+      />
+
+      {/* Client Withdrawal Modal (para clientes) */}
+      <ClientWithdrawalModal
+        open={withdrawalOpen}
+        onOpenChange={setWithdrawalOpen}
         onSuccess={refreshData}
       />
     </div>

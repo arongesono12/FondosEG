@@ -29,6 +29,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Transferencia no encontrada' }, { status: 404 });
     }
 
+    // El envío a un cliente registrado se liquida contra su billetera en el
+    // momento de crearse. Su código no autoriza ninguna entrega de efectivo: el
+    // titular tiene que emitir su propio retiro desde el panel.
+    if (transfer.receiver_user_id) {
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            'Este envío se acreditó en la billetera del beneficiario. Debe generar su propio código de retiro desde la aplicación.',
+        },
+        { status: 409 }
+      );
+    }
+
     if (!['created', 'available_for_pickup'].includes(transfer.status)) {
       return NextResponse.json({ success: false, error: 'La transferencia no está disponible para pago' }, { status: 409 });
     }

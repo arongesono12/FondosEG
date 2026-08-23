@@ -226,16 +226,25 @@ export async function GET() {
       return NextResponse.json(stats);
     }
 
-    const [{ data: balances, error: balancesError }, { data: walletTransfers, error: walletError }] = await Promise.all([
+    const [
+      { data: balances, error: balancesError },
+      { data: walletTransfers, error: walletError },
+      { data: receivedAgentTransfers, error: receivedAgentTransfersError },
+    ] = await Promise.all([
       adminClient.from('client_balances').select('balance, reserved_balance, currency').eq('client_id', profile.id),
       adminClient
         .from('wallet_transfers')
         .select('status, amount, created_at')
         .or(`sender_id.eq.${profile.id},receiver_id.eq.${profile.id}`),
+      adminClient
+        .from('transfers')
+        .select('status, amount, created_at')
+        .eq('receiver_user_id', profile.id),
     ]);
 
     if (balancesError) throw balancesError;
     if (walletError) throw walletError;
+    if (receivedAgentTransfersError) throw receivedAgentTransfersError;
 
     const safeBalances = (balances ?? []) as Array<BalanceRow & { reserved_balance?: number | string | null }>;
     const safeTransfers = (walletTransfers ?? []) as TransferRow[];
@@ -256,13 +265,18 @@ export async function GET() {
       ...transfer,
       status: mapWalletTransferStatus(transfer.status),
     }));
+    const normalizedReceivedAgentTransfers = ((receivedAgentTransfers ?? []) as TransferRow[]).map((transfer) => ({
+      ...transfer,
+      status: normalizeTransferStatus(transfer.status),
+    }));
+    const clientTransfers = [...normalizedWalletTransfers, ...normalizedReceivedAgentTransfers];
 
-    const completedTransfersRows = normalizedWalletTransfers.filter((transfer) => isTransferCompleted(transfer.status));
-    const pendingTransferRows = normalizedWalletTransfers.filter((transfer) => isTransferPending(transfer.status));
-    const cancelledTransferRows = normalizedWalletTransfers.filter(
+    const completedTransfersRows = clientTransfers.filter((transfer) => isTransferCompleted(transfer.status));
+    const pendingTransferRows = clientTransfers.filter((transfer) => isTransferPending(transfer.status));
+    const cancelledTransferRows = clientTransfers.filter(
       (transfer) => normalizeTransferStatus(transfer.status) === 'cancelled'
     );
-    const todayTransfersRows = normalizedWalletTransfers.filter((transfer) => isSameOrAfter(transfer.created_at, today));
+    const todayTransfersRows = clientTransfers.filter((transfer) => isSameOrAfter(transfer.created_at, today));
     const todayCompletedRows = completedTransfersRows.filter((transfer) => isSameOrAfter(transfer.created_at, today));
     const recent7dCompletedRows = completedTransfersRows.filter((transfer) => isSameOrAfter(transfer.created_at, sevenDaysAgo));
     const recent30dCompletedRows = completedTransfersRows.filter((transfer) =>

@@ -632,7 +632,18 @@ export async function GET() {
                     receiver_name: { type: 'string' },
                     receiver_phone: { type: 'string' },
                     destination_city: { type: 'string' },
-                    status: { type: 'string', example: 'available_for_pickup' },
+                    status: {
+                      type: 'string',
+                      enum: ['available_for_pickup', 'completed'],
+                      example: 'available_for_pickup',
+                      description:
+                        'available_for_pickup cuando el beneficiario no tiene cuenta y debe cobrar con el código en ventanilla; completed cuando sí la tiene y el importe se liquidó en su billetera.',
+                    },
+                    settled_to_wallet: {
+                      type: 'boolean',
+                      description:
+                        'true cuando el beneficiario tenía cuenta y el envío se abonó directamente en su billetera. En ese caso el transfer_code es sólo referencia: no autoriza ninguna entrega de efectivo.',
+                    },
                     created_at: { type: 'string', format: 'date-time' },
                     sandbox: { type: 'boolean', description: 'true cuando la credencial es test.' },
                   },
@@ -726,7 +737,13 @@ export async function GET() {
                     transfer_code: { type: 'string' },
                     amount: { type: 'number' },
                     currency: { type: 'string' },
-                    status: { type: 'string', example: 'available_for_pickup' },
+                    status: {
+                      type: 'string',
+                      enum: ['available_for_pickup', 'completed'],
+                      example: 'available_for_pickup',
+                      description:
+                        'completed indica que el beneficiario tenía cuenta y el envío se liquidó en su billetera.',
+                    },
                     sender_name: { type: 'string' },
                     sender_phone: { type: 'string' },
                     receiver_name: { type: 'string' },

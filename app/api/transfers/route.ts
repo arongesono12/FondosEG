@@ -3,44 +3,13 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { AuthzError, requireProfile, requireRole } from '@/lib/server/authz';
 import { createAgentTransferOperation } from '@/modules/transfers/application';
 import type { Transfer, TransferFormData } from '@/types';
-import { generateTransferCode, getPhoneLookupCandidates, normalizePhoneDigits } from '@/lib/utils';
+import { generateTransferCode } from '@/lib/utils';
 import { queueTransferNotifications, processNotificationOutbox } from '@/lib/server/notification-outbox';
 import { emitWebhookEvent } from '@/lib/server/webhook-outbox';
 import { isAdminRole } from '@/lib/roles';
 import { PAYMENT_REGULATION } from '@/lib/compliance';
 import { assertComplianceInfrastructure, recordPaymentConsent } from '@/lib/server/compliance-events';
-
-// Unified notification helper replaced by lib/server/notification-outbox.ts
-
-async function findRegisteredClientByPhone(adminClient: ReturnType<typeof createAdminClient>, phone: string) {
-  const lookupCandidates = getPhoneLookupCandidates(phone);
-  const normalizedInput = normalizePhoneDigits(phone);
-
-  if (lookupCandidates.length > 0) {
-    const { data } = await adminClient
-      .from('users')
-      .select('id, name, phone')
-      .eq('role', 'cliente')
-      .in('phone', lookupCandidates)
-      .limit(10);
-
-    const exactMatch = (data || []).find((user) => normalizePhoneDigits(user.phone || '') === normalizedInput);
-    if (exactMatch) {
-      return exactMatch;
-    }
-
-    if ((data || []).length > 0) {
-      return data![0];
-    }
-  }
-
-  const { data: fallbackUsers } = await adminClient
-    .from('users')
-    .select('id, name, phone')
-    .eq('role', 'cliente');
-
-  return (fallbackUsers || []).find((user) => normalizePhoneDigits(user.phone || '') === normalizedInput) ?? null;
-}
+import { findRegisteredClientByPhone } from '@/lib/server/client-recipient';
 
 export async function GET(request: NextRequest) {
   try {
@@ -205,7 +174,7 @@ export async function POST(request: NextRequest) {
         currency: typedTransfer.currency,
         destinationCity: typedTransfer.destination_city,
         receiverUserId: typedTransfer.receiver_user_id ?? registeredReceiver?.id ?? null,
-        creditedToWallet: Boolean(typedTransfer.receiver_user_id && typedTransfer.wallet_credited_at),
+        settledToWallet: Boolean(typedTransfer.receiver_user_id && typedTransfer.wallet_credited_at),
       });
 
       // Background process the outbox immediately.

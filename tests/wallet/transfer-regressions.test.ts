@@ -110,26 +110,35 @@ test('sólo el beneficiario puede confirmar una transferencia', async () => {
 });
 
 test('la confirmación reclama la transferencia antes de mover dinero', async () => {
-  const source = await service();
+  const [source, migration] = await Promise.all([
+    service(),
+    load('supabase/migrations/20260402_financial_foundation.sql'),
+  ]);
 
-  // Sin el filtro por `status = 'pending'` en el UPDATE, dos peticiones
-  // concurrentes (un doble clic basta) confirmaban la misma orden dos veces y
-  // acreditaban el importe dos veces.
+  // La aplicación delega la reclamación al procedimiento almacenado. Éste
+  // bloquea la orden antes de comprobar que siga pendiente, de modo que un
+  // doble clic no puede acreditar el importe dos veces.
   assert.match(
     source,
-    /\.update\(\{ status: 'confirmed'[\s\S]{0,200}?\.eq\('status', 'pending'\)/,
-    'la transición pending -> confirmed debe ser condicional'
+    /confirmWalletTransferOperation\(/,
+    'la confirmación debe usar la operación financiera atómica'
   );
+  assert.match(migration, /FROM public\.wallet_transfers[\s\S]{0,200}?FOR UPDATE/);
+  assert.match(migration, /IF v_transfer\.status <> 'pending' THEN/);
 });
 
 test('todas las escrituras de saldo comprueban su resultado', async () => {
-  const source = await service();
+  const [source, migration] = await Promise.all([
+    service(),
+    load('supabase/migrations/20260402_financial_foundation.sql'),
+  ]);
 
-  // Las tres escrituras descartaban `{ error }`: si fallaba el abono tras el
-  // débito, el dinero desaparecía y la orden se marcaba `confirmed` igualmente.
-  assert.match(source, /if \(debitError \|\| !debited\)/);
-  assert.match(source, /if \(creditFailed\)/);
-  assert.match(source, /releaseClaim/, 'un fallo a mitad debe compensarse');
+  // La aplicación ya no ejecuta débitos y créditos aislados: los delega a una
+  // única RPC transaccional que bloquea ambos saldos y los actualiza juntos.
+  assert.match(source, /confirmWalletTransferOperation\(/);
+  assert.match(migration, /FROM public\.client_balances[\s\S]{0,120}?FOR UPDATE/);
+  assert.match(migration, /UPDATE public\.client_balances[\s\S]{0,300}?v_sender_balance\.id/);
+  assert.match(migration, /UPDATE public\.client_balances[\s\S]{0,300}?v_receiver_balance\.id/);
 });
 
 test('el destinatario se busca con el teléfono normalizado', async () => {
@@ -164,7 +173,7 @@ test('un consentimiento no registrable no deja órdenes cobrables vivas', async 
   assert.match(source, /catch \(consentError\)/);
   assert.match(
     source,
-    /catch \(consentError\)[\s\S]{0,400}?update\(\{ status: 'cancelled' \}\)/,
+    /catch \(consentError\)[\s\S]{0,400}?cancelWalletTransferOperation\(transfer\.id, senderId\)/,
     'la orden debe anularse si no se puede dejar evidencia del consentimiento'
   );
 });

@@ -2,37 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { AuthzError, requireProfile, requireRole } from '@/lib/server/authz';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { correctAgentTransferOperation } from '@/modules/transfers/application';
-import { getPhoneLookupCandidates, normalizePhoneDigits } from '@/lib/utils';
-
-async function findRegisteredClientByPhone(adminClient: ReturnType<typeof createAdminClient>, phone: string) {
-  const lookupCandidates = getPhoneLookupCandidates(phone);
-  const normalizedInput = normalizePhoneDigits(phone);
-
-  if (lookupCandidates.length > 0) {
-    const { data } = await adminClient
-      .from('users')
-      .select('id, name, phone')
-      .eq('role', 'cliente')
-      .in('phone', lookupCandidates)
-      .limit(10);
-
-    const exactMatch = (data || []).find((user) => normalizePhoneDigits(user.phone || '') === normalizedInput);
-    if (exactMatch) {
-      return exactMatch;
-    }
-
-    if ((data || []).length > 0) {
-      return data![0];
-    }
-  }
-
-  const { data: fallbackUsers } = await adminClient
-    .from('users')
-    .select('id, name, phone')
-    .eq('role', 'cliente');
-
-  return (fallbackUsers || []).find((user) => normalizePhoneDigits(user.phone || '') === normalizedInput) ?? null;
-}
+import { findRegisteredClientByPhone } from '@/lib/server/client-recipient';
 
 export async function PATCH(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {

@@ -120,6 +120,12 @@
       "sourceType": "github",
       "skillPath": "skills/features/clerk-webhooks/SKILL.md",
       "computedHash": "6acecf8a6a4a77294c87874bce189d311bce39ea28786a010d2769b922fbb8cc"
+    },
+    "deep-research": {
+      "source": "affaan-m/ECC",
+      "sourceType": "github",
+      "skillPath": "skills/deep-research/SKILL.md",
+      "computedHash": "a077ae15135e506490458ac6dacaf17be9dfa61600f1712c6b7dc79a7cef249e"
     }
   }
 }

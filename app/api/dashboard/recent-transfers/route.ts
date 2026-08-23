@@ -40,11 +40,12 @@ export async function GET(request: NextRequest) {
       return NextResponse.json((data || []) as Transfer[]);
     }
 
-    // cliente: solo ve sus propias transferencias
+    // cliente: ve las transferencias que emitió y los envíos de gestor que
+    // fueron acreditados a su billetera mediante receiver_user_id.
     const { data: clientTransfers } = await adminClient
       .from('transfers')
       .select('*')
-      .eq('sender_id', profile.id)
+      .or(`sender_id.eq.${profile.id},receiver_user_id.eq.${profile.id}`)
       .order('created_at', { ascending: false })
       .limit(limit);
 
