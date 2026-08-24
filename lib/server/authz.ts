@@ -5,8 +5,9 @@ import type { AccessProduct, AccountAccess, User, UserRole } from '@/types';
 import { isAdminRole, isSuperAdminRole } from '@/lib/roles';
 import {
   getClerkIdentity,
+  getClerkUserId,
+  resolveInternalUserByClerkId,
   resolveInternalUser,
-  syncFromClerk,
   type ClerkIdentity,
 } from '@/lib/server/clerk-identity';
 
@@ -77,14 +78,14 @@ async function withRetry<T>(
   throw lastError;
 }
 
-function toAuthUser(profile: User, identity: ClerkIdentity): AuthUser {
+function toAuthUser(profile: User, clerkUserId: string, identity?: ClerkIdentity): AuthUser {
   return {
     id: profile.id,
-    clerkUserId: identity.clerkUserId,
-    email: profile.email || identity.email,
+    clerkUserId,
+    email: profile.email || identity?.email || '',
     user_metadata: {
-      name: profile.name || identity.name,
-      avatar_url: profile.avatar_url || identity.imageUrl || undefined,
+      name: profile.name || identity?.name,
+      avatar_url: profile.avatar_url || identity?.imageUrl || undefined,
     },
   };
 }
@@ -102,6 +103,27 @@ async function resolveAuthUser(): Promise<{
   needsOnboarding: boolean;
 }> {
   try {
+    const clerkUserId = await withRetry(() => getClerkUserId());
+    if (!clerkUserId) {
+      return { user: null, profile: null, authError: null, needsOnboarding: false };
+    }
+
+    // La gran mayoría de peticiones llega aquí: la sesión ya fue validada por
+    // el middleware y el perfil ya está vinculado. No llamar a currentUser()
+    // evita una petición al Backend API de Clerk por cada widget del panel.
+    const linkedProfile = await withRetry(() => resolveInternalUserByClerkId(clerkUserId));
+    if (linkedProfile) {
+      return {
+        user: toAuthUser(linkedProfile, clerkUserId),
+        profile: linkedProfile,
+        authError: null,
+        needsOnboarding: false,
+      };
+    }
+
+    // Sólo una cuenta aún no vinculada necesita su perfil completo de Clerk:
+    // puede ser una cuenta anterior a la migración (se reconecta por email) o
+    // una cuenta nueva que debe pasar por onboarding.
     const identity = await withRetry(() => getClerkIdentity());
     if (!identity) {
       return { user: null, profile: null, authError: null, needsOnboarding: false };
@@ -113,7 +135,7 @@ async function resolveAuthUser(): Promise<{
     }
 
     return {
-      user: toAuthUser(profile, identity),
+      user: toAuthUser(profile, clerkUserId, identity),
       profile,
       authError: null,
       needsOnboarding: false,
@@ -269,12 +291,7 @@ export async function requireProfile(): Promise<User> {
     throw new AuthzError('Account disabled', 403);
   }
 
-  const identity = await getClerkIdentity();
-  if (!identity) {
-    throw new AuthzError('Unauthorized', 401);
-  }
-
-  return syncFromClerk(profile, identity);
+  return profile;
 }
 
 export function requireRole(profile: User, roles: UserRole | UserRole[]): void {

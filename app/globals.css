@@ -1838,24 +1838,6 @@ dialog *,
     text-align: right;
     word-break: break-word;
   }
-
-  .agent-transfer-confirm-dialog .flex.gap-3.pt-2 {
-    position: sticky;
-    bottom: 0;
-    margin: 0 -18px -18px;
-    padding: 12px 18px 18px;
-    background: linear-gradient(180deg, transparent, var(--surface-2) 18%);
-  }
-}
-
-@media (max-width: 420px) {
-  .agent-transfer-confirm-dialog .flex.gap-3.pt-2 {
-    flex-direction: column;
-  }
-
-  .agent-transfer-confirm-dialog .flex.gap-3.pt-2 button {
-    width: 100%;
-  }
 }
 
 /* La superficie ya no se repinta aquí: la aporta `.dialog-shell`, que es la
@@ -1864,6 +1846,28 @@ dialog *,
    translucidez del sistema anterior; con una superficie opaca sobran, y el
    `::before` además chocaba con el reflejo superior compartido. */
 
+/* El elemento desplazable era el panel ENTERO, y su contenido mide casi el
+   doble de su altura máxima: la casilla de consentimiento quedaba ~500 px
+   por debajo del pliegue, junto con los botones. El gestor veía un panel sin
+   casilla y sin botón de confirmar, y ese botón está deshabilitado justo
+   hasta marcarla, así que el envío no se podía terminar. Mismo reparto en
+   tres bandas que el resto de modales —cabecera y pie fijos, solo el cuerpo
+   se desplaza— para que lo que cierra la operación no dependa de descubrir
+   un desplazamiento interno (WCAG 2.2 SC 2.4.11). */
+.agent-transfer-confirm-header,
+.agent-transfer-confirm-footer {
+  flex: none;
+}
+
+.agent-transfer-confirm-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  scroll-padding-block: 16px;
+}
+
 /* El panel de confirmación se apila sobre el modal: se le da la misma
    superficie que a la tarjeta, con los tokens compartidos. */
 .agent-transfer-dialog .agent-transfer-confirm-dialog {
@@ -1871,10 +1875,12 @@ dialog *,
   left: 50% !important;
   top: 50% !important;
   z-index: 20;
+  display: flex !important;
+  flex-direction: column;
   width: min(calc(100% - 24px), 430px) !important;
   max-height: min(calc(100% - 24px), 680px) !important;
   transform: translate(-50%, -50%) !important;
-  overflow-y: auto !important;
+  overflow: hidden !important;
   border: 1px solid var(--surface-border) !important;
   border-radius: 1.5rem !important;
   background-color: var(--surface) !important;
@@ -2818,13 +2824,10 @@ dialog *,
     word-break: break-word;
   }
 
-  .agent-transfer-confirm-actions {
-    position: sticky;
-    bottom: 0;
-    z-index: 3;
-    margin: 0 -18px -18px;
-    padding: 12px 18px 18px;
-    background: linear-gradient(180deg, transparent, var(--surface-2) 18%);
+  /* El pie ya no se desplaza con el contenido: no necesita pegarse al borde
+     ni degradar el fondo de lo que pasaba por debajo. */
+  .agent-transfer-confirm-dialog .agent-transfer-confirm-footer {
+    padding: 12px 18px calc(14px + env(safe-area-inset-bottom)) !important;
   }
 }
 
@@ -2921,32 +2924,28 @@ dialog *,
     background-image: none !important;
   }
 
-  .agent-transfer-body [class*="bg-primary"],
-  .agent-transfer-body [class*="bg-emerald"],
-  .agent-transfer-body [class*="bg-amber"],
-  .agent-transfer-body [class*="bg-red"],
-  .agent-transfer-confirm-body [class*="bg-primary"],
-  .agent-transfer-confirm-body [class*="bg-emerald"],
-  .agent-transfer-confirm-body [class*="bg-amber"],
-  .agent-transfer-confirm-body [class*="bg-red"] {
+  .agent-transfer-body [class*="bg-primary"]:not(button),
+  .agent-transfer-body [class*="bg-emerald"]:not(button),
+  .agent-transfer-body [class*="bg-amber"]:not(button),
+  .agent-transfer-body [class*="bg-red"]:not(button),
+  .agent-transfer-confirm-body [class*="bg-primary"]:not(button),
+  .agent-transfer-confirm-body [class*="bg-emerald"]:not(button),
+  .agent-transfer-confirm-body [class*="bg-amber"]:not(button),
+  .agent-transfer-confirm-body [class*="bg-red"]:not(button) {
     background-color: #ffffff !important;
     background-image: none !important;
   }
 
-  .dark .agent-transfer-body [class*="bg-primary"],
-  .dark .agent-transfer-body [class*="bg-emerald"],
-  .dark .agent-transfer-body [class*="bg-amber"],
-  .dark .agent-transfer-body [class*="bg-red"],
-  .dark .agent-transfer-confirm-body [class*="bg-primary"],
-  .dark .agent-transfer-confirm-body [class*="bg-emerald"],
-  .dark .agent-transfer-confirm-body [class*="bg-amber"],
-  .dark .agent-transfer-confirm-body [class*="bg-red"] {
+  .dark .agent-transfer-body [class*="bg-primary"]:not(button),
+  .dark .agent-transfer-body [class*="bg-emerald"]:not(button),
+  .dark .agent-transfer-body [class*="bg-amber"]:not(button),
+  .dark .agent-transfer-body [class*="bg-red"]:not(button),
+  .dark .agent-transfer-confirm-body [class*="bg-primary"]:not(button),
+  .dark .agent-transfer-confirm-body [class*="bg-emerald"]:not(button),
+  .dark .agent-transfer-confirm-body [class*="bg-amber"]:not(button),
+  .dark .agent-transfer-confirm-body [class*="bg-red"]:not(button) {
     background-color: #020817 !important;
     background-image: none !important;
-  }
-
-  .agent-transfer-confirm-actions {
-    background: linear-gradient(180deg, transparent, var(--surface-2) 18%) !important;
   }
 }
 
@@ -3399,7 +3398,9 @@ dialog *,
   }
 
   /* Objetivos táctiles y campos legibles (16px evita el zoom de iOS). */
-  .dialog-shell input,
+  /* Casillas y radios quedan fuera: estirarlos a 46 px no mejora el objetivo
+     táctil (su etiqueta ya es pulsable) y deforma el control. */
+  .dialog-shell input:not([type='checkbox']):not([type='radio']),
   .dialog-shell select,
   .dialog-shell textarea {
     min-height: 46px;

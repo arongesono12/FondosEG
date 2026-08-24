@@ -1,6 +1,6 @@
 import 'server-only';
 
-import { currentUser } from '@clerk/nextjs/server';
+import { auth, currentUser } from '@clerk/nextjs/server';
 import type { User as ClerkUser } from '@clerk/nextjs/server';
 
 import { createAdminClient } from '@/lib/supabase/admin';
@@ -25,6 +25,19 @@ export interface ClerkIdentity {
   email: string;
   name: string;
   imageUrl: string | null;
+}
+
+/**
+ * Obtiene sólo el identificador de sesión ya verificado por `clerkMiddleware`.
+ *
+ * A diferencia de `currentUser()`, `auth()` no pide el registro completo al
+ * Backend API de Clerk. Las rutas del panel se cargan en paralelo y consultar
+ * ese registro en cada una agotaba fácilmente el límite de una instancia de
+ * desarrollo, convirtiendo lecturas de saldo/notificaciones en errores 503.
+ */
+export async function getClerkUserId(): Promise<string | null> {
+  const { userId } = await auth();
+  return userId;
 }
 
 /**
@@ -103,6 +116,22 @@ export async function getClerkIdentity(): Promise<ClerkIdentity | null> {
 }
 
 /**
+ * Busca el perfil ya vinculado sin hacer una llamada al Backend API de Clerk.
+ * Es el camino normal después de la primera visita autenticada.
+ */
+export async function resolveInternalUserByClerkId(clerkUserId: string): Promise<User | null> {
+  const adminClient = createAdminClient();
+  const { data, error } = await adminClient
+    .from('users')
+    .select('*')
+    .eq('clerk_user_id', clerkUserId)
+    .maybeSingle();
+
+  if (error) throw new Error(error.message);
+  return (data as User | null) ?? null;
+}
+
+/**
  * Resuelve la identidad de Clerk a la fila interna de `public.users`.
  *
  * Orden de resolución:
@@ -120,14 +149,8 @@ export async function resolveInternalUser(identity: ClerkIdentity): Promise<User
   const adminClient = createAdminClient();
   const nowIso = new Date().toISOString();
 
-  const { data: byClerkId, error: byClerkIdError } = await adminClient
-    .from('users')
-    .select('*')
-    .eq('clerk_user_id', identity.clerkUserId)
-    .maybeSingle();
-
-  if (byClerkIdError) throw new Error(byClerkIdError.message);
-  if (byClerkId) return byClerkId as User;
+  const byClerkId = await resolveInternalUserByClerkId(identity.clerkUserId);
+  if (byClerkId) return byClerkId;
 
   // Cuenta preexistente de la era Supabase Auth: la reclamamos por correo.
   const { data: byEmail, error: byEmailError } = await adminClient
@@ -283,8 +306,10 @@ export async function ensureProductAccessAndBalances(user: User): Promise<void> 
 /**
  * Sincroniza hacia la base de datos lo que el usuario haya cambiado en Clerk
  * (nombre, correo, avatar) y aplica el rol declarado en `publicMetadata`.
- * Se llama en cada resolución de perfil: es un único UPDATE y mantiene el
- * dashboard alineado con Clerk sin necesidad de webhooks.
+ * Se reserva para operaciones que soliciten una sincronización explícita.
+ * Las lecturas normales del dashboard usan el perfil interno ya vinculado;
+ * consultar `currentUser()` en cada widget consume el límite del Backend API
+ * de Clerk y no es necesario para autorizar la petición.
  */
 export async function syncFromClerk(user: User, identity: ClerkIdentity): Promise<User> {
   const clerkUser = await currentUser();

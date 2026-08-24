@@ -693,21 +693,29 @@ export function AgentTransferModal({ open, onOpenChange, onSuccess }: AgentTrans
                   <p>Disponibilidad prevista: inmediata tras el registro, sujeta a validaciones operativas.</p>
                   <p>La operación quedará identificada por una referencia y podrá reclamarse desde Cumplimiento.</p>
                 </div>
-                <label className="mt-4 flex cursor-pointer items-start gap-3 text-xs font-semibold text-foreground">
-                  <input
-                    type="checkbox"
-                    checked={complianceConsent}
-                    onChange={(event) => setComplianceConsent(event.target.checked)}
-                    className="mt-0.5 h-4 w-4 accent-pink-600"
-                  />
-                  <span>
-                    Confirmo que he revisado los datos, autorizo la orden de pago y acepto la información
-                    previa conforme al Reglamento {PAYMENT_REGULATION.code}.
-                  </span>
-                </label>
               </div>
+            </div>
 
-              <div className="agent-transfer-confirm-actions flex gap-3 pt-2">
+            {/* La casilla de consentimiento y los botones viven FUERA del cuerpo
+                desplazable. Son lo único que permite completar la operación —el
+                botón de confirmar está deshabilitado hasta marcarla—, así que no
+                pueden quedar por debajo del pliegue de un panel que se desplaza
+                por dentro y que no anuncia que haya más contenido. */}
+            <div className="agent-transfer-confirm-footer flex flex-col gap-3 px-6 pt-4 pb-6 border-t border-border/10">
+              <label className="flex cursor-pointer items-start gap-3 text-xs font-semibold text-foreground">
+                <input
+                  type="checkbox"
+                  checked={complianceConsent}
+                  onChange={(event) => setComplianceConsent(event.target.checked)}
+                  className="mt-0.5 h-4 w-4 shrink-0 accent-pink-600"
+                />
+                <span>
+                  Confirmo que he revisado los datos, autorizo la orden de pago y acepto la información
+                  previa conforme al Reglamento {PAYMENT_REGULATION.code}.
+                </span>
+              </label>
+
+              <div className="agent-transfer-confirm-actions flex gap-3">
                 <Button 
                   variant="outline"
                   onClick={() => setShowConfirm(false)}
