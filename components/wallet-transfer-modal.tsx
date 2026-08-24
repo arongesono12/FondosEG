@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { 
   Dialog, 
   DialogContent, 
@@ -12,17 +12,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { 
-  Wallet, 
-  Send, 
-  Loader2, 
-  CheckCircle2, 
+import {
+  Wallet,
+  Send,
+  Loader2,
+  CheckCircle2,
   AlertCircle,
-  Check,
-  Copy,
-  QrCode,
 } from 'lucide-react';
-import { QRGenerator, generateQRData } from '@/components/ui/qr-generator';
 import { useAppStore } from '@/lib/store';
 import { formatCurrency } from '@/lib/utils';
 import { getAvailableClientBalance } from '@/lib/financial';
@@ -35,7 +31,9 @@ interface WalletTransferModalProps {
   onSuccess?: () => void;
 }
 
-type Step = 'form' | 'qr' | 'success';
+// El envío entre clientes se liquida en el acto: no hay paso intermedio de
+// código ni QR que compartir. Del formulario se pasa directamente al resultado.
+type Step = 'form' | 'success';
 
 export function WalletTransferModal({ open, onOpenChange, onSuccess }: WalletTransferModalProps) {
   const { user } = useAppStore();
@@ -49,7 +47,6 @@ export function WalletTransferModal({ open, onOpenChange, onSuccess }: WalletTra
   const [transfer, setTransfer] = useState<WalletTransfer | null>(null);
   const [balance, setBalance] = useState(0);
   const [complianceConsent, setComplianceConsent] = useState(false);
-  const [copied, setCopied] = useState(false);
   // La billetera opera en su propia divisa, que se lee del saldo real. La
   // preferencia de visualización del usuario no puede decidir la divisa de la
   // operación: no hay conversión en ninguna capa, así que usarla mostraba saldo
@@ -66,38 +63,39 @@ export function WalletTransferModal({ open, onOpenChange, onSuccess }: WalletTra
       setTransfer(null);
       setError(null);
       setComplianceConsent(false);
-      setCopied(false);
     }
   }, [open]);
 
-  useEffect(() => {
-    async function fetchBalance() {
-      if (!user) return;
-      try {
-        const res = await fetch(`/api/balance?userId=${user.id}`);
-        if (!res.ok) {
-          setError('No se pudo consultar tu saldo disponible');
-          return;
-        }
-        const data = await res.json();
-        // `client_balances.client_id` es UNIQUE: hay como mucho una fila de
-        // saldo por cliente, y es ella la que fija la divisa de la billetera.
-        const wallet = Array.isArray(data.balances) ? data.balances[0] : null;
-        // DISPONIBLE, no bruto: al crear una orden el importe queda retenido
-        // en `reserved_balance` hasta que el beneficiario la confirme o el
-        // emisor la anule. Mostrar el saldo bruto dejaría enviar dinero ya
-        // comprometido, y el servidor lo rechazaría con "Saldo insuficiente"
-        // sobre una cifra que en pantalla parecía suficiente.
-        setBalance(
-          getAvailableClientBalance(Number(wallet?.balance) || 0, Number(wallet?.reserved_balance) || 0)
-        );
-        setCurrency(wallet?.currency || 'XAF');
-      } catch (err) {
-        console.error('Error fetching balance:', err);
+  const refreshWallet = useCallback(async () => {
+    if (!user) return;
+
+    try {
+      const res = await fetch(`/api/balance?userId=${user.id}`);
+      if (!res.ok) {
+        setError('No se pudo consultar tu saldo disponible');
+        return;
       }
+      const data = await res.json();
+      // `client_balances.client_id` es UNIQUE: hay como mucho una fila de
+      // saldo por cliente, y es ella la que fija la divisa de la billetera.
+      const wallet = Array.isArray(data.balances) ? data.balances[0] : null;
+      // DISPONIBLE, no bruto: lo retenido por un código de retiro vivo del
+      // propio cliente ya está comprometido. Mostrar el saldo bruto dejaría
+      // enviar dinero comprometido, y el servidor lo rechazaría con "Saldo
+      // insuficiente" sobre una cifra que en pantalla parecía suficiente.
+      setBalance(
+        getAvailableClientBalance(Number(wallet?.balance) || 0, Number(wallet?.reserved_balance) || 0)
+      );
+      setCurrency(wallet?.currency || 'XAF');
+    } catch (err) {
+      console.error('Error fetching balance:', err);
     }
-    fetchBalance();
   }, [user]);
+
+  useEffect(() => {
+    if (!open) return;
+    refreshWallet();
+  }, [open, refreshWallet]);
 
   const handleSubmit = async () => {
     if (!receiverPhone || !receiverName || !amount) {
@@ -143,71 +141,17 @@ export function WalletTransferModal({ open, onOpenChange, onSuccess }: WalletTra
       }
 
       setTransfer(data.transfer);
-      setStep('qr');
+      // El dinero ya está entregado cuando la respuesta llega: no hay paso
+      // intermedio que esperar, así que se avisa al padre de inmediato para que
+      // refresque saldos e historial.
+      setStep('success');
+      onSuccess?.();
     } catch {
       setError('Error de conexión');
     } finally {
       setLoading(false);
     }
   };
-
-  const handleCancel = async () => {
-    if (!transfer) return;
-
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await fetch('/api/wallet-transfer', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'cancel',
-          transfer_id: transfer.id,
-        }),
-      });
-
-      const data = await res.json();
-
-      // Cerrar el diálogo pase lo que pase daba por anulada una orden que seguía
-      // viva y cobrable durante 24 horas.
-      if (!res.ok || !data.success) {
-        setError(data.error || 'No se pudo cancelar la transferencia');
-        return;
-      }
-
-      onOpenChange(false);
-    } catch (err) {
-      console.error('Error cancelling:', err);
-      setError('Error de conexión al cancelar la transferencia');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // El código sólo viaja en la respuesta de creación, que va dirigida al emisor.
-  // Los listados lo omiten para que el beneficiario no pueda leerlo, así que el
-  // tipo lo declara opcional.
-  const verificationCode = transfer?.verification_code ?? '';
-
-  const copyCode = async () => {
-    if (!verificationCode) return;
-    try {
-      await navigator.clipboard.writeText(verificationCode);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      setError('No se pudo copiar el código. Cópialo manualmente.');
-    }
-  };
-
-  const qrData = transfer ? generateQRData({
-    transfer_id: transfer.id,
-    amount: transfer.amount,
-    currency: transfer.currency,
-    sender_name: transfer.sender_name,
-    receiver_name: transfer.receiver_name,
-    verification_code: verificationCode,
-  }) : '';
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -233,6 +177,7 @@ export function WalletTransferModal({ open, onOpenChange, onSuccess }: WalletTra
                   Sin comisión para transferencias entre clientes
                 </p>
               </div>
+
 
               <div className="space-y-2">
                 <Label htmlFor="receiverPhone">Teléfono del destinatario</Label>
@@ -293,7 +238,8 @@ export function WalletTransferModal({ open, onOpenChange, onSuccess }: WalletTra
                   <p>Importe: {formatCurrency(Number(amount) || 0, currency)}</p>
                   <p>Comisión: {formatCurrency(0, currency)}</p>
                   <p>Beneficiario: {receiverName || 'Pendiente de completar'}</p>
-                  <p>Plazo: pendiente de confirmación del beneficiario, con vigencia máxima de 24 horas.</p>
+                  <p>Plazo: entrega inmediata en la billetera del beneficiario.</p>
+                  <p>Esta operación no se puede deshacer una vez enviada.</p>
                 </div>
                 <label className="mt-4 flex cursor-pointer items-start gap-3 text-xs font-semibold text-foreground">
                   <input
@@ -318,80 +264,10 @@ export function WalletTransferModal({ open, onOpenChange, onSuccess }: WalletTra
                   <Loader2 className="h-5 w-5 animate-spin" />
                 ) : (
                   <>
-                    <Send className="h-4 w-4 mr-2" /> Crear Transferencia
+                    <Send className="h-4 w-4 mr-2" /> Enviar dinero
                   </>
                 )}
               </Button>
-            </div>
-          </>
-        )}
-
-        {step === 'qr' && transfer && (
-          <>
-            <DialogHeader className="p-6 border-b border-border/10">
-               <DialogTitle className="flex items-center gap-2 text-xl font-bold text-foreground">
-                <QrCode className="h-5 w-5 text-primary" />
-                Comparte el QR
-              </DialogTitle>
-              <DialogDescription className="text-sm text-muted-foreground">
-                El destinatario debe escanear este QR e ingresar el código para confirmar
-              </DialogDescription>
-            </DialogHeader>
-            
-            <div className="p-6 space-y-4">
-              <div className="text-center space-y-2">
-                <p className="text-sm font-semibold text-muted-foreground">
-                  Monto a recibir
-                </p>
-                <p className="text-3xl font-bold text-green-600">
-                  {formatCurrency(transfer.amount, transfer.currency)}
-                </p>
-              </div>
-
-              <QRGenerator data={qrData} size={200} />
-
-              <div className="flex flex-col items-center gap-2 p-4 rounded-xl bg-muted/50">
-                <p className="text-xs font-semibold text-muted-foreground uppercase">
-                  Código de verificación
-                </p>
-                <div className="flex items-center gap-2">
-                  <p className="text-2xl font-bold tracking-[0.5em]">
-                    {verificationCode}
-                  </p>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={copyCode}
-                    aria-label={copied ? 'Código copiado' : 'Copiar código de verificación'}
-                  >
-                    {copied ? <Check className="h-4 w-4 text-green-600" /> : <Copy className="h-4 w-4" />}
-                  </Button>
-                </div>
-                <p className="text-[10px] text-amber-600 dark:text-amber-500 text-center">
-                  Entrégalo únicamente al destinatario: quien tenga este código
-                  puede cobrar la transferencia.
-                </p>
-              </div>
-
-              <div className="flex gap-3">
-                <Button 
-                  variant="outline"
-                  onClick={handleCancel}
-                  disabled={loading}
-                  className="flex-1"
-                >
-                  Cancelar
-                </Button>
-                <Button 
-                  onClick={() => {
-                    setStep('success');
-                    onSuccess?.();
-                  }}
-                   className="flex-1 bg-brand-gradient text-white font-bold"
-                >
-                  Listo
-                </Button>
-              </div>
             </div>
           </>
         )}
@@ -402,10 +278,10 @@ export function WalletTransferModal({ open, onOpenChange, onSuccess }: WalletTra
               <CheckCircle2 className="h-8 w-8 text-green-600" />
             </div>
             <div>
-               <p className="text-lg font-bold">Transferencia creada</p>
+              <p className="text-lg font-bold">Dinero entregado</p>
               <p className="text-sm text-muted-foreground mt-1">
-                Hemos avisado al destinatario. Entrégale el código de
-                confirmación para que pueda cobrarla.
+                El importe ya está en la billetera de {transfer.receiver_name}. No
+                hace falta ningún código: puede usarlo desde ahora mismo.
               </p>
             </div>
             <div className="p-4 rounded-xl bg-muted/50 space-y-2">
@@ -419,7 +295,7 @@ export function WalletTransferModal({ open, onOpenChange, onSuccess }: WalletTra
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Estado:</span>
-                <span className="font-semibold text-amber-600">Pendiente de confirmación</span>
+                <span className="font-semibold text-green-600">Completada</span>
               </div>
             </div>
             <Button 

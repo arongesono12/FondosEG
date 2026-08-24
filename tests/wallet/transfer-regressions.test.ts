@@ -23,7 +23,6 @@ async function load(path: string): Promise<string> {
 const service = () => load('services/wallet-transfer.ts');
 const route = () => load('app/api/wallet-transfer/route.ts');
 const sendModal = () => load('components/wallet-transfer-modal.tsx');
-const verifyModal = () => load('components/verify-transfer-modal.tsx');
 const notifications = () => load('lib/server/notification-outbox.ts');
 const types = () => load('types/index.ts');
 
@@ -75,14 +74,38 @@ test('las consultas de transferencias no dependen de claves foráneas inexistent
   assert.match(source, /async function attachParties/);
 });
 
-test('el código de verificación se genera con un CSPRNG', async () => {
+test('el envío entre clientes no genera ningún código', async () => {
   const source = await service();
 
-  // El estado de `Math.random()` es reconstruible observando salidas sucesivas:
-  // permitía predecir el código de una orden ajena a partir de códigos propios.
+  // El vale con código pertenece al retiro de efectivo, donde quien lo presenta
+  // en ventanilla es quien cobra. Entre dos cuentas de la aplicación el
+  // beneficiario ya está identificado: el envío se liquida en el acto, igual que
+  // el de un gestor a un cliente registrado. Un código sólo añadiría un paso que
+  // puede no completarse nunca, con el importe retenido mientras tanto.
+  assert.doesNotMatch(source, /generateVerificationCode/);
+  assert.doesNotMatch(source, /randomInt\(/);
   assert.doesNotMatch(source, /Math\.random\(\)/);
-  assert.match(source, /from 'node:crypto'/);
-  assert.match(source, /randomInt\(/);
+  assert.match(source, /createWalletTransferSettledOperation\(\{/);
+  assert.doesNotMatch(
+    source,
+    /createWalletTransferHold\(\{/,
+    'la creación no puede volver al modelo de retención'
+  );
+});
+
+test('el envío entre clientes se liquida en el acto', async () => {
+  const migration = await load(
+    'supabase/migrations/20260826_wallet_transfer_instant_settlement.sql'
+  );
+
+  // El saldo del emisor baja y el del beneficiario sube en la MISMA
+  // transacción, y la orden nace `confirmed`. Nada queda `pending` esperando a
+  // que alguien presente un código.
+  assert.match(
+    migration,
+    /CREATE OR REPLACE FUNCTION public\.create_wallet_transfer_settled_operation/
+  );
+  assert.match(migration, /NULL, 'confirmed', p_notes, v_now, p_origin_channel/);
 });
 
 test('sólo el beneficiario puede confirmar una transferencia', async () => {
@@ -164,17 +187,25 @@ test('el emisor sin teléfono recibe un mensaje accionable', async () => {
   assert.match(source, /if \(!sender\.phone\?\.trim\(\)\)/);
 });
 
-test('un consentimiento no registrable no deja órdenes cobrables vivas', async () => {
+test('la evidencia de consentimiento se escribe con el dinero, no después', async () => {
   const source = await service();
 
-  // `recordPaymentConsent` se ejecuta después del INSERT. Si lanzaba, el emisor
-  // veía un 500 y creía que no había pasado nada, pero quedaba una transferencia
-  // `pending` que el beneficiario podía cobrar durante 24 horas.
-  assert.match(source, /catch \(consentError\)/);
+  // Con el modelo de retención se podía anular la orden si el registro fallaba,
+  // porque no se había entregado nada. Con entrega inmediata no hay ventana: en
+  // el momento en que ese INSERT ocurriría, el importe ya está en la billetera
+  // del beneficiario y la operación no se puede deshacer. Por eso la evidencia
+  // viaja a la RPC y se escribe en la misma transacción que el dinero.
+  assert.doesNotMatch(source, /recordPaymentConsent\(/);
+  assert.match(source, /regulationCode: PAYMENT_REGULATION\.code/);
+  assert.match(source, /disclosureVersion: PAYMENT_REGULATION\.disclosureVersion/);
+
+  const migration = await load(
+    'supabase/migrations/20260826_wallet_transfer_instant_settlement.sql'
+  );
   assert.match(
-    source,
-    /catch \(consentError\)[\s\S]{0,400}?cancelWalletTransferOperation\(transfer\.id, senderId\)/,
-    'la orden debe anularse si no se puede dejar evidencia del consentimiento'
+    migration,
+    /INSERT INTO public\.compliance_events/,
+    'la RPC debe dejar la evidencia junto al movimiento de saldo'
   );
 });
 
@@ -187,31 +218,30 @@ test('los errores internos no se filtran al navegador', async () => {
   assert.doesNotMatch(source, /error: cancelError\.message/);
 });
 
-test('la lista de pendientes tolera una respuesta de error', async () => {
-  const source = await verifyModal();
+test('ya no hay pantalla de confirmación de recepción', async () => {
+  // El beneficiario no tiene nada que confirmar: cuando ve el aviso, el dinero
+  // ya está en su billetera. La pantalla que pedía el código desaparece en vez
+  // de quedarse mostrando una lista de pendientes que siempre estará vacía.
+  await assert.rejects(
+    readFile(new URL('components/verify-transfer-modal.tsx', root), 'utf8'),
+    'el modal de confirmación debe haber desaparecido con el modelo de vale'
+  );
 
-  // El GET devuelve un array en el camino feliz y `{ error }` en 401/403/500.
-  // Asignar el objeto al estado rompía el render con
-  // "pendingTransfers.map is not a function".
-  assert.match(source, /Array\.isArray\(data\)/);
+  const page = await load('app/(dashboard)/transfers/page.tsx');
+  assert.doesNotMatch(page, /VerifyTransferModal/);
+  assert.doesNotMatch(page, /Confirmar Recepción/);
 });
 
-test('la auto-verificación exige transferencia y no puede entrar en bucle', async () => {
-  const source = await verifyModal();
-
-  // La guarda original era `!transfer`, justo lo contrario de lo que necesita
-  // `handleVerify`. Al corregirla hace falta `lastAttemptedCode`: si no, un
-  // código incorrecto relanzaría el efecto contra el servidor sin parar.
-  assert.doesNotMatch(source, /verificationCode\.length === 6 && !transfer/);
-  assert.match(source, /lastAttemptedCode\.current !== verificationCode/);
-});
-
-test('la cancelación no se da por buena sin mirar la respuesta', async () => {
+test('el modal de envío no ofrece código, QR ni anulación', async () => {
   const source = await sendModal();
 
-  // Se cerraba el diálogo pase lo que pase: el usuario creía haber anulado una
-  // orden que seguía viva y cobrable durante 24 horas.
-  assert.match(source, /if \(!res\.ok \|\| !data\.success\)/);
+  // No hay paso intermedio: del formulario se pasa al resultado. Tampoco hay
+  // nada que anular, porque la operación se completa al enviarla.
+  assert.match(source, /type Step = 'form' \| 'success'/);
+  assert.doesNotMatch(source, /step === 'qr'/);
+  assert.doesNotMatch(source, /verification_code/);
+  assert.doesNotMatch(source, /QRGenerator/);
+  assert.doesNotMatch(source, /action: 'cancel'/);
 });
 
 test('el modal de envío usa la divisa real de la billetera', async () => {

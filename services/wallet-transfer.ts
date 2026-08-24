@@ -1,17 +1,17 @@
-import { randomInt } from 'node:crypto';
 import { createAdminClient } from '@/lib/supabase/admin';
 import type { WalletTransfer, CreateWalletTransferData, ConfirmWalletTransferData } from '@/types';
-import { queueWalletPendingNotice, queueWalletConfirmationInternal } from '@/lib/server/notification-outbox';
+import { queueWalletConfirmationInternal } from '@/lib/server/notification-outbox';
 import { emitWebhookEvent } from '@/lib/server/webhook-outbox';
 import { PAYMENT_REGULATION } from '@/lib/compliance';
 import { getAvailableClientBalance } from '@/lib/financial';
-import { assertComplianceInfrastructure, recordPaymentConsent } from '@/lib/server/compliance-events';
+import { assertComplianceInfrastructure } from '@/lib/server/compliance-events';
 import { getPhoneLookupCandidates, normalizePhoneDigits } from '@/lib/utils';
 import {
   cancelWalletTransferOperation,
   confirmWalletTransferOperation,
-  createWalletTransferHold,
+  createWalletTransferSettledOperation,
   releaseExpiredClientWithdrawals,
+  releaseExpiredWalletTransfers,
 } from '@/lib/server/financial-operations';
 
 type AdminClient = ReturnType<typeof createAdminClient>;
@@ -35,6 +35,30 @@ function translateRpcError(error: unknown, fallback: string): string {
     [/transfer has expired/i, 'La transferencia ha caducado'],
     [/invalid verification code/i, 'El código de verificación no es correcto'],
     [/transfer cannot be cancelled/i, 'Esta transferencia ya no se puede cancelar'],
+    [/receiver is not a valid client/i, 'El destinatario no es un cliente válido'],
+    [/sender is not a valid client/i, 'Sólo los clientes pueden enviar dinero desde la billetera'],
+    // El código se despliega antes que la migración con más frecuencia de la
+    // que uno quisiera. Sin esta entrada, la RPC ausente cae en el mensaje de
+    // reserva y el emisor lee "inténtalo de nuevo" ante algo que sólo se
+    // arregla aplicando la migración.
+    [
+      /could not find the function/i,
+      'La base de datos todavía no tiene aplicada la última migración. Avisa a soporte: reintentar no lo va a resolver.',
+    ],
+    [
+      /receiver account is not active/i,
+      'La cuenta del destinatario no está activa, así que no podría cobrar el envío',
+    ],
+    // Violación de clave foránea: el emisor o el beneficiario no existen para
+    // la restricción de `wallet_transfers`. Es un defecto de esquema, no algo
+    // que el usuario pueda arreglar, así que NO se le puede decir que
+    // reintente: el mensaje de reserva («inténtalo de nuevo») convirtió este
+    // fallo en un callejón sin salida hasta que se reprodujo contra la base
+    // de datos. Ver 20260824_wallet_transfers_fk_repoint_to_public_users.sql.
+    [
+      /violates foreign key constraint/i,
+      'Tu cuenta o la del beneficiario no está correctamente registrada en la base de datos. Avisa a soporte: reintentar no lo va a resolver.',
+    ],
   ];
   for (const [pattern, message] of table) {
     if (pattern.test(raw)) return message;
@@ -42,21 +66,16 @@ function translateRpcError(error: unknown, fallback: string): string {
   return fallback;
 }
 
-function generateVerificationCode(): string {
-  // `Math.random()` no es un CSPRNG: su estado interno se puede reconstruir
-  // observando salidas sucesivas, lo que permitiría predecir el código de una
-  // orden ajena a partir de códigos propios.
-  return randomInt(0, 1_000_000).toString().padStart(6, '0');
-}
-
 /**
  * Resuelve el emisor y el beneficiario de cada transferencia.
  *
- * La tabla `wallet_transfers` desplegada no declara las claves foráneas hacia
- * `users`, así que PostgREST no puede resolver el embed
- * `users!wallet_transfers_sender_id_fkey(...)` y responde PGRST200. Una consulta
- * explícita funciona con y sin constraints, de modo que este código es inmune a
- * esa divergencia de esquema.
+ * Se hace con una consulta explícita en lugar del embed
+ * `users!wallet_transfers_sender_id_fkey(...)`, que responde PGRST200 mientras
+ * las claves foráneas no apunten a `public.users`. La tabla desplegada las
+ * tenía apuntando a `auth.users` —lo que además impedía crear cualquier
+ * transferencia, ver
+ * `20260824_wallet_transfers_fk_repoint_to_public_users.sql`—, y una consulta
+ * explícita funciona igual antes y después de esa corrección.
  */
 async function attachParties(adminClient: AdminClient, transfers: WalletTransfer[]): Promise<WalletTransfer[]> {
   const ids = Array.from(
@@ -131,6 +150,58 @@ async function findClientByPhone(adminClient: AdminClient, phone: string) {
   ) ?? null;
 }
 
+/**
+ * Barre las órdenes caducadas antes de leer, crear o confirmar.
+ *
+ * Una orden caducada sigue restando saldo disponible hasta que alguien libera
+ * su retención, y nada lo hace por su cuenta: no hay tarea programada. Se barre
+ * en cada punto por el que pasa el flujo, igual que ya se hacía con los códigos
+ * de retiro caducados. No puede hacer fallar a quien lo invoca: en el peor caso
+ * se sigue viendo retenido un importe que ya nadie puede cobrar, que es
+ * exactamente el estado anterior.
+ */
+async function sweepExpiredWalletTransfers(clientId?: string | null): Promise<void> {
+  try {
+    await releaseExpiredWalletTransfers(clientId ?? null);
+  } catch (expiryError) {
+    console.error('No se pudieron liberar las órdenes de billetera caducadas:', expiryError);
+  }
+}
+
+/**
+ * Comprueba que el beneficiario podría entrar a cobrar la orden.
+ *
+ * Tener ficha en `users` no basta. Si la cuenta está desactivada o su acceso al
+ * panel no está en `active`, no puede iniciar sesión para confirmar, y el
+ * importe se quedaría retenido en la billetera del emisor hasta caducar. Se
+ * exige lo MISMO que exige el inicio de sesión, `requireProductAccess('dashboard')`.
+ *
+ * Ante un error de lectura devuelve `true` a propósito: la misma regla está
+ * replicada dentro de `create_wallet_transfer_hold`, que es quien manda. Fallar
+ * cerrado aquí bloquearía envíos legítimos por una incidencia pasajera sin
+ * ganar nada.
+ */
+async function canReceiveWalletTransfer(
+  adminClient: AdminClient,
+  receiver: { id: string; is_active?: boolean | null }
+): Promise<boolean> {
+  if (receiver.is_active === false) return false;
+
+  const { data, error } = await adminClient
+    .from('account_access')
+    .select('status')
+    .eq('user_id', receiver.id)
+    .eq('product', 'dashboard')
+    .maybeSingle();
+
+  if (error) {
+    console.error('No se pudo comprobar el acceso del destinatario:', error);
+    return true;
+  }
+
+  return data?.status === 'active';
+}
+
 export async function createWalletTransfer(
   senderId: string,
   data: CreateWalletTransferData,
@@ -153,15 +224,18 @@ export async function createWalletTransfer(
 
   await assertComplianceInfrastructure();
 
-  // Los códigos de retiro caducados siguen reteniendo saldo hasta que se
-  // liberan. Sin este barrido, un vale que el emisor nunca llegó a cobrar le
-  // bloquearía sus propios envíos con un "Saldo insuficiente" que ya no
-  // responde a ninguna orden viva.
+  // Los códigos de retiro y las órdenes de billetera caducados siguen
+  // reteniendo saldo hasta que se liberan. Sin este barrido, un vale que el
+  // emisor nunca llegó a cobrar —o un envío que el beneficiario nunca
+  // confirmó— le bloquearía sus propios envíos con un "Saldo insuficiente" que
+  // ya no responde a ninguna orden viva.
   try {
     await releaseExpiredClientWithdrawals(senderId);
   } catch (expiryError) {
     console.error('No se pudieron liberar los retiros caducados:', expiryError);
   }
+
+  await sweepExpiredWalletTransfers(senderId);
 
   const { data: sender, error: senderError } = await adminClient
     .from('users')
@@ -192,6 +266,13 @@ export async function createWalletTransfer(
 
   if (receiver.id === senderId) {
     return { success: false, error: 'No puedes enviarte dinero a ti mismo' };
+  }
+
+  if (!(await canReceiveWalletTransfer(adminClient, receiver))) {
+    return {
+      success: false,
+      error: 'La cuenta del destinatario no está activa, así que no podría cobrar el envío',
+    };
   }
 
   // `client_balances.client_id` es UNIQUE: hay como mucho una fila por cliente.
@@ -234,17 +315,20 @@ export async function createWalletTransfer(
     return { success: false, error: 'Saldo insuficiente para realizar esta transferencia' };
   }
 
-  const verificationCode = generateVerificationCode();
-
-  // La creación pasa por `create_wallet_transfer_hold`: en una sola transacción
-  // bloquea la fila del saldo (`FOR UPDATE`), retiene el importe en
-  // `reserved_balance`, inserta la orden y deja el asiento en
-  // `financial_events`. Hacerlo a mano —como antes— permitía que dos órdenes
-  // simultáneas del mismo emisor superasen su saldo, porque ninguna veía la
-  // retención de la otra.
+  // Todo pasa por `create_wallet_transfer_settled_operation`: en UNA sola
+  // transacción bloquea las dos filas de saldo, debita al emisor, abona al
+  // beneficiario, inserta la orden ya `confirmed` y deja los dos asientos
+  // contables junto con la evidencia de consentimiento.
+  //
+  // No hay código ni retención. El envío entre clientes se entrega en el acto,
+  // igual que el de un gestor a un cliente registrado: el beneficiario ya está
+  // identificado, así que no hace falta un vale al portador que alguien tenga
+  // que presentar. El vale sigue existiendo sólo donde tiene sentido, en
+  // `client_withdrawals`, cuando un cliente quiere sacar en efectivo su propio
+  // saldo.
   let transfer: WalletTransfer;
   try {
-    const result = await createWalletTransferHold({
+    const result = await createWalletTransferSettledOperation({
       senderId,
       receiverId: receiver.id,
       senderName: sender.name,
@@ -255,57 +339,28 @@ export async function createWalletTransfer(
       receiverPhone: receiver.phone ?? data.receiver_phone,
       amount,
       currency,
-      verificationCode,
       // El envoltorio ya normaliza `undefined` a NULL antes de la RPC.
       notes: data.notes,
       originChannel: 'dashboard',
-    });
-    transfer = result.transfer as unknown as WalletTransfer;
-  } catch (holdError) {
-    console.error('No se pudo registrar la transferencia de billetera:', holdError);
-    return {
-      success: false,
-      error: translateRpcError(holdError, 'No se pudo registrar la transferencia. Inténtalo de nuevo.'),
-    };
-  }
-
-  try {
-    await recordPaymentConsent({
-      actorUserId: senderId,
-      transferId: transfer.id,
-      transferType: 'wallet_transfer',
-      amount: Number(transfer.amount),
-      currency: transfer.currency,
-      feeAmount: 0,
-      beneficiaryName: transfer.receiver_name,
-      channel: 'dashboard_wallet',
+      regulationCode: PAYMENT_REGULATION.code,
+      disclosureVersion: PAYMENT_REGULATION.disclosureVersion,
+      consentChannel: 'dashboard_wallet',
       ipAddress: requestEvidence?.ipAddress,
       userAgent: requestEvidence?.userAgent,
     });
-  } catch (consentError) {
-    // La evidencia de consentimiento es un requisito regulatorio. Si no se puede
-    // dejar constancia, la orden no puede quedarse viva y cobrable 24 horas
-    // mientras el emisor ve un error y cree que no ha pasado nada.
-    console.error('No se pudo registrar el consentimiento de pago:', consentError);
-    // Se anula por la RPC, no con un UPDATE de `status`: ahora hay fondos
-    // RETENIDOS detrás de la orden. Marcarla como anulada sin liberar la
-    // reserva dejaría ese importe bloqueado en la billetera del emisor para
-    // siempre, sin ninguna orden viva que lo justifique.
-    try {
-      await cancelWalletTransferOperation(transfer.id, senderId);
-    } catch (releaseError) {
-      console.error('No se pudo liberar la retención de la orden anulada:', releaseError);
-    }
+    transfer = result.transfer as unknown as WalletTransfer;
+  } catch (settleError) {
+    console.error('No se pudo registrar la transferencia de billetera:', settleError);
     return {
       success: false,
-      error: 'No se pudo registrar la evidencia de consentimiento. La orden ha sido anulada.',
+      error: translateRpcError(settleError, 'No se pudo registrar la transferencia. Inténtalo de nuevo.'),
     };
   }
 
-  // Aviso al beneficiario, deliberadamente SIN el código: es el emisor quien lo
-  // custodia y lo entrega en mano. Ver `queueWalletPendingNotice`.
+  // El dinero ya está en su billetera, así que el aviso lo dice y no pide
+  // ningún código.
   try {
-    await queueWalletPendingNotice({
+    await queueWalletConfirmationInternal({
       transferId: transfer.id,
       phone: receiver.phone,
       senderName: sender.name,
@@ -314,7 +369,33 @@ export async function createWalletTransfer(
       currency,
     });
   } catch (notifErr) {
-    console.error('Failed to queue wallet pending notice:', notifErr);
+    console.error('Failed to queue wallet settlement notice:', notifErr);
+  }
+
+  // Para un integrador, este envío ya está completado: si no se emitiera aquí,
+  // los envíos del panel dejarían de aparecer en `wallet_transfer.confirmed`,
+  // que hasta ahora los recogía al confirmarse.
+  try {
+    await emitWebhookEvent(
+      {
+        eventType: 'wallet_transfer.confirmed',
+        payload: {
+          transfer_id: transfer.id,
+          amount: Number(transfer.amount),
+          currency: transfer.currency,
+          status: transfer.status,
+          sender_name: transfer.sender_name,
+          sender_phone: transfer.sender_phone,
+          receiver_name: transfer.receiver_name,
+          receiver_phone: transfer.receiver_phone,
+          confirmed_at: transfer.confirmed_at ?? null,
+          source: 'dashboard_wallet',
+        },
+      },
+      10
+    );
+  } catch (webhookErr) {
+    console.error('Failed to dispatch wallet settlement webhook:', webhookErr);
   }
 
   return { success: true, transfer };
@@ -329,6 +410,11 @@ export async function confirmWalletTransfer(
   if (!data.transfer_id) {
     return { success: false, error: 'Selecciona la transferencia que quieres confirmar' };
   }
+
+  // Si la orden ya caducó, el barrido la marca y devuelve su importe al emisor.
+  // La RPC la rechaza después con "Transfer has expired", que es el motivo real
+  // y no un genérico "ya no está pendiente".
+  await sweepExpiredWalletTransfers();
 
   const { data: transfer, error: transferError } = await adminClient
     .from('wallet_transfers')
@@ -458,6 +544,8 @@ function redactCodeForNonSender(transfers: WalletTransfer[], viewerId: string): 
 export async function getPendingWalletTransfers(userId: string): Promise<WalletTransfer[]> {
   const adminClient = createAdminClient();
 
+  await sweepExpiredWalletTransfers();
+
   // Consulta orientada al beneficiario: el código no se selecciona siquiera, de
   // modo que no puede escaparse por esta vía ni por descuido de un cambio futuro.
   const { data, error } = await adminClient
@@ -479,6 +567,8 @@ export async function getPendingWalletTransfers(userId: string): Promise<WalletT
 
 export async function getClientWalletTransfers(clientId: string): Promise<WalletTransfer[]> {
   const adminClient = createAdminClient();
+
+  await sweepExpiredWalletTransfers(clientId);
 
   const { data, error } = await adminClient
     .from('wallet_transfers')

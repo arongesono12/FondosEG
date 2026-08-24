@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { AuthzError, requireProfile, requireSelfOrAdmin } from '@/lib/server/authz';
-import { releaseExpiredClientWithdrawals } from '@/lib/server/financial-operations';
+import {
+  releaseExpiredClientWithdrawals,
+  releaseExpiredWalletTransfers,
+} from '@/lib/server/financial-operations';
 
 export async function GET(request: NextRequest) {
   try {
@@ -16,14 +19,21 @@ export async function GET(request: NextRequest) {
 
     const adminClient = createAdminClient();
 
-    // Un código de retiro caducado deja de ser cobrable, pero su retención
-    // sigue restando saldo disponible hasta que alguien la libera. Se barre
-    // aquí porque este es el punto por el que pasa toda lectura de saldo del
-    // cliente: así nunca ve retenido un importe que ya nadie puede cobrar.
+    // Un código de retiro o una orden de billetera caducados dejan de ser
+    // cobrables, pero su retención sigue restando saldo disponible hasta que
+    // alguien la libera. Se barre aquí porque este es el punto por el que pasa
+    // toda lectura de saldo del cliente: así nunca ve retenido un importe que
+    // ya nadie puede cobrar.
     try {
       await releaseExpiredClientWithdrawals(targetUserId);
     } catch (expiryError) {
       console.error('No se pudieron liberar los retiros caducados:', expiryError);
+    }
+
+    try {
+      await releaseExpiredWalletTransfers(targetUserId);
+    } catch (expiryError) {
+      console.error('No se pudieron liberar las órdenes de billetera caducadas:', expiryError);
     }
 
     const { data: balances, error } = await adminClient

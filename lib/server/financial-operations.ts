@@ -1,5 +1,37 @@
 import { createAdminClient } from '@/lib/supabase/admin';
 
+/**
+ * Convierte el error de una RPC en excepción SIN perder su diagnóstico.
+ *
+ * `new Error(error.message)` tiraba `code`, `details` y `hint`, que es justo
+ * lo que identifica la causa. El envío entre clientes llegaba al log como
+ * "violates foreign key constraint wallet_transfers_sender_id_fkey" sin el
+ * código 23503 ni el DETAIL que nombra la clave rechazada, y hubo que
+ * reproducir la llamada contra la base de datos para saber qué pasaba.
+ *
+ * `message` conserva el texto original como primer fragmento: las tablas de
+ * traducción de los servicios lo buscan por expresión regular.
+ */
+class RpcError extends Error {
+  readonly code?: string;
+  readonly details?: string | null;
+  readonly hint?: string | null;
+
+  constructor(error: { message: string; code?: string; details?: string | null; hint?: string | null }) {
+    const context = [
+      error.code ? `code=${error.code}` : null,
+      error.details ? `details=${error.details}` : null,
+      error.hint ? `hint=${error.hint}` : null,
+    ].filter(Boolean);
+
+    super(context.length > 0 ? `${error.message} (${context.join('; ')})` : error.message);
+    this.name = 'RpcError';
+    this.code = error.code;
+    this.details = error.details;
+    this.hint = error.hint;
+  }
+}
+
 interface AgentTransferPayload {
   agentId: string;
   actorUserId: string;
@@ -32,6 +64,24 @@ interface WalletTransferPayload {
   verificationCode: string;
   notes?: string;
   originChannel?: string;
+}
+
+interface SettledWalletTransferPayload {
+  senderId: string;
+  receiverId: string;
+  senderName: string;
+  senderPhone: string;
+  receiverName: string;
+  receiverPhone: string;
+  amount: number;
+  currency: string;
+  notes?: string;
+  originChannel?: string;
+  regulationCode: string;
+  disclosureVersion: string;
+  consentChannel?: string;
+  ipAddress?: string | null;
+  userAgent?: string | null;
 }
 
 interface DirectWalletTransferPayload {
@@ -101,7 +151,7 @@ export async function createAgentTransferOperation(payload: AgentTransferPayload
   });
 
   if (error) {
-    throw new Error(error.message);
+    throw new RpcError(error);
   }
 
   return extractRpcData<{
@@ -119,7 +169,7 @@ export async function markAgentTransferPaidOut(transferId: string, actorUserId: 
   });
 
   if (error) {
-    throw new Error(error.message);
+    throw new RpcError(error);
   }
 
   return extractRpcData<{ transfer: Record<string, unknown> }>(data);
@@ -147,7 +197,7 @@ export async function correctAgentTransferOperation(payload: CorrectAgentTransfe
   });
 
   if (error) {
-    throw new Error(error.message);
+    throw new RpcError(error);
   }
 
   return extractRpcData<{
@@ -175,7 +225,7 @@ export async function topUpAgentBalanceOperation(
   });
 
   if (error) {
-    throw new Error(error.message);
+    throw new RpcError(error);
   }
 
   return extractRpcData<{ previous_balance: number; new_balance: number }>(data);
@@ -196,12 +246,60 @@ export async function resetAgentBalanceOperation(
   });
 
   if (error) {
-    throw new Error(error.message);
+    throw new RpcError(error);
   }
 
   return extractRpcData<{ previous_balance: number; new_balance: number }>(data);
 }
 
+/**
+ * Envío entre clientes liquidado en el acto.
+ *
+ * Sustituye a `createWalletTransferHold`: el saldo del emisor baja y el del
+ * beneficiario sube en la misma transacción, sin código ni confirmación, igual
+ * que cuando un gestor envía a un cliente registrado.
+ *
+ * La evidencia de consentimiento viaja como argumento y la escribe la propia
+ * RPC. Con entrega inmediata no hay ventana para registrarla después: el dinero
+ * ya estaría entregado y la operación no se podría deshacer.
+ */
+export async function createWalletTransferSettledOperation(payload: SettledWalletTransferPayload) {
+  const adminClient = createAdminClient();
+  const { data, error } = await adminClient.rpc('create_wallet_transfer_settled_operation', {
+    p_sender_id: payload.senderId,
+    p_receiver_id: payload.receiverId,
+    p_sender_name: payload.senderName,
+    p_sender_phone: payload.senderPhone,
+    p_receiver_name: payload.receiverName,
+    p_receiver_phone: payload.receiverPhone,
+    p_amount: payload.amount,
+    p_currency: payload.currency,
+    p_notes: payload.notes ?? null,
+    p_origin_channel: payload.originChannel ?? 'dashboard',
+    p_regulation_code: payload.regulationCode,
+    p_disclosure_version: payload.disclosureVersion,
+    p_consent_channel: payload.consentChannel ?? 'dashboard_wallet',
+    p_ip_address: payload.ipAddress ?? null,
+    p_user_agent: payload.userAgent ?? null,
+  });
+
+  if (error) {
+    throw new RpcError(error);
+  }
+
+  return extractRpcData<{
+    transfer: Record<string, unknown>;
+    sender_balance: number;
+    sender_available_balance: number;
+    receiver_balance: number;
+  }>(data);
+}
+
+/**
+ * HEREDADA: modelo de vale con código, sustituido por
+ * `createWalletTransferSettledOperation`. Se conserva porque sigue siendo la
+ * pieza que liquida cualquier orden antigua que quedara en `pending`.
+ */
 export async function createWalletTransferHold(payload: WalletTransferPayload) {
   const adminClient = createAdminClient();
   const { data, error } = await adminClient.rpc('create_wallet_transfer_hold', {
@@ -219,7 +317,7 @@ export async function createWalletTransferHold(payload: WalletTransferPayload) {
   });
 
   if (error) {
-    throw new Error(error.message);
+    throw new RpcError(error);
   }
 
   return extractRpcData<{
@@ -242,7 +340,7 @@ export async function createWalletTransferDirectOperation(payload: DirectWalletT
   });
 
   if (error) {
-    throw new Error(error.message);
+    throw new RpcError(error);
   }
 
   return extractRpcData<{
@@ -266,7 +364,7 @@ export async function confirmWalletTransferOperation(
   });
 
   if (error) {
-    throw new Error(error.message);
+    throw new RpcError(error);
   }
 
   return extractRpcData<{
@@ -296,7 +394,7 @@ export async function createClientWithdrawalOperation(payload: CreateClientWithd
   });
 
   if (error) {
-    throw new Error(error.message);
+    throw new RpcError(error);
   }
 
   return extractRpcData<{
@@ -314,7 +412,7 @@ export async function payOutClientWithdrawalOperation(withdrawalId: string, agen
   });
 
   if (error) {
-    throw new Error(error.message);
+    throw new RpcError(error);
   }
 
   return extractRpcData<{
@@ -334,7 +432,7 @@ export async function cancelClientWithdrawalOperation(withdrawalId: string, acto
   });
 
   if (error) {
-    throw new Error(error.message);
+    throw new RpcError(error);
   }
 
   return extractRpcData<{
@@ -356,7 +454,30 @@ export async function releaseExpiredClientWithdrawals(clientId?: string | null) 
   });
 
   if (error) {
-    throw new Error(error.message);
+    throw new RpcError(error);
+  }
+
+  return Number(data ?? 0);
+}
+
+/**
+ * Libera las retenciones de las órdenes de billetera caducadas.
+ *
+ * Una orden `pending` cuyo `expires_at` ya pasó no la puede cobrar nadie, pero
+ * su importe seguía restando saldo disponible al emisor para siempre: la rama
+ * de caducidad de `confirm_wallet_transfer_operation` intentaba liberarla y
+ * acto seguido lanzaba una excepción que revertía sus propias escrituras, y no
+ * existía ningún barrido. Ver
+ * `20260825_wallet_transfer_expiry_and_receiver_eligibility.sql`.
+ */
+export async function releaseExpiredWalletTransfers(clientId?: string | null) {
+  const adminClient = createAdminClient();
+  const { data, error } = await adminClient.rpc('release_expired_wallet_transfers', {
+    p_client_id: clientId ?? null,
+  });
+
+  if (error) {
+    throw new RpcError(error);
   }
 
   return Number(data ?? 0);
@@ -370,7 +491,7 @@ export async function cancelWalletTransferOperation(transferId: string, actorUse
   });
 
   if (error) {
-    throw new Error(error.message);
+    throw new RpcError(error);
   }
 
   return extractRpcData<{

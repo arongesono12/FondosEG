@@ -30,7 +30,6 @@ import {
 } from 'lucide-react';
 import { SupportModal } from '@/components/layout/support-modal';
 import { WalletTransferModal } from '@/components/wallet-transfer-modal';
-import { VerifyTransferModal } from '@/components/verify-transfer-modal';
 import { AgentPayoutModal } from '@/components/agent-payout-modal';
 import { AgentTransferModal } from '@/components/agent-transfer-modal';
 import { ClientWithdrawalModal } from '@/components/client-withdrawal-modal';
@@ -49,7 +48,6 @@ export default function TransfersPage() {
   const [showWeeklyModal, setShowWeeklyModal] = useState(false);
   const [supportOpen, setSupportOpen] = useState(false);
   const [walletTransferOpen, setWalletTransferOpen] = useState(false);
-  const [verifyTransferOpen, setVerifyTransferOpen] = useState(false);
   const [agentTransferOpen, setAgentTransferOpen] = useState(false);
   const [agentPayoutOpen, setAgentPayoutOpen] = useState(false);
   const [revolutPayoutOpen, setRevolutPayoutOpen] = useState(false);
@@ -176,23 +174,10 @@ export default function TransfersPage() {
           </Card>
         )}
 
-        {/* Card: Confirmar Recepción (Solo clientes) */}
-        {user?.role === 'cliente' && (
-          <Card className="transfer-action-card bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 rounded-3xl p-6 cursor-pointer hover:shadow-lg transition-all" onClick={() => setVerifyTransferOpen(true)}>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-bold text-blue-600 dark:text-blue-400 flex items-center gap-2">
-                <QrCode className="h-4 w-4" /> Confirmar Recepción
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">QR + Código</p>
-              <p className="text-xs text-blue-500 mt-1">Confirma transferencias recibidas</p>
-              <Button variant="ghost" className="transfer-mobile-action text-xs font-bold text-blue-600 mt-2 p-0 h-auto">
-                Ver pendientes <ArrowUpRight className="h-3 w-3 ml-1" />
-              </Button>
-            </CardContent>
-          </Card>
-        )}
+        {/* Sin tarjeta de "Confirmar Recepción": desde 20260826 el envío entre
+            clientes se entrega en el acto y no hay nada que confirmar. El
+            código sobrevive sólo en el retiro de efectivo, que tiene su propia
+            tarjeta justo debajo. */}
 
         {/* Card: Retirar Efectivo (Solo clientes) */}
         {user?.role === 'cliente' && (
@@ -471,15 +456,6 @@ export default function TransfersPage() {
       <WalletTransferModal 
         open={walletTransferOpen} 
         onOpenChange={setWalletTransferOpen}
-        onSuccess={() => {
-          refreshData();
-        }}
-      />
-
-      {/* Verify Transfer Modal (para clientes) */}
-      <VerifyTransferModal 
-        open={verifyTransferOpen} 
-        onOpenChange={setVerifyTransferOpen}
         onSuccess={() => {
           refreshData();
         }}
