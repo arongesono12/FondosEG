@@ -252,7 +252,7 @@ export function AgentPayoutModal({ open, onOpenChange, onSuccess }: AgentPayoutM
                   : 'La transferencia fue pagada y tu saldo digital ha sido actualizado.'}
               </p>
             </div>
-            <Button className="w-full rounded-xl bg-brand-gradient text-white font-bold" onClick={() => onOpenChange(false)}>
+            <Button variant="brand" className="w-full rounded-xl font-bold" onClick={() => onOpenChange(false)}>
               Cerrar
             </Button>
           </div>

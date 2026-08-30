@@ -435,7 +435,7 @@ export default function BalancePage() {
   if (isGestor) {
     return (
       <div className="space-y-8">
-        <section className="rounded-4xl border border-border/10 bg-card/50 p-6 shadow-xl shadow-black/5 backdrop-blur-xl md:p-8">
+        <Card asChild interactive={false} className="rounded-4xl p-6 md:p-8"><section>
           <Badge className="rounded-full border border-white/20 bg-white/70 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.24em] text-slate-700 dark:border-white/10 dark:bg-white/10 dark:text-slate-200">
             Liquidez del gestor
           </Badge>
@@ -443,7 +443,7 @@ export default function BalancePage() {
           <p className="mt-3 max-w-2xl text-sm font-semibold leading-6 text-muted-foreground">
             Consulta tu saldo disponible, el volumen operado y el historial completo de movimientos de caja.
           </p>
-        </section>
+        </section></Card>
 
         <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <SummaryCard label="Saldo disponible" value={formatCurrency(currentAgentBalance)} hint="Float utilizable ahora mismo" icon={Wallet} tone="border-emerald-500/20 bg-emerald-500 shadow-emerald-500/20" />
@@ -512,7 +512,7 @@ export default function BalancePage() {
 
   return (
     <div className="space-y-8">
-      <section className="rounded-4xl border border-border/10 bg-card/50 p-6 shadow-xl shadow-black/5 backdrop-blur-xl md:p-8">
+      <Card asChild interactive={false} className="rounded-4xl p-6 md:p-8"><section>
         <Badge className="rounded-full border border-white/20 bg-white/70 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.24em] text-slate-700 dark:border-white/10 dark:bg-white/10 dark:text-slate-200">
           Billetera del cliente
         </Badge>
@@ -520,7 +520,7 @@ export default function BalancePage() {
         <p className="mt-3 max-w-2xl text-sm font-semibold leading-6 text-muted-foreground">
           Tus fondos son tuyos desde que entran: úsalos en la app o genera tu propio código para retirarlos en efectivo con cualquier gestor.
         </p>
-      </section>
+      </section></Card>
 
       <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <SummaryCard label="Monedas activas" value={String(currencySnapshots.length)} hint="Balances abiertos en cuenta" icon={Banknote} tone="border-sky-500/20 bg-sky-500 shadow-sky-500/20" />

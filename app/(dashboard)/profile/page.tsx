@@ -548,7 +548,7 @@ export default function ProfilePage() {
             <Button type="button" variant="outline" className="rounded-xl" onClick={closeAvatarCropper} disabled={isUploadingAvatar}>
               Cancelar
             </Button>
-            <Button type="button" className="rounded-xl bg-brand-gradient text-white" onClick={handleAvatarCropUpload} disabled={isUploadingAvatar}>
+            <Button type="button" variant="brand" className="rounded-xl" onClick={handleAvatarCropUpload} disabled={isUploadingAvatar}>
               {isUploadingAvatar ? 'Subiendo...' : 'Recortar y subir'}
             </Button>
           </DialogFooter>

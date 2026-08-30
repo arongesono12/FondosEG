@@ -1,3 +1,4 @@
+import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 
@@ -20,14 +21,14 @@ export function DashboardPageSkeleton() {
 
 export function AuthPageSkeleton() {
   return (
-    <div className="mx-auto w-full max-w-md rounded-4xl border border-border/10 bg-card/60 p-6 shadow-xl">
+    <Card interactive={false} className="mx-auto w-full max-w-md rounded-4xl p-6">
       <div className="mb-8 flex flex-col items-center gap-4">
         <Skeleton className="h-16 w-16 rounded-3xl" />
         <Skeleton className="h-7 w-44" />
         <Skeleton className="h-4 w-64" />
       </div>
       <FormSkeleton rows={4} />
-    </div>
+    </Card>
   );
 }
 
@@ -82,7 +83,7 @@ export function CardsGridSkeleton({ count = 4 }: { count?: number }) {
 
 export function PanelSkeleton({ rows = 5, className }: { rows?: number; className?: string }) {
   return (
-    <div className={cn('rounded-4xl border border-border/10 bg-card/40 p-5 shadow-sm', className)}>
+    <Card interactive={false} className={cn('rounded-4xl p-5', className)}>
       <div className="mb-5 flex items-center justify-between gap-4">
         <div className="space-y-2">
           <Skeleton className="h-5 w-40" />
@@ -102,13 +103,13 @@ export function PanelSkeleton({ rows = 5, className }: { rows?: number; classNam
           </div>
         ))}
       </div>
-    </div>
+    </Card>
   );
 }
 
 export function TableSkeleton({ rows = 6, columns = 5 }: { rows?: number; columns?: number }) {
   return (
-    <div className="rounded-4xl border border-border/10 bg-card/40 p-4">
+    <Card interactive={false} className="rounded-4xl p-4">
       <div className="mb-4 grid gap-3" style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}>
         {Array.from({ length: columns }).map((_, index) => (
           <Skeleton key={index} className="h-4 rounded-lg" />
@@ -123,7 +124,7 @@ export function TableSkeleton({ rows = 6, columns = 5 }: { rows?: number; column
           </div>
         ))}
       </div>
-    </div>
+    </Card>
   );
 }
 

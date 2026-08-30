@@ -13,6 +13,8 @@ import {
 
 import { DashboardLogo } from '@/components/layout/dashboard-logo';
 import { ThemeToggle } from '@/components/theme-toggle';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 import {
@@ -63,7 +65,7 @@ function Header() {
   }, []);
   return <header className={cn('landing-header', scrolled && 'landing-header--scrolled')}>
     <div className="landing-nav">
-      <Link href="/" aria-label="FondosEG inicio"><DashboardLogo size="md" priority labelClassName="text-xl" /></Link>
+      <Link href="/" aria-label="FondosEG inicio"><DashboardLogo size="md" priority labelClassName="text-xl md:text-2xl" /></Link>
       <nav className="landing-navlinks">
         <Link href="/landing/gestores">Gestores</Link><Link href="/landing/aliados">Aliados</Link><Link href="/landing/developers">Developers</Link>
         <div
@@ -85,13 +87,13 @@ function Header() {
             evita un hueco durante la carga y no filtra estado de sesión. */}
         {isSignedIn ? (
           <>
-            <Link className="btn-secondary" href="/dashboard">Ir al dashboard</Link>
+            <Button asChild variant="outline" size="xl" className="btn-secondary"><Link href="/dashboard">Ir al dashboard</Link></Button>
             <UserButton />
           </>
         ) : (
           <>
-            <Link className="btn-secondary" href="/login">Entrar</Link>
-            <Link className="btn-primary" href="/register">Comenzar gratis <ArrowRight /></Link>
+            <Button asChild variant="outline" size="xl" className="btn-secondary"><Link href="/login">Entrar</Link></Button>
+            <Button asChild variant="brand" size="xl" className="btn-primary"><Link href="/register">Comenzar gratis <ArrowRight /></Link></Button>
           </>
         )}
         <button className="menu-button" onClick={() => setOpen(!open)} aria-label="Abrir menú">{open ? <X /> : <Menu />}</button>
@@ -126,7 +128,7 @@ export function LandingPage() {
       <FadeInDown><span className="hero-pill"><Zap /> Conexión directa, sin intermediarios</span></FadeInDown>
       <FadeIn><h1>Mueve dinero con <span>velocidad, control</span> y confianza</h1></FadeIn>
       <FadeIn><p>FondosEG centraliza tus operaciones de transferencia, controla tus billeteras, visualiza tu flujo de efectivo y da seguimiento operativo en tiempo real.</p></FadeIn>
-      <FadeIn><div className="hero-buttons"><Link className="btn-primary" href="/register">Comenzar gratis <ArrowRight /></Link><button type="button" className="demo-button" onClick={() => setDemoOpen(true)}>Ver demo <Play /></button></div></FadeIn>
+      <FadeIn><div className="hero-buttons"><Button asChild variant="brand" size="xl" className="btn-primary"><Link href="/register">Comenzar gratis <ArrowRight /></Link></Button><Button type="button" variant="outline" size="xl" className="demo-button" onClick={() => setDemoOpen(true)}>Ver demo <Play /></Button></div></FadeIn>
       <FadeIn><div className="hero-checks"><span><Check /> Sin tarjeta</span><span><Check /> Sin instalación</span><span><Check /> Listo en minutos</span></div></FadeIn>
     </div>
     <FadeInRight><div className="hero-visual"><div className="orbit orbit-a"/><div className="orbit orbit-b"/><Image src="/mockup.png" alt="Panel de FondosEG en ordenador, tableta y móvil" width={2048} height={1228} priority /></div></FadeInRight>
@@ -136,15 +138,15 @@ export function LandingPage() {
     <StaggerItem><Stat icon={Network} value="250K+" label="Transacciones procesadas" tone="purple"/></StaggerItem><StaggerItem><Stat icon={CircleDollarSign} value="XAF 12.5M" label="Dinero movido por nuestros usuarios" tone="blue"/></StaggerItem><StaggerItem><Stat icon={ShieldCheck} value="99.9%" label="Seguimiento operativo en tiempo real" tone="green"/></StaggerItem><StaggerItem><Stat icon={Headphones} value="24/7" label="Soporte humano siempre disponible" tone="pink"/></StaggerItem>
   </section></StaggerContainerFast>
 
-  <section className="landing-section"><FadeIn><SectionTitle eyebrow="TODO LO QUE NECESITAS">Potentes herramientas para <span>mover tu negocio</span></SectionTitle></FadeIn><StaggerContainer><div className="feature-grid">{tools.map(({icon:Icon,...f})=><StaggerItem key={f.title}><article className="feature-card"><div className={`icon-box ${f.tone}`}><Icon /></div><h3>{f.title}</h3><p>{f.text}</p><Link className={f.tone} href={f.href} aria-label={`Más información sobre ${f.title.replace('\n', ' ')}`}>Saber más <ArrowRight /></Link></article></StaggerItem>)}</div></StaggerContainer></section>
+  <section className="landing-section"><FadeIn><SectionTitle eyebrow="TODO LO QUE NECESITAS">Potentes herramientas para <span>mover tu negocio</span></SectionTitle></FadeIn><StaggerContainer><div className="feature-grid">{tools.map(({icon:Icon,...f})=><StaggerItem key={f.title}><Card asChild><article className="feature-card"><div className={`icon-box ${f.tone}`}><Icon /></div><h3>{f.title}</h3><p>{f.text}</p><Link className={f.tone} href={f.href} aria-label={`Más información sobre ${f.title.replace('\n', ' ')}`}>Saber más <ArrowRight /></Link></article></Card></StaggerItem>)}</div></StaggerContainer></section>
 
-  <section className="landing-section roles-section"><FadeIn><SectionTitle eyebrow="PARA CADA ROL, UNA EXPERIENCIA PENSADA PARA TI"><span className="sr-only">Experiencias por rol</span></SectionTitle></FadeIn><StaggerContainer><div className="role-grid">{(Object.keys(roleCopy) as LandingRole[]).map((key,i)=>{const r=roleCopy[key];const Icon=r.icon;return <StaggerItem key={key} className="role-grid-item"><Link href={r.href} className={`role-card role-${i+1}`}><div className="role-card-content"><Icon/><h3>{r.label}</h3><p>{r.text}</p><strong>{key==='gestores'?'Entrar como gestor':key==='aliados'?'Entrar como aliado':'Explorar para developers'} <ArrowRight /></strong></div><div className="role-art" aria-hidden="true"><Icon/></div></Link></StaggerItem>})}</div></StaggerContainer></section>
+  <section className="landing-section roles-section"><FadeIn><SectionTitle eyebrow="PARA CADA ROL, UNA EXPERIENCIA PENSADA PARA TI"><span className="sr-only">Experiencias por rol</span></SectionTitle></FadeIn><StaggerContainer><div className="role-grid">{(Object.keys(roleCopy) as LandingRole[]).map((key,i)=>{const r=roleCopy[key];const Icon=r.icon;return <StaggerItem key={key} className="role-grid-item"><Card asChild><Link href={r.href} className={`role-card role-${i+1}`}><div className="role-card-content"><Icon/><h3>{r.label}</h3><p>{r.text}</p><strong>{key==='gestores'?'Entrar como gestor':key==='aliados'?'Entrar como aliado':'Explorar para developers'} <ArrowRight /></strong></div><div className="role-art" aria-hidden="true"><Icon/></div></Link></Card></StaggerItem>})}</div></StaggerContainer></section>
 
-  <section className="landing-section"><FadeIn><SectionTitle eyebrow="CONFIANZA EN CADA MOVIMIENTO">Infraestructura sólida para operaciones seguras</SectionTitle></FadeIn><StaggerContainer><div className="trust-grid">{trust.map(({icon:Icon,...x})=><StaggerItem key={x.title}><article className="trust-card"><div><Icon /></div><section><h3>{x.title}</h3><p>{x.text}</p></section></article></StaggerItem>)}</div></StaggerContainer></section>
+  <section className="landing-section"><FadeIn><SectionTitle eyebrow="CONFIANZA EN CADA MOVIMIENTO">Infraestructura sólida para operaciones seguras</SectionTitle></FadeIn><StaggerContainer><div className="trust-grid">{trust.map(({icon:Icon,...x})=><StaggerItem key={x.title}><Card asChild><article className="trust-card"><div><Icon /></div><section><h3>{x.title}</h3><p>{x.text}</p></section></article></Card></StaggerItem>)}</div></StaggerContainer></section>
 
   <section className="landing-section"><FadeIn><SectionTitle eyebrow="LO QUE DICEN NUESTROS ALIADOS"><span className="sr-only">Testimonios</span></SectionTitle></FadeIn><StaggerContainer><div className="testimonial-grid"><StaggerItem><Testimonial text="Con FondosEG optimizamos nuestros pagos y ahora tenemos visibilidad total de nuestras operaciones. La plataforma es rápida, estable y muy intuitiva." name="Mamadou Diallo" role="Director de Operaciones, LogiTrans SA"/></StaggerItem><StaggerItem><Testimonial text="La integración vía API nos permitió automatizar nuestros cobros y conciliaciones. El soporte técnico es excelente y siempre están disponibles." name="Aissatou Camara" role="CTO, PayLink Solutions" blue/></StaggerItem></div><div className="dots"><i/><i/><i/><i/><i/></div></StaggerContainer></section>
 
-  <FadeIn><section className="cta-section"><div><h2>Comienza con <span>FondosEG</span></h2><p>Crea tu cuenta gratis y comienza a mover tu dinero<br/>con velocidad, control y confianza.</p></div><form action="/register"><div><input type="email" name="email" placeholder="Correo electrónico" aria-label="Correo electrónico"/><button className="btn-primary">Comenzar gratis <ArrowRight /></button></div><p><span><Check/> Sin tarjeta de crédito</span><span><Check/> Configuración en minutos</span><span><Check/> Cancela cuando quieras</span></p></form></section></FadeIn>
+  <FadeIn><section className="cta-section"><div><h2>Comienza con <span>FondosEG</span></h2><p>Crea tu cuenta gratis y comienza a mover tu dinero<br/>con velocidad, control y confianza.</p></div><form action="/register"><div><input type="email" name="email" placeholder="Correo electrónico" aria-label="Correo electrónico"/><Button variant="brand" size="xl" className="btn-primary">Comenzar gratis <ArrowRight /></Button></div><p><span><Check/> Sin tarjeta de crédito</span><span><Check/> Configuración en minutos</span><span><Check/> Cancela cuando quieras</span></p></form></section></FadeIn>
 
   <Dialog open={demoOpen} onOpenChange={setDemoOpen}>
     <DialogContent mobile="none" className="demo-dialog" aria-describedby="demo-description">
@@ -162,13 +164,13 @@ export function LandingPage() {
         </div>}
       </div>
       <div className="demo-chapters"><span><b>01</b> Inicio de sesión</span><span><b>02</b> Envío de dinero</span><span><b>03</b> Dashboard y seguimiento</span></div>
-      <div className="demo-dialog-actions"><Link href="/login" className="demo-button" onClick={() => setDemoOpen(false)}>Explorar la aplicación</Link><Link href="/register" className="btn-primary" onClick={() => setDemoOpen(false)}>Crear cuenta <ArrowRight /></Link></div>
+      <div className="demo-dialog-actions"><Button asChild variant="outline" size="xl" className="demo-button"><Link href="/login" onClick={() => setDemoOpen(false)}>Explorar la aplicación</Link></Button><Button asChild variant="brand" size="xl" className="btn-primary"><Link href="/register" onClick={() => setDemoOpen(false)}>Crear cuenta <ArrowRight /></Link></Button></div>
     </DialogContent>
   </Dialog>
   </Shell>;
 }
 
-function Stat({icon:Icon,value,label,tone}:{icon:typeof Zap;value:string;label:string;tone:string}) { return <article className="stat-card"><div className={`stat-icon ${tone}`}><Icon/></div><div><strong>{value}</strong><p>{label}</p></div></article>; }
-function Testimonial({text,name,role,blue=false}:{text:string;name:string;role:string;blue?:boolean}) { return <article className="testimonial"><Quote className={blue?'blue':''}/><div><p>{text}</p><footer><span>{name.charAt(0)}</span><div><strong>{name}</strong><small>{role}</small></div></footer></div></article>; }
+function Stat({icon:Icon,value,label,tone}:{icon:typeof Zap;value:string;label:string;tone:string}) { return <Card asChild><article className="stat-card"><div className={`stat-icon ${tone}`}><Icon/></div><div><strong>{value}</strong><p>{label}</p></div></article></Card>; }
+function Testimonial({text,name,role,blue=false}:{text:string;name:string;role:string;blue?:boolean}) { return <Card asChild><article className="testimonial"><Quote className={blue?'blue':''}/><div><p>{text}</p><footer><span>{name.charAt(0)}</span><div><strong>{name}</strong><small>{role}</small></div></footer></div></article></Card>; }
 
-export function RoleLandingPage({ role }: { role: LandingRole }) { const r=roleCopy[role]; const Icon=r.icon; return <Shell><section className="role-detail"><FadeInLeft><div><span className="hero-pill"><Icon/> {r.label}</span><h1>{r.title}</h1><p>{r.text} FondosEG reúne control, seguridad y trazabilidad en una experiencia creada para tu equipo.</p><div className="hero-buttons"><Link className="btn-primary" href="/register">Comenzar ahora <ArrowRight/></Link><Link className="demo-button" href={role==='developers'?'/developers-portal':'/login'}>Ver plataforma</Link></div></div></FadeInLeft><FadeInRight><div className="role-detail-card"><Icon/><h2>{r.label}</h2>{['Operaciones en tiempo real','Seguridad de nivel bancario','Soporte y trazabilidad completa'].map(x=><p key={x}><BadgeCheck/>{x}</p>)}</div></FadeInRight></section><section className="landing-section"><FadeIn><SectionTitle eyebrow="TODO EN UN SOLO LUGAR">La infraestructura para avanzar con confianza</SectionTitle></FadeIn><StaggerContainer><div className="feature-grid">{tools.map(({icon:I,...f})=><StaggerItem key={f.title}><article className="feature-card"><div className={`icon-box ${f.tone}`}><I/></div><h3>{f.title}</h3><p>{f.text}</p></article></StaggerItem>)}</div></StaggerContainer></section></Shell>; }
+export function RoleLandingPage({ role }: { role: LandingRole }) { const r=roleCopy[role]; const Icon=r.icon; return <Shell><section className="role-detail"><FadeInLeft><div><span className="hero-pill"><Icon/> {r.label}</span><h1>{r.title}</h1><p>{r.text} FondosEG reúne control, seguridad y trazabilidad en una experiencia creada para tu equipo.</p><div className="hero-buttons"><Button asChild variant="brand" size="xl" className="btn-primary"><Link href="/register">Comenzar ahora <ArrowRight/></Link></Button><Button asChild variant="outline" size="xl" className="demo-button"><Link href={role==='developers'?'/developers-portal':'/login'}>Ver plataforma</Link></Button></div></div></FadeInLeft><FadeInRight><Card interactive={false} className="role-detail-card"><Icon/><h2>{r.label}</h2>{['Operaciones en tiempo real','Seguridad de nivel bancario','Soporte y trazabilidad completa'].map(x=><p key={x}><BadgeCheck/>{x}</p>)}</Card></FadeInRight></section><section className="landing-section"><FadeIn><SectionTitle eyebrow="TODO EN UN SOLO LUGAR">La infraestructura para avanzar con confianza</SectionTitle></FadeIn><StaggerContainer><div className="feature-grid">{tools.map(({icon:I,...f})=><StaggerItem key={f.title}><Card asChild><article className="feature-card"><div className={`icon-box ${f.tone}`}><I/></div><h3>{f.title}</h3><p>{f.text}</p></article></Card></StaggerItem>)}</div></StaggerContainer></section></Shell>; }

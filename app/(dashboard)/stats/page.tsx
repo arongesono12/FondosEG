@@ -166,7 +166,7 @@ export default function StatsPage() {
   if (!isAdmin && !isGestor) {
     return (
       <div className="space-y-6">
-        <section className="rounded-4xl border border-border/10 bg-card/50 p-8 shadow-xl shadow-black/5 backdrop-blur-xl">
+        <Card asChild interactive={false} className="rounded-4xl p-8"><section>
           <Badge className="rounded-full border border-white/20 bg-white/70 px-3 py-1 text-[10px] font-black uppercase tracking-[0.24em] text-slate-700 dark:border-white/10 dark:bg-white/10 dark:text-slate-200">
             Analítica disponible para operación
           </Badge>
@@ -175,14 +175,14 @@ export default function StatsPage() {
             Esta vista avanzada está orientada a dirección y gestores. Desde tu perfil puedes seguir saldo, movimientos y confirmaciones de forma clara.
           </p>
           <div className="mt-6 flex gap-3">
-            <Button asChild className="rounded-2xl bg-brand-gradient px-6 font-black text-white">
+            <Button asChild variant="brand" className="rounded-2xl px-6 font-black">
               <Link href="/dashboard">Volver al panel</Link>
             </Button>
             <Button asChild variant="outline" className="rounded-2xl px-6 font-black">
               <Link href="/history">Ver historial</Link>
             </Button>
           </div>
-        </section>
+        </section></Card>
       </div>
     );
   }

@@ -25,6 +25,7 @@ import {
 import { DashboardLogo } from '@/components/layout/dashboard-logo';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 
 const sections = [
@@ -387,7 +388,7 @@ function CodeBlock({ code, label }: { code: string; label?: string }) {
   }
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-white/10 bg-slate-950 shadow-2xl shadow-slate-950/15">
+    <Card interactive={false} className="rounded-2xl border-white/10 bg-slate-950 bg-none">
       <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
         <div className="flex items-center gap-2">
           <span className="h-2.5 w-2.5 rounded-full bg-rose-400" />
@@ -395,13 +396,13 @@ function CodeBlock({ code, label }: { code: string; label?: string }) {
           <span className="h-2.5 w-2.5 rounded-full bg-emerald-400" />
           {label && <span className="ml-2 text-xs font-semibold text-slate-400">{label}</span>}
         </div>
-        <button onClick={copy} className="flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-slate-400 transition hover:bg-white/10 hover:text-white">
-          {copied ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
+        <Button variant="ghost" size="sm" onClick={copy} className="rounded-lg px-2.5 text-slate-400 hover:bg-white/10 hover:text-white">
+          {copied ? <Check className="text-emerald-400" /> : <Copy />}
           {copied ? 'Copiado' : 'Copiar'}
-        </button>
+        </Button>
       </div>
       <pre className="overflow-x-auto p-5 text-[13px] leading-6 text-slate-200"><code>{code}</code></pre>
-    </div>
+    </Card>
   );
 }
 
@@ -437,30 +438,30 @@ function ApiHeroVisual() {
       <div className="pointer-events-none absolute right-0 top-[225px] h-px w-[17%] bg-gradient-to-l from-pink-400 via-fuchsia-400/70 to-transparent" />
       <div className="pointer-events-none absolute right-0 top-[221px] h-2 w-2 rounded-full bg-pink-400 shadow-[0_0_12px_rgba(244,114,182,.95)]" />
 
-      <div className="absolute left-[12%] top-[32px] z-30 h-[270px] w-[72%] overflow-hidden rounded-2xl border border-pink-500/80 bg-[#10071a]/95 shadow-[0_24px_70px_rgba(15,3,25,.55),0_0_45px_rgba(236,72,153,.10)]">
+      <Card interactive={false} className="absolute left-[12%] top-[32px] z-30 h-[270px] w-[72%] rounded-2xl border-pink-500/80 bg-[#10071a]/95 bg-none shadow-[0_24px_70px_rgba(15,3,25,.55),0_0_45px_rgba(236,72,153,.10)]">
         <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
           <div className="flex items-center gap-7 text-sm font-bold text-white">
             <span className="flex items-center gap-2"><span className="h-3 w-3 rounded-full bg-emerald-400" /> cURL</span>
             <span className="text-white/75">POST</span>
             <code className="text-white">/v1/transfers</code>
           </div>
-          <button onClick={copyHeroCode} className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-white/70 transition hover:border-pink-400/60 hover:text-white">
-            {copied ? <Check className="h-3.5 w-3.5 text-emerald-300" /> : <Copy className="h-3.5 w-3.5" />}
+          <Button variant="outline" size="sm" onClick={copyHeroCode} className="rounded-xl border-white/10 bg-white/5 text-white/70 hover:border-pink-400/60 hover:bg-white/10 hover:text-white">
+            {copied ? <Check className="text-emerald-300" /> : <Copy />}
             {copied ? 'Copiado' : 'Copy'}
-          </button>
+          </Button>
         </div>
         <pre className="h-[212px] overflow-hidden px-6 py-4 text-[12px] leading-[19px] text-slate-200"><code>{heroTransferCurl}</code></pre>
-      </div>
+      </Card>
 
-      <div className="absolute left-0 top-[332px] z-20 h-[238px] w-[44%] overflow-hidden rounded-2xl border border-pink-500/60 bg-[#080c19]/95 shadow-[0_22px_60px_rgba(3,7,18,.50),0_0_38px_rgba(236,72,153,.08)]">
+      <Card interactive={false} className="absolute left-0 top-[332px] z-20 h-[238px] w-[44%] rounded-2xl border-pink-500/60 bg-[#080c19]/95 bg-none shadow-[0_22px_60px_rgba(3,7,18,.50),0_0_38px_rgba(236,72,153,.08)]">
         <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
           <span className="flex items-center gap-2 text-sm font-bold text-white"><span className="h-3 w-3 rounded-full bg-emerald-400" /> 200 OK</span>
           <span className="flex items-center gap-1 text-xs font-semibold text-white/60">JSON <ChevronRight className="h-3.5 w-3.5 rotate-90" /></span>
         </div>
         <pre className="h-[180px] overflow-hidden px-6 py-4 text-[11px] leading-[18px] text-emerald-200"><code>{heroResponseJson}</code></pre>
-      </div>
+      </Card>
 
-      <div className="absolute left-[48%] top-[332px] z-20 h-[252px] w-[48%] overflow-hidden rounded-2xl border border-purple-500/75 bg-[#080c19]/95 shadow-[0_22px_60px_rgba(3,7,18,.50),0_0_38px_rgba(168,85,247,.10)]">
+      <Card interactive={false} className="absolute left-[48%] top-[332px] z-20 h-[252px] w-[48%] rounded-2xl border-purple-500/75 bg-[#080c19]/95 bg-none shadow-[0_22px_60px_rgba(3,7,18,.50),0_0_38px_rgba(168,85,247,.10)]">
         <div className="border-b border-white/10 px-5 py-4">
           <p className="flex items-center gap-2 text-sm font-bold text-white"><span className="h-3 w-3 rounded-full bg-purple-400" /> Webhook</p>
           <p className="mt-1 text-xs font-semibold text-white/60">transfer.completed</p>
@@ -470,7 +471,7 @@ function ApiHeroVisual() {
           <span>2024-05-20T14:33:21Z</span>
           <span className="rounded-full border border-emerald-400/30 bg-emerald-400/10 px-3 py-1 font-bold text-emerald-300">Entregado ✓</span>
         </div>
-      </div>
+      </Card>
     </div>
   );
 }
@@ -491,7 +492,7 @@ export function ApiDocumentation() {
           <div className="flex items-center gap-2">
             <span className="hidden rounded-full border border-emerald-400/20 bg-emerald-400/10 px-4 py-2 text-xs font-bold text-emerald-300 shadow-[0_0_30px_rgba(16,185,129,0.12)] sm:block">API v1 – Operativa</span>
             <ThemeToggle />
-            <Button asChild className="hidden rounded-2xl bg-brand-gradient px-6 font-bold text-white shadow-[0_14px_45px_rgba(236,72,153,0.35)] sm:inline-flex">
+            <Button asChild variant="brand" className="hidden rounded-2xl px-6 font-bold sm:inline-flex">
               <Link href="/developers-portal">Obtener credenciales <ArrowRight className="h-4 w-4" /></Link>
             </Button>
             <Button variant="ghost" size="icon" className="border border-border text-foreground dark:border-white/10 dark:text-white lg:hidden" onClick={() => setMobileNavOpen(!mobileNavOpen)}>
@@ -511,12 +512,14 @@ export function ApiDocumentation() {
               </a>
             ))}
           </nav>
-          <div className="mt-10 rounded-2xl border border-border/40 bg-card p-5 shadow-[0_20px_55px_rgba(2,6,23,0.08)] transition-colors duration-300 dark:border-white/10 dark:bg-[#071120]/80 dark:shadow-[0_20px_55px_rgba(0,0,0,0.22)]">
+          <Card interactive={false} className="mt-10 rounded-2xl p-5">
             <BookOpen className="h-6 w-6 text-pink-400" />
             <p className="mt-5 text-base font-bold text-foreground">Referencia completa</p>
             <p className="mt-2 text-sm leading-6 text-muted-foreground">Especificación OpenAPI 3.1 lista para Postman, Insomnia o generación de clientes.</p>
-            <Link href="/api/docs/openapi.json" target="_blank" className="mt-5 flex items-center gap-1.5 text-sm font-bold text-pink-400">Abrir OpenAPI <ExternalLink className="h-3.5 w-3.5" /></Link>
-          </div>
+            <Button asChild variant="link" size="sm" className="mt-3 h-auto justify-start p-0 font-bold text-pink-500 dark:text-pink-400">
+              <Link href="/api/docs/openapi.json" target="_blank">Abrir OpenAPI <ExternalLink /></Link>
+            </Button>
+          </Card>
         </aside>
 
         <main className="min-w-0">
@@ -529,15 +532,17 @@ export function ApiDocumentation() {
                 <h1 className="mt-8 max-w-[740px] text-4xl font-black leading-[1.05] tracking-[-0.045em] text-foreground sm:text-5xl xl:text-[50px] 2xl:text-[56px]">Integra pagos y transferencias con una API clara y segura.</h1>
                 <p className="mt-7 max-w-[640px] text-base font-medium leading-8 text-muted-foreground 2xl:text-lg 2xl:leading-9">Conecta tu backend con FondosEG para consultar saldos, mover dinero, gestionar alquileres y recibir eventos en tiempo real. Empieza en pruebas y pasa a producción sin cambiar tu implementación.</p>
                 <div className="mt-8 flex flex-wrap gap-4">
-                  <Button asChild size="lg" className="h-14 rounded-2xl bg-brand-gradient px-7 font-bold text-white"><Link href="#inicio-rapido">Empezar a integrar <ArrowRight /></Link></Button>
-                  <Button asChild size="lg" variant="outline" className="h-14 rounded-2xl border-border/60 bg-card px-7 font-bold text-foreground hover:bg-accent dark:border-white/10 dark:bg-[#071120]/80 dark:text-white dark:hover:bg-white/10"><Link href="/api/docs/openapi.json" target="_blank">Ver OpenAPI <ExternalLink /></Link></Button>
+                  <Button asChild variant="brand" size="lg" className="h-14 rounded-2xl px-7 font-bold"><Link href="#inicio-rapido">Empezar a integrar <ArrowRight /></Link></Button>
+                  <Button asChild size="lg" variant="outline" className="h-14 rounded-2xl px-7 font-bold"><Link href="/api/docs/openapi.json" target="_blank">Ver OpenAPI <ExternalLink /></Link></Button>
                 </div>
                 <div className="mt-9 flex flex-wrap gap-2">
                   {capabilityChips.map(({ label, icon: Icon, color }) => (
-                    <span key={label} className="inline-flex h-12 items-center gap-2 rounded-xl border border-border/60 bg-card px-4 text-sm font-semibold text-foreground transition-colors duration-300 dark:border-white/10 dark:bg-[#071120]/85 dark:text-white">
-                      <Icon className={cn('h-4 w-4', color)} />
-                      {label}
-                    </span>
+                    <Card asChild key={label} interactive={false} className="rounded-xl">
+                      <span className="inline-flex h-12 items-center gap-2 px-4 text-sm font-semibold">
+                        <Icon className={cn('h-4 w-4', color)} />
+                        {label}
+                      </span>
+                    </Card>
                   ))}
                 </div>
               </div>
@@ -546,7 +551,7 @@ export function ApiDocumentation() {
               </div>
               <div className="relative mt-10 grid gap-4 sm:grid-cols-3 2xl:col-span-2 2xl:row-start-2 2xl:mt-0 2xl:w-[1048px]">
                 {[['REST + JSON', 'Interfaz estándar y predecible'], ['Entorno test', 'Prueba sin mover dinero real'], ['Webhooks HMAC', 'Eventos verificados y deduplicables']].map(([title, detail]) => (
-                  <div key={title} className="min-h-[120px] rounded-2xl border border-border/60 bg-card p-6 transition-colors duration-300 dark:border-white/10 dark:bg-[#071120]/85"><CheckCircle2 className="h-5 w-5 text-emerald-400" /><p className="mt-4 text-sm font-bold text-foreground">{title}</p><p className="mt-2 text-sm leading-5 text-muted-foreground">{detail}</p></div>
+                  <Card key={title} interactive={false} className="min-h-[120px] rounded-2xl p-6"><CheckCircle2 className="h-5 w-5 text-emerald-400" /><p className="mt-4 text-sm font-bold text-foreground">{title}</p><p className="mt-2 text-sm leading-5 text-muted-foreground">{detail}</p></Card>
                 ))}
               </div>
             </div>
@@ -563,7 +568,7 @@ export function ApiDocumentation() {
                   [Rocket, '04', 'Valida y despliega', 'Prueba idempotencia, errores y webhooks antes de solicitar credenciales de producción.'],
                 ].map(([Icon, number, title, detail]) => {
                   const StepIcon = Icon as typeof KeyRound;
-                  return <div key={String(number)} className="rounded-3xl border border-border/40 bg-card/40 p-6"><div className="flex items-center justify-between"><StepIcon className="h-6 w-6 text-pink-500" /><span className="text-3xl font-black text-muted/80">{String(number)}</span></div><h3 className="mt-5 text-lg font-bold">{String(title)}</h3><p className="mt-2 text-sm leading-6 text-muted-foreground">{String(detail)}</p></div>;
+                  return <Card key={String(number)} interactive={false} className="p-6"><div className="flex items-center justify-between"><StepIcon className="h-6 w-6 text-pink-500" /><span className="text-3xl font-black text-muted/80">{String(number)}</span></div><h3 className="mt-5 text-lg font-bold">{String(title)}</h3><p className="mt-2 text-sm leading-6 text-muted-foreground">{String(detail)}</p></Card>;
                 })}
               </div>
             </section>
@@ -577,17 +582,17 @@ export function ApiDocumentation() {
                     ['x-api-secret', 'Autentica la petición. Nunca debe llegar al cliente.'],
                     ['idempotency-key', 'UUID único para cada POST que mueve dinero.'],
                     ['content-type', 'Usa application/json cuando envíes un body.'],
-                  ].map(([name, detail]) => <div key={name} className="rounded-2xl border border-border/40 p-4"><code className="text-sm font-bold text-pink-600 dark:text-pink-400">{name}</code><p className="mt-1 text-sm text-muted-foreground">{detail}</p></div>)}
+                  ].map(([name, detail]) => <Card key={name} interactive={false} className="rounded-2xl p-4"><code className="text-sm font-bold text-pink-600 dark:text-pink-400">{name}</code><p className="mt-1 text-sm text-muted-foreground">{detail}</p></Card>)}
                 </div>
                 <CodeBlock label=".env" code={`FONDOSEG_API_KEY=sk_test_••••••••\nFONDOSEG_API_SECRET=secret_••••••••\nFONDOSEG_BASE_URL=https://fondoseg.com`} />
               </div>
-              <div className="mt-6 rounded-2xl border border-amber-500/20 bg-amber-500/10 p-5 text-sm leading-6 text-amber-900 dark:text-amber-200"><strong>Importante:</strong> no incluyas las credenciales en React, Flutter, aplicaciones móviles, repositorios, analytics o logs. Tu app llama a tu backend y tu backend llama a FondosEG.</div>
+              <Card interactive={false} className="mt-6 rounded-2xl border-amber-500/20 bg-amber-500/10 bg-none p-5 text-sm leading-6 text-amber-900 dark:text-amber-200"><strong>Importante:</strong> no incluyas las credenciales en React, Flutter, aplicaciones móviles, repositorios, analytics o logs. Tu app llama a tu backend y tu backend llama a FondosEG.</Card>
             </section>
 
             <section id="ejemplos" className="scroll-mt-20 px-5 py-16 sm:px-10 lg:px-14 lg:py-20">
               <SectionTitle eyebrow="Ejemplos" title="Consulta un saldo en minutos">La respuesta mantiene la misma estructura en pruebas y producción; el entorno test añade <code className="rounded bg-muted px-1.5 py-0.5 text-sm">sandbox: true</code>.</SectionTitle>
               <div className="mb-4 flex flex-wrap gap-1 rounded-2xl bg-muted/70 p-1.5">
-                {(Object.keys(examples) as (keyof typeof examples)[]).map((item) => <button key={item} onClick={() => setLanguage(item)} className={cn('rounded-xl px-3.5 py-2 text-xs font-bold transition', language === item ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground')}>{exampleLabels[item]}</button>)}
+                {(Object.keys(examples) as (keyof typeof examples)[]).map((item) => <Button key={item} variant="ghost" size="sm" onClick={() => setLanguage(item)} className={cn('rounded-xl px-3.5 font-bold', language === item ? 'bg-background text-foreground shadow-sm hover:bg-background' : 'text-muted-foreground hover:text-foreground')}>{exampleLabels[item]}</Button>)}
               </div>
               <CodeBlock label={exampleFiles[language]} code={examples[language]} />
               <h3 className="mt-10 text-xl font-bold">Crear una transferencia idempotente</h3>
@@ -597,15 +602,15 @@ export function ApiDocumentation() {
 
             <section id="endpoints" className="scroll-mt-20 px-5 py-16 sm:px-10 lg:px-14 lg:py-20">
               <SectionTitle eyebrow="Referencia" title="Endpoints disponibles">Todos los endpoints públicos están versionados bajo <code className="rounded bg-muted px-1.5 py-0.5 text-sm">/api/v1/external</code>.</SectionTitle>
-              <div className="overflow-hidden rounded-3xl border border-border/40">
+              <Card interactive={false}>
                 {endpoints.map((endpoint, index) => <div key={endpoint.path} className={cn('grid gap-3 p-5 md:grid-cols-[92px_minmax(260px,1fr)_110px_1.2fr] md:items-center', index && 'border-t border-border/40')}><span className={cn('w-fit rounded-lg px-2.5 py-1 text-[11px] font-black', endpoint.method.startsWith('GET') ? 'bg-sky-500/10 text-sky-600 dark:text-sky-300' : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-300')}>{endpoint.method}</span><code className="overflow-x-auto text-sm font-bold">{endpoint.path}</code><span className="w-fit rounded-full bg-muted px-2.5 py-1 text-[11px] font-bold text-muted-foreground">{endpoint.scope}</span><p className="text-sm leading-5 text-muted-foreground">{endpoint.description}</p></div>)}
-              </div>
+              </Card>
             </section>
 
             <section id="webhooks" className="scroll-mt-20 px-5 py-16 sm:px-10 lg:px-14 lg:py-20">
               <SectionTitle eyebrow="Eventos" title="Webhooks firmados, estados al instante">Configura una URL HTTPS desde tu consola. Verifica la firma sobre el body sin modificar antes de procesar cualquier evento.</SectionTitle>
               <div className="grid gap-6 xl:grid-cols-[0.8fr_1.2fr]">
-                <div className="space-y-3">{['transfer.created', 'transfer.paid_out', 'wallet_transfer.confirmed', 'rental_payment.updated'].map(event => <div key={event} className="flex items-center gap-3 rounded-2xl border border-border/40 p-4"><Webhook className="h-4 w-4 text-pink-500" /><code className="text-sm font-bold">{event}</code></div>)}</div>
+                <div className="space-y-3">{['transfer.created', 'transfer.paid_out', 'wallet_transfer.confirmed', 'rental_payment.updated'].map(event => <Card key={event} interactive={false} className="flex items-center gap-3 rounded-2xl p-4"><Webhook className="h-4 w-4 text-pink-500" /><code className="text-sm font-bold">{event}</code></Card>)}</div>
                 <CodeBlock label="webhook.ts" code={`const rawBody = await request.text();
 const timestamp = request.headers.get(
   'x-fondoseg-webhook-timestamp'
@@ -625,15 +630,15 @@ const signature = request.headers.get(
               <SectionTitle eyebrow="Resiliencia" title="Errores predecibles y trazables">Guarda siempre el <code className="rounded bg-muted px-1.5 py-0.5 text-sm">x-request-id</code>; es la referencia que permite seguir una operación de extremo a extremo.</SectionTitle>
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{[
                 ['400', 'validation_error', 'Corrige el payload; no reintentes automáticamente.'], ['401', 'invalid_credentials', 'Revisa key, secret y estado de la credencial.'], ['403', 'permission_denied', 'La clave no tiene el scope o rol requerido.'], ['409', 'idempotency_conflict', 'La misma clave se usó con otro payload.'], ['429', 'rate_limit_exceeded', 'Respeta retry-after y usa backoff exponencial.'], ['5xx', 'internal_error', 'Reintenta con backoff y la misma idempotency-key.']
-              ].map(([status, code, detail]) => <div key={status} className="rounded-2xl border border-border/40 p-5"><span className="text-2xl font-black">{status}</span><code className="mt-3 block text-xs font-bold text-pink-600 dark:text-pink-400">{code}</code><p className="mt-2 text-sm leading-5 text-muted-foreground">{detail}</p></div>)}</div>
+              ].map(([status, code, detail]) => <Card key={status} interactive={false} className="rounded-2xl p-5"><span className="text-2xl font-black">{status}</span><code className="mt-3 block text-xs font-bold text-pink-600 dark:text-pink-400">{code}</code><p className="mt-2 text-sm leading-5 text-muted-foreground">{detail}</p></Card>)}</div>
             </section>
 
             <section id="produccion" className="scroll-mt-20 px-5 py-16 sm:px-10 lg:px-14 lg:py-20">
               <SectionTitle eyebrow="Go live" title="Checklist antes de producción">Completa estas verificaciones con credenciales test. Después crea una clave production separada y cambia únicamente las variables del servidor.</SectionTitle>
               <div className="grid gap-3 md:grid-cols-2">{[
                 'Credenciales separadas para test y producción.', 'Secrets almacenados en un gestor seguro.', 'Idempotencia probada en todas las operaciones monetarias.', 'Reintentos limitados con backoff para 429 y 5xx.', 'Firmas y deduplicación de webhooks verificadas.', 'Logs con request ID, status y latencia, sin datos sensibles.'
-              ].map(item => <div key={item} className="flex items-start gap-3 rounded-2xl border border-border/40 p-4"><CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-500" /><p className="text-sm font-semibold leading-6">{item}</p></div>)}</div>
-              <div className="mt-10 overflow-hidden rounded-3xl bg-slate-950 p-7 text-white sm:p-9"><Package className="h-7 w-7 text-pink-400" /><h3 className="mt-5 text-2xl font-black">¿Listo para construir?</h3><p className="mt-2 max-w-2xl text-sm leading-6 text-slate-300">Crea tu cuenta de desarrollador, genera una credencial test y realiza tu primera petición. La referencia OpenAPI está disponible para automatizar el resto.</p><div className="mt-6 flex flex-wrap gap-3"><Button asChild className="rounded-xl bg-white font-bold text-slate-950 hover:bg-slate-100"><Link href="/developers-portal/register">Crear cuenta <ArrowRight /></Link></Button><Button asChild variant="outline" className="rounded-xl border-white/20 bg-white/5 font-bold text-white hover:bg-white/10"><Link href="/api/docs/openapi.json" target="_blank"><Clipboard /> OpenAPI JSON</Link></Button></div></div>
+              ].map(item => <Card key={item} interactive={false} className="flex items-start gap-3 rounded-2xl p-4"><CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-500" /><p className="text-sm font-semibold leading-6">{item}</p></Card>)}</div>
+              <Card interactive={false} className="mt-10 border-white/10 bg-slate-950 bg-none p-7 text-white sm:p-9"><Package className="h-7 w-7 text-pink-400" /><h3 className="mt-5 text-2xl font-black">¿Listo para construir?</h3><p className="mt-2 max-w-2xl text-sm leading-6 text-slate-300">Crea tu cuenta de desarrollador, genera una credencial test y realiza tu primera petición. La referencia OpenAPI está disponible para automatizar el resto.</p><div className="mt-6 flex flex-wrap gap-3"><Button asChild className="rounded-xl bg-white font-bold text-slate-950 hover:bg-slate-100"><Link href="/developers-portal/register">Crear cuenta <ArrowRight /></Link></Button><Button asChild variant="outline" className="rounded-xl border-white/20 bg-white/5 font-bold text-white hover:bg-white/10"><Link href="/api/docs/openapi.json" target="_blank"><Clipboard /> OpenAPI JSON</Link></Button></div></Card>
             </section>
           </div>
 

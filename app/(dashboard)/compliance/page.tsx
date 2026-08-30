@@ -83,7 +83,7 @@ export default function CompliancePage() {
 
   return (
     <div className="space-y-8">
-      <section className="rounded-[2rem] border border-border/10 bg-card/50 p-6 shadow-xl shadow-black/5 backdrop-blur-xl md:p-8">
+      <Card asChild interactive={false} className="rounded-4xl p-6 md:p-8"><section>
         <Badge className="rounded-full border border-white/20 bg-white/70 px-3 py-1 text-[10px] font-black uppercase tracking-[0.24em] text-slate-700 dark:border-white/10 dark:bg-white/10 dark:text-slate-200">
           CEMAC / COBAC
         </Badge>
@@ -97,7 +97,7 @@ export default function CompliancePage() {
               21 de diciembre de 2018.
             </p>
           </div>
-          <Button asChild className="h-11 rounded-xl bg-brand-gradient font-black text-white">
+          <Button asChild variant="brand" className="h-11 rounded-xl font-black">
             <a href={PAYMENT_REGULATION.officialUrl} target="_blank" rel="noreferrer">
               <BookOpen className="mr-2 h-4 w-4" />
               Documento oficial
@@ -105,7 +105,7 @@ export default function CompliancePage() {
             </a>
           </Button>
         </div>
-      </section>
+      </section></Card>
 
       <div className="grid gap-4 md:grid-cols-2">
         {controls.map((control) => (

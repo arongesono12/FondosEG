@@ -1,4 +1,7 @@
 import Link from 'next/link';
+
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 import { DashboardLogo } from './dashboard-logo';
 
 interface ErrorScreenAction {
@@ -17,7 +20,7 @@ interface ErrorScreenProps {
 export function ErrorScreen({ title, description, badge, actions }: ErrorScreenProps) {
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-6">
-      <div className="w-full max-w-lg rounded-4xl border border-border/20 bg-card/90 backdrop-blur-xl shadow-2xl p-8 text-center">
+      <Card interactive={false} className="w-full max-w-lg rounded-4xl p-8 text-center">
         <DashboardLogo
           size="lg"
           className="justify-center mb-5"
@@ -34,21 +37,19 @@ export function ErrorScreen({ title, description, badge, actions }: ErrorScreenP
         {actions && actions.length > 0 && (
           <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
             {actions.map((action) => (
-              <Link
+              <Button
                 key={action.href}
-                href={action.href}
-                className={
-                  action.variant === 'outline'
-                    ? 'inline-flex h-11 items-center justify-center rounded-2xl border border-border/40 px-5 text-sm font-bold text-foreground transition-colors hover:bg-muted/60'
-                    : 'inline-flex h-11 items-center justify-center rounded-2xl bg-brand-gradient px-5 text-sm font-black text-white shadow-lg shadow-pink-500/20 transition-opacity hover:opacity-90'
-                }
+                asChild
+                size="xl"
+                variant={action.variant === 'outline' ? 'outline' : 'brand'}
+                className="rounded-2xl"
               >
-                {action.label}
-              </Link>
+                <Link href={action.href}>{action.label}</Link>
+              </Button>
             ))}
           </div>
         )}
-      </div>
+      </Card>
     </div>
   );
 }

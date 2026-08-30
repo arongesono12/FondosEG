@@ -208,7 +208,7 @@ export default function DashboardPage() {
           </div>
 
           <div className="grid gap-3 sm:grid-cols-2">
-            <Button asChild className="h-14 w-full rounded-2xl bg-brand-gradient px-6 text-base font-bold text-white shadow-xl shadow-pink-500/20 hover:scale-[1.01]">
+            <Button asChild variant="brand" className="h-14 w-full rounded-2xl px-6 text-base font-bold">
               <Link href={primaryAction.href}>
                 <PrimaryIcon className="mr-2 h-5 w-5" />
                 {primaryAction.label}

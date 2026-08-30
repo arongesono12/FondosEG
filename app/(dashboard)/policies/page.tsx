@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 export default function PoliciesPage() {
   return (
     <div className="space-y-8">
-      <section className="rounded-[2rem] border border-border/10 bg-card/50 p-6 shadow-xl shadow-black/5 backdrop-blur-xl md:p-8">
+      <Card asChild interactive={false} className="rounded-4xl p-6 md:p-8"><section>
         <Badge className="rounded-full border border-white/20 bg-white/70 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-slate-700 dark:border-white/10 dark:bg-white/10 dark:text-slate-200">
           Políticas
         </Badge>
@@ -14,7 +14,7 @@ export default function PoliciesPage() {
         <p className="mt-3 max-w-2xl text-sm font-medium leading-6 text-muted-foreground">
           Lineamientos para el uso correcto del sistema, la seguridad y el control de operaciones.
         </p>
-      </section>
+      </section></Card>
 
       <Card className="glass-premium border-border/10 bg-card/40 shadow-xl shadow-black/5">
         <CardHeader>

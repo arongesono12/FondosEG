@@ -223,7 +223,7 @@ export default function HistoryPage() {
 
   return (
     <div className="space-y-8">
-      <section className="rounded-4xl border border-border/10 bg-card/50 p-6 shadow-xl shadow-black/5 backdrop-blur-xl md:p-8">
+      <Card asChild interactive={false} className="rounded-4xl p-6 md:p-8"><section>
         <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <Badge className="rounded-full border border-white/20 bg-white/70 px-3 py-1 text-[10px] font-black uppercase tracking-[0.24em] text-slate-700 dark:border-white/10 dark:bg-white/10 dark:text-slate-200">
@@ -237,12 +237,12 @@ export default function HistoryPage() {
             </p>
           </div>
 
-          <Button onClick={exportToCsv} className="w-full shrink-0 rounded-2xl bg-brand-gradient px-6 font-black text-white shadow-xl shadow-pink-500/20 lg:w-auto">
+          <Button onClick={exportToCsv} variant="brand" className="w-full shrink-0 rounded-2xl px-6 font-black lg:w-auto">
             <Download className="mr-2 h-4 w-4" />
             Exportar CSV
           </Button>
         </div>
-      </section>
+      </section></Card>
 
       <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <MetricTile label="Completadas" value={String(completedTransfers.length)} hint="Operaciones cerradas" icon={History} tone="border-emerald-500/20 bg-emerald-500 shadow-emerald-500/20" />
