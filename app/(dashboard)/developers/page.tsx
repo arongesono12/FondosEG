@@ -558,7 +558,7 @@ const event = parseFondosEGWebhookBody(rawBody);`;
                 </div>
               </div>
 
-              <Button type="submit" disabled={saving} className="h-12 w-full rounded-2xl bg-brand-gradient text-base font-bold text-white shadow-xl shadow-pink-500/20">
+              <Button type="submit" disabled={saving} variant="brand" className="h-12 w-full rounded-2xl text-base font-bold">
                 <Plus className="h-4 w-4" />
                 {saving ? 'Creando...' : 'Crear credencial'}
               </Button>
