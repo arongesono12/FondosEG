@@ -6,7 +6,7 @@ import { getOptionalAuthState, getProductAccess } from '@/lib/server/authz';
 import { getAuthErrorMessage, isAuthServiceUnavailableError } from '@/lib/supabase/auth-errors';
 import { DashboardLayoutWrapper } from '@/components/layout/dashboard-layout-wrapper';
 import { AppProvider } from '@/components/providers/app-provider';
-import { ensureProductAccessAndBalances } from '@/lib/server/clerk-identity';
+import { ensureProductAccessAndBalances, syncProfileFromClerkIfNeeded } from '@/lib/server/clerk-identity';
 import type { User } from '@/types';
 
 // Todo lo que cuelga del dashboard depende de la sesión de Clerk, que se lee
@@ -77,6 +77,19 @@ export default async function DashboardLayout({
         .single();
       user = profileResult.data;
       profileError = profileResult.error;
+
+      // Reconciliación perezosa con Clerk (avatar, nombre, rol).
+      // No lanza excepciones: si falla, el dashboard carga el perfil tal cual.
+      if (user && !profileError) {
+        try {
+          user = await syncProfileFromClerkIfNeeded(user as User);
+        } catch (error) {
+          console.error(
+            'Reconciliación con Clerk ignorada:',
+            error instanceof Error ? error.message : error,
+          );
+        }
+      }
     }
   } catch (error) {
     if (isAuthServiceUnavailableError(error)) {

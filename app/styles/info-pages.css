@@ -1,0 +1,72 @@
+/* =========================================================================
+   INFO PAGES — Páginas públicas de información y documentos legales
+   ========================================================================= */
+
+.info-page {
+  min-height: 100vh;
+  padding: 22px;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 75% 15%, rgba(236, 72, 153, .14), transparent 25%),
+    radial-gradient(circle at 90% 35%, rgba(244, 63, 94, .12), transparent 22%),
+    var(--background);
+  color: var(--foreground);
+}
+
+.info-header {
+  max-width: 1240px; min-height: 72px; margin: 0 auto; padding: 12px 18px;
+  display: flex; align-items: center; justify-content: space-between;
+  border: 1px solid var(--glass-border); border-radius: 18px;
+  background: var(--card); backdrop-filter: none;
+}
+.info-header > div { display: flex; align-items: center; gap: 12px; }
+
+.info-back {
+  min-height: 42px; padding: 0 17px; display: inline-flex; align-items: center; gap: 8px;
+  border: 1px solid var(--glass-border); border-radius: 12px; font-size: 12px; font-weight: 700;
+}
+.info-back svg { width: 16px; }
+
+.info-hero {
+  max-width: 1120px; min-height: 610px; margin: 0 auto; padding: 80px 20px 55px;
+  display: grid; grid-template-columns: 1.12fr .88fr; align-items: center; gap: 70px;
+}
+
+.info-copy > span {
+  width: fit-content; padding: 8px 14px; display: flex; align-items: center; gap: 8px;
+  border: 1px solid rgba(240, 38, 126, .3); border-radius: 999px;
+  color: #f0267e; background: rgba(240, 38, 126, .08);
+  font-size: 11px; font-weight: 750; letter-spacing: .08em; text-transform: uppercase;
+}
+.info-copy > span svg { width: 16px; }
+.info-copy h1 { max-width: 690px; margin: 24px 0 18px; font-size: clamp(42px, 5vw, 65px); line-height: 1.04; letter-spacing: -.045em; font-weight: 750; }
+.info-copy > p { max-width: 620px; color: var(--muted-foreground); font-size: 16px; line-height: 1.8; }
+.info-copy > .btn-primary { margin-top: 30px; }
+
+.info-panel {
+  padding: 34px; border: 1px solid var(--glass-border); border-radius: 24px;
+  background: var(--card); box-shadow: var(--app-card-shadow); backdrop-filter: none;
+}
+.info-panel-icon {
+  width: 58px; height: 58px; display: grid; place-items: center; border-radius: 17px;
+  color: white; background: linear-gradient(135deg,#f93291,#e60762); box-shadow: 0 12px 30px rgba(238,20,112,.25);
+}
+.info-panel-icon svg { width: 27px; }
+.info-panel h2 { margin: 25px 0 10px; font-size: 23px; font-weight: 750; }
+.info-panel > p { padding: 15px 0; display: flex; align-items: flex-start; gap: 10px; border-top: 1px solid var(--glass-border); color: var(--muted-foreground); font-size: 13px; line-height: 1.55; }
+.info-panel > p svg { width: 18px; flex: none; color: #18bf8b; }
+
+.info-note {
+  max-width: 1120px; margin: 0 auto 40px; padding: 24px 28px;
+  display: flex; gap: 18px; border: 1px solid var(--glass-border); border-radius: 20px; background: var(--card);
+}
+.info-note > svg { width: 26px; flex: none; color: #ec4899; }
+.info-note h2 { font-size: 17px; font-weight: 750; }
+.info-note p { margin-top: 6px; color: var(--muted-foreground); font-size: 12px; line-height: 1.65; }
+
+@media (max-width: 780px) {
+  .info-page { padding: 12px; }
+  .info-back { width: 42px; padding: 0; justify-content: center; font-size: 0; }
+  .info-hero { min-height: auto; padding: 60px 10px 35px; grid-template-columns: 1fr; gap: 40px; }
+  .info-copy h1 { font-size: 43px; }
+}

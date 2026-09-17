@@ -1,3 +1,5 @@
+import Link from 'next/link';
+import { DashboardLogo } from '@/components/layout/dashboard-logo';
 import { ThemeToggle } from '@/components/theme-toggle';
 
 export default function DevelopersPortalLayout({
@@ -6,15 +8,32 @@ export default function DevelopersPortalLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <div className="absolute top-4 right-4 z-50">
+    <div
+      className="auth-public-page relative flex min-h-dvh flex-col overflow-y-auto overscroll-y-contain p-4 transition-colors duration-500"
+      style={{
+        paddingTop: 'max(1rem, env(safe-area-inset-top))',
+        paddingBottom: 'max(1rem, env(safe-area-inset-bottom))',
+        paddingLeft: 'max(1rem, env(safe-area-inset-left))',
+        paddingRight: 'max(1rem, env(safe-area-inset-right))',
+      }}
+    >
+      <header className="flex w-full shrink-0 items-center justify-between gap-4">
+        <Link
+          href="/"
+          aria-label="FondosEG — ir al inicio"
+          className="inline-flex min-h-11 items-center rounded-2xl focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+        >
+          <DashboardLogo size="sm" priority />
+        </Link>
+
         <ThemeToggle />
+      </header>
+
+      <div className="flex w-full flex-1 flex-col items-center justify-start">
+        <div className="w-full relative z-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          {children}
+        </div>
       </div>
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-24 left-10 h-56 w-56 rounded-full bg-pink-400/10 blur-3xl" />
-        <div className="absolute bottom-24 right-10 h-72 w-72 rounded-full bg-rose-500/10 blur-3xl" />
-      </div>
-      <div className="relative">{children}</div>
     </div>
   );
 }

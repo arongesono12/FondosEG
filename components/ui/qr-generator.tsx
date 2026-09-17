@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import QRCode from 'qrcode';
-import { Download } from 'lucide-react';
+import { Download } from '@/components/ui/hugeicons';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 

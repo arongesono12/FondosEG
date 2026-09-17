@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { AlertCircle, CheckCircle2, ExternalLink, Landmark, Loader2, Search } from 'lucide-react';
+import { AlertCircle, CheckCircle2, ExternalLink, Landmark, Loader2, Search } from '@/components/ui/hugeicons';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -131,18 +131,18 @@ export function RevolutPayoutModal({ open, onOpenChange, onSuccess }: RevolutPay
                     {transfer.receiver_name} · {transfer.destination_city}
                   </p>
                 </div>
-                <Badge className={`rounded-full px-3 py-1 text-[10px] font-black uppercase ${getStatusColor(transfer.status)}`}>
+                <Badge className={`rounded-full px-3 py-1 text-xs font-black uppercase ${getStatusColor(transfer.status)}`}>
                   {getStatusText(transfer.status)}
                 </Badge>
               </div>
 
               <div className="grid grid-cols-2 gap-3 text-sm">
                 <div>
-                  <p className="text-[10px] font-bold uppercase text-muted-foreground">Monto</p>
+                  <p className="text-xs font-bold uppercase text-muted-foreground">Monto</p>
                   <p className="font-black text-foreground">{formatCurrency(transfer.amount, transfer.currency)}</p>
                 </div>
                 <div>
-                  <p className="text-[10px] font-bold uppercase text-muted-foreground">Canal</p>
+                  <p className="text-xs font-bold uppercase text-muted-foreground">Canal</p>
                   <p className="font-black text-foreground">{transfer.payout_provider === 'revolut' ? 'Revolut' : 'Gestor'}</p>
                 </div>
               </div>

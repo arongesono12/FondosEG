@@ -17,7 +17,7 @@ interface ErrorScreenProps {
 export function ErrorScreen({ title, description, badge, actions }: ErrorScreenProps) {
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-6">
-      <div className="w-full max-w-lg rounded-4xl border border-border/20 bg-card/90 backdrop-blur-xl shadow-2xl p-8 text-center">
+      <div className="app-card w-full max-w-lg p-8 text-center">
         <DashboardLogo
           size="lg"
           className="justify-center mb-5"
@@ -25,7 +25,7 @@ export function ErrorScreen({ title, description, badge, actions }: ErrorScreenP
           labelClassName="text-4xl"
         />
         {badge && (
-          <div className="mx-auto mb-4 inline-flex items-center rounded-full border border-border/20 bg-muted/60 px-3 py-1 text-[10px] font-black uppercase tracking-[0.24em] text-muted-foreground">
+          <div className="mx-auto mb-4 inline-flex items-center rounded-full border border-border/20 bg-muted/60 px-3 py-1 text-xs font-black uppercase tracking-[0.24em] text-muted-foreground">
             {badge}
           </div>
         )}

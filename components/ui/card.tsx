@@ -8,10 +8,7 @@ const Card = React.forwardRef<
   <div
     ref={ref}
     className={cn(
-      // `transition-all` animaba también propiedades de layout, y en táctil el
-      // :hover se queda pegado tras el tap, dejando tarjetas escaladas de forma
-      // permanente y desalineadas respecto a sus vecinas de rejilla.
-      "glass rounded-3xl bg-card text-card-foreground transition-[transform,box-shadow] duration-200 ease-out [@media(hover:hover)]:hover:scale-[1.01]",
+      "app-card rounded-[20px] border border-border bg-card text-card-foreground shadow-[0_8px_28px_rgba(15,23,42,0.06)] transition-[border-color,box-shadow] duration-200",
       className
     )}
     {...props}
@@ -25,7 +22,7 @@ const CardHeader = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn("flex flex-col space-y-1.5 p-6", className)}
+    className={cn("flex flex-col gap-1.5 p-6", className)}
     {...props}
   />
 ))

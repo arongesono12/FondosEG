@@ -8,7 +8,7 @@ import {
   DialogBody,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Search, MapPin, User, ArrowRight } from 'lucide-react';
+import { Search, MapPin, User, ArrowRight } from '@/components/ui/hugeicons';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ModalListSkeleton } from '@/components/skeletons/app-skeletons';
@@ -112,15 +112,15 @@ export function SearchModal({ open, onOpenChange }: SearchModalProps) {
                     <div>
                       <div className="flex items-center gap-2">
                         <p className="text-sm font-black text-foreground uppercase tracking-tighter">{result.transfer_code}</p>
-                        <span className="text-[10px] font-black px-1.5 py-0.5 rounded bg-muted text-muted-foreground uppercase">
+                        <span className="text-xs font-black px-1.5 py-0.5 rounded bg-muted text-muted-foreground uppercase">
                           {result.status}
                         </span>
                       </div>
                       <div className="flex items-center gap-3 mt-0.5">
-                        <span className="flex items-center gap-1 text-[10px] font-bold text-muted-foreground">
+                        <span className="flex items-center gap-1 text-xs font-bold text-muted-foreground">
                           <User className="h-3 w-3" /> {result.receiver_name}
                         </span>
-                        <span className="flex items-center gap-1 text-[10px] font-bold text-muted-foreground">
+                        <span className="flex items-center gap-1 text-xs font-bold text-muted-foreground">
                           <MapPin className="h-3 w-3" /> {result.destination_city}
                         </span>
                       </div>
@@ -129,7 +129,7 @@ export function SearchModal({ open, onOpenChange }: SearchModalProps) {
                   <div className="text-right flex items-center gap-4">
                     <div>
                       <p className="text-sm font-black text-foreground">{formatCurrency(result.amount, result.currency)}</p>
-                      <p className="text-[10px] font-bold text-muted-foreground uppercase">Monto enviado</p>
+                      <p className="text-xs font-bold text-muted-foreground uppercase">Monto enviado</p>
                     </div>
                     <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
                   </div>
@@ -140,11 +140,11 @@ export function SearchModal({ open, onOpenChange }: SearchModalProps) {
         </DialogBody>
 
         <div className="p-4 bg-muted/20 border-t border-border/5 flex justify-between items-center px-8 shrink-0">
-          <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
+          <p className="text-xs font-black text-muted-foreground uppercase tracking-widest">
             {results.length} resultados encontrados
           </p>
           <div className="flex gap-4">
-            <span className="text-[9px] font-black text-muted-foreground uppercase flex items-center gap-1">
+            <span className="text-[11px] font-black text-muted-foreground uppercase flex items-center gap-1">
               <kbd className="px-1.5 py-0.5 rounded bg-muted-foreground/10">ESC</kbd> Cerrar
             </span>
           </div>

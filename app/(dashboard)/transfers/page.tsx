@@ -27,14 +27,20 @@ import {
   QrCode,
   Send,
   HandCoins,
-} from 'lucide-react';
+} from '@/components/ui/hugeicons';
 import { SupportModal } from '@/components/layout/support-modal';
+import { Bar, BarChart, XAxis, YAxis } from 'recharts';
+import { type ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { WalletTransferModal } from '@/components/wallet-transfer-modal';
 import { AgentPayoutModal } from '@/components/agent-payout-modal';
 import { AgentTransferModal } from '@/components/agent-transfer-modal';
 import { ClientWithdrawalModal } from '@/components/client-withdrawal-modal';
 import { RevolutPayoutModal } from '@/components/revolut-payout-modal';
 import { isAdminRole } from '@/lib/roles';
+
+const weeklyVolumeConfig = {
+  amount: { label: 'Volumen', color: 'var(--chart-1)' },
+} satisfies ChartConfig;
 
 export default function TransfersPage() {
   const { user, preferredCurrency } = useAppStore();
@@ -140,7 +146,7 @@ export default function TransfersPage() {
       <div className={`grid grid-cols-1 ${user?.role === 'gestor' ? 'sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5' : user?.role === 'cliente' ? 'sm:grid-cols-2' : 'md:grid-cols-2 lg:grid-cols-4'} gap-4`}>
         {/* Card: Nueva Transferencia (Solo gestores) */}
         {user?.role === 'gestor' && (
-          <Card className="transfer-action-card bg-brand-gradient border-0 rounded-3xl p-6 cursor-pointer hover:shadow-xl transition-all text-white" onClick={() => setAgentTransferOpen(true)}>
+          <Card className="transfer-action-card cursor-pointer p-6" onClick={() => setAgentTransferOpen(true)}>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-bold flex items-center gap-2">
                 <Send className="h-4 w-4" /> Nueva Transferencia
@@ -158,7 +164,7 @@ export default function TransfersPage() {
 
         {/* Card: Transferir a Cliente (Solo clientes) */}
         {user?.role === 'cliente' && (
-          <Card className="transfer-action-card bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 rounded-3xl p-6 cursor-pointer hover:shadow-lg transition-all" onClick={() => setWalletTransferOpen(true)}>
+          <Card className="transfer-action-card cursor-pointer p-6" onClick={() => setWalletTransferOpen(true)}>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-bold text-green-600 dark:text-green-400 flex items-center gap-2">
                 <Wallet className="h-4 w-4" /> Transferir a Cliente
@@ -181,7 +187,7 @@ export default function TransfersPage() {
 
         {/* Card: Retirar Efectivo (Solo clientes) */}
         {user?.role === 'cliente' && (
-          <Card className="transfer-action-card bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800 rounded-3xl p-6 cursor-pointer hover:shadow-lg transition-all" onClick={() => setWithdrawalOpen(true)}>
+          <Card className="transfer-action-card cursor-pointer p-6" onClick={() => setWithdrawalOpen(true)}>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-bold text-amber-600 dark:text-amber-400 flex items-center gap-2">
                 <HandCoins className="h-4 w-4" /> Retirar Efectivo
@@ -199,7 +205,7 @@ export default function TransfersPage() {
 
         {/* Card: Pagar Transferencia (Solo gestores) */}
         {user?.role === 'gestor' && (
-          <Card className="transfer-action-card bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800 rounded-3xl p-6 cursor-pointer hover:shadow-lg transition-all" onClick={() => setAgentPayoutOpen(true)}>
+          <Card className="transfer-action-card cursor-pointer p-6" onClick={() => setAgentPayoutOpen(true)}>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-2">
                 <QrCode className="h-4 w-4" /> Pagar transferencia
@@ -216,7 +222,7 @@ export default function TransfersPage() {
         )}
         {/* Card: Payout Revolut (gestores y administración) */}
         {user?.role !== 'cliente' && (
-          <Card className="transfer-action-card bg-sky-50 dark:bg-sky-950/20 border-sky-200 dark:border-sky-900 rounded-3xl p-6 cursor-pointer hover:shadow-lg transition-all" onClick={() => setRevolutPayoutOpen(true)}>
+          <Card className="transfer-action-card cursor-pointer p-6" onClick={() => setRevolutPayoutOpen(true)}>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-bold text-sky-700 dark:text-sky-300 flex items-center gap-2">
                 <Landmark className="h-4 w-4" /> Payout Revolut
@@ -233,7 +239,7 @@ export default function TransfersPage() {
         )}
         {/* Card 1: Flujo del Día */}
         {user?.role !== 'cliente' && (
-        <Card className="transfer-action-card bg-card border-border/50 rounded-3xl p-6 cursor-pointer hover:shadow-lg transition-all" onClick={() => setShowDailyModal(true)}>
+        <Card className="transfer-action-card cursor-pointer p-6" onClick={() => setShowDailyModal(true)}>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-bold text-muted-foreground flex items-center gap-2">
               <TrendingUp className="h-4 w-4" /> Flujo del Día
@@ -252,7 +258,7 @@ export default function TransfersPage() {
 
         {/* Card 2: Envíos de Gestores */}
         {user?.role !== 'cliente' && (
-        <Card className="transfer-action-card bg-card border-border/50 rounded-3xl p-6 cursor-pointer hover:shadow-lg transition-all" onClick={() => setShowAgentsModal(true)}>
+        <Card className="transfer-action-card cursor-pointer p-6" onClick={() => setShowAgentsModal(true)}>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-bold text-muted-foreground flex items-center gap-2">
               <Users className="h-4 w-4" /> Envíos de Gestores
@@ -270,7 +276,7 @@ export default function TransfersPage() {
 
         {/* Card 3: Volumen Semanal */}
         {user?.role !== 'cliente' && (
-        <Card className="transfer-action-card bg-card border-border/50 rounded-3xl p-6 cursor-pointer hover:shadow-lg transition-all" onClick={() => setShowWeeklyModal(true)}>
+        <Card className="transfer-action-card cursor-pointer p-6" onClick={() => setShowWeeklyModal(true)}>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-bold text-muted-foreground flex items-center gap-2">
               <BarChart3 className="h-4 w-4" /> Volumen Semanal
@@ -287,7 +293,7 @@ export default function TransfersPage() {
         )}
 
         {/* Card 4: Soporte */}
-        <Card className="transfer-action-card bg-card border-border/50 rounded-3xl p-6 cursor-pointer hover:shadow-lg transition-all" onClick={() => setSupportOpen(true)}>
+        <Card className="transfer-action-card cursor-pointer p-6" onClick={() => setSupportOpen(true)}>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-bold text-muted-foreground flex items-center gap-2">
               <MessageSquare className="h-4 w-4" /> Soporte
@@ -304,7 +310,7 @@ export default function TransfersPage() {
       </div>
 
       {/* Recent Transfers Table */}
-      <Card className="bg-card border-border/50 rounded-3xl">
+      <Card>
         <CardHeader>
           <CardTitle className="text-lg font-bold">Últimas Transferencias</CardTitle>
         </CardHeader>
@@ -428,22 +434,32 @@ export default function TransfersPage() {
             </div>
             
             {/* Bar Chart */}
-            {/* 14 barras en 292px darían 13px por barra con las etiquetas
-                solapadas: se le da ancho mínimo y scroll horizontal propio. */}
             <div className="-mx-2 overflow-x-auto overscroll-x-contain px-2">
-              <div className="flex h-48 min-w-[520px] items-end justify-between gap-2">
-                {dailyStats.slice(-14).map((day, idx) => (
-                  <div key={idx} className="flex min-w-[28px] flex-1 flex-col items-center gap-2">
-                    <div
-                      className="w-full bg-brand-gradient rounded-t-md"
-                      style={{ height: `${Math.max((day.total_amount / (avgDaily * 2 || 1)) * 100, 5)}%` }}
-                    />
-                    <span className="text-[10px] tabular-nums text-muted-foreground">
-                      {formatDayOfMonth(day.date)}
-                    </span>
-                  </div>
-                ))}
-              </div>
+              <ChartContainer config={weeklyVolumeConfig} className="aspect-auto h-72 w-full min-w-[380px]">
+                <BarChart
+                  accessibilityLayer
+                  data={dailyStats.slice(-14).map((day) => ({
+                    name: formatDayOfMonth(day.date),
+                    amount: Math.round(convertCurrency(day.total_amount, 'XAF', displayCurrency)),
+                  }))}
+                  layout="vertical"
+                  margin={{ left: 0, right: 8 }}
+                >
+                  <XAxis type="number" dataKey="amount" hide />
+                  <YAxis
+                    dataKey="name"
+                    type="category"
+                    tickLine={false}
+                    tickMargin={8}
+                    axisLine={false}
+                    width={34}
+                    tick={{ fontSize: 10, fill: 'currentColor', fontWeight: 700 }}
+                    className="text-muted-foreground"
+                  />
+                  <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel indicator="dot" />} />
+                  <Bar dataKey="amount" fill="var(--color-amount)" radius={4} />
+                </BarChart>
+              </ChartContainer>
             </div>
           </div>
         </DialogContent>

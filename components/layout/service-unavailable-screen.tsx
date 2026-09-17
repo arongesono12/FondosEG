@@ -14,7 +14,7 @@ export function ServiceUnavailableScreen({
 }: ServiceUnavailableScreenProps) {
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-6">
-      <div className="w-full max-w-lg rounded-4xl border border-border/20 bg-card/90 backdrop-blur-xl shadow-2xl p-8 text-center">
+      <div className="app-card w-full max-w-lg p-8 text-center">
         <DashboardLogo
           size="lg"
           className="justify-center mb-5"

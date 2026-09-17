@@ -10,7 +10,7 @@ import {
   Save,
   Settings2,
   ShieldCheck,
-} from 'lucide-react';
+} from '@/components/ui/hugeicons';
 
 export interface CookieConsentPreferences {
   essential: true;
@@ -117,7 +117,7 @@ export function CookieConsentModal({
             >
               <Cookie className="h-4 w-4 shrink-0" aria-hidden="true" />
               <span>Preferencias</span>
-              <span className={`flex items-center gap-1 rounded-full px-2 py-1 text-[10px] ${preferences.preferences ? 'bg-pink-500 text-white' : 'bg-muted text-muted-foreground'}`}>
+              <span className={`flex items-center gap-1 rounded-full px-2 py-1 text-xs ${preferences.preferences ? 'bg-pink-500 text-white' : 'bg-muted text-muted-foreground'}`}>
                 {preferences.preferences && <Check className="h-3 w-3" aria-hidden="true" />}
                 {preferences.preferences ? 'Activadas' : 'Desactivadas'}
               </span>

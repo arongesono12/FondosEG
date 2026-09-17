@@ -16,7 +16,7 @@ import {
   ShieldCheck,
   Trash2,
   Wallet,
-} from 'lucide-react';
+} from '@/components/ui/hugeicons';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -400,10 +400,10 @@ const event = parseFondosEGWebhookBody(rawBody);`;
 
   return (
     <div className="space-y-6 md:space-y-8">
-      <section className="overflow-hidden rounded-4xl border border-border/10 bg-[linear-gradient(135deg,rgba(255,255,255,0.92),rgba(248,250,252,0.72))] p-6 shadow-2xl shadow-slate-200/40 backdrop-blur-xl dark:bg-[linear-gradient(135deg,rgba(15,23,42,0.9),rgba(2,6,23,0.82))] dark:shadow-black/20 md:p-8">
+      <section className="app-card overflow-hidden p-6 md:p-8">
         <div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
           <div className="max-w-3xl space-y-4">
-            <Badge className="w-fit rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-emerald-700 dark:text-emerald-300">
+            <Badge className="w-fit rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.24em] text-emerald-700 dark:text-emerald-300">
               FondosEG API
             </Badge>
             <div>
@@ -416,15 +416,15 @@ const event = parseFondosEGWebhookBody(rawBody);`;
 
           <div className="grid gap-3 sm:grid-cols-3">
             <div className="rounded-2xl border border-border/10 bg-background/70 px-4 py-3">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Credenciales</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Credenciales</p>
               <p className="mt-1 text-2xl font-bold text-foreground">{apiKeys.length}</p>
             </div>
             <div className="rounded-2xl border border-border/10 bg-background/70 px-4 py-3">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Rate limit</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Rate limit</p>
               <p className="mt-1 text-2xl font-bold text-foreground">{selectedKey?.rate_limit || 100}/h</p>
             </div>
             <div className="rounded-2xl border border-border/10 bg-background/70 px-4 py-3">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Endpoints</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Endpoints</p>
               <p className="mt-1 text-2xl font-bold text-foreground">{endpointDocs.length}</p>
             </div>
           </div>
@@ -463,7 +463,7 @@ const event = parseFondosEGWebhookBody(rawBody);`;
       )}
 
       <section className="grid gap-6 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.25fr)]">
-        <Card className="glass-premium overflow-hidden border-border/10 bg-card/40 shadow-xl shadow-black/5">
+        <Card className="overflow-hidden">
           <CardHeader className="border-b border-border/5 pb-5">
             <CardTitle className="flex items-center gap-2 text-xl font-bold text-foreground">
               <KeyRound className="h-5 w-5 text-primary" />
@@ -567,7 +567,7 @@ const event = parseFondosEGWebhookBody(rawBody);`;
         </Card>
 
         <div className="space-y-6">
-          <Card className="glass-premium overflow-hidden border-border/10 bg-card/40 shadow-xl shadow-black/5">
+          <Card className="overflow-hidden">
             <CardHeader className="border-b border-border/5 pb-5">
               <CardTitle className="flex items-center gap-2 text-xl font-bold text-foreground">
                 <ShieldCheck className="h-5 w-5 text-primary" />
@@ -595,10 +595,10 @@ const event = parseFondosEGWebhookBody(rawBody);`;
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
                         <p className="font-bold text-foreground">{key.app_name}</p>
-                        <Badge className="rounded-full bg-slate-900 px-2 py-1 text-[10px] uppercase tracking-[0.16em] text-white dark:bg-white dark:text-slate-900">
+                        <Badge className="rounded-full bg-slate-900 px-2 py-1 text-xs uppercase tracking-[0.16em] text-white dark:bg-white dark:text-slate-900">
                           {key.role_access}
                         </Badge>
-                        <Badge className={cn('rounded-full px-2 py-1 text-[10px] uppercase tracking-[0.16em]', environmentLabels[key.environment || 'test'].badge)}>
+                        <Badge className={cn('rounded-full px-2 py-1 text-xs uppercase tracking-[0.16em]', environmentLabels[key.environment || 'test'].badge)}>
                           {environmentLabels[key.environment || 'test'].label}
                         </Badge>
                       </div>
@@ -659,7 +659,7 @@ const event = parseFondosEGWebhookBody(rawBody);`;
             </CardContent>
           </Card>
 
-          <Card className="glass-premium overflow-hidden border-border/10 bg-card/40 shadow-xl shadow-black/5">
+          <Card className="overflow-hidden">
             <CardHeader className="border-b border-border/5 pb-5">
               <CardTitle className="flex items-center gap-2 text-xl font-bold text-foreground">
                 <Code2 className="h-5 w-5 text-primary" />
@@ -691,7 +691,7 @@ const event = parseFondosEGWebhookBody(rawBody);`;
             </CardContent>
           </Card>
 
-          <Card className="glass-premium overflow-hidden border-border/10 bg-card/40 shadow-xl shadow-black/5">
+          <Card className="overflow-hidden">
             <CardHeader className="border-b border-border/5 pb-5">
               <CardTitle className="flex items-center gap-2 text-xl font-bold text-foreground">
                 <BookOpen className="h-5 w-5 text-primary" />
@@ -714,15 +714,15 @@ const event = parseFondosEGWebhookBody(rawBody);`;
 
               <div className="grid gap-3 sm:grid-cols-3">
                 <div className="rounded-3xl border border-border/10 bg-background/70 p-4">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Requests</p>
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Requests</p>
                   <p className="mt-2 text-2xl font-bold tabular-nums text-foreground">{usageLoading ? '...' : usage?.summary.total ?? 0}</p>
                 </div>
                 <div className="rounded-3xl border border-border/10 bg-background/70 p-4">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Exitosos</p>
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Exitosos</p>
                   <p className="mt-2 text-2xl font-bold text-emerald-600 dark:text-emerald-300">{usageLoading ? '...' : usage?.summary.success ?? 0}</p>
                 </div>
                 <div className="rounded-3xl border border-border/10 bg-background/70 p-4">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Errores</p>
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Errores</p>
                   <p className="mt-2 text-2xl font-bold text-rose-600 dark:text-rose-300">{usageLoading ? '...' : usage?.summary.errors ?? 0}</p>
                 </div>
               </div>
@@ -732,10 +732,10 @@ const event = parseFondosEGWebhookBody(rawBody);`;
                   <div key={log.id} className="flex flex-col gap-2 rounded-3xl border border-border/10 bg-background/70 p-4 md:flex-row md:items-center md:justify-between">
                     <div>
                       <p className="font-mono text-xs font-bold text-foreground">{log.method} {log.path}</p>
-                      <p className="mt-1 font-mono text-[10px] text-muted-foreground">{log.request_id}</p>
+                      <p className="mt-1 font-mono text-xs text-muted-foreground">{log.request_id}</p>
                     </div>
                     <div className="flex items-center gap-3">
-                      <Badge className={cn('rounded-full px-2 py-1 text-[10px] font-bold', log.status_code < 400 ? 'bg-emerald-500 text-white' : 'bg-rose-500 text-white')}>
+                      <Badge className={cn('rounded-full px-2 py-1 text-xs font-bold', log.status_code < 400 ? 'bg-emerald-500 text-white' : 'bg-rose-500 text-white')}>
                         {log.status_code}
                       </Badge>
                       <span className="text-xs font-semibold text-muted-foreground">{log.latency_ms}ms</span>
@@ -757,10 +757,10 @@ const event = parseFondosEGWebhookBody(rawBody);`;
         {endpointDocs.map((endpoint) => (
           <div key={`${endpoint.method}-${endpoint.path}`} className="rounded-3xl border border-border/10 bg-background/70 p-5 shadow-sm">
             <div className="flex items-center justify-between gap-3">
-              <Badge className={cn('rounded-full px-2 py-1 text-[10px] font-bold uppercase tracking-[0.16em]', endpoint.method === 'GET' ? 'bg-sky-500 text-white' : 'bg-emerald-500 text-white')}>
+              <Badge className={cn('rounded-full px-2 py-1 text-xs font-bold uppercase tracking-[0.16em]', endpoint.method === 'GET' ? 'bg-sky-500 text-white' : 'bg-emerald-500 text-white')}>
                 {endpoint.method}
               </Badge>
-              <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground">{endpoint.scope}</span>
+              <span className="text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">{endpoint.scope}</span>
             </div>
             <p className="mt-4 text-sm font-bold text-foreground">{endpoint.title}</p>
             <p className="mt-2 break-all font-mono text-xs text-primary">{endpoint.path}</p>
@@ -770,7 +770,7 @@ const event = parseFondosEGWebhookBody(rawBody);`;
       </section>
 
       <section className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
-        <Card className="glass-premium overflow-hidden border-border/10 bg-card/40 shadow-xl shadow-black/5">
+        <Card className="overflow-hidden">
           <CardHeader className="border-b border-border/5 pb-5">
             <CardTitle className="flex items-center gap-2 text-xl font-bold text-foreground">
               <BookOpen className="h-5 w-5 text-primary" />
@@ -815,7 +815,7 @@ const event = parseFondosEGWebhookBody(rawBody);`;
           </CardContent>
         </Card>
 
-        <Card className="glass-premium overflow-hidden border-border/10 bg-card/40 shadow-xl shadow-black/5">
+        <Card className="overflow-hidden">
           <CardHeader className="border-b border-border/5 pb-5">
             <CardTitle className="flex items-center gap-2 text-xl font-bold text-foreground">
               <Code2 className="h-5 w-5 text-primary" />
@@ -849,7 +849,7 @@ const event = parseFondosEGWebhookBody(rawBody);`;
       </section>
 
       <section className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
-        <Card className="glass-premium overflow-hidden border-border/10 bg-card/40 shadow-xl shadow-black/5">
+        <Card className="overflow-hidden">
           <CardHeader className="border-b border-border/5 pb-5">
             <CardTitle className="flex items-center gap-2 text-xl font-bold text-foreground">
               <AlertTriangle className="h-5 w-5 text-primary" />
@@ -871,7 +871,7 @@ const event = parseFondosEGWebhookBody(rawBody);`;
           </CardContent>
         </Card>
 
-        <Card className="glass-premium overflow-hidden border-border/10 bg-card/40 shadow-xl shadow-black/5">
+        <Card className="overflow-hidden">
           <CardHeader className="border-b border-border/5 pb-5">
             <CardTitle className="flex items-center gap-2 text-xl font-bold text-foreground">
               <ShieldCheck className="h-5 w-5 text-primary" />

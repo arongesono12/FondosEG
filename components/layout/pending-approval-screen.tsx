@@ -1,4 +1,4 @@
-import { Clock } from 'lucide-react';
+import { Clock } from '@/components/ui/hugeicons';
 import { SignOutButton } from '@clerk/nextjs';
 
 import { getRoleLabel } from '@/lib/roles';

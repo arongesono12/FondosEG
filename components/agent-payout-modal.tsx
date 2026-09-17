@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { PanelSkeleton } from '@/components/skeletons/app-skeletons';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import type { ClientWithdrawal, Transfer } from '@/types';
-import { AlertCircle, CheckCircle2, HandCoins, Loader2, Search, Wallet } from 'lucide-react';
+import { AlertCircle, CheckCircle2, HandCoins, Loader2, Search, Wallet } from '@/components/ui/hugeicons';
 
 interface AgentPayoutModalProps {
   open: boolean;
@@ -179,7 +179,7 @@ export function AgentPayoutModal({ open, onOpenChange, onSuccess }: AgentPayoutM
                         {target.transfer.sender_name} · {target.transfer.destination_city}
                       </p>
                     </div>
-                    <Badge className="rounded-full bg-emerald-100 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-700">
+                    <Badge className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold uppercase tracking-[0.18em] text-emerald-700">
                       Envío
                     </Badge>
                   </div>
@@ -203,12 +203,12 @@ export function AgentPayoutModal({ open, onOpenChange, onSuccess }: AgentPayoutM
                           : ' no registrado en el perfil'}
                       </p>
                       {target.withdrawal.expires_at && (
-                        <p className="mt-1 text-[10px] font-semibold text-muted-foreground">
+                        <p className="mt-1 text-xs font-semibold text-muted-foreground">
                           Válido hasta {formatDate(target.withdrawal.expires_at)}
                         </p>
                       )}
                     </div>
-                    <Badge className="rounded-full bg-sky-100 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-sky-700">
+                    <Badge className="rounded-full bg-sky-100 px-3 py-1 text-xs font-bold uppercase tracking-[0.18em] text-sky-700">
                       Retiro
                     </Badge>
                   </div>

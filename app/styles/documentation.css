@@ -1,0 +1,223 @@
+/* API documentation keeps the dedicated dark canvas from the visual spec. */
+.documentation-page {
+  --background: hsl(224 71% 4%);
+  --foreground: hsl(210 20% 98%);
+  --surface: hsl(217 60% 9%);
+  --surface-2: hsl(222 60% 6%);
+  --surface-fg: hsl(210 20% 98%);
+  --card: var(--surface);
+  --card-foreground: var(--surface-fg);
+  --muted: hsl(222.2 47.4% 11.2%);
+  --muted-foreground: hsl(215 20% 65%);
+  --border: hsl(217.2 32.6% 17.5% / .55);
+  --app-card-bg: hsl(217 60% 9%);
+  --app-card-border: hsl(215 20% 40% / .28);
+  --app-card-shadow: 0 10px 30px rgba(0, 0, 0, .18);
+  color-scheme: dark;
+  color: #f8fafc;
+  background: #020817;
+  overflow-x: hidden;
+}
+
+.documentation-page .text-foreground,
+.documentation-page h1,
+.documentation-page h2,
+.documentation-page h3 {
+  color: #f8fafc;
+}
+
+.documentation-page .text-muted-foreground {
+  color: #94a3b8;
+}
+
+.documentation-shell,
+.documentation-layout {
+  background: #020817;
+}
+
+.documentation-header {
+  box-shadow: none;
+}
+
+.documentation-theme-control svg {
+  display: none;
+}
+
+.documentation-theme-control button::after {
+  content: "";
+  display: block;
+  width: 15px;
+  height: 15px;
+  border-radius: 999px;
+  background: #dbe4f0;
+  box-shadow: 5px -4px 0 0 #111827;
+}
+
+.documentation-sidebar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, .2) transparent;
+}
+
+.documentation-sidebar::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+.documentation-hero {
+  min-height: 753px;
+}
+
+.documentation-hero-grid-pattern {
+  background-image:
+    linear-gradient(rgba(148, 163, 184, .035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(148, 163, 184, .035) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+.documentation-hero-aura {
+  background:
+    radial-gradient(circle at 69% 13%, rgba(236, 72, 153, .23), transparent 35%),
+    radial-gradient(circle at 87% 51%, rgba(168, 85, 247, .13), transparent 30%),
+    linear-gradient(270deg, rgba(88, 28, 135, .08), transparent 72%);
+}
+
+.documentation-hero-grid {
+  min-height: 704px;
+}
+
+.documentation-hero-copy {
+  padding-top: 56px;
+}
+
+.documentation-hero-visual {
+  display: none;
+}
+
+.documentation-proof-grid {
+  margin-top: 40px;
+}
+
+.documentation-code-card {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+@media (min-width: 1024px) {
+  .documentation-sidebar {
+    overflow-y: auto;
+  }
+
+  .documentation-hero-copy {
+    padding-top: 72px;
+  }
+}
+
+@media (min-width: 1360px) {
+  .documentation-hero {
+    padding-right: 40px;
+    padding-left: 40px;
+  }
+
+  .documentation-hero-grid {
+    display: grid;
+    grid-template-columns: minmax(390px, .85fr) minmax(480px, 1.15fr);
+    grid-template-rows: 589px 120px;
+    column-gap: 24px;
+  }
+
+  .documentation-hero-copy {
+    grid-column: 1;
+    grid-row: 1;
+    padding-top: 76px;
+  }
+
+  .documentation-hero-copy h1 {
+    font-size: 42px;
+  }
+
+  .documentation-hero-visual {
+    display: block;
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .documentation-proof-grid {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    width: min(100%, 1048px);
+    margin-top: 0;
+  }
+}
+
+@media (min-width: 1720px) {
+  .documentation-layout {
+    grid-template-columns: 222px minmax(0, 1fr);
+    padding-left: max(0px, calc((100vw - 1470px) / 2));
+  }
+
+  .documentation-sidebar {
+    padding-right: 12px;
+    padding-left: 12px;
+  }
+
+  .documentation-hero {
+    padding-right: 56px;
+    padding-left: 56px;
+  }
+
+  .documentation-hero-grid {
+    grid-template-columns: 680px minmax(0, 1fr);
+    column-gap: 10px;
+  }
+
+  .documentation-hero-copy {
+    padding-top: 86px;
+  }
+
+  .documentation-hero-copy h1 {
+    font-size: 46px;
+  }
+
+  .documentation-hero-copy > p {
+    font-size: 17px;
+    line-height: 2;
+  }
+
+  .documentation-hero-visual {
+    transform: translateX(-48px);
+  }
+
+  .documentation-code-stage {
+    width: calc(100% + 40px);
+  }
+}
+
+@media (max-width: 1023.98px) {
+  .documentation-layout {
+    display: block;
+  }
+
+  .documentation-sidebar {
+    position: fixed;
+    inset: 68px 0 auto 0;
+    z-index: 45;
+    max-height: calc(100vh - 68px);
+    overflow-y: auto;
+    border-bottom: 1px solid rgba(255, 255, 255, .1);
+  }
+}
+
+@media (max-width: 639.98px) {
+  .documentation-hero {
+    min-height: auto;
+    padding-bottom: 48px;
+  }
+
+  .documentation-hero-grid {
+    min-height: 0;
+  }
+
+  .documentation-hero-copy {
+    padding-top: 44px;
+  }
+}

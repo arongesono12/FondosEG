@@ -13,18 +13,25 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
+  Bar,
+  BarChart,
   CartesianGrid,
   Cell,
-  Legend,
   Line,
   LineChart,
   Pie,
   PieChart,
-  ResponsiveContainer,
-  Tooltip,
   XAxis,
   YAxis,
 } from 'recharts';
+import {
+  type ChartConfig,
+  ChartContainer,
+  ChartLegend,
+  ChartLegendContent,
+  ChartTooltip,
+  ChartTooltipContent,
+} from '@/components/ui/chart';
 import {
   ArrowUpRight,
   BarChart3,
@@ -34,9 +41,18 @@ import {
   Sparkles,
   TrendingUp,
   Users,
-} from 'lucide-react';
+} from '@/components/ui/hugeicons';
 
-const CHART_COLORS = ['#0ea5e9', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6'];
+const lineChartConfig = {
+  amount: { label: 'Volumen', color: 'var(--chart-1)' },
+  count: { label: 'Operaciones', color: 'var(--chart-2)' },
+} satisfies ChartConfig;
+
+const settlementRateConfig = {
+  value: { label: 'Liquidación', color: 'var(--chart-3)' },
+} satisfies ChartConfig;
+
+const PIE_COLOR_VARS = ['var(--chart-1)', 'var(--chart-2)', 'var(--chart-3)', 'var(--chart-4)', 'var(--chart-5)'];
 
 function StatChip({
   label,
@@ -52,13 +68,13 @@ function StatChip({
   tone: string;
 }) {
   return (
-    <Card className="glass-premium min-w-0 border-border/10 bg-card/40 shadow-xl shadow-black/5">
+    <Card className="min-w-0">
       <CardContent className="flex items-center gap-4 p-5">
         <div className={cn('flex h-12 w-12 items-center justify-center rounded-2xl border text-white shadow-lg', tone)}>
           <Icon className="h-5 w-5" />
         </div>
         <div className="space-y-1">
-          <p className="text-[10px] font-black uppercase tracking-[0.22em] text-muted-foreground">{label}</p>
+          <p className="text-xs font-black uppercase tracking-[0.22em] text-muted-foreground">{label}</p>
           <p className="text-[clamp(1.125rem,1.4vw+0.75rem,1.5rem)] font-black leading-tight tabular-nums text-foreground">{value}</p>
           <p className="text-xs font-semibold text-muted-foreground">{hint}</p>
         </div>
@@ -166,8 +182,8 @@ export default function StatsPage() {
   if (!isAdmin && !isGestor) {
     return (
       <div className="space-y-6">
-        <section className="rounded-4xl border border-border/10 bg-card/50 p-8 shadow-xl shadow-black/5 backdrop-blur-xl">
-          <Badge className="rounded-full border border-white/20 bg-white/70 px-3 py-1 text-[10px] font-black uppercase tracking-[0.24em] text-slate-700 dark:border-white/10 dark:bg-white/10 dark:text-slate-200">
+        <section className="app-card p-8">
+          <Badge className="rounded-full border border-white/20 bg-white/70 px-3 py-1 text-xs font-black uppercase tracking-[0.24em] text-slate-700 dark:border-white/10 dark:bg-white/10 dark:text-slate-200">
             Analítica disponible para operación
           </Badge>
           <h1 className="mt-4 text-3xl font-black tracking-tight text-foreground">Estadísticas operativas</h1>
@@ -189,10 +205,10 @@ export default function StatsPage() {
 
   return (
     <div className="space-y-8">
-      <section className="rounded-4xl border border-border/10 bg-[radial-gradient(circle_at_top_left,rgba(14,165,233,0.14),transparent_30%),radial-gradient(circle_at_bottom_right,rgba(16,185,129,0.12),transparent_32%),linear-gradient(135deg,rgba(255,255,255,0.86),rgba(248,250,252,0.72))] p-6 shadow-2xl shadow-slate-200/40 backdrop-blur-xl dark:bg-[radial-gradient(circle_at_top_left,rgba(14,165,233,0.12),transparent_30%),radial-gradient(circle_at_bottom_right,rgba(16,185,129,0.10),transparent_34%),linear-gradient(135deg,rgba(15,23,42,0.88),rgba(2,6,23,0.82))] dark:shadow-black/20 md:p-8">
+      <section className="app-card p-6 md:p-8">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div className="max-w-3xl">
-            <Badge className="rounded-full border border-white/30 bg-white/70 px-3 py-1 text-[10px] font-black uppercase tracking-[0.24em] text-slate-700 shadow-sm dark:border-white/10 dark:bg-white/10 dark:text-slate-200">
+            <Badge className="rounded-full border border-white/30 bg-white/70 px-3 py-1 text-xs font-black uppercase tracking-[0.24em] text-slate-700 shadow-sm dark:border-white/10 dark:bg-white/10 dark:text-slate-200">
               {isAdmin ? 'Dirección analítica' : 'Analítica del gestor'}
             </Badge>
             <h1 className="mt-4 text-3xl font-black tracking-tight text-foreground md:text-4xl">
@@ -207,11 +223,11 @@ export default function StatsPage() {
 
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="rounded-2xl border border-sky-500/20 bg-sky-500/10 px-4 py-3">
-              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-sky-700 dark:text-sky-300">Volumen 30 días</p>
+              <p className="text-xs font-black uppercase tracking-[0.2em] text-sky-700 dark:text-sky-300">Volumen 30 días</p>
               <p className="mt-1 text-xl font-black text-foreground">{fmt(stats?.monthlyVolume ?? 0)}</p>
             </div>
             <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3">
-              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-700 dark:text-emerald-300">Tasa de cierre</p>
+              <p className="text-xs font-black uppercase tracking-[0.2em] text-emerald-700 dark:text-emerald-300">Tasa de cierre</p>
               <p className="mt-1 text-xl font-black text-foreground">{settlementRate}%</p>
             </div>
           </div>
@@ -226,7 +242,7 @@ export default function StatsPage() {
       </section>
 
       <section className="grid gap-6 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,0.95fr)]">
-        <Card className="glass-premium min-w-0 border-border/10 bg-card/40 shadow-xl shadow-black/5">
+        <Card className="min-w-0">
           <CardHeader className="border-b border-border/5 pb-5">
             <CardTitle className="flex items-center gap-2 text-xl font-black text-foreground">
               <BarChart3 className="h-5 w-5 text-primary" />
@@ -235,45 +251,37 @@ export default function StatsPage() {
           </CardHeader>
           <CardContent className="space-y-5 p-6">
             <div className="h-64 w-full min-w-0 sm:h-80">
-              <ResponsiveContainer width="100%" height="100%" debounce={120}>
+              <ChartContainer config={lineChartConfig} className="aspect-auto h-full w-full">
                 <LineChart data={chartData} margin={{ top: 8, right: 12, bottom: 0, left: -12 }}>
                   <CartesianGrid strokeDasharray="4 4" vertical={false} stroke="rgba(148,163,184,0.18)" />
                   <XAxis dataKey="date" tick={{ fontSize: 11, fill: 'currentColor', fontWeight: 800 }} axisLine={false} tickLine={false} className="text-muted-foreground" />
                   <YAxis tick={{ fontSize: 11, fill: 'currentColor', fontWeight: 800 }} axisLine={false} tickLine={false} className="text-muted-foreground" />
-                  <Tooltip
-                    wrapperStyle={{ zIndex: 20, outline: 'none' }}
-                    contentStyle={{
-                      backgroundColor: 'var(--card)',
-                      borderRadius: '18px',
-                      border: '1px solid var(--border)',
-                      boxShadow: '0 20px 45px rgba(15,23,42,0.12)',
-                    }}
-                  />
-                  <Legend />
-                  <Line type="monotone" dataKey="amount" name="Volumen" stroke="#0ea5e9" strokeWidth={3.5} dot={{ r: 3 }} activeDot={{ r: 6 }} />
-                  <Line type="monotone" dataKey="count" name="Operaciones" stroke="#10b981" strokeWidth={2.5} dot={{ r: 2 }} activeDot={{ r: 5 }} />
+                  <ChartTooltip content={<ChartTooltipContent hideLabel />} />
+                  <ChartLegend content={<ChartLegendContent />} />
+                  <Line type="monotone" dataKey="amount" stroke="var(--color-amount)" strokeWidth={3.5} dot={{ r: 3 }} activeDot={{ r: 6 }} />
+                  <Line type="monotone" dataKey="count" stroke="var(--color-count)" strokeWidth={2.5} dot={{ r: 2 }} activeDot={{ r: 5 }} />
                 </LineChart>
-              </ResponsiveContainer>
+              </ChartContainer>
             </div>
 
             <div className="grid gap-4 md:grid-cols-3">
               <div className="rounded-3xl border border-border/10 bg-background/70 p-4">
-                <p className="text-[10px] font-black uppercase tracking-[0.18em] text-muted-foreground">Semana actual</p>
+                <p className="text-xs font-black uppercase tracking-[0.18em] text-muted-foreground">Semana actual</p>
                 <p className="mt-2 text-2xl font-black tabular-nums text-foreground">{fmt(stats?.weeklyVolume ?? 0)}</p>
               </div>
               <div className="rounded-3xl border border-border/10 bg-background/70 p-4">
-                <p className="text-[10px] font-black uppercase tracking-[0.18em] text-muted-foreground">Hoy</p>
+                <p className="text-xs font-black uppercase tracking-[0.18em] text-muted-foreground">Hoy</p>
                 <p className="mt-2 text-2xl font-black tabular-nums text-foreground">{fmt(stats?.todayVolume ?? 0)}</p>
               </div>
               <div className="rounded-3xl border border-border/10 bg-background/70 p-4">
-                <p className="text-[10px] font-black uppercase tracking-[0.18em] text-muted-foreground">Comisión media</p>
+                <p className="text-xs font-black uppercase tracking-[0.18em] text-muted-foreground">Comisión media</p>
                 <p className="mt-2 text-2xl font-black tabular-nums text-foreground">{fmt(stats?.commissionPerTransfer ?? 0)}</p>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="glass-premium min-w-0 border-border/10 bg-card/40 shadow-xl shadow-black/5">
+        <Card className="min-w-0">
           <CardHeader className="border-b border-border/5 pb-5">
             <CardTitle className="flex items-center gap-2 text-xl font-black text-foreground">
               <PieChartIcon className="h-5 w-5 text-primary" />
@@ -282,7 +290,12 @@ export default function StatsPage() {
           </CardHeader>
           <CardContent className="space-y-5 p-6">
             <div className="h-64 min-w-0 sm:h-72">
-              <ResponsiveContainer width="100%" height="100%" debounce={120}>
+              <ChartContainer
+                config={{
+                  value: { label: 'Valor' },
+                }}
+                className="aspect-square h-full w-full"
+              >
                 <PieChart>
                   <Pie
                     data={isAdmin ? concentrationData : statusData}
@@ -295,30 +308,22 @@ export default function StatsPage() {
                     paddingAngle={4}
                   >
                     {(isAdmin ? concentrationData : statusData).map((_, index) => (
-                      <Cell key={index} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                      <Cell key={index} fill={PIE_COLOR_VARS[index % PIE_COLOR_VARS.length]} />
                     ))}
                   </Pie>
-                  <Tooltip
-                    wrapperStyle={{ zIndex: 20, outline: 'none' }}
-                    contentStyle={{
-                      backgroundColor: 'var(--card)',
-                      borderRadius: '18px',
-                      border: '1px solid var(--border)',
-                      boxShadow: '0 20px 45px rgba(15,23,42,0.12)',
-                    }}
-                  />
+                  <ChartTooltip content={<ChartTooltipContent hideLabel />} />
                 </PieChart>
-              </ResponsiveContainer>
+              </ChartContainer>
             </div>
 
             <div className="space-y-3">
               {(isAdmin ? concentrationData : statusData).map((item, index) => (
                 <div key={item.name} className="flex items-center justify-between rounded-2xl border border-border/10 bg-background/70 px-4 py-3">
                   <div className="flex items-center gap-3">
-                    <div className="h-3 w-3 rounded-full" style={{ backgroundColor: CHART_COLORS[index % CHART_COLORS.length] }} />
+                    <div className="h-3 w-3 rounded-full" style={{ backgroundColor: PIE_COLOR_VARS[index % PIE_COLOR_VARS.length] }} />
                     <div>
                       <p className="text-sm font-black text-foreground">{item.name}</p>
-                      {item.ops !== undefined && <p className="text-[10px] font-semibold text-muted-foreground">{item.ops} operaciones</p>}
+                      {item.ops !== undefined && <p className="text-xs font-semibold text-muted-foreground">{item.ops} operaciones</p>}
                     </div>
                   </div>
                   <p className="text-sm font-black text-foreground">{isAdmin ? fmt(item.value) : item.value}</p>
@@ -330,7 +335,7 @@ export default function StatsPage() {
       </section>
 
       <section className="grid gap-6 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
-        <Card className="glass-premium min-w-0 border-border/10 bg-card/40 shadow-xl shadow-black/5">
+        <Card className="min-w-0">
           <CardHeader className="border-b border-border/5 pb-5">
             <CardTitle className="flex items-center gap-2 text-xl font-black text-foreground">
               <ShieldCheck className="h-5 w-5 text-primary" />
@@ -340,29 +345,35 @@ export default function StatsPage() {
           <CardContent className="space-y-4 p-6">
             <div className="rounded-3xl border border-border/10 bg-background/70 p-5">
               <div className="flex items-center justify-between">
-                <p className="text-[10px] font-black uppercase tracking-[0.18em] text-muted-foreground">Liquidación</p>
+                <p className="text-xs font-black uppercase tracking-[0.18em] text-muted-foreground">Liquidación</p>
                 <p className="text-2xl font-black text-foreground">{settlementRate}%</p>
               </div>
-              <div className="mt-4 h-3 rounded-full bg-muted/30">
-                <div className="h-full rounded-full bg-linear-to-r from-emerald-500 to-sky-500" style={{ width: `${Math.min(settlementRate, 100)}%` }} />
+              <div className="mt-4">
+                <ChartContainer config={settlementRateConfig} className="h-3 w-full">
+                  <BarChart accessibilityLayer data={[{ name: 'rate', value: Math.min(settlementRate, 100) }]} layout="vertical" margin={{ left: 0, right: 0 }}>
+                    <XAxis type="number" domain={[0, 100]} hide />
+                    <YAxis type="category" dataKey="name" hide />
+                    <Bar dataKey="value" fill="var(--color-value)" radius={6} />
+                  </BarChart>
+                </ChartContainer>
               </div>
             </div>
 
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="rounded-3xl border border-border/10 bg-background/70 p-4">
-                <p className="text-[10px] font-black uppercase tracking-[0.18em] text-muted-foreground">Pendientes</p>
+                <p className="text-xs font-black uppercase tracking-[0.18em] text-muted-foreground">Pendientes</p>
                 <p className="mt-2 text-2xl font-black tabular-nums text-foreground">{stats?.pendingTransfers ?? 0}</p>
               </div>
               <div className="rounded-3xl border border-border/10 bg-background/70 p-4">
-                <p className="text-[10px] font-black uppercase tracking-[0.18em] text-muted-foreground">Canceladas</p>
+                <p className="text-xs font-black uppercase tracking-[0.18em] text-muted-foreground">Canceladas</p>
                 <p className="mt-2 text-2xl font-black tabular-nums text-foreground">{stats?.cancelledTransfers ?? 0}</p>
               </div>
               <div className="rounded-3xl border border-border/10 bg-background/70 p-4">
-                <p className="text-[10px] font-black uppercase tracking-[0.18em] text-muted-foreground">Float utilizado</p>
+                <p className="text-xs font-black uppercase tracking-[0.18em] text-muted-foreground">Float utilizado</p>
                 <p className="mt-2 text-2xl font-black tabular-nums text-foreground">{stats?.floatUtilization ?? 0}%</p>
               </div>
               <div className="rounded-3xl border border-border/10 bg-background/70 p-4">
-                <p className="text-[10px] font-black uppercase tracking-[0.18em] text-muted-foreground">Cobertura</p>
+                <p className="text-xs font-black uppercase tracking-[0.18em] text-muted-foreground">Cobertura</p>
                 <p className="mt-2 text-2xl font-black tabular-nums text-foreground">{(stats?.liquidityCoverageDays ?? 0).toFixed(1)} días</p>
               </div>
             </div>
@@ -376,7 +387,7 @@ export default function StatsPage() {
           </CardContent>
         </Card>
 
-        <Card className="glass-premium min-w-0 border-border/10 bg-card/40 shadow-xl shadow-black/5">
+        <Card className="min-w-0">
           <CardHeader className="border-b border-border/5 pb-5">
             <CardTitle className="flex items-center gap-2 text-xl font-black text-foreground">
               <Sparkles className="h-5 w-5 text-primary" />
@@ -398,17 +409,17 @@ export default function StatsPage() {
                         <p className="mt-1 text-xs font-semibold text-muted-foreground">
                           {agent.transfer_count} operaciones · hoy {fmt(agent.today_commission)}
                         </p>
-                        <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                        <p className="mt-1 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
                           Costo est. {fmt(agent.estimated_cost)} · margen {agent.net_margin}%
                         </p>
                       </div>
-                      <Badge className="rounded-full bg-slate-100 px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-slate-700">
+                      <Badge className="rounded-full bg-slate-100 px-3 py-1 text-xs font-black uppercase tracking-[0.18em] text-slate-700">
                         Neto estimado
                       </Badge>
                     </div>
                     <div className="mt-4 flex items-center justify-between">
                       <p className="text-lg font-black text-foreground">{fmt(agent.net_profit)}</p>
-                      <p className="text-[10px] font-semibold uppercase text-muted-foreground">Comisión {fmt(agent.total_commission)}</p>
+                      <p className="text-xs font-semibold uppercase text-muted-foreground">Comisión {fmt(agent.total_commission)}</p>
                     </div>
                   </div>
                 ))
@@ -422,11 +433,11 @@ export default function StatsPage() {
                       <p className="mt-1 text-xs font-semibold text-muted-foreground">
                         {transfer.sender_name} · {transfer.receiver_name}
                       </p>
-                      <p className="mt-1 text-[10px] font-semibold text-muted-foreground">
+                      <p className="mt-1 text-xs font-semibold text-muted-foreground">
                         {transfer.destination_city} · {formatDateShort(transfer.created_at)}
                       </p>
                     </div>
-                    <Badge className={cn('rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em]', getStatusColor(transfer.status))}>
+                    <Badge className={cn('rounded-full px-3 py-1 text-xs font-black uppercase tracking-[0.18em]', getStatusColor(transfer.status))}>
                       {transfer.status}
                     </Badge>
                   </div>
@@ -447,7 +458,7 @@ export default function StatsPage() {
 
       {isAdmin && (
         <section className="grid gap-6">
-          <Card className="glass-premium min-w-0 border-border/10 bg-card/40 shadow-xl shadow-black/5">
+          <Card className="min-w-0">
             <CardHeader className="border-b border-border/5 pb-5">
               <CardTitle className="flex items-center gap-2 text-xl font-black text-foreground">
                 <ShieldCheck className="h-5 w-5 text-primary" />
@@ -468,13 +479,13 @@ export default function StatsPage() {
                         <p className="mt-1 text-xs font-semibold text-muted-foreground">
                           Topups {fmt(period.topups)} · Salidas {fmt(period.transfersOutflow)}
                         </p>
-                        <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                        <p className="mt-1 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
                           Ajustes {fmt(period.resets)} · Reembolsos {fmt(period.refunds)}
                         </p>
                       </div>
                       <div className="text-right">
                         <p className="text-lg font-black text-foreground">{fmt(period.netFlow)}</p>
-                        <p className="text-[10px] font-semibold uppercase text-muted-foreground">{period.transactionCount} movimientos</p>
+                        <p className="text-xs font-semibold uppercase text-muted-foreground">{period.transactionCount} movimientos</p>
                       </div>
                     </div>
                   </div>
@@ -484,7 +495,7 @@ export default function StatsPage() {
               {reconciliation && (
                 <div className="rounded-2xl border border-border/10 bg-background/70 px-4 py-3">
                   <div className="flex items-center justify-between">
-                    <p className="text-[10px] font-black uppercase tracking-[0.18em] text-muted-foreground">Neto del período</p>
+                    <p className="text-xs font-black uppercase tracking-[0.18em] text-muted-foreground">Neto del período</p>
                     <p className="text-base font-black text-foreground">{fmt(reconciliation.totalNetFlow)}</p>
                   </div>
                 </div>

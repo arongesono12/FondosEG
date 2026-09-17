@@ -1,7 +1,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { ArrowLeft, BadgeCheck, FileCheck2, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, BadgeCheck, FileCheck2, ShieldCheck } from '@/components/ui/hugeicons';
 import { PAYMENT_REGULATION } from '@/lib/compliance';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { requireProfile } from '@/lib/server/authz';
@@ -207,7 +207,7 @@ export default async function ReceiptPage({ params }: { params: Promise<{ id: st
             priority
           />
         </div>
-        <header className="relative border-b border-border/10 bg-background/80 p-4 backdrop-blur-xl print:bg-white md:p-5">
+        <header className="relative border-b border-border/10 bg-background p-4 print:bg-white md:p-5">
           <div className="flex items-start justify-between gap-4">
             <div>
               <Badge className="rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-primary">
@@ -261,7 +261,7 @@ export default async function ReceiptPage({ params }: { params: Promise<{ id: st
             <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Trazabilidad del gestor</p>
             <dl className="mt-4 grid gap-4 sm:grid-cols-2">
               {compactAuditFields.map(([label, value]) => (
-                <div key={label} className="rounded-2xl border border-border/10 bg-card/70 p-4 print:border-slate-200 print:bg-slate-50">
+                <div key={label} className="rounded-2xl border border-border/10 bg-card p-4 print:border-slate-200 print:bg-slate-50">
                   <dt className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">{label}</dt>
                   <dd className="mt-2 break-words text-sm font-medium text-foreground">{value}</dd>
                 </div>

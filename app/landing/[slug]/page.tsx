@@ -5,7 +5,7 @@ import {
   ArrowLeft, ArrowRight, BarChart3, BookOpen, CheckCircle2, Code2,
   Gauge, Headphones, LayoutDashboard, LockKeyhole, Newspaper, ReceiptText, ShieldCheck,
   Sparkles, TestTube2, TrendingUp, WalletCards, Zap,
-} from 'lucide-react';
+} from '@/components/ui/hugeicons';
 
 import { DashboardLogo } from '@/components/layout/dashboard-logo';
 import { ThemeToggle } from '@/components/theme-toggle';

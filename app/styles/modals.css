@@ -1,0 +1,128 @@
+/* =========================================================================
+   MODALS — Sistema de modales fullscreen (móvil) y centrados
+   ========================================================================= */
+
+/* Animations */
+@keyframes dialog-overlay-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes dialog-overlay-out { from { opacity: 1; } to { opacity: 0; } }
+@keyframes dialog-card-in { from { opacity: 0; transform: scale(.96); } to { opacity: 1; transform: none; } }
+@keyframes dialog-card-out { from { opacity: 1; transform: none; } to { opacity: 0; transform: scale(.96); } }
+@keyframes dialog-sheet-in { from { opacity: .4; transform: translateY(2.5%); } to { opacity: 1; transform: none; } }
+@keyframes dialog-sheet-out { from { opacity: 1; transform: none; } to { opacity: 0; transform: translateY(2.5%); } }
+
+.dialog-overlay[data-state='open'] { animation: dialog-overlay-in .18s ease-out; }
+.dialog-overlay[data-state='closed'] { animation: dialog-overlay-out .15s ease-in; }
+.dialog-shell[data-state='open'] { animation: dialog-card-in .18s ease-out; }
+.dialog-shell[data-state='closed'] { animation: dialog-card-out .15s ease-in; }
+.dialog-body { min-height: 0; }
+
+/* Scroll contract */
+.dialog-shell:not(:has(> .dialog-body)) { overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; scroll-padding: 20px; }
+.dialog-shell:has(> .dialog-body) { display: flex; flex-direction: column; overflow: hidden; }
+.dialog-shell:has(> .dialog-body) > .dialog-header, .dialog-shell:has(> .dialog-body) > .dialog-footer { flex: none; }
+.dialog-shell:has(> .dialog-body) > .dialog-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; scroll-padding-block: 16px; }
+
+@layer components {
+  .dialog-shell { max-height: min(88dvh, 900px); }
+
+  .dialog-close {
+    display: grid; place-items: center; width: 40px; height: 40px;
+    border-radius: 999px; color: var(--surface-fg); background-color: transparent;
+    transition: background-color .15s ease-out;
+  }
+  .dialog-close:hover { background-color: var(--muted); }
+  @media (pointer: coarse) { .dialog-close { width: 44px; height: 44px; } }
+  .dialog-shell:not([data-mobile='fullscreen']) > .dialog-header { padding-right: 44px; }
+}
+
+/* Mobile: fullscreen modals */
+@media (max-width: 1023.98px) {
+  .dialog-shell[data-mobile='fullscreen'] {
+    position: fixed; inset: 0; left: 0; top: 0; right: 0; bottom: 0; z-index: 50;
+    display: flex; flex-direction: column; gap: 0;
+    width: 100vw; width: 100dvw; min-width: 0; max-width: none;
+    height: 100vh; height: 100dvh; min-height: 0; max-height: none;
+    margin: 0; padding: 0; translate: none; transform: none;
+    border: 0; border-radius: 0;
+    background-color: var(--dialog-surface); background-image: none;
+    color: var(--foreground); box-shadow: none;
+    -webkit-backdrop-filter: none; backdrop-filter: none;
+  }
+  .dialog-shell[data-mobile='fullscreen'][data-state='open'] { animation: dialog-sheet-in .2s ease-out; }
+  .dialog-shell[data-mobile='fullscreen'][data-state='closed'] { animation: dialog-sheet-out .15s ease-in; }
+  .dialog-shell[data-mobile='fullscreen'] > * { flex: none; }
+  .dialog-shell[data-mobile='fullscreen']:not(:has(> .dialog-body)) { overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
+  .dialog-shell[data-mobile='fullscreen']:has(> .dialog-body) { overflow: hidden; }
+  .dialog-shell[data-mobile='fullscreen'] > .dialog-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
+
+  .dialog-shell[data-mobile='fullscreen'] > .dialog-header {
+    position: sticky; top: 0; z-index: 4;
+    padding: max(16px, env(safe-area-inset-top)) calc(60px + env(safe-area-inset-right)) 14px max(18px, env(safe-area-inset-left));
+    border-bottom: 1px solid var(--dialog-separator); background-color: var(--dialog-surface); text-align: left;
+  }
+
+  .dialog-shell[data-mobile='fullscreen'] > *:not(.dialog-header):not(.dialog-close):not(.dialog-layer) {
+    padding-left: max(18px, env(safe-area-inset-left)); padding-right: max(18px, env(safe-area-inset-right));
+  }
+  .dialog-shell[data-mobile='fullscreen'] > *:last-of-type:not(.dialog-header):not(.dialog-layer):not(.dialog-close) {
+    padding-bottom: calc(20px + env(safe-area-inset-bottom));
+  }
+  .dialog-shell[data-mobile='fullscreen'] > .dialog-header + *:not(.dialog-layer) { padding-top: 16px; }
+
+  .dialog-shell[data-mobile='fullscreen'] > .dialog-footer {
+    position: sticky; bottom: 0; z-index: 4; flex-direction: column-reverse; gap: 10px;
+    padding: 14px max(18px, env(safe-area-inset-right)) calc(14px + env(safe-area-inset-bottom)) max(18px, env(safe-area-inset-left));
+    border-top: 1px solid var(--dialog-separator); background-color: var(--dialog-surface);
+  }
+  .dialog-shell[data-mobile='fullscreen'] > .dialog-footer > * { width: 100%; margin: 0; }
+
+  .dialog-shell[data-mobile='fullscreen'] > .dialog-close {
+    position: fixed; top: max(14px, env(safe-area-inset-top)); right: max(14px, env(safe-area-inset-right));
+    z-index: 6; display: grid; place-items: center; width: 38px; height: 38px;
+    border-radius: 999px; background-color: var(--muted); color: var(--foreground); opacity: 1;
+  }
+
+  .dialog-shell[data-mobile='fullscreen'] [class^="bg-white/"],
+  .dialog-shell[data-mobile='fullscreen'] [class*=" bg-white/"],
+  .dialog-shell[data-mobile='fullscreen'] [class^="bg-card/"],
+  .dialog-shell[data-mobile='fullscreen'] [class*=" bg-card/"],
+  .dialog-shell[data-mobile='fullscreen'] [class^="bg-muted/"],
+  .dialog-shell[data-mobile='fullscreen'] [class*=" bg-muted/"],
+  .dialog-shell[data-mobile='fullscreen'] [class^="backdrop-blur"],
+  .dialog-shell[data-mobile='fullscreen'] [class*=" backdrop-blur"] {
+    background-color: var(--dialog-surface-sunken); background-image: none;
+    -webkit-backdrop-filter: none; backdrop-filter: none;
+  }
+  .dialog-shell[data-mobile='fullscreen'] [class^="shadow-xl"],
+  .dialog-shell[data-mobile='fullscreen'] [class*=" shadow-xl"],
+  .dialog-shell[data-mobile='fullscreen'] [class^="shadow-2xl"],
+  .dialog-shell[data-mobile='fullscreen'] [class*=" shadow-2xl"] { box-shadow: none; }
+
+  .dialog-shell[data-mobile='fullscreen'] [class*="grid-cols-2"],
+  .dialog-shell[data-mobile='fullscreen'] [class*="grid-cols-3"],
+  .dialog-shell[data-mobile='fullscreen'] [class*="grid-cols-4"] { grid-template-columns: minmax(0, 1fr); }
+
+  .dialog-shell input:not([type='checkbox']):not([type='radio']),
+  .dialog-shell select, .dialog-shell textarea { min-height: 46px; font-size: 16px; border-radius: 16px; }
+  .dialog-shell textarea { min-height: 96px; }
+  .dialog-shell button:not([aria-label]):not([data-radix-collection-item]) { min-height: 44px; }
+
+  /* Drawers */
+  .dashboard-drawer { width: 100vw; width: 100dvw; max-width: none; border-left: 0; box-shadow: none; background-color: var(--dialog-surface); }
+  .dashboard-drawer-header { padding: max(16px, env(safe-area-inset-top)) max(18px, env(safe-area-inset-right)) 14px max(18px, env(safe-area-inset-left)); border-bottom: 1px solid var(--dialog-separator); }
+  .dashboard-drawer-body { padding: 18px max(18px, env(safe-area-inset-right)) calc(24px + env(safe-area-inset-bottom)) max(18px, env(safe-area-inset-left)); overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
+
+  /* Centered cards */
+  .dialog-shell[data-mobile='centered'] {
+    --dialog-gutter-x: max(14px, env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px));
+    --dialog-gutter-y: max(16px, env(safe-area-inset-top, 0px), env(safe-area-inset-bottom, 0px));
+    width: min(460px, calc(100dvw - (2 * var(--dialog-gutter-x))));
+    max-width: min(460px, calc(100dvw - (2 * var(--dialog-gutter-x))));
+    max-height: min(680px, calc(100dvh - (2 * var(--dialog-gutter-y))));
+  }
+  .dialog-shell[data-mobile='centered']:not(.p-0) { padding: 20px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dialog-overlay[data-state], .dialog-shell[data-state] { animation: none; }
+}

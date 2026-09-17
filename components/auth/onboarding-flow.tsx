@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { AlertCircle, ArrowLeft, ArrowRight, Briefcase, Check, Loader2, User as UserIcon } from 'lucide-react';
+import { AlertCircle, ArrowLeft, ArrowRight, Briefcase, Check, Loader2, User as UserIcon } from '@/components/ui/hugeicons';
 
 import { completeOnboardingAction } from '@/app/actions/onboarding';
 import type { OnboardingInput } from '@/lib/server/clerk-identity';

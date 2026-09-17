@@ -19,7 +19,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { 
   Search, 
-  Bell, 
   LayoutDashboard, 
   Send, 
   Users, 
@@ -35,10 +34,11 @@ import {
   FileText,
   ShieldCheck,
   MoreHorizontal,
-} from 'lucide-react';
+} from '@/components/ui/hugeicons';
 import { UsersPanel } from './users-panel';
 import { SearchModal } from './search-modal';
-import { NotificationModal } from './notification-modal';
+import { HeaderSearch } from './header-search';
+import { NotificationsDropdown } from './notifications-dropdown';
 import { SettingsModal } from './settings-modal';
 import { SupportModal } from './support-modal';
 import { CookieConsentModal, type CookieConsentPreferences } from './cookie-consent-modal';
@@ -147,7 +147,6 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
   const { resolvedTheme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
-  const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [supportOpen, setSupportOpen] = useState(false);
   const [cookieConsentOpen, setCookieConsentOpen] = useState(false);
@@ -334,7 +333,7 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
           <DropdownMenuLabel className="font-normal">
             <div className="flex flex-col space-y-1">
               <p className="text-sm font-semibold leading-none">{user?.name}</p>
-              <p className="text-[10px] font-medium text-muted-foreground capitalize">
+              <p className="text-xs font-medium text-muted-foreground capitalize">
                 {getRoleLabel(user?.role)}
               </p>
             </div>
@@ -385,7 +384,7 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
             <p className="text-sm font-semibold leading-none">{user?.name}</p>
-            <p className="text-[10px] font-medium text-muted-foreground capitalize">
+            <p className="text-xs font-medium text-muted-foreground capitalize">
               {getRoleLabel(user?.role)}
             </p>
           </div>
@@ -440,7 +439,7 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
       
       {/* Mobile: Full screen card | Desktop: Max width card with rounded top corners */}
       <div className={cn(
-        "mx-auto w-full relative flex flex-col",
+        "dashboard-shell mx-auto w-full relative flex flex-col",
         // `min-h` y no `h`: en escritorio la tarjeta ocupa como mínimo el alto
         // de la ventana —el aspecto de siempre— pero puede crecer con el
         // contenido, que es lo que permite que el scroll lo lleve el
@@ -448,15 +447,15 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
         "lg:max-w-[1440px] lg:min-h-[calc(100vh-4rem)] lg:rounded-[2.5rem] lg:shadow-xl lg:shadow-slate-200/20 dark:lg:shadow-black/20 lg:border lg:border-border/10",
         "h-dvh lg:h-auto"
       )}>
-        {/* Top Header Navigation - rounded top corners to match container */}
+        {/* Top Header Navigation - grid 3 columnas: logo | nav centrado | tools */}
         <header className={cn(
-          "hidden lg:flex h-20 items-center justify-between px-10 border-b border-border/10 shrink-0 transition-all duration-300 z-50",
+          "dashboard-desktop-header hidden lg:grid h-20 items-center px-10 border-b border-border/10 shrink-0 transition-all duration-300 z-50",
           "bg-linear-to-b from-white to-slate-50 dark:from-slate-900 dark:to-slate-950",
           "lg:rounded-t-[2.5rem]",
           scrolled && "h-16 shadow-lg shadow-black/5"
         )}>
-          {/* Left side: Logo + Nav */}
-          <div className="flex items-center gap-2">
+          {/* Left: Logo */}
+          <div className="dashboard-desktop-brand-nav flex items-center gap-2">
             <Link 
               href="/" 
               className="flex items-center gap-2"
@@ -469,56 +468,44 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
                 labelClassName="text-xl md:text-2xl"
               />
             </Link>
-
-            <nav className="hidden lg:flex items-center gap-1 ml-4">
-              {navItems.map((item) => {
-                const isActive = pathname === item.href;
-                return (
-                  <Link 
-                    key={item.href} 
-                    href={item.href}
-                    className={cn(
-                      "px-5 py-2 rounded-full text-sm font-bold transition-all duration-300",
-                      isActive 
-                        ? "bg-brand-gradient text-white shadow-lg shadow-pink-500/20" 
-                        : "text-muted-foreground hover:text-pink-600 dark:hover:text-pink-400 hover:bg-pink-100 dark:hover:bg-pink-500/20"
-                    )}
-                  >
-                    {item.label}
-                  </Link>
-                );
-              })}
-            </nav>
           </div>
 
-          {/* Right side: Search + Notifications + Theme (desktop) + Avatar + Menu (mobile) */}
-          <div className="flex items-center gap-1 md:gap-4">
-            {/* Desktop: Search + Notifications + Theme */}
+          {/* Center: Nav pills */}
+          <nav className="dashboard-desktop-nav hidden lg:flex items-center gap-1 justify-center" aria-label="Navegación principal">
+            {navItems.map((item) => {
+              const isActive = pathname === item.href;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={scrollMainToTop}
+                  aria-current={isActive ? 'page' : undefined}
+                  className={cn(
+                    "px-5 py-2 rounded-full text-sm font-bold transition-all duration-300",
+                    isActive
+                      ? "bg-brand-gradient text-white shadow-lg shadow-pink-500/20"
+                      : "text-muted-foreground hover:text-pink-600 dark:hover:text-pink-400 hover:bg-pink-100 dark:hover:bg-pink-500/20"
+                  )}
+                >
+                  {item.label}
+                </Link>
+              );
+            })}
+          </nav>
+
+          {/* Right: Search + Notifications + Theme + Avatar */}
+          <div className="dashboard-desktop-tools flex items-center gap-1 md:gap-4">
+            {/* Desktop: Search (inline) + Notifications + Theme */}
             <div className="hidden md:flex items-center gap-1 md:gap-2 text-muted-foreground">
-              <button 
-                onClick={() => setSearchOpen(true)}
-                className="p-2 hover:bg-pink-100 dark:hover:bg-pink-500/20 rounded-full transition-colors text-foreground/70 hover:text-pink-600 dark:hover:text-pink-400"
-              >
-                <Search className="h-5 w-5" />
-              </button>
-              <button 
-                onClick={() => setNotificationsOpen(true)}
-                className="p-2 hover:bg-pink-100 dark:hover:bg-pink-500/20 rounded-full transition-colors relative text-foreground/70 hover:text-pink-600 dark:hover:text-pink-400"
-              >
-                <Bell className="h-5 w-5" />
-                {notificationCount > 0 && (
-                  <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-rose-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1">
-                    {notificationCount > 99 ? '99+' : notificationCount}
-                  </span>
-                )}
-              </button>
+              <HeaderSearch />
+              <NotificationsDropdown notificationCount={notificationCount} onCountChange={setNotificationCount} />
               <ThemeToggle />
             </div>
 
             <div className="flex items-center gap-2 md:gap-3 pl-2 md:pl-6 border-l border-border/50">
-              <div className="text-right hidden md:block">
+              <div className="dashboard-desktop-user-label text-right hidden md:block">
                 <p className="text-sm font-semibold text-foreground leading-tight">{user?.name || 'Usuario'}</p>
-                <p className="text-[10px] font-medium text-muted-foreground capitalize">
+                <p className="text-xs font-medium text-muted-foreground capitalize">
                   {getRoleLabel(user?.role)}
                 </p>
               </div>
@@ -535,7 +522,7 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
                   <DropdownMenuLabel className="font-normal">
                     <div className="flex flex-col space-y-1">
                       <p className="text-sm font-semibold leading-none">{user?.name}</p>
-                      <p className="text-[10px] font-medium text-muted-foreground capitalize">
+                      <p className="text-xs font-medium text-muted-foreground capitalize">
                         {getRoleLabel(user?.role)}
                       </p>
                     </div>
@@ -557,15 +544,6 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
                   <DropdownMenuItem onClick={() => setSearchOpen(true)} className="md:hidden">
                     <Search className="mr-2 h-4 w-4" />
                     <span>Buscar</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setNotificationsOpen(true)} className="md:hidden">
-                    <Bell className="mr-2 h-4 w-4" />
-                    <span>Notificaciones</span>
-                    {notificationCount > 0 && (
-                      <span className="ml-auto bg-rose-500 text-white text-[10px] font-bold rounded-full px-1.5">
-                        {notificationCount > 99 ? '99+' : notificationCount}
-                      </span>
-                    )}
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => setTheme(isDark ? 'light' : 'dark')} className="md:hidden">
                     {!mounted ? (
@@ -638,19 +616,12 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
             >
               {isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
             </button>
-            <button
-              type="button"
-              className="dashboard-mobile-header-action"
-              onClick={() => setNotificationsOpen(true)}
-              aria-label="Abrir notificaciones"
-            >
-              <Bell className="h-5 w-5" />
-              {notificationCount > 0 && (
-                <span className="dashboard-mobile-header-badge">
-                  {notificationCount > 99 ? '99+' : notificationCount}
-                </span>
-              )}
-            </button>
+            <NotificationsDropdown
+              notificationCount={notificationCount}
+              onCountChange={setNotificationCount}
+              triggerClassName="dashboard-mobile-header-action"
+              badgeClassName="dashboard-mobile-header-badge"
+            />
             {userMenuDropdown("h-10 w-10", true)}
           </div>
         </header>
@@ -671,7 +642,7 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
           como utilidad ni por plugin—, así que nunca ocultó nada. Era la
           razón de que la barra interna se viera al hacer scroll aquí.
         */}
-        <main className="flex-1 min-h-0 overflow-y-auto overscroll-y-contain lg:overflow-visible lg:overscroll-auto bg-transparent p-4 pb-28 lg:p-10">
+        <main className="dashboard-main flex-1 min-h-0 overflow-y-auto overscroll-y-contain lg:overflow-visible lg:overscroll-auto bg-transparent p-4 pb-28 lg:p-10">
           {children}
         </main>
 
@@ -736,7 +707,6 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
         {/* Modals */}
         <UsersPanel open={usersPanelOpen} onClose={() => setUsersPanelOpen(false)} />
         <SearchModal open={searchOpen} onOpenChange={setSearchOpen} />
-        <NotificationModal open={notificationsOpen} onOpenChange={setNotificationsOpen} />
         <SettingsModal open={settingsOpen} onOpenChange={setSettingsOpen} />
         <SupportModal open={supportOpen} onOpenChange={setSupportOpen} requestType="balance_topup" />
         <CookieConsentModal

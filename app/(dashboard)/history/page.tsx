@@ -13,7 +13,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { correctTransfer, getAllTransfers, getTransfers } from '@/modules/transfers/http/client';
 import { formatCurrency, formatDate, getStatusColor, getStatusText } from '@/lib/utils';
 import type { Transfer } from '@/types';
-import { Download, History, PencilLine, Search, TrendingUp, Wallet, XCircle } from 'lucide-react';
+import { Download, History, PencilLine, Search, TrendingUp, Wallet, XCircle } from '@/components/ui/hugeicons';
 import { isAdminRole } from '@/lib/roles';
 import Link from 'next/link';
 
@@ -33,11 +33,11 @@ function MetricTile({
   tone: string;
 }) {
   return (
-    <Card className="glass-premium border-border/10 bg-card/40 shadow-xl shadow-black/5">
+    <Card>
       <CardContent className="p-5">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">{label}</p>
+            <p className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">{label}</p>
             <p className="mt-2 text-[clamp(1.125rem,1.4vw+0.75rem,1.5rem)] font-black leading-tight tabular-nums text-foreground">{value}</p>
             <p className="mt-2 text-xs font-semibold text-muted-foreground">{hint}</p>
           </div>
@@ -223,10 +223,10 @@ export default function HistoryPage() {
 
   return (
     <div className="space-y-8">
-      <section className="rounded-4xl border border-border/10 bg-card/50 p-6 shadow-xl shadow-black/5 backdrop-blur-xl md:p-8">
+      <section className="app-card p-6 md:p-8">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <Badge className="rounded-full border border-white/20 bg-white/70 px-3 py-1 text-[10px] font-black uppercase tracking-[0.24em] text-slate-700 dark:border-white/10 dark:bg-white/10 dark:text-slate-200">
+            <Badge className="rounded-full border border-white/20 bg-white/70 px-3 py-1 text-xs font-black uppercase tracking-[0.24em] text-slate-700 dark:border-white/10 dark:bg-white/10 dark:text-slate-200">
               Historial de operaciones
             </Badge>
             <h1 className="mt-4 text-3xl font-black tracking-tight text-foreground md:text-4xl">Trazabilidad completa de transferencias</h1>
@@ -251,7 +251,7 @@ export default function HistoryPage() {
         <MetricTile label="Ticket medio" value={formatCurrency(averageTicket)} hint={formatCurrency(totalVolume) + ' de volumen confirmado'} icon={TrendingUp} tone="border-sky-500/20 bg-sky-500 shadow-sky-500/20" />
       </section>
 
-      <Card className="glass-premium overflow-hidden border-border/10 bg-card/40 shadow-xl shadow-black/5">
+      <Card className="overflow-hidden">
         <CardHeader className="border-b border-border/5 pb-5">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <CardTitle className="flex items-center gap-2 text-xl font-black text-foreground">
@@ -297,13 +297,13 @@ export default function HistoryPage() {
             <Table className="activity-records-table">
               <TableHeader className="bg-muted/30">
                 <TableRow className="border-border/5 hover:bg-transparent">
-                  <TableHead className="pl-8 py-4 text-[10px] font-black uppercase tracking-[0.18em] text-muted-foreground">Código</TableHead>
-                  <TableHead className="py-4 text-[10px] font-black uppercase tracking-[0.18em] text-muted-foreground">Participantes</TableHead>
-                  <TableHead className="py-4 text-[10px] font-black uppercase tracking-[0.18em] text-muted-foreground">Destino</TableHead>
-                  <TableHead className="py-4 text-[10px] font-black uppercase tracking-[0.18em] text-muted-foreground text-right">Monto</TableHead>
-                  <TableHead className="py-4 text-[10px] font-black uppercase tracking-[0.18em] text-muted-foreground">Estado</TableHead>
-                  <TableHead className="py-4 text-[10px] font-black uppercase tracking-[0.18em] text-muted-foreground">Fecha</TableHead>
-                  <TableHead className="pr-8 py-4 text-[10px] font-black uppercase tracking-[0.18em] text-muted-foreground text-right">Acciones</TableHead>
+                  <TableHead className="pl-8 py-4 text-xs font-black uppercase tracking-[0.18em] text-muted-foreground">Código</TableHead>
+                  <TableHead className="py-4 text-xs font-black uppercase tracking-[0.18em] text-muted-foreground">Participantes</TableHead>
+                  <TableHead className="py-4 text-xs font-black uppercase tracking-[0.18em] text-muted-foreground">Destino</TableHead>
+                  <TableHead className="py-4 text-xs font-black uppercase tracking-[0.18em] text-muted-foreground text-right">Monto</TableHead>
+                  <TableHead className="py-4 text-xs font-black uppercase tracking-[0.18em] text-muted-foreground">Estado</TableHead>
+                  <TableHead className="py-4 text-xs font-black uppercase tracking-[0.18em] text-muted-foreground">Fecha</TableHead>
+                  <TableHead className="pr-8 py-4 text-xs font-black uppercase tracking-[0.18em] text-muted-foreground text-right">Acciones</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -319,7 +319,7 @@ export default function HistoryPage() {
                       <TableCell data-label="Código" className="pl-8">
                         <p className="font-mono text-sm font-black text-foreground">{transfer.transfer_code}</p>
                         {transfer.agent?.name && (
-                          <p className="text-[10px] font-semibold uppercase text-primary">Gestor {transfer.agent.name}</p>
+                          <p className="text-xs font-semibold uppercase text-primary">Gestor {transfer.agent.name}</p>
                         )}
                       </TableCell>
                       <TableCell data-label="Participantes">
@@ -330,13 +330,13 @@ export default function HistoryPage() {
                       </TableCell>
                       <TableCell data-label="Destino">
                         <p className="text-sm font-bold text-foreground">{transfer.destination_city}</p>
-                        <p className="text-[10px] font-semibold uppercase text-muted-foreground">{transfer.destination_country || 'N/A'}</p>
+                        <p className="text-xs font-semibold uppercase text-muted-foreground">{transfer.destination_country || 'N/A'}</p>
                       </TableCell>
                       <TableCell data-label="Monto" className="text-right">
                         <p className="text-sm font-black text-foreground">{formatCurrency(transfer.amount, transfer.currency)}</p>
                       </TableCell>
                       <TableCell data-label="Estado">
-                        <Badge className={`rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] ${getStatusColor(transfer.status)}`}>
+                        <Badge className={`rounded-full px-3 py-1 text-xs font-black uppercase tracking-[0.18em] ${getStatusColor(transfer.status)}`}>
                           {getStatusText(transfer.status)}
                         </Badge>
                       </TableCell>

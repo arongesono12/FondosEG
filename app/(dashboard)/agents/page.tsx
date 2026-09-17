@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { getAgents, toggleAgentStatus, topUpAgentBalance, resetAgentBalance, createAgent } from '@/services/agent';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import type { AgentWithBalance, UserRole } from '@/types';
-import { Users, Plus, Search, Phone, Mail, CreditCard, CheckCircle, AlertCircle, RotateCcw } from 'lucide-react';
+import { Users, Plus, Search, Phone, Mail, CreditCard, CheckCircle, AlertCircle, RotateCcw } from '@/components/ui/hugeicons';
 import { useAppStore } from '@/lib/store';
 import { isAdminRole } from '@/lib/roles';
 

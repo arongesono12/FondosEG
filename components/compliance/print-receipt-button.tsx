@@ -1,6 +1,6 @@
 'use client';
 
-import { FileDown, Printer } from 'lucide-react';
+import { FileDown, Printer } from '@/components/ui/hugeicons';
 import { Button } from '@/components/ui/button';
 
 export function PrintReceiptButton() {

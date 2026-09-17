@@ -7,7 +7,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
-import { Settings, DollarSign, Palette, Bell } from 'lucide-react';
+import { Settings, DollarSign, Palette, Bell } from '@/components/ui/hugeicons';
 import { useAppStore } from '@/lib/store';
 import { useState, useEffect } from 'react';
 import { useTheme } from '@/components/theme-provider';
@@ -78,7 +78,7 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
                     <span className="text-lg">{curr.flag}</span>
                     <div>
                       <p className="text-sm font-semibold">{curr.code}</p>
-                      <p className="text-[10px] text-muted-foreground">{curr.name}</p>
+                      <p className="text-xs text-muted-foreground">{curr.name}</p>
                     </div>
                   </div>
                 </button>

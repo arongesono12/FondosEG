@@ -21,7 +21,7 @@ import {
   HandCoins,
   Loader2,
   QrCode,
-} from 'lucide-react';
+} from '@/components/ui/hugeicons';
 import { QRGenerator, generateWithdrawalQRData } from '@/components/ui/qr-generator';
 import { useAppStore } from '@/lib/store';
 import { formatCurrency, formatDate } from '@/lib/utils';
@@ -223,7 +223,7 @@ export function ClientWithdrawalModal({ open, onOpenChange, onSuccess }: ClientW
                 <p className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">
                   Saldo disponible: {formatCurrency(available, currency)}
                 </p>
-                <p className="mt-1 text-[10px] text-emerald-500">
+                <p className="mt-1 text-xs text-emerald-500">
                   {reserved > 0
                     ? `${formatCurrency(reserved, currency)} retenidos por códigos u órdenes en curso`
                     : 'Tu saldo se retiene sólo mientras un código de retiro está activo'}
@@ -296,7 +296,7 @@ export function ClientWithdrawalModal({ open, onOpenChange, onSuccess }: ClientW
                         <p className="text-sm font-bold tracking-[0.12em] text-foreground">
                           {item.withdrawal_code}
                         </p>
-                        <p className="text-[10px] font-semibold text-muted-foreground">
+                        <p className="text-xs font-semibold text-muted-foreground">
                           {formatCurrency(Number(item.amount), item.currency)}
                           {item.expires_at ? ` · caduca ${formatDate(item.expires_at)}` : ''}
                         </p>
@@ -354,7 +354,7 @@ export function ClientWithdrawalModal({ open, onOpenChange, onSuccess }: ClientW
                 <p className="text-3xl font-bold text-emerald-600">
                   {formatCurrency(Number(withdrawal.amount), withdrawal.currency)}
                 </p>
-                <Badge className="rounded-full bg-emerald-100 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-700">
+                <Badge className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold uppercase tracking-[0.18em] text-emerald-700">
                   {getWithdrawalStatusLabel(withdrawal.status)}
                 </Badge>
               </div>
@@ -377,11 +377,11 @@ export function ClientWithdrawalModal({ open, onOpenChange, onSuccess }: ClientW
                   </Button>
                 </div>
                 {withdrawal.expires_at && (
-                  <p className="text-[10px] font-semibold text-muted-foreground">
+                  <p className="text-xs font-semibold text-muted-foreground">
                     Válido hasta {formatDate(withdrawal.expires_at)}
                   </p>
                 )}
-                <p className="text-center text-[10px] text-amber-600 dark:text-amber-500">
+                <p className="text-center text-xs text-amber-600 dark:text-amber-500">
                   Mientras el código esté activo, este importe queda retenido y no podrás usarlo
                   para otras operaciones.
                 </p>

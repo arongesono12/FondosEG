@@ -25,6 +25,12 @@ export interface ClerkIdentity {
   email: string;
   name: string;
   imageUrl: string | null;
+  /**
+   * Rol declarado en `publicMetadata` de Clerk, ya validado (o `null`).
+   * Se captura de la misma llamada a `currentUser()` para no hacer una
+   * segunda petición al Backend API al sincronizar.
+   */
+  declaredRole: UserRole | null;
 }
 
 /**
@@ -82,6 +88,15 @@ function displayName(clerkUser: ClerkUser, fallbackEmail: string): string {
   return fallbackEmail.split('@')[0] || 'Usuario';
 }
 
+function isValidDeclaredRole(value: unknown): value is UserRole {
+  return (
+    value === 'admin' ||
+    value === 'superadmin' ||
+    value === 'gestor' ||
+    value === 'cliente'
+  );
+}
+
 /**
  * Lee el rol declarado en los metadatos públicos de Clerk, si lo hay.
  * Permite promover a `gestor`/`admin` desde el dashboard de Clerk sin tocar la
@@ -89,15 +104,7 @@ function displayName(clerkUser: ClerkUser, fallbackEmail: string): string {
  */
 function roleFromClerk(clerkUser: ClerkUser): UserRole | null {
   const declared = (clerkUser.publicMetadata as Record<string, unknown> | null)?.role;
-  if (
-    declared === 'admin' ||
-    declared === 'superadmin' ||
-    declared === 'gestor' ||
-    declared === 'cliente'
-  ) {
-    return declared;
-  }
-  return null;
+  return isValidDeclaredRole(declared) ? declared : null;
 }
 
 export async function getClerkIdentity(): Promise<ClerkIdentity | null> {
@@ -112,6 +119,7 @@ export async function getClerkIdentity(): Promise<ClerkIdentity | null> {
     email,
     name: displayName(clerkUser, email),
     imageUrl: clerkUser.imageUrl || null,
+    declaredRole: roleFromClerk(clerkUser),
   };
 }
 
@@ -162,13 +170,18 @@ export async function resolveInternalUser(identity: ClerkIdentity): Promise<User
   if (byEmailError) throw new Error(byEmailError.message);
 
   if (byEmail) {
+    // Se reclama la cuenta preexistente. El avatar de Google se copia sólo si
+    // Clerk trae una imagen: una subida a mano no se pisa con `null`.
+    const linkChanges: Record<string, unknown> = {
+      clerk_user_id: identity.clerkUserId,
+      is_verified: true,
+      updated_at: nowIso,
+    };
+    if (identity.imageUrl) linkChanges.avatar_url = identity.imageUrl;
+
     const { data: linked, error: linkError } = await adminClient
       .from('users')
-      .update({
-        clerk_user_id: identity.clerkUserId,
-        is_verified: true,
-        updated_at: nowIso,
-      })
+      .update(linkChanges)
       .eq('id', (byEmail as User).id)
       .select('*')
       .single();
@@ -304,16 +317,19 @@ export async function ensureProductAccessAndBalances(user: User): Promise<void> 
 }
 
 /**
- * Sincroniza hacia la base de datos lo que el usuario haya cambiado en Clerk
+ * Sincroniza hacia la base de datos lo que el usuario tenga distinto en Clerk
  * (nombre, correo, avatar) y aplica el rol declarado en `publicMetadata`.
- * Se reserva para operaciones que soliciten una sincronización explícita.
- * Las lecturas normales del dashboard usan el perfil interno ya vinculado;
- * consultar `currentUser()` en cada widget consume el límite del Backend API
- * de Clerk y no es necesario para autorizar la petición.
+ *
+ * No vuelve a llamar a `currentUser()`: el rol ya viaja en `identity` (capturado
+ * en la misma petición que construyó la identidad), así que cada sincronización
+ * cuesta una única llamada al Backend API de Clerk como máximo.
+ *
+ * Se usa desde dos sitios: la reconciliación perezosa de la entrada al
+ * dashboard (`syncProfileFromClerkIfNeeded`) y el webhook `user.updated`
+ * (`app/api/webhooks/clerk/route.ts`).
  */
 export async function syncFromClerk(user: User, identity: ClerkIdentity): Promise<User> {
-  const clerkUser = await currentUser();
-  const declaredRole = clerkUser ? roleFromClerk(clerkUser) : null;
+  const declaredRole = isValidDeclaredRole(identity.declaredRole) ? identity.declaredRole : null;
 
   const changes: Record<string, unknown> = {};
   if (user.email !== identity.email) changes.email = identity.email;
@@ -342,4 +358,122 @@ export async function syncFromClerk(user: User, identity: ClerkIdentity): Promis
   const synced = updated as User;
   if (changes.role) await ensureProductAccessAndBalances(synced);
   return synced;
+}
+
+// ---------------------------------------------------------------------------
+// Throttle de la reconciliación (entrada al dashboard)
+// ---------------------------------------------------------------------------
+
+const CLERK_SYNC_INTERVAL_MS = 15 * 60 * 1000;
+const CLERK_SYNC_INTERVAL_WITH_AVATAR_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * Reconcilia el perfil con Clerk de forma perezosa: con avatar propio la
+ * comprobación es diaria; sin avatar (caso típico de Google) es cada 15 min.
+ * Lanza `currentUser()` (una única llamada al Backend API) y, si hubo cambios,
+ * los persiste en la base de datos. Un fallo cosmético nunca tumba la carga
+ * del dashboard.
+ */
+export async function syncProfileFromClerkIfNeeded(profile: User): Promise<User> {
+  const lastSyncAt = profile.clerk_synced_at
+    ? new Date(profile.clerk_synced_at).getTime()
+    : 0;
+  const hasAvatar = Boolean(profile.avatar_url?.trim());
+  const threshold = hasAvatar
+    ? CLERK_SYNC_INTERVAL_WITH_AVATAR_MS
+    : CLERK_SYNC_INTERVAL_MS;
+
+  if (Date.now() - lastSyncAt < threshold) return profile;
+
+  let identity: ClerkIdentity | null = null;
+  try {
+    identity = await getClerkIdentity();
+  } catch (error) {
+    console.error(
+      'No se pudo obtener la identidad de Clerk para reconciliar:',
+      error instanceof Error ? error.message : error,
+    );
+    return profile;
+  }
+  if (!identity) return profile;
+
+  try {
+    const synced = await syncFromClerk(profile, identity);
+    // Marca siempre, aunque no haya cambios, para no repetir la llamada hasta
+    // el próximo intervalo.
+    await markClerkSyncChecked(profile.id);
+    return synced;
+  } catch (error) {
+    console.error(
+      'No se pudo aplicar la reconciliación de Clerk:',
+      error instanceof Error ? error.message : error,
+    );
+    return profile;
+  }
+}
+
+async function markClerkSyncChecked(userId: string): Promise<void> {
+  try {
+    const adminClient = createAdminClient();
+    await adminClient
+      .from('users')
+      .update({ clerk_synced_at: new Date().toISOString() })
+      .eq('id', userId);
+  } catch {
+    // El throttle falla abierto: peor caso, una llamada extra a Clerk.
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Conciliación por webhook (user.created / user.updated)
+// ---------------------------------------------------------------------------
+
+export interface ClerkWebhookProfileSource {
+  clerkUserId: string;
+  email: string | null;
+  name: string | null;
+  imageUrl: string | null;
+  declaredRole: string | null;
+}
+
+async function findInternalUserByEmail(email: string): Promise<User | null> {
+  const adminClient = createAdminClient();
+  const { data, error } = await adminClient
+    .from('users')
+    .select('*')
+    .eq('email', email)
+    .maybeSingle();
+
+  if (error) throw new Error(error.message);
+  return (data as User | null) ?? null;
+}
+
+/**
+ * Reconcilia un perfil existente con los datos que recibe el webhook de Clerk
+ * (`user.created` / `user.updated`). Si el perfil aún no existe en la app
+ * (alta aún no completada), no hace nada — la sincronización ocurrirá vía
+ * `completeOnboarding` / `syncProfileFromClerkIfNeeded`.
+ *
+ * El webhook de Clerk es la vía autoritativa para cambios posteriores (nombre,
+ * avatar, correo) y evita depender exclusivamente de la petición del layout
+ * para mantenerlos frescos.
+ */
+export async function reconcileProfileFromClerkWebhook(
+  source: ClerkWebhookProfileSource,
+): Promise<void> {
+  const profile =
+    (await resolveInternalUserByClerkId(source.clerkUserId)) ??
+    (source.email ? await findInternalUserByEmail(source.email) : null);
+
+  if (!profile) return;
+
+  const identity: ClerkIdentity = {
+    clerkUserId: source.clerkUserId,
+    email: source.email ?? profile.email,
+    name: source.name ?? profile.name,
+    imageUrl: source.imageUrl ?? profile.avatar_url ?? null,
+    declaredRole: isValidDeclaredRole(source.declaredRole) ? source.declaredRole : null,
+  };
+
+  await syncFromClerk(profile, identity);
 }

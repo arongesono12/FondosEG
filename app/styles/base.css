@@ -1,0 +1,159 @@
+/* =========================================================================
+   BASE — Estilos base, transiciones, tipografía y reset global
+   ========================================================================= */
+
+* {
+  border-color: var(--border);
+}
+
+html {
+  font-family: var(--font-fondoseg-primary);
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+body {
+  @apply bg-background text-foreground;
+  font-family: var(--font-fondoseg-primary);
+  min-height: 100dvh;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+code,
+pre,
+kbd,
+samp,
+.font-mono {
+  font-family: var(--font-fondoseg-secondary) !important;
+}
+
+/* Theme transition — optimized for performance */
+*, *::before, *::after {
+  transition-property: background-color, border-color, color, fill, stroke;
+  transition-duration: 0.3s;
+  transition-timing-function: ease;
+}
+
+@media (max-width: 1023.98px) {
+  *, *::before, *::after {
+    transition-duration: 0.15s;
+  }
+}
+
+/* Disable transitions for animations that should be instant */
+[data-state="open"],
+[data-state="closed"],
+.animate-in,
+.animate-out,
+[aria-expanded="true"],
+[aria-expanded="false"],
+dialog,
+dialog *,
+.sr-only,
+.pointer-events-none {
+  transition: none !important;
+}
+
+/* Smooth theme transitions for specific elements */
+.bg-card,
+.bg-background,
+.bg-muted,
+.bg-primary\/5,
+.bg-primary\/10,
+.bg-green-50,
+.bg-red-50,
+.bg-amber-50,
+.bg-blue-50,
+.bg-purple-50,
+.text-foreground,
+.text-muted-foreground,
+.border,
+.border-border,
+.border-border\/5,
+.border-border\/10,
+.border-border\/20 {
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+/* =========================================================================
+   TYPOGRAPHY POLISH — UI premium sin texto excesivamente pesado
+   ========================================================================= */
+
+.font-black,
+.font-extrabold {
+  font-weight: 700;
+}
+
+.font-bold {
+  font-weight: 600;
+}
+
+.font-semibold {
+  font-weight: 500;
+}
+
+/* Landing: botones, navlinks y elementos destacados */
+.landing-root .btn-primary,
+.landing-root .btn-secondary,
+.landing-root .demo-button,
+.landing-navlinks a,
+.hero-pill,
+.section-heading > p,
+.feature-card > a,
+.role-card strong,
+.footer-grid h4,
+.legal-sources a,
+.legal-document > footer p,
+.legal-document > footer a,
+.demo-dialog-copy > span,
+.resources-menu strong {
+  font-weight: 600;
+}
+
+/* Headings */
+.hero-copy h1,
+.role-detail h1,
+.cta-section h2,
+.info-copy h1,
+.info-panel h2,
+.info-note h2,
+.demo-dialog-copy h2,
+.legal-document h1,
+.legal-section h2,
+.feature-card h3,
+.role-card h3,
+.role-detail-card h2,
+.trust-card h3 {
+  font-weight: 650;
+}
+
+/* Stats, badges, brand */
+.stat-card strong,
+.testimonial footer > span,
+.dashboard-mobile-brand span,
+.mobile-bottom-nav-item span,
+.mobile-sheet-title {
+  font-weight: 600;
+}
+
+/* Body text */
+.feature-card p,
+.role-card p,
+.trust-card p,
+.testimonial > div > p,
+.footer-grid p,
+.footer-grid a,
+.info-copy > p,
+.info-panel > p,
+.info-note p,
+.legal-notice p,
+.demo-preview p,
+.demo-chapters span {
+  font-weight: 400;
+}

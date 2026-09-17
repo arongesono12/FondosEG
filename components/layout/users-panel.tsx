@@ -15,7 +15,7 @@ import {
   Wifi,
   WifiOff,
   RefreshCw,
-} from 'lucide-react';
+} from '@/components/ui/hugeicons';
 
 interface UserPresence {
   id: string;
@@ -127,7 +127,7 @@ export function UsersPanel({ open, onClose }: UsersPanelProps) {
             <Users className="h-5 w-5 text-primary" />
             <h2 className="text-lg font-bold text-foreground">Usuarios</h2>
             {onlineCount > 0 && (
-              <span className="h-5 px-1.5 bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-[10px] font-bold rounded-full flex items-center">
+              <span className="h-5 px-1.5 bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-bold rounded-full flex items-center">
                 {onlineCount} en línea
               </span>
             )}
@@ -180,7 +180,7 @@ export function UsersPanel({ open, onClose }: UsersPanelProps) {
             filtered.map((u) => (
               <div
                 key={u.id}
-                className="p-3 rounded-2xl border border-border/20 bg-card/60 hover:bg-muted/40 transition-colors"
+                className="rounded-2xl border border-border/20 bg-card p-3 transition-colors hover:bg-muted/40"
               >
                 <div className="flex items-start gap-3">
                   {/* Avatar + online dot */}
@@ -203,11 +203,11 @@ export function UsersPanel({ open, onClose }: UsersPanelProps) {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5 flex-wrap">
                       <p className="text-sm font-bold text-foreground truncate">{u.name}</p>
-                      <Badge className={cn('text-[9px] font-bold uppercase px-1.5 py-0 h-4 border-none', roleColors[u.role] || 'bg-muted text-muted-foreground')}>
+                      <Badge className={cn('text-[11px] font-bold uppercase px-1.5 py-0 h-4 border-none', roleColors[u.role] || 'bg-muted text-muted-foreground')}>
                         {u.role}
                       </Badge>
                     </div>
-                    <p className="text-[10px] text-muted-foreground truncate">{u.email}</p>
+                    <p className="text-xs text-muted-foreground truncate">{u.email}</p>
 
                     {/* Status row */}
                     <div className="flex items-center gap-1 mt-1">
@@ -216,7 +216,7 @@ export function UsersPanel({ open, onClose }: UsersPanelProps) {
                       ) : (
                         <WifiOff className="h-3 w-3 text-muted-foreground/50" />
                       )}
-                      <span className={cn('text-[10px] font-semibold', u.isOnline ? 'text-emerald-600 dark:text-emerald-400' : 'text-muted-foreground')}>
+                      <span className={cn('text-xs font-semibold', u.isOnline ? 'text-emerald-600 dark:text-emerald-400' : 'text-muted-foreground')}>
                         {u.isOnline ? 'En línea' : u.lastSeen ? timeAgo(u.lastSeen) : 'Sin actividad'}
                       </span>
                     </div>
@@ -225,19 +225,19 @@ export function UsersPanel({ open, onClose }: UsersPanelProps) {
                     {(u.device || u.browser || u.os) && (
                       <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                         {u.device && (
-                          <span className="flex items-center gap-1 text-[9px] font-semibold text-muted-foreground uppercase bg-muted/60 px-1.5 py-0.5 rounded-lg">
+                          <span className="flex items-center gap-1 text-[11px] font-semibold text-muted-foreground uppercase bg-muted/60 px-1.5 py-0.5 rounded-lg">
                             <DeviceIcon device={u.device} />
                             {u.device === 'mobile' ? 'Móvil' : u.device === 'tablet' ? 'Tablet' : 'Navegador'}
                           </span>
                         )}
                         {u.browser && (
-                          <span className="flex items-center gap-1 text-[9px] font-semibold text-muted-foreground uppercase bg-muted/60 px-1.5 py-0.5 rounded-lg">
+                          <span className="flex items-center gap-1 text-[11px] font-semibold text-muted-foreground uppercase bg-muted/60 px-1.5 py-0.5 rounded-lg">
                             <Globe className="h-3 w-3" />
                             {u.browser}
                           </span>
                         )}
                         {u.os && (
-                          <span className="text-[9px] font-semibold text-muted-foreground uppercase bg-muted/60 px-1.5 py-0.5 rounded-lg">
+                          <span className="text-[11px] font-semibold text-muted-foreground uppercase bg-muted/60 px-1.5 py-0.5 rounded-lg">
                             {u.os}
                           </span>
                         )}
@@ -248,7 +248,7 @@ export function UsersPanel({ open, onClose }: UsersPanelProps) {
                     {(u.ipAddress || u.location) && (
                       <div className="flex items-center gap-1 mt-1">
                         <MapPin className="h-3 w-3 text-muted-foreground/60" />
-                        <span className="text-[9px] font-semibold text-muted-foreground">
+                        <span className="text-[11px] font-semibold text-muted-foreground">
                           {u.location || u.ipAddress}
                         </span>
                       </div>
@@ -262,7 +262,7 @@ export function UsersPanel({ open, onClose }: UsersPanelProps) {
 
         {/* Footer */}
         <div className="p-4 border-t border-border/10">
-          <p className="text-[10px] text-muted-foreground text-center font-semibold uppercase tracking-wide">
+          <p className="text-xs text-muted-foreground text-center font-semibold uppercase tracking-wide">
             {users.length} usuario{users.length !== 1 ? 's' : ''} registrados · {onlineCount} activos
           </p>
         </div>
@@ -270,4 +270,3 @@ export function UsersPanel({ open, onClose }: UsersPanelProps) {
     </>
   );
 }
-

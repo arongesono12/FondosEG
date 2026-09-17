@@ -28,6 +28,58 @@ productos sobre una misma base de datos:
 | Pagos externos | Revolut Payout Links + proveedor de pagos genérico vía webhooks firmados |
 | Documentación API | OpenAPI 3 generado en runtime (`@asteasolutions/zod-to-openapi`) + `swagger-ui-react` |
 | Tests | Runner nativo de Node (`node --test`) sobre TypeScript sin compilar |
+| CI/CD | GitHub Actions (lint + typecheck + tests + build) + [Dockerfile](Dockerfile) multi-stage |
+
+---
+
+## 🏗️ Arquitectura
+
+```mermaid
+flowchart LR
+    subgraph Cliente
+        A[App Next.js 16<br/>App Router · RSC]
+        B[SDK TypeScript<br/>para integradores]
+        C[Edge Functions<br/>Supabase · ejemplo]
+    end
+
+    subgraph ServidorNext
+        P[proxy.ts<br/>clerkMiddleware]
+        L[lib/server/authz.ts<br/>autorización por recurso]
+        F[lib/financial.ts<br/>tarifa versionada]
+        FOP[lib/server/financial-operations.ts<br/>RPCs atómicas]
+        API[app/api<br/>rutas internas + v1/external]
+        WH[webhooks firmados<br/>webhook_deliveries + reintentos]
+    end
+
+    R[Rate limit<br/>api_key_usage_windows]
+    I[Idempotencia<br/>api_idempotency_keys]
+
+    subgraph Supabase
+        DB[(PostgreSQL<br/>transfers · balances · wallets)]
+        EDGE[fondoseg-proxy · balance<br/>history · transfer · health]
+    end
+
+    subgraph Externos
+        T[Twilio SMS]
+        RSN[Resend · correo]
+        REV[Revolut · payout links]
+        IMAP[Buzón soporte IMAP]
+    end
+
+    A --> P --> L --> API
+    B --> API
+    C --> EDGE --> API
+    API --> I --> FOP --> DB
+    API --> R --> DB
+    FOP --> DB
+    WH --> DB
+    DB --> A
+    A --> T
+    API --> T
+    API --> RSN
+    API --> REV
+    API --> IMAP
+```
 
 ---
 
@@ -141,6 +193,37 @@ Implementado sobre el **Reglamento 04/18/CEMAC/UMAC/COBAC**
 - **Idempotencia** (`api_idempotency_keys`) en toda operación que mueve dinero.
 - **Rate limit** por ventana deslizante (`api_key_usage_windows`), con cabeceras
   `x-ratelimit-limit` / `-remaining` / `-reset`.
+
+#### Rate limit
+
+Cada credencial `sk_test_`/`sk_live_` tiene su propia ventana de uso (`api_key_usage_windows`),
+en **ventanas deslizantes** — no bloques de reloj fijos: dos ráfagas a las 09:59 y 10:00 no
+se absorben por reiniciar el minuto. El contador se firma con `PUBLIC_RATE_LIMIT_SALT` (≥ 32
+bytes aleatorios, ver `.env.example`) para que nadie pueda fabricar créditos.
+
+Respuesta ante un exceso:
+
+```http
+HTTP/1.1 429 Too Many Requests
+x-ratelimit-limit: 100
+x-ratelimit-remaining: 0
+x-ratelimit-reset: 120
+retry-after: 120
+
+{
+  "success": false,
+  "error": {
+    "code": "rate_limit_exceeded",
+    "message": "Se excedió el límite de peticiones. Reintenta en 120 segundos.",
+    "retry_after": 120
+  },
+  "request_id": "req_..."
+}
+```
+
+Todos los códigos de error de la API usan el catálogo cerrado:
+`validation_error`, `permission_denied`, `idempotency_conflict`, `business_rule_failed`,
+`rate_limit_exceeded`, `provider_unavailable` y `service_unavailable`.
 - **Sobre de respuesta uniforme** — `{ success, data, pagination?, meta?, request_id }` y un
   catálogo cerrado de códigos de error (`validation_error`, `permission_denied`,
   `idempotency_conflict`, `business_rule_failed`, …).
@@ -229,8 +312,8 @@ POST /api/support/email-sync    # sincroniza el buzón IMAP    (SUPPORT_EMAIL_SY
 
 ### 1. Requisitos
 
-Node 20+, un proyecto de Supabase y una instancia de Clerk. El repo trae `bun.lock`, pero
-`npm install` funciona igual.
+Node ≥ 20.19, un proyecto de Supabase y una instancia de Clerk. Gestor de paquetes: **npm**
+(el `packageManager` está declarado en `package.json`).
 
 ### 2. Instalar
 
@@ -251,6 +334,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE_KEY=            # server-only
 NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=
 CLERK_SECRET_KEY=                     # server-only
+CLERK_WEBHOOK_SIGNING_SECRET=         # firma de Clerk (webhook /api/webhooks/clerk)
 NEXT_PUBLIC_CLERK_SIGN_IN_URL=/login
 NEXT_PUBLIC_CLERK_SIGN_UP_URL=/register
 ```
@@ -341,6 +425,26 @@ Scripts de operación en [scripts/](scripts/):
 - `fix-missing-profiles.ts` — repara perfiles sin fila en `public.users`.
 - `generate-revolut-jwks.js` — genera el JWKS para la integración de Revolut.
 
+### 🐳 Docker
+
+[Dockerfile](Dockerfile) multi-stage para producción:
+
+```bash
+docker build -t fondoseg .
+docker run -p 3001:3001 \
+  --env-file .env \
+  fondoseg
+```
+
+- Imagen final: `node:22-alpine`, usuario no-root `nextjs`, expone el puerto 3001.
+- Requiere `output: 'standalone'` en [next.config.ts](next.config.ts) (habilitado por defecto);
+  el runner copia el servidor standalone y lanza `node server.js`.
+- Build reproducible en el propio contenedor: instala dependencias, compila la app y descarta
+  todo lo que no sea necesario.
+- La **CI** (`.github/workflows/ci.yml`) ejecuta `lint` + `typecheck` + `test` y, si todo pasa,
+  el build de producción. Los secretos de Supabase (`SUPABASE_URL`, `SUPABASE_ANON_KEY`) se
+  inyectan como secrets del repositorio.
+
 ---
 
 ## 🧪 Tests
@@ -356,6 +460,8 @@ Suite de **contrato y regresión** con el runner nativo de Node, sin build previ
 | `tests/client-balance-flow.contract.test.ts` | Liquidación en billetera vs. retiro en ventanilla |
 | `tests/wallet/client-withdrawal.contract.test.ts` | Retención, pago atómico, caducidad y CSPRNG |
 | `tests/wallet/transfer-regressions.test.ts` | Envío entre clientes y avisos al beneficiario |
+| `tests/financial/financial-operations.contract.test.ts` | RPCs atómicas, tarifa versionada y retiros |
+| `tests/api/external-api.contract.test.ts` | Autenticación API, idempotencia, rate limit y sandbox |
 
 ---
 

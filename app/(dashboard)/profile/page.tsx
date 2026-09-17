@@ -3,7 +3,7 @@
 import { ChangeEvent, useEffect, useRef, useState, useTransition } from 'react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { Calendar, Camera, Clock, Image as ImageIcon, KeyRound, Mail, Phone, Shield, User as UserIcon } from 'lucide-react';
+import { Calendar, Camera, Clock, Image as ImageIcon, KeyRound, Mail, Phone, Shield, User as UserIcon } from '@/components/ui/hugeicons';
 import { DashboardLogo } from '@/components/layout/dashboard-logo';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -284,7 +284,7 @@ export default function ProfilePage() {
       )}
 
       <div className="grid gap-6 md:grid-cols-2">
-        <Card className="border border-border/10 bg-card/80 text-card-foreground shadow-sm backdrop-blur-sm dark:bg-slate-950/70">
+        <Card className="text-card-foreground">
           <CardHeader>
             <div className="flex items-center justify-between">
               <div className="space-y-1">
@@ -386,7 +386,7 @@ export default function ProfilePage() {
           </CardContent>
         </Card>
 
-        <Card className="border border-border/10 bg-card/80 text-card-foreground shadow-sm backdrop-blur-sm dark:bg-slate-950/70">
+        <Card className="text-card-foreground">
           <CardHeader>
             <h2 className="text-xl font-semibold text-foreground">Detalles de Cuenta</h2>
             <CardDescription>Seguridad y ubicación registrada</CardDescription>
@@ -502,7 +502,7 @@ export default function ProfilePage() {
               )}
             </div>
 
-            <div className="space-y-4 rounded-2xl border border-border/10 bg-card/70 p-4">
+            <div className="space-y-4 rounded-2xl border border-border/10 bg-card p-4">
               <label className="block text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
                 Zoom
                 <input

@@ -45,7 +45,7 @@ import {
   UserPlus,
   Users,
   Wallet,
-} from 'lucide-react';
+} from '@/components/ui/hugeicons';
 
 function movementKindTone(kind: UserMovementItem['kind']) {
   switch (kind) {
@@ -436,9 +436,9 @@ export default function StaffPage() {
       )}
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
-        <Card className="min-w-0 rounded-3xl">
+        <Card className="min-w-0">
           <CardHeader className="p-4 pb-0">
-            <CardTitle className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.12em] text-muted-foreground">
+            <CardTitle className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.12em] text-muted-foreground">
               <ShieldCheck className="h-4 w-4" />
               Admins activos
             </CardTitle>
@@ -447,9 +447,9 @@ export default function StaffPage() {
             <p className="text-2xl font-black tabular-nums">{activeAdmins}</p>
           </CardContent>
         </Card>
-        <Card className="min-w-0 rounded-3xl">
+        <Card className="min-w-0">
           <CardHeader className="p-4 pb-0">
-            <CardTitle className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.12em] text-muted-foreground">
+            <CardTitle className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.12em] text-muted-foreground">
               <Power className="h-4 w-4" />
               Admins inactivos
             </CardTitle>
@@ -458,9 +458,9 @@ export default function StaffPage() {
             <p className="text-2xl font-black tabular-nums">{inactiveAdmins}</p>
           </CardContent>
         </Card>
-        <Card className="min-w-0 rounded-3xl">
+        <Card className="min-w-0">
           <CardHeader className="p-4 pb-0">
-            <CardTitle className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.12em] text-muted-foreground">
+            <CardTitle className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.12em] text-muted-foreground">
               <Users className="h-4 w-4" />
               Gestores
             </CardTitle>
@@ -469,9 +469,9 @@ export default function StaffPage() {
             <p className="text-2xl font-black tabular-nums">{managedAgents}</p>
           </CardContent>
         </Card>
-        <Card className="min-w-0 rounded-3xl">
+        <Card className="min-w-0">
           <CardHeader className="p-4 pb-0">
-            <CardTitle className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.12em] text-muted-foreground">
+            <CardTitle className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.12em] text-muted-foreground">
               <Users className="h-4 w-4" />
               Clientes
             </CardTitle>
@@ -480,9 +480,9 @@ export default function StaffPage() {
             <p className="text-2xl font-black tabular-nums">{managedClients}</p>
           </CardContent>
         </Card>
-        <Card className="min-w-0 rounded-3xl">
+        <Card className="min-w-0">
           <CardHeader className="p-4 pb-0">
-            <CardTitle className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.12em] text-muted-foreground">
+            <CardTitle className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.12em] text-muted-foreground">
               <Wallet className="h-4 w-4" />
               Usuarios activos
             </CardTitle>
@@ -491,9 +491,9 @@ export default function StaffPage() {
             <p className="text-2xl font-black tabular-nums">{managedActive}</p>
           </CardContent>
         </Card>
-        <Card className="min-w-0 rounded-3xl">
+        <Card className="min-w-0">
           <CardHeader className="p-4 pb-0">
-            <CardTitle className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.12em] text-muted-foreground">
+            <CardTitle className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.12em] text-muted-foreground">
               <Activity className="h-4 w-4" />
               Acciones staff
             </CardTitle>
@@ -504,7 +504,7 @@ export default function StaffPage() {
         </Card>
       </div>
 
-      <Card className="rounded-3xl">
+      <Card>
         <CardHeader>
           <CardTitle>Equipo administrativo</CardTitle>
         </CardHeader>
@@ -560,7 +560,7 @@ export default function StaffPage() {
         </CardContent>
       </Card>
 
-      <Card className="rounded-3xl">
+      <Card>
         <CardHeader className="gap-4">
           <div>
             <CardTitle>Usuarios del dashboard</CardTitle>
@@ -656,7 +656,7 @@ export default function StaffPage() {
         </CardContent>
       </Card>
 
-      <Card className="rounded-3xl">
+      <Card>
         <CardHeader>
           <CardTitle>Bitácora del staff</CardTitle>
         </CardHeader>

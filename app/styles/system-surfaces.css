@@ -1,0 +1,82 @@
+/* Universal FondosEG surface system.
+   One solid card language for marketing, application, auth and documentation. */
+.app-card,
+.glass,
+.glass-premium,
+.dashboard-card,
+.auth-card-premium,
+.dialog-shell,
+.info-panel,
+.info-note,
+.info-capability-card,
+.legal-layout > aside,
+.legal-document,
+.legal-notice,
+.legal-sources a,
+.onboarding-panel,
+.role-detail-card,
+.demo-dialog,
+.resources-menu {
+  border: 1px solid var(--app-card-border) !important;
+  border-radius: var(--app-card-radius);
+  background: var(--app-card-bg) !important;
+  color: var(--surface-fg);
+  box-shadow: var(--app-card-shadow) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+.app-card:hover,
+.glass:hover,
+.glass-premium:hover,
+.info-panel:hover,
+.info-note:hover,
+.info-capability-card:hover,
+.legal-sources a:hover {
+  border-color: color-mix(in srgb, var(--primary) 34%, var(--app-card-border)) !important;
+  box-shadow: var(--app-card-shadow-hover) !important;
+}
+
+/* Older pages still carry transparent utility classes. This keeps their
+   surfaces compatible until those page-specific classes can disappear. */
+.dashboard-main :is(section, article, div)[class*="bg-card/"][class*="border"],
+.dashboard-main :is(section, article, div)[class*="backdrop-blur"][class*="border"] {
+  background: var(--app-card-bg) !important;
+  border-color: var(--app-card-border) !important;
+  border-radius: var(--app-card-radius) !important;
+  box-shadow: var(--app-card-shadow) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+.landing-nav,
+.dashboard-mobile-header,
+.dashboard-mobile-bottom-bar,
+.dashboard-mobile-user-trigger {
+  background: var(--surface) !important;
+  border-color: var(--app-card-border) !important;
+  box-shadow: var(--app-card-shadow) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+.landing-nav { border-radius: var(--app-card-radius); }
+.cta-section { border-radius: var(--app-card-radius); }
+
+/* Form controls outside the shared React primitives. */
+.landing-root :is(input:not([type="checkbox"]):not([type="radio"]), textarea, select),
+.auth-public-page :is(input:not([type="checkbox"]):not([type="radio"]), textarea, select),
+.dashboard-main :is(input:not([type="checkbox"]):not([type="radio"]), textarea, select) {
+  border-radius: var(--app-control-radius);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-card,
+  .glass,
+  .glass-premium,
+  .stat-card,
+  .feature-card,
+  .role-card,
+  .trust-card,
+  .testimonial { transition: none !important; transform: none !important; }
+}

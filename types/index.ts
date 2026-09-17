@@ -22,6 +22,7 @@ export interface User {
   country?: string;
   city?: string;
   avatar_url?: string;
+  clerk_synced_at?: string;
   is_active: boolean;
   created_at: string;
   updated_at: string;

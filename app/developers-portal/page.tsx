@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { ArrowRight, KeyRound, Webhook, BookOpen, Package } from 'lucide-react';
+import { ArrowRight, KeyRound, Webhook, BookOpen, Package } from '@/components/ui/hugeicons';
 import { DashboardLogo } from '@/components/layout/dashboard-logo';
 import { Button } from '@/components/ui/button';
 import { getOptionalAuthState } from '@/lib/server/authz';
@@ -29,7 +29,7 @@ export default async function DevelopersPortalPage() {
         <div className="max-w-4xl">
           <div className="mb-8 flex items-center gap-3">
             <DashboardLogo size="md" priority className="justify-start" />
-            <span className="rounded-full border border-border/60 bg-background/70 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground backdrop-blur">
+            <span className="rounded-full border border-border/60 bg-background px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
               Developer Portal
             </span>
           </div>
@@ -59,28 +59,28 @@ export default async function DevelopersPortalPage() {
         </div>
 
         <div className="mt-16 grid gap-6 md:grid-cols-2 xl:grid-cols-4">
-          <div className="rounded-2xl border border-border/60 bg-background/70 p-6 backdrop-blur">
+          <div className="app-card p-6">
             <KeyRound className="h-5 w-5 text-pink-500" />
             <p className="mt-4 text-sm font-semibold text-foreground">1. Registro</p>
             <p className="mt-2 text-sm leading-6 text-muted-foreground">
               El desarrollador entra por `/developers-portal/register` y crea su cuenta.
             </p>
           </div>
-          <div className="rounded-2xl border border-border/60 bg-background/70 p-6 backdrop-blur">
+          <div className="app-card p-6">
             <BookOpen className="h-5 w-5 text-pink-500" />
             <p className="mt-4 text-sm font-semibold text-foreground">2. Consola</p>
             <p className="mt-2 text-sm leading-6 text-muted-foreground">
               Tras autenticarse entra a `/developer-console`, donde genera credenciales y revisa uso.
             </p>
           </div>
-          <div className="rounded-2xl border border-border/60 bg-background/70 p-6 backdrop-blur">
+          <div className="app-card p-6">
             <Package className="h-5 w-5 text-pink-500" />
             <p className="mt-4 text-sm font-semibold text-foreground">3. Integración</p>
             <p className="mt-2 text-sm leading-6 text-muted-foreground">
               Usa OpenAPI o el SDK TypeScript para conectar el otro proyecto con la API de FondosEG.
             </p>
           </div>
-          <div className="rounded-2xl border border-border/60 bg-background/70 p-6 backdrop-blur">
+          <div className="app-card p-6">
             <Webhook className="h-5 w-5 text-pink-500" />
             <p className="mt-4 text-sm font-semibold text-foreground">4. Eventos</p>
             <p className="mt-2 text-sm leading-6 text-muted-foreground">

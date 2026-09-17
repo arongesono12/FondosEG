@@ -1,0 +1,119 @@
+/* =========================================================================
+   MARKETING CARDS — Sistema unificado de tarjetas para landing e info
+   ========================================================================= */
+
+.stat-card, .feature-card, .role-card, .trust-card, .testimonial,
+.info-panel, .info-note, .legal-layout > aside, .legal-document, .legal-notice, .legal-sources a {
+  position: relative; border: 1px solid var(--marketing-card-border);
+  border-radius: var(--marketing-card-radius); background: var(--marketing-card-bg);
+  box-shadow: var(--marketing-card-shadow); backdrop-filter: none; -webkit-backdrop-filter: none;
+}
+
+.stat-card, .feature-card, .role-card, .trust-card, .testimonial,
+.info-panel, .info-note, .legal-sources a {
+  transition: transform .25s ease, border-color .25s ease, box-shadow .25s ease;
+}
+
+.stat-card:hover, .feature-card:hover, .role-card:hover, .trust-card:hover, .testimonial:hover,
+.info-panel:hover, .info-note:hover, .legal-sources a:hover {
+  z-index: 2; border-color: color-mix(in srgb, var(--primary) 38%, var(--app-card-border));
+  box-shadow: var(--marketing-card-shadow-hover); transform: translateY(-2px);
+}
+
+.stat-card::before, .feature-card::before, .role-card::before, .trust-card::before,
+.testimonial::before, .info-panel::before, .info-note::before, .legal-document::before { content: none; }
+
+.stat-card > *, .feature-card > *, .trust-card > *, .testimonial > *,
+.info-panel > *, .info-note > *, .legal-document > * { position: relative; z-index: 1; }
+
+.stat-card { display: flex; min-height: 118px; align-items: center; gap: 16px; padding: 20px 24px; }
+.stat-card > div:last-child { min-width: 0; }
+.stat-card strong { display: block; color: var(--surface-fg); font-size: 26px; line-height: 1.15; letter-spacing: -.025em; }
+.stat-card p { margin-top: 5px; color: var(--muted-foreground); font-size: 12px; line-height: 1.45; }
+
+.feature-card { display: flex; width: 100%; height: 100%; min-height: 286px; flex-direction: column; align-items: flex-start; padding: 24px; }
+.feature-card h3 { margin-top: 20px; color: var(--surface-fg); font-size: 18px; line-height: 1.18; white-space: pre-line; }
+.feature-card p { margin-top: 12px; color: var(--muted-foreground); font-size: 13px; line-height: 1.65; }
+.feature-card > a { display: inline-flex; align-items: center; gap: 7px; margin-top: auto; padding-top: 20px; color: var(--primary); font-size: 12px; }
+.feature-card > a.blue { color: var(--chart-2); }
+.feature-card > a.green { color: var(--chart-3); }
+.feature-card > a.purple { color: var(--chart-5); }
+.feature-card > a svg { width: 15px; height: 15px; transition: transform .2s ease; }
+.feature-card > a:hover svg { transform: translateX(3px); }
+
+.trust-card { display: flex; width: 100%; height: 100%; min-height: 150px; gap: 14px; padding: 20px; }
+.trust-card > div { display: grid; width: 42px; height: 42px; flex: none; place-items: center; border-radius: 13px; background:var(--accent); color:var(--primary); }
+.trust-card > div svg { width: 21px; height: 21px; }
+.trust-grid > *:nth-child(1) .trust-card > div { color:var(--chart-2);background:color-mix(in srgb,var(--chart-2) 13%,#07101f); }
+.trust-grid > *:nth-child(2) .trust-card > div { color:#8b9ec7;background:rgba(59,88,145,.18); }
+.trust-grid > *:nth-child(3) .trust-card > div { color:var(--chart-3);background:color-mix(in srgb,var(--chart-3) 13%,#07101f); }
+.trust-grid > *:nth-child(4) .trust-card > div { color:var(--chart-2);background:color-mix(in srgb,var(--chart-2) 13%,#07101f); }
+.trust-card h3 { color: var(--surface-fg); font-size: 16px; line-height: 1.25; white-space: pre-line; }
+.trust-card p { margin-top: 9px; color: var(--muted-foreground); font-size: 12px; line-height: 1.65; }
+
+.testimonial { display: flex; width: 100%; height: 100%; min-height: 180px; gap: 18px; padding: 24px; }
+.testimonial > svg { width: 30px; height: 30px; flex: none; color: var(--primary); opacity: .7; }
+.testimonial > svg.blue { color: var(--chart-2); }
+.testimonial > div { display: flex; min-width: 0; flex-direction: column; }
+.testimonial > div > p { color: var(--surface-fg); font-size: 14px; line-height: 1.8; }
+.testimonial footer { display: flex; align-items: center; gap: 11px; margin-top: auto; padding-top: 22px; }
+.testimonial footer > span { display: grid; width: 38px; height: 38px; place-items: center; border-radius: 50%; background: var(--accent); color: var(--primary); }
+.testimonial footer div { display: grid; gap: 2px; }
+.testimonial footer strong { font-size: 12px; }
+.testimonial footer small { color: var(--muted-foreground); font-size: 10px; }
+.dots { display: flex; justify-content: center; gap: 6px; margin-top: 22px; }
+.dots i { width: 6px; height: 6px; border-radius: 999px; background: var(--app-card-border); }
+.dots i:first-child { width: 20px; background: var(--primary); }
+
+/* Role accent stripes */
+.role-1 { border-color:rgba(236,22,116,.8);background:linear-gradient(100deg,rgba(86,9,51,.58),#07101f 72%);box-shadow:inset 2px 0 0 #ec1674; }
+.role-2 { border-color:rgba(14,165,233,.72);background:linear-gradient(100deg,rgba(3,52,91,.62),#07101f 72%);box-shadow:inset 2px 0 0 #0ea5e9; }
+.role-3 { border-color:rgba(168,85,247,.72);background:linear-gradient(100deg,rgba(57,17,91,.58),#07101f 72%);box-shadow:inset 2px 0 0 #a855f7; }
+
+.role-grid-item { display: flex; min-width: 0; }
+.role-card { display: flex; width: 100%; min-height: 220px; padding: 24px 22px; }
+.role-card-content { position: relative; z-index: 2; display: flex; min-height: 100%; max-width: 270px; flex-direction: column; align-items: flex-start; }
+.role-card-content > svg { width: 27px; height: 27px; flex: none; color: #f0267e; }
+.role-2 .role-card-content > svg { color: #ec4899; }
+.role-3 .role-card-content > svg { color: #d946ef; }
+.role-card p { position: static; z-index: auto; }
+.role-card strong { position: static; margin-top: auto; padding-top: 20px; }
+.role-1 strong{color:#ff4ba0}.role-2 strong{color:#38bdf8}.role-3 strong{color:#c084fc}
+.role-art { position:absolute;z-index:1;right:22px;bottom:12px;display:grid;width:112px;height:112px;place-items:center;border:1px solid currentColor;border-radius:24px;opacity:.28;transform:rotate(-5deg);pointer-events:none; }
+.role-art svg{width:58px;height:58px}
+.role-1 .role-art{color:#ec1674}.role-2 .role-art{color:#0ea5e9}.role-3 .role-art{color:#a855f7}
+
+/* Stat icons */
+.stat-icon {
+  display: grid; width: 60px; height: 60px; flex: none; place-items: center; border:1px solid currentColor;border-radius:50%;color: var(--primary);
+  background: color-mix(in srgb, currentColor 18%, #07101f);
+  box-shadow:none;
+}
+.stat-icon svg { width: 22px; height: 22px; }
+.stat-icon.blue { color: var(--chart-2); }
+.stat-icon.green { color: var(--chart-3); }
+.stat-icon.purple { color: var(--chart-5); }
+.stat-icon.pink { color: var(--chart-1); }
+.stat-card::before { opacity: .34; }
+.dark .stat-card::before { opacity: .22; }
+.stat-card:hover .stat-icon { box-shadow: none; }
+
+/* Feature card icons */
+.feature-card .icon-box {
+  display: grid; width: 54px; height: 54px; flex: none; place-items: center; border:1px solid currentColor;border-radius:14px;color: var(--primary);
+  background: color-mix(in srgb, currentColor 16%, #07101f);
+  box-shadow:none;
+}
+.feature-card .icon-box svg { width: 23px; height: 23px; }
+.feature-card .icon-box.blue { color: var(--chart-2); }
+.feature-card .icon-box.green { color: var(--chart-3); }
+.feature-card .icon-box.purple { color: var(--chart-5); }
+.feature-card .icon-box.pink { color: var(--chart-1); }
+.feature-card::before { opacity: .3; }
+.dark .feature-card::before { opacity: .2; }
+.feature-card:hover .icon-box { box-shadow: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .stat-card, .feature-card, .role-card, .trust-card, .testimonial,
+  .info-panel, .info-note, .legal-sources a { transition: none; }
+}

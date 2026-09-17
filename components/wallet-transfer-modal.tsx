@@ -18,7 +18,7 @@ import {
   Loader2,
   CheckCircle2,
   AlertCircle,
-} from 'lucide-react';
+} from '@/components/ui/hugeicons';
 import { useAppStore } from '@/lib/store';
 import { formatCurrency } from '@/lib/utils';
 import { getAvailableClientBalance } from '@/lib/financial';
@@ -173,7 +173,7 @@ export function WalletTransferModal({ open, onOpenChange, onSuccess }: WalletTra
                 <p className="text-xs font-semibold text-green-600 dark:text-green-400">
                   Saldo disponible: {formatCurrency(balance, currency)}
                 </p>
-                <p className="text-[10px] text-green-500 mt-1">
+                <p className="text-xs text-green-500 mt-1">
                   Sin comisión para transferencias entre clientes
                 </p>
               </div>

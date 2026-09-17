@@ -1,0 +1,62 @@
+/* =========================================================================
+   PRINT — Estilos de impresión para recibos
+   ========================================================================= */
+
+@media print {
+  @page { size: A4; margin: 12mm; }
+
+  html, body { background: #ffffff !important; color: #0f172a !important; }
+
+  body:has(.receipt-print-area) .dashboard-public-page > *:not(.flex),
+  body:has(.receipt-print-area) .dashboard-public-page aside,
+  body:has(.receipt-print-area) .dashboard-public-page nav,
+  body:has(.receipt-print-area) .dashboard-public-page header,
+  body:has(.receipt-print-area) .dashboard-public-page [class*="dashboard-mobile"],
+  body:has(.receipt-print-area) .dashboard-public-page [class*="mobile-bottom"],
+  body:has(.receipt-print-area) .dashboard-public-page [data-radix-popper-content-wrapper],
+  body:has(.receipt-print-area) .receipt-print-scope > :not(.receipt-print-area) { display: none !important; }
+
+  body:has(.receipt-print-area) .dashboard-public-page,
+  body:has(.receipt-print-area) .dashboard-public-page > .flex,
+  body:has(.receipt-print-area) main,
+  body:has(.receipt-print-area) .receipt-print-scope {
+    display: block !important; width: 100% !important; min-height: auto !important;
+    height: auto !important; margin: 0 !important; padding: 0 !important;
+    overflow: visible !important; background: #ffffff !important;
+  }
+
+  body:has(.receipt-print-area) .receipt-print-area {
+    display: block !important; width: 100% !important; max-width: none !important;
+    margin: 0 !important; break-inside: avoid; page-break-inside: avoid;
+  }
+
+  body:has(.receipt-print-area) .receipt-print-area * { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+  body:has(.receipt-print-area) .receipt-print-area { font-size: 10px !important; }
+  body:has(.receipt-print-area) .receipt-print-area header { padding: 10px 12px !important; }
+  body:has(.receipt-print-area) .receipt-print-area header h1 { font-size: 20px !important; line-height: 1.1 !important; }
+  body:has(.receipt-print-area) .receipt-print-area header [class*="h-11"],
+  body:has(.receipt-print-area) .receipt-print-area header [class*="w-11"] { height: 34px !important; width: 34px !important; }
+  body:has(.receipt-print-area) .receipt-print-area > div.relative { padding: 10px 12px !important; }
+  body:has(.receipt-print-area) .receipt-print-area section,
+  body:has(.receipt-print-area) .receipt-print-area dl { gap: 7px !important; }
+
+  body:has(.receipt-print-area) .receipt-print-area section:first-of-type { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; margin-bottom: 8px !important; }
+  body:has(.receipt-print-area) .receipt-print-area section:first-of-type > div,
+  body:has(.receipt-print-area) .receipt-print-area dl > div,
+  body:has(.receipt-print-area) .receipt-print-area section.mt-6,
+  body:has(.receipt-print-area) .receipt-print-area div.mt-6 { border-radius: 10px !important; padding: 8px !important; }
+
+  body:has(.receipt-print-area) .receipt-print-area section:first-of-type p.mt-3,
+  body:has(.receipt-print-area) .receipt-print-area section:first-of-type > div:nth-child(2) p.mt-1,
+  body:has(.receipt-print-area) .receipt-print-area header .rounded-2xl,
+  body:has(.receipt-print-area) .receipt-print-area .shadow-lg,
+  body:has(.receipt-print-area) .receipt-print-area .shadow-sm { display: none !important; box-shadow: none !important; }
+
+  body:has(.receipt-print-area) .receipt-print-area dt,
+  body:has(.receipt-print-area) .receipt-print-area p[class*="uppercase"] { font-size: 8px !important; letter-spacing: .08em !important; }
+  body:has(.receipt-print-area) .receipt-print-area dd,
+  body:has(.receipt-print-area) .receipt-print-area p { line-height: 1.25 !important; }
+
+  body:has(.receipt-print-area) .receipt-print-area section.mt-6 { margin-top: 8px !important; }
+  body:has(.receipt-print-area) .receipt-print-area div.mt-6 { margin-top: 8px !important; }
+}

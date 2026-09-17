@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 export default function CookiesPage() {
   return (
     <div className="space-y-8">
-      <section className="rounded-[2rem] border border-border/10 bg-card/50 p-6 shadow-xl shadow-black/5 backdrop-blur-xl md:p-8">
+      <section className="app-card p-6 md:p-8">
         <Badge className="rounded-full border border-white/20 bg-white/70 px-3 py-1 text-[10px] font-black uppercase tracking-[0.24em] text-slate-700 dark:border-white/10 dark:bg-white/10 dark:text-slate-200">
           Cookies
         </Badge>
@@ -16,7 +16,7 @@ export default function CookiesPage() {
         </p>
       </section>
 
-      <Card className="glass-premium border-border/10 bg-card/40 shadow-xl shadow-black/5">
+      <Card>
         <CardHeader>
           <CardTitle className="text-xl font-black text-foreground">Cookies esenciales</CardTitle>
         </CardHeader>
@@ -27,7 +27,7 @@ export default function CookiesPage() {
         </CardContent>
       </Card>
 
-      <Card className="glass-premium border-border/10 bg-card/40 shadow-xl shadow-black/5">
+      <Card>
         <CardHeader>
           <CardTitle className="text-xl font-black text-foreground">Preferencias</CardTitle>
         </CardHeader>
@@ -37,7 +37,7 @@ export default function CookiesPage() {
         </CardContent>
       </Card>
 
-      <Card className="glass-premium border-border/10 bg-card/40 shadow-xl shadow-black/5">
+      <Card>
         <CardHeader>
           <CardTitle className="text-xl font-black text-foreground">Gestión y limitaciones</CardTitle>
         </CardHeader>

@@ -27,7 +27,7 @@ import {
   MapPin,
   Wallet,
   ArrowLeft,
-} from 'lucide-react';
+} from '@/components/ui/hugeicons';
 import { getAgentBalance } from '@/services/agent';
 import { PAYMENT_REGULATION } from '@/lib/compliance';
 
@@ -552,7 +552,7 @@ export function AgentTransferModal({ open, onOpenChange, onSuccess }: AgentTrans
                     <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 p-4">
                       <div className="flex items-center justify-between gap-3">
                         <div>
-                          <p className="text-[10px] font-bold uppercase tracking-wide text-emerald-700 dark:text-emerald-300">
+                          <p className="text-xs font-bold uppercase tracking-wide text-emerald-700 dark:text-emerald-300">
                             Comisión estimada
                           </p>
                           <p className="mt-1 text-lg font-bold text-foreground">
@@ -560,7 +560,7 @@ export function AgentTransferModal({ open, onOpenChange, onSuccess }: AgentTrans
                           </p>
                         </div>
                         <div className="text-right">
-                          <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                             Monto del envío
                           </p>
                           <p className="mt-1 text-sm font-bold text-foreground">

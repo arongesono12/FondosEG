@@ -1,0 +1,94 @@
+# =========================================================================
+# FondosEG CI — lint, typecheck, tests y build
+# -------------------------------------------------------------------------
+# Se ejecuta en cada push a `main` y en cada PR.
+# TODO: tras activar el repo en GitHub, configurar los secretos:
+#   - SUPABASE_URL    → URL del proyecto Supabase (staging)
+#   - SUPABASE_ANON   → anon key pública (staging)
+#   - CLERK_PKEY      → publishable key de Clerk (staging)
+# =========================================================================
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: Lint · Typecheck · Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    env:
+      NEXT_PUBLIC_APP_URL: http://localhost:3001
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_URL }} # CI puede arrancar sin Supabase
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON }}
+      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_ci-placeholder
+      NEXT_PUBLIC_CLERK_SIGN_IN_URL: /login
+      NEXT_PUBLIC_CLERK_SIGN_UP_URL: /register
+      NEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL: /dashboard
+      NEXT_PUBLIC_CLERK_SIGN_UP_FALLBACK_REDIRECT_URL: /dashboard
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Tests
+        run: npm test
+        env:
+          PUBLIC_RATE_LIMIT_SALT: ci_test_salt_dummy_value_32_bytes_minimum
+
+  build:
+    name: Production Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: quality
+
+    env:
+      NEXT_PUBLIC_APP_URL: http://localhost:3001
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON }}
+      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_ci-placeholder
+      NEXT_PUBLIC_CLERK_SIGN_IN_URL: /login
+      NEXT_PUBLIC_CLERK_SIGN_UP_URL: /register
+      NEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL: /dashboard
+      NEXT_PUBLIC_CLERK_SIGN_UP_FALLBACK_REDIRECT_URL: /dashboard
+      CSS_TRANSFORMER_WASM: 1
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Build
+        run: npm run build

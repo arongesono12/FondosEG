@@ -1,58 +1,32 @@
 'use client';
 
 import { useEffect } from 'react';
-import { ErrorScreen } from '@/components/layout/error-screen';
-import { ServiceUnavailableScreen } from '@/components/layout/service-unavailable-screen';
-import { isTransientNetworkMessage } from '@/lib/network-errors';
 
-export default function GlobalError({ error }: { error: Error & { digest?: string } }) {
+export default function GlobalError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   useEffect(() => {
     console.error('Global error boundary:', error);
   }, [error]);
 
-  const message = error?.message || '';
-
-  if (isTransientNetworkMessage(message)) {
-    return <ServiceUnavailableScreen retryHref="/" />;
-  }
-
-  if (message.includes('Unauthorized')) {
-    return (
-      <ErrorScreen
-        badge="401"
-        title="No autorizado"
-        description="Tu sesión no es válida o no tienes permisos para acceder a esta sección."
-        actions={[
-          { href: '/login', label: 'Iniciar sesión' },
-          { href: '/', label: 'Ir al inicio', variant: 'outline' },
-        ]}
-      />
-    );
-  }
-
-  if (message.includes('Forbidden') || message.includes('Account disabled')) {
-    return (
-      <ErrorScreen
-        badge="403"
-        title="Operación no permitida"
-        description="No tienes permisos para ejecutar esta acción. Si crees que es un error, contacta a administración."
-        actions={[
-          { href: '/dashboard', label: 'Volver al dashboard' },
-          { href: '/login', label: 'Cambiar cuenta', variant: 'outline' },
-        ]}
-      />
-    );
-  }
-
   return (
-    <ErrorScreen
-      badge="500"
-      title="Algo salió mal"
-      description="Ocurrió un error inesperado. Puedes reintentar o volver al inicio."
-      actions={[
-        { href: '/', label: 'Ir al inicio' },
-        { href: '/dashboard', label: 'Volver al dashboard', variant: 'outline' },
-      ]}
-    />
+    <html lang="es">
+      <body className="bg-background text-foreground">
+        <div className="flex min-h-screen items-center justify-center p-6">
+          <div className="w-full max-w-lg rounded-4xl border border-border/20 bg-card p-8 text-center shadow-2xl">
+            <h1 className="text-2xl font-black tracking-tight">Algo salió mal</h1>
+            <p className="mt-3 text-sm font-medium leading-6 text-muted-foreground">
+              Se produjo un error inesperado en la aplicación. Intenta recargar la página.
+            </p>
+            <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+              <button
+                onClick={reset}
+                className="inline-flex h-11 items-center justify-center rounded-2xl bg-brand-gradient px-5 text-sm font-black text-white shadow-lg shadow-pink-500/20 transition-opacity hover:opacity-90"
+              >
+                Reintentar
+              </button>
+            </div>
+          </div>
+        </div>
+      </body>
+    </html>
   );
 }

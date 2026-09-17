@@ -17,7 +17,7 @@ import {
   CheckCircle2,
   Clock,
   XCircle,
-} from 'lucide-react';
+} from '@/components/ui/hugeicons';
 import type { AgentsCommissionStats, Transfer, DashboardStats } from '@/types';
 import { isAdminRole } from '@/lib/roles';
 
@@ -106,7 +106,7 @@ function StatusBadge({ status }: { status: string }) {
   };
   const { label, cls, icon: Icon } = map[status] ?? map.created;
   return (
-    <span className={cn('inline-flex items-center gap-1 text-[10px] font-black uppercase px-2 py-0.5 rounded-full border', cls)}>
+    <span className={cn('inline-flex items-center gap-1 text-xs font-black uppercase px-2 py-0.5 rounded-full border', cls)}>
       <Icon className="h-2.5 w-2.5" /> {label}
     </span>
   );
@@ -252,7 +252,7 @@ export function GestoresModal({ open, onClose, userRole, preferredCurrency }: Ge
       {isAdminRole(userRole) && (
         <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400">
           <ShieldAlert className="h-3.5 w-3.5 shrink-0" />
-          <span className="text-[10px] font-black uppercase tracking-wide">
+          <span className="text-xs font-black uppercase tracking-wide">
             Modo supervisión — Los administradores no realizan envíos directamente
           </span>
         </div>
@@ -267,7 +267,7 @@ export function GestoresModal({ open, onClose, userRole, preferredCurrency }: Ge
         </div>
       ) : (
         transfers.map((t) => (
-          <div key={t.id} className="p-4 rounded-2xl border border-border/20 bg-card/60 hover:bg-muted/30 transition-colors">
+          <div key={t.id} className="rounded-2xl border border-border/20 bg-card p-4 transition-colors hover:bg-muted/30">
             <div className="flex items-start justify-between gap-3">
               <div className="flex items-center gap-3">
                 <Avatar className="h-10 w-10 border border-border/20 shrink-0">
@@ -277,9 +277,9 @@ export function GestoresModal({ open, onClose, userRole, preferredCurrency }: Ge
                 </Avatar>
                 <div>
                   <p className="text-sm font-black text-foreground">{t.receiver_name}</p>
-                  <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-tighter">{t.destination_city}</p>
+                  <p className="text-xs text-muted-foreground uppercase font-bold tracking-tighter">{t.destination_city}</p>
                   {t.agent?.name && (
-                    <p className="text-[10px] text-primary font-black uppercase">Gestor: {t.agent.name}</p>
+                    <p className="text-xs text-primary font-black uppercase">Gestor: {t.agent.name}</p>
                   )}
                 </div>
               </div>
@@ -289,8 +289,8 @@ export function GestoresModal({ open, onClose, userRole, preferredCurrency }: Ge
               </div>
             </div>
             <div className="flex items-center justify-between mt-3 pt-3 border-t border-border/10">
-              <span className="text-[10px] font-bold text-muted-foreground font-mono">#{t.transfer_code}</span>
-              <span className="text-[10px] font-bold text-muted-foreground">
+              <span className="text-xs font-bold text-muted-foreground font-mono">#{t.transfer_code}</span>
+              <span className="text-xs font-bold text-muted-foreground">
                 {formatDateShort(t.created_at)}
               </span>
             </div>
@@ -343,14 +343,14 @@ export function VolumenSemanalModal({ open, onClose, preferredCurrency }: Volume
           {/* Summary cards */}
           <div className="grid grid-cols-2 gap-3">
           <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/20">
-              <p className="text-[10px] font-black uppercase text-rose-500 tracking-wide">Total Envíos</p>
+              <p className="text-xs font-black uppercase text-rose-500 tracking-wide">Total Envíos</p>
               <p className="text-2xl font-black text-foreground mt-1">{totals.count}</p>
-              <p className="text-[10px] text-muted-foreground">en los últimos 7 días</p>
+              <p className="text-xs text-muted-foreground">en los últimos 7 días</p>
             </div>
           <div className="p-4 rounded-2xl bg-blue-500/10 border border-blue-500/20">
-              <p className="text-[10px] font-black uppercase text-blue-500 tracking-wide">Volumen Total</p>
+              <p className="text-xs font-black uppercase text-blue-500 tracking-wide">Volumen Total</p>
               <p className="text-xl font-black text-foreground mt-1">{fmt(totals.amount)}</p>
-              <p className="text-[10px] text-muted-foreground">acumulado semanal</p>
+              <p className="text-xs text-muted-foreground">acumulado semanal</p>
             </div>
           </div>
 
@@ -363,7 +363,7 @@ export function VolumenSemanalModal({ open, onClose, preferredCurrency }: Volume
                 const dayName = DAYS_ES[new Date(d.date).getDay()];
                 return (
                   <div key={d.date} className="flex-1 flex flex-col items-center gap-1.5">
-                    <span className="text-[9px] font-black text-muted-foreground">{d.transfer_count}</span>
+                    <span className="text-[11px] font-black text-muted-foreground">{d.transfer_count}</span>
                     <div className="w-full relative flex flex-col justify-end h-28">
                       <div className="absolute inset-x-0 bottom-0 bg-muted/30 rounded-xl h-full" />
                       <div
@@ -372,7 +372,7 @@ export function VolumenSemanalModal({ open, onClose, preferredCurrency }: Volume
                         title={fmt(d.total_amount)}
                       />
                     </div>
-                    <span className="text-[9px] font-black text-muted-foreground">{dayName}</span>
+                    <span className="text-[11px] font-black text-muted-foreground">{dayName}</span>
                   </div>
                 );
               })}
@@ -391,7 +391,7 @@ export function VolumenSemanalModal({ open, onClose, preferredCurrency }: Volume
                     <p className="text-sm font-black text-foreground">
                       {formatDateWithWeekday(d.date)}
                     </p>
-                    <p className="text-[10px] text-muted-foreground">{d.transfer_count} transferencia{d.transfer_count !== 1 ? 's' : ''}</p>
+                    <p className="text-xs text-muted-foreground">{d.transfer_count} transferencia{d.transfer_count !== 1 ? 's' : ''}</p>
                   </div>
                 </div>
                 <p className="text-sm font-black text-foreground">{fmt(d.total_amount)}</p>
@@ -482,20 +482,20 @@ export function SoporteModal({
 
       {/* Mock Chat Messages */}
       <div className="space-y-3">
-        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-wide">Mensajes recientes</p>
+        <p className="text-xs font-black text-muted-foreground uppercase tracking-wide">Mensajes recientes</p>
         {mockMessages.map((msg) => (
           <div key={msg.id} className="flex flex-col items-start gap-1">
             <div className="bg-muted px-4 py-2.5 rounded-2xl rounded-tl-none max-w-[85%]">
               <p className="text-sm font-bold text-foreground">{msg.text}</p>
             </div>
-            <span className="text-[9px] font-bold text-muted-foreground/60 uppercase pl-1">Admin · {msg.time}</span>
+            <span className="text-[11px] font-bold text-muted-foreground/60 uppercase pl-1">Admin · {msg.time}</span>
           </div>
         ))}
       </div>
 
       {/* Quick Actions */}
       <div className="space-y-2">
-        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-wide">Acciones rápidas</p>
+        <p className="text-xs font-black text-muted-foreground uppercase tracking-wide">Acciones rápidas</p>
         <div className="grid grid-cols-1 gap-2">
           {actions.map((a) => {
             const Icon = a.icon;
@@ -549,24 +549,24 @@ export function ComisionesModal({ open, onClose, userRole, stats, commissionStat
           {/* Admin: Ver todos los agentes con sus comisiones */}
           <div className="grid grid-cols-2 gap-3 mb-4">
             <div className="p-4 rounded-2xl bg-green-500/10 border border-green-500/20">
-              <p className="text-[10px] font-black uppercase text-green-500">Total Comisión</p>
+              <p className="text-xs font-black uppercase text-green-500">Total Comisión</p>
               <p className="text-xl font-black text-foreground">{fmt(commissionStats?.totalCommission || 0)}</p>
             </div>
             <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20">
-              <p className="text-[10px] font-black uppercase text-emerald-500">Hoy</p>
+              <p className="text-xs font-black uppercase text-emerald-500">Hoy</p>
               <p className="text-xl font-black text-foreground">{fmt(commissionStats?.todayCommission || 0)}</p>
             </div>
             <div className="p-4 rounded-2xl bg-sky-500/10 border border-sky-500/20">
-              <p className="text-[10px] font-black uppercase text-sky-500">Mes actual</p>
+              <p className="text-xs font-black uppercase text-sky-500">Mes actual</p>
               <p className="text-xl font-black text-foreground">{fmt(commissionStats?.monthCommission || 0)}</p>
             </div>
             <div className="p-4 rounded-2xl bg-violet-500/10 border border-violet-500/20">
-              <p className="text-[10px] font-black uppercase text-violet-500">Anual</p>
+              <p className="text-xs font-black uppercase text-violet-500">Anual</p>
               <p className="text-xl font-black text-foreground">{fmt(commissionStats?.yearCommission || 0)}</p>
             </div>
           </div>
 
-          <p className="text-[10px] font-black text-muted-foreground uppercase tracking-wide mb-2">Comisiones por gestor</p>
+          <p className="text-xs font-black text-muted-foreground uppercase tracking-wide mb-2">Comisiones por gestor</p>
            <div className="space-y-2">
              {(commissionStats?.agents || []).map((agent) => (
                <div key={agent.agent_id} className="flex items-center justify-between p-3 rounded-xl border border-border/10 hover:bg-muted/30">
@@ -576,13 +576,13 @@ export function ComisionesModal({ open, onClose, userRole, stats, commissionStat
                    </div>
                   <div>
                     <p className="text-sm font-bold text-foreground">{agent.agent_name}</p>
-                    <p className="text-[10px] text-muted-foreground">{agent.transfer_count} envíos</p>
+                    <p className="text-xs text-muted-foreground">{agent.transfer_count} envíos</p>
                   </div>
                 </div>
                 <div className="text-right">
                   <p className="text-sm font-black text-green-600">{fmt(agent.total_commission)}</p>
-                  <p className="text-[10px] text-muted-foreground">hoy: {fmt(agent.today_commission)}</p>
-                  <p className="text-[10px] text-muted-foreground">mes: {fmt(agent.month_commission)} | anual: {fmt(agent.year_commission)}</p>
+                  <p className="text-xs text-muted-foreground">hoy: {fmt(agent.today_commission)}</p>
+                  <p className="text-xs text-muted-foreground">mes: {fmt(agent.month_commission)} | anual: {fmt(agent.year_commission)}</p>
                 </div>
               </div>
             ))}
@@ -593,29 +593,29 @@ export function ComisionesModal({ open, onClose, userRole, stats, commissionStat
           {/* Gestor: Sus propias comisiones */}
           <div className="grid grid-cols-1 gap-3">
             <div className="p-5 rounded-2xl bg-green-500/10 border border-green-500/20">
-              <p className="text-[10px] font-black uppercase text-green-500">Mi Comisión Total</p>
+              <p className="text-xs font-black uppercase text-green-500">Mi Comisión Total</p>
               <p className="text-3xl font-black text-foreground">{fmt(stats?.totalCommission || 0)}</p>
-              <p className="text-[10px] text-muted-foreground mt-1">Ganancias acumuladas por todos tus envíos</p>
+              <p className="text-xs text-muted-foreground mt-1">Ganancias acumuladas por todos tus envíos</p>
             </div>
             <div className="p-5 rounded-2xl bg-emerald-500/10 border border-emerald-500/20">
-              <p className="text-[10px] font-black uppercase text-emerald-500">Comisión Hoy</p>
+              <p className="text-xs font-black uppercase text-emerald-500">Comisión Hoy</p>
               <p className="text-2xl font-black text-foreground">{fmt(stats?.todayCommission || 0)}</p>
-              <p className="text-[10px] text-muted-foreground mt-1">Ganado el día de hoy</p>
+              <p className="text-xs text-muted-foreground mt-1">Ganado el día de hoy</p>
             </div>
             <div className="p-5 rounded-2xl bg-sky-500/10 border border-sky-500/20">
-              <p className="text-[10px] font-black uppercase text-sky-500">Mes actual</p>
+              <p className="text-xs font-black uppercase text-sky-500">Mes actual</p>
               <p className="text-2xl font-black text-foreground">{fmt(stats?.monthlyCommission || 0)}</p>
-              <p className="text-[10px] text-muted-foreground mt-1">Comisión acumulada del mes en curso</p>
+              <p className="text-xs text-muted-foreground mt-1">Comisión acumulada del mes en curso</p>
             </div>
             <div className="p-5 rounded-2xl bg-violet-500/10 border border-violet-500/20">
-              <p className="text-[10px] font-black uppercase text-violet-500">Anual</p>
+              <p className="text-xs font-black uppercase text-violet-500">Anual</p>
               <p className="text-2xl font-black text-foreground">{fmt(stats?.yearlyCommission || 0)}</p>
-              <p className="text-[10px] text-muted-foreground mt-1">Comision acumulada del ano en curso</p>
+              <p className="text-xs text-muted-foreground mt-1">Comision acumulada del ano en curso</p>
             </div>
             <div className="p-5 rounded-2xl bg-teal-500/10 border border-teal-500/20">
-              <p className="text-[10px] font-black uppercase text-teal-500">Promedio por Envío</p>
+              <p className="text-xs font-black uppercase text-teal-500">Promedio por Envío</p>
               <p className="text-2xl font-black text-foreground">{fmt(stats?.commissionPerTransfer || 0)}</p>
-              <p className="text-[10px] text-muted-foreground mt-1">Comisión media por transacción</p>
+              <p className="text-xs text-muted-foreground mt-1">Comisión media por transacción</p>
             </div>
           </div>
         </>

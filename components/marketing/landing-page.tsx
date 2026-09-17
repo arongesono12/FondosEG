@@ -9,10 +9,9 @@ import {
   Clock3, Code2, Eye, Facebook, Headphones, Linkedin, LockKeyhole, Mail,
   Menu, Network, Phone, Play, Quote, ShieldCheck, TrendingUp, Twitter,
   Users, WalletCards, X, Youtube, Zap,
-} from 'lucide-react';
+} from '@/components/ui/hugeicons';
 
 import { DashboardLogo } from '@/components/layout/dashboard-logo';
-import { ThemeToggle } from '@/components/theme-toggle';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 import {
@@ -80,7 +79,7 @@ function Header() {
           {resourcesOpen && <div className="resources-menu" role="menu"><Link role="menuitem" href="/documentation" onClick={() => setResourcesOpen(false)}><BookOpen /> <span><strong>Documentación</strong><small>Guías, API y recursos técnicos</small></span><ArrowRight /></Link></div>}
         </div>
       </nav>
-      <div className="landing-actions"><ThemeToggle />
+      <div className="landing-actions">
         {/* Hasta que Clerk resuelve la sesión se muestran los enlaces públicos:
             evita un hueco durante la carga y no filtra estado de sesión. */}
         {isSignedIn ? (
@@ -133,7 +132,7 @@ export function LandingPage() {
   </section>
 
   <StaggerContainerFast><section className="stats-grid">
-    <StaggerItem><Stat icon={Network} value="250K+" label="Transacciones procesadas" tone="purple"/></StaggerItem><StaggerItem><Stat icon={CircleDollarSign} value="XAF 12.5M" label="Dinero movido por nuestros usuarios" tone="blue"/></StaggerItem><StaggerItem><Stat icon={ShieldCheck} value="99.9%" label="Seguimiento operativo en tiempo real" tone="green"/></StaggerItem><StaggerItem><Stat icon={Headphones} value="24/7" label="Soporte humano siempre disponible" tone="pink"/></StaggerItem>
+    <StaggerItem><Stat icon={Network} value="250K+" label="Transacciones procesadas" tone="purple"/></StaggerItem><StaggerItem><Stat icon={CircleDollarSign} value="$12.5M" label="Dinero movido por nuestros usuarios" tone="blue"/></StaggerItem><StaggerItem><Stat icon={ShieldCheck} value="99.9%" label="Seguimiento operativo en tiempo real" tone="green"/></StaggerItem><StaggerItem><Stat icon={Headphones} value="24/7" label="Soporte humano siempre disponible" tone="pink"/></StaggerItem>
   </section></StaggerContainerFast>
 
   <section className="landing-section"><FadeIn><SectionTitle eyebrow="TODO LO QUE NECESITAS">Potentes herramientas para <span>mover tu negocio</span></SectionTitle></FadeIn><StaggerContainer><div className="feature-grid">{tools.map(({icon:Icon,...f})=><StaggerItem key={f.title}><article className="feature-card"><div className={`icon-box ${f.tone}`}><Icon /></div><h3>{f.title}</h3><p>{f.text}</p><Link className={f.tone} href={f.href} aria-label={`Más información sobre ${f.title.replace('\n', ' ')}`}>Saber más <ArrowRight /></Link></article></StaggerItem>)}</div></StaggerContainer></section>

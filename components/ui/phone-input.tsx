@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { COUNTRIES } from '@/lib/countries';
-import { ChevronDown, Search } from 'lucide-react';
+import { ChevronDown, Search } from '@/components/ui/hugeicons';
 
 interface PhoneInputProps {
   value: string;

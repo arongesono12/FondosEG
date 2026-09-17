@@ -20,7 +20,7 @@ import {
   Webhook,
   X,
   Zap,
-} from 'lucide-react';
+} from '@/components/ui/hugeicons';
 
 import { DashboardLogo } from '@/components/layout/dashboard-logo';
 import { ThemeToggle } from '@/components/theme-toggle';
@@ -425,7 +425,7 @@ function ApiHeroVisual() {
   }
 
   return (
-    <div className="relative min-h-[610px] min-w-0 overflow-visible">
+    <div className="documentation-code-stage relative min-h-[610px] min-w-0 overflow-visible">
       <div className="pointer-events-none absolute left-[12%] top-[72px] h-px w-[28%] bg-gradient-to-r from-white/40 via-emerald-400/55 to-emerald-400/20" />
       <div className="pointer-events-none absolute left-[11.6%] top-[68px] h-2 w-2 rounded-full bg-white/55 shadow-[0_0_10px_rgba(255,255,255,.8)]" />
       <div className="pointer-events-none absolute left-[40%] top-[72px] h-[92px] w-px bg-gradient-to-b from-emerald-400/25 to-pink-400/75" />
@@ -437,7 +437,7 @@ function ApiHeroVisual() {
       <div className="pointer-events-none absolute right-0 top-[225px] h-px w-[17%] bg-gradient-to-l from-pink-400 via-fuchsia-400/70 to-transparent" />
       <div className="pointer-events-none absolute right-0 top-[221px] h-2 w-2 rounded-full bg-pink-400 shadow-[0_0_12px_rgba(244,114,182,.95)]" />
 
-      <div className="absolute left-[12%] top-[32px] z-30 h-[270px] w-[72%] overflow-hidden rounded-2xl border border-pink-500/80 bg-[#10071a]/95 shadow-[0_24px_70px_rgba(15,3,25,.55),0_0_45px_rgba(236,72,153,.10)]">
+      <div className="documentation-code-card documentation-code-card--request absolute left-[16%] top-[36px] z-30 h-[270px] w-[74%] overflow-hidden rounded-2xl border border-pink-500/80 bg-[#10071a]/95 shadow-[0_24px_70px_rgba(15,3,25,.55),0_0_45px_rgba(236,72,153,.10)]">
         <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
           <div className="flex items-center gap-7 text-sm font-bold text-white">
             <span className="flex items-center gap-2"><span className="h-3 w-3 rounded-full bg-emerald-400" /> cURL</span>
@@ -452,7 +452,7 @@ function ApiHeroVisual() {
         <pre className="h-[212px] overflow-hidden px-6 py-4 text-[12px] leading-[19px] text-slate-200"><code>{heroTransferCurl}</code></pre>
       </div>
 
-      <div className="absolute left-0 top-[332px] z-20 h-[238px] w-[44%] overflow-hidden rounded-2xl border border-pink-500/60 bg-[#080c19]/95 shadow-[0_22px_60px_rgba(3,7,18,.50),0_0_38px_rgba(236,72,153,.08)]">
+      <div className="documentation-code-card absolute left-0 top-[334px] z-20 h-[238px] w-[46%] overflow-hidden rounded-2xl border border-pink-500/60 bg-[#080c19]/95 shadow-[0_22px_60px_rgba(3,7,18,.50),0_0_38px_rgba(236,72,153,.08)]">
         <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
           <span className="flex items-center gap-2 text-sm font-bold text-white"><span className="h-3 w-3 rounded-full bg-emerald-400" /> 200 OK</span>
           <span className="flex items-center gap-1 text-xs font-semibold text-white/60">JSON <ChevronRight className="h-3.5 w-3.5 rotate-90" /></span>
@@ -460,7 +460,7 @@ function ApiHeroVisual() {
         <pre className="h-[180px] overflow-hidden px-6 py-4 text-[11px] leading-[18px] text-emerald-200"><code>{heroResponseJson}</code></pre>
       </div>
 
-      <div className="absolute left-[48%] top-[332px] z-20 h-[252px] w-[48%] overflow-hidden rounded-2xl border border-purple-500/75 bg-[#080c19]/95 shadow-[0_22px_60px_rgba(3,7,18,.50),0_0_38px_rgba(168,85,247,.10)]">
+      <div className="documentation-code-card absolute left-[50%] top-[334px] z-20 h-[252px] w-[49%] overflow-hidden rounded-2xl border border-purple-500/75 bg-[#080c19]/95 shadow-[0_22px_60px_rgba(3,7,18,.50),0_0_38px_rgba(168,85,247,.10)]">
         <div className="border-b border-white/10 px-5 py-4">
           <p className="flex items-center gap-2 text-sm font-bold text-white"><span className="h-3 w-3 rounded-full bg-purple-400" /> Webhook</p>
           <p className="mt-1 text-xs font-semibold text-white/60">transfer.completed</p>
@@ -480,8 +480,9 @@ export function ApiDocumentation() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-background text-foreground transition-colors duration-300">
-      <header className="sticky top-0 z-50 border-b border-border/40 bg-background/85 backdrop-blur-2xl transition-colors duration-300 dark:border-white/10 dark:bg-[#060b17]/90">
+    <div className="documentation-page dark min-h-screen font-sans text-foreground">
+      <div className="documentation-shell relative flex min-h-screen w-full flex-col">
+      <header className="documentation-header sticky top-0 z-50 border-b border-white/10 bg-[#030914]">
         <div className="mx-auto flex h-[68px] max-w-[1500px] items-center justify-between px-4 lg:px-8">
           <div className="flex items-center gap-4">
             <Link href="/" aria-label="FondosEG inicio"><DashboardLogo size="md" priority /></Link>
@@ -490,7 +491,7 @@ export function ApiDocumentation() {
           </div>
           <div className="flex items-center gap-2">
             <span className="hidden rounded-full border border-emerald-400/20 bg-emerald-400/10 px-4 py-2 text-xs font-bold text-emerald-300 shadow-[0_0_30px_rgba(16,185,129,0.12)] sm:block">API v1 – Operativa</span>
-            <ThemeToggle />
+            <div className="documentation-theme-control"><ThemeToggle /></div>
             <Button asChild className="hidden rounded-2xl bg-brand-gradient px-6 font-bold text-white shadow-[0_14px_45px_rgba(236,72,153,0.35)] sm:inline-flex">
               <Link href="/developers-portal">Obtener credenciales <ArrowRight className="h-4 w-4" /></Link>
             </Button>
@@ -501,17 +502,17 @@ export function ApiDocumentation() {
         </div>
       </header>
 
-      <div className="grid w-full lg:grid-cols-[240px_minmax(0,1fr)] lg:pl-[clamp(0px,10.5vw,240px)]">
-        <aside className={cn('border-r border-border/40 bg-background/95 px-5 py-8 transition-colors duration-300 dark:border-white/10 dark:bg-[#050b16]/95 lg:sticky lg:top-[68px] lg:block lg:h-[calc(100vh-68px)]', mobileNavOpen ? 'block' : 'hidden')}>
-          <p className="mb-5 px-3 text-[10px] font-bold uppercase tracking-[0.36em] text-muted-foreground">Guía de integración</p>
+      <div className="documentation-layout grid w-full lg:grid-cols-[240px_minmax(0,1fr)] lg:pl-[clamp(0px,10.5vw,240px)]">
+        <aside className={cn('documentation-sidebar border-r border-white/10 bg-[#040b17] px-5 py-7 lg:sticky lg:top-[68px] lg:block lg:h-[calc(100vh-68px)]', mobileNavOpen ? 'block' : 'hidden')}>
+          <p className="mb-1 px-3 text-[10px] font-bold uppercase tracking-[0.36em] text-muted-foreground">Guía de integración</p>
           <nav className="space-y-1">
             {sections.map((section) => (
-              <a key={section.id} href={`#${section.id}`} onClick={() => setMobileNavOpen(false)} className="group flex items-center justify-between rounded-xl px-3 py-3 text-[15px] font-medium text-muted-foreground transition hover:bg-accent hover:text-foreground dark:hover:bg-white/[0.04] dark:hover:text-white">
+              <a key={section.id} href={`#${section.id}`} onClick={() => setMobileNavOpen(false)} className="group flex items-center justify-between rounded-xl px-3 py-2.5 text-[15px] font-medium text-muted-foreground transition hover:bg-accent hover:text-foreground dark:hover:bg-white/[0.04] dark:hover:text-white">
                 {section.label}<ChevronRight className="h-3.5 w-3.5 opacity-0 transition group-hover:opacity-100" />
               </a>
             ))}
           </nav>
-          <div className="mt-10 rounded-2xl border border-border/40 bg-card p-5 shadow-[0_20px_55px_rgba(2,6,23,0.08)] transition-colors duration-300 dark:border-white/10 dark:bg-[#071120]/80 dark:shadow-[0_20px_55px_rgba(0,0,0,0.22)]">
+          <div className="mt-5 rounded-2xl border border-border/40 bg-card p-5 shadow-[0_20px_55px_rgba(2,6,23,0.08)] transition-colors duration-300 dark:border-white/10 dark:bg-[#071120]/80 dark:shadow-[0_20px_55px_rgba(0,0,0,0.22)]">
             <BookOpen className="h-6 w-6 text-pink-400" />
             <p className="mt-5 text-base font-bold text-foreground">Referencia completa</p>
             <p className="mt-2 text-sm leading-6 text-muted-foreground">Especificación OpenAPI 3.1 lista para Postman, Insomnia o generación de clientes.</p>
@@ -520,19 +521,19 @@ export function ApiDocumentation() {
         </aside>
 
         <main className="min-w-0">
-          <section id="introduccion" className="relative flex min-h-[calc(100vh-68px)] min-w-0 flex-col overflow-hidden border-b border-border/40 bg-background px-5 py-10 transition-colors duration-300 dark:border-white/10 dark:bg-[#020817] sm:px-8 lg:px-10 2xl:min-h-[875px] 2xl:px-14 2xl:py-12 2xl:pb-12">
-            <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(15,23,42,0.055)_1px,transparent_1px),linear-gradient(90deg,rgba(15,23,42,0.055)_1px,transparent_1px)] bg-[size:32px_32px] dark:bg-[linear-gradient(rgba(148,163,184,0.035)_1px,transparent_1px),linear-gradient(90deg,rgba(148,163,184,0.035)_1px,transparent_1px)]" />
-            <div className="pointer-events-none absolute inset-y-0 right-0 w-[52%] bg-linear-to-l from-pink-500/10 via-fuchsia-500/5 to-transparent dark:from-pink-600/18 dark:via-fuchsia-500/8" />
-            <div className="relative flex-1 2xl:grid 2xl:grid-cols-[minmax(0,650px)_minmax(0,1fr)] 2xl:grid-rows-[610px_auto] 2xl:gap-x-8">
-              <div className="min-w-0 max-w-[690px] 2xl:pt-[82px]">
-                <div className="inline-flex items-center gap-2 rounded-full border border-pink-500/35 bg-pink-500/10 px-4 py-2 text-sm font-bold text-pink-600 dark:border-pink-400/35 dark:bg-pink-400/10 dark:text-pink-200"><Zap className="h-4 w-4" /> FondosEG API v1</div>
-                <h1 className="mt-8 max-w-[740px] text-4xl font-black leading-[1.05] tracking-[-0.045em] text-foreground sm:text-5xl xl:text-[50px] 2xl:text-[56px]">Integra pagos y transferencias con una API clara y segura.</h1>
-                <p className="mt-7 max-w-[640px] text-base font-medium leading-8 text-muted-foreground 2xl:text-lg 2xl:leading-9">Conecta tu backend con FondosEG para consultar saldos, mover dinero, gestionar alquileres y recibir eventos en tiempo real. Empieza en pruebas y pasa a producción sin cambiar tu implementación.</p>
+          <section id="introduccion" className="documentation-hero relative flex min-h-[calc(100vh-68px)] min-w-0 flex-col overflow-hidden border-b border-white/10 bg-[#020817] px-5 sm:px-8 lg:px-10">
+            <div className="documentation-hero-grid-pattern pointer-events-none absolute inset-0" />
+            <div className="documentation-hero-aura pointer-events-none absolute inset-y-0 right-0 w-[58%]" />
+            <div className="documentation-hero-grid relative flex-1">
+              <div className="documentation-hero-copy min-w-0 max-w-[690px]">
+                <div className="inline-flex items-center gap-2 rounded-full border border-pink-500/35 bg-pink-500/10 px-4 py-1.5 text-xs font-bold text-pink-600 dark:border-pink-400/35 dark:bg-pink-400/10 dark:text-pink-200"><Zap className="h-4 w-4" /> FondosEG API v1</div>
+                <h1 className="mt-8 max-w-[740px] text-4xl font-black leading-[1.08] tracking-[-0.045em] text-foreground sm:text-5xl">Integra pagos y transferencias con una API clara y segura.</h1>
+                <p className="mt-7 max-w-[640px] text-base font-medium leading-8 text-muted-foreground">Conecta tu backend con FondosEG para consultar saldos, mover dinero, gestionar alquileres y recibir eventos en tiempo real. Empieza en pruebas y pasa a producción sin cambiar tu implementación.</p>
                 <div className="mt-8 flex flex-wrap gap-4">
-                  <Button asChild size="lg" className="h-14 rounded-2xl bg-brand-gradient px-7 font-bold text-white"><Link href="#inicio-rapido">Empezar a integrar <ArrowRight /></Link></Button>
-                  <Button asChild size="lg" variant="outline" className="h-14 rounded-2xl border-border/60 bg-card px-7 font-bold text-foreground hover:bg-accent dark:border-white/10 dark:bg-[#071120]/80 dark:text-white dark:hover:bg-white/10"><Link href="/api/docs/openapi.json" target="_blank">Ver OpenAPI <ExternalLink /></Link></Button>
+                  <Button asChild size="lg" className="h-12 rounded-xl bg-brand-gradient px-7 font-bold text-white"><Link href="#inicio-rapido">Empezar a integrar <ArrowRight /></Link></Button>
+                  <Button asChild size="lg" variant="outline" className="h-12 rounded-xl border-border/60 bg-card px-7 font-bold text-foreground hover:bg-accent dark:border-white/10 dark:bg-[#071120]/80 dark:text-white dark:hover:bg-white/10"><Link href="/api/docs/openapi.json" target="_blank">Ver OpenAPI <ExternalLink /></Link></Button>
                 </div>
-                <div className="mt-9 flex flex-wrap gap-2">
+                <div className="mt-5 flex flex-wrap gap-2">
                   {capabilityChips.map(({ label, icon: Icon, color }) => (
                     <span key={label} className="inline-flex h-12 items-center gap-2 rounded-xl border border-border/60 bg-card px-4 text-sm font-semibold text-foreground transition-colors duration-300 dark:border-white/10 dark:bg-[#071120]/85 dark:text-white">
                       <Icon className={cn('h-4 w-4', color)} />
@@ -541,10 +542,10 @@ export function ApiDocumentation() {
                   ))}
                 </div>
               </div>
-              <div className="hidden min-w-0 xl:mt-10 xl:block 2xl:col-start-2 2xl:row-start-1 2xl:mt-0 2xl:pt-[28px]">
+              <div className="documentation-hero-visual min-w-0">
                 <ApiHeroVisual />
               </div>
-              <div className="relative mt-10 grid gap-4 sm:grid-cols-3 2xl:col-span-2 2xl:row-start-2 2xl:mt-0 2xl:w-[1048px]">
+              <div className="documentation-proof-grid relative grid gap-4 sm:grid-cols-3">
                 {[['REST + JSON', 'Interfaz estándar y predecible'], ['Entorno test', 'Prueba sin mover dinero real'], ['Webhooks HMAC', 'Eventos verificados y deduplicables']].map(([title, detail]) => (
                   <div key={title} className="min-h-[120px] rounded-2xl border border-border/60 bg-card p-6 transition-colors duration-300 dark:border-white/10 dark:bg-[#071120]/85"><CheckCircle2 className="h-5 w-5 text-emerald-400" /><p className="mt-4 text-sm font-bold text-foreground">{title}</p><p className="mt-2 text-sm leading-5 text-muted-foreground">{detail}</p></div>
                 ))}
@@ -563,7 +564,7 @@ export function ApiDocumentation() {
                   [Rocket, '04', 'Valida y despliega', 'Prueba idempotencia, errores y webhooks antes de solicitar credenciales de producción.'],
                 ].map(([Icon, number, title, detail]) => {
                   const StepIcon = Icon as typeof KeyRound;
-                  return <div key={String(number)} className="rounded-3xl border border-border/40 bg-card/40 p-6"><div className="flex items-center justify-between"><StepIcon className="h-6 w-6 text-pink-500" /><span className="text-3xl font-black text-muted/80">{String(number)}</span></div><h3 className="mt-5 text-lg font-bold">{String(title)}</h3><p className="mt-2 text-sm leading-6 text-muted-foreground">{String(detail)}</p></div>;
+                  return <div key={String(number)} className="app-card p-6"><div className="flex items-center justify-between"><StepIcon className="h-6 w-6 text-pink-500" /><span className="text-3xl font-black text-muted/80">{String(number)}</span></div><h3 className="mt-5 text-lg font-bold">{String(title)}</h3><p className="mt-2 text-sm leading-6 text-muted-foreground">{String(detail)}</p></div>;
                 })}
               </div>
             </section>
@@ -639,6 +640,7 @@ const signature = request.headers.get(
 
           <footer className="border-t border-border/40 px-5 py-8 sm:px-10 lg:px-14"><div className="flex flex-col gap-4 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between"><DashboardLogo size="sm" /><p>FondosEG API v1 · Diseñada para integraciones seguras.</p></div></footer>
         </main>
+      </div>
       </div>
     </div>
   );

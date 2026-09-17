@@ -117,6 +117,9 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: process.cwd(),
   },
+  // Standalone output: permite servir la app desde el contenedor del Dockerfile
+  // con `node server.js`, sin Node modules completos en la imagen final.
+  output: "standalone",
   async headers() {
     return [{ source: "/(.*)", headers: securityHeaders }];
   },

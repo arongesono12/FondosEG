@@ -1,0 +1,206 @@
+/* =========================================================================
+   DESIGN TOKENS — Fuente única de verdad para colores, superficies y radios
+   -------------------------------------------------------------------------
+   Los valores se mantienen sincronizados con lib/design-tokens.ts.
+   ========================================================================= */
+
+/* --- Superficies (modo claro) --- */
+:root {
+  --font-fondoseg-primary: "Poppins", sans-serif;
+  --font-fondoseg-secondary: "Roboto", sans-serif;
+  --background: hsl(220 33% 98%);
+  --foreground: hsl(224 71.4% 4.1%);
+
+  --surface: hsl(0 0% 100%);
+  --surface-2: hsl(210 40% 98%);
+  --surface-fg: hsl(224 71.4% 4.1%);
+  --surface-border: hsl(215 25% 89%);
+  --surface-highlight: rgba(15, 23, 42, .06);
+  --surface-glow: rgba(236, 72, 153, .14);
+  --surface-shadow: 0 30px 80px -20px rgba(15, 23, 42, .28);
+
+  --card: var(--surface);
+  --card-foreground: var(--surface-fg);
+  --popover: var(--surface);
+  --popover-foreground: var(--surface-fg);
+  --primary: hsl(346 80% 55%);
+  --primary-foreground: hsl(0 0% 100%);
+  --secondary: hsl(220 14.3% 95.9%);
+  --secondary-foreground: hsl(220.9 39.3% 11%);
+  --muted: hsl(220 14.3% 95.9%);
+  --muted-foreground: hsl(215 19% 35%);
+  --accent: hsl(346 80% 55% / 0.1);
+  --accent-foreground: hsl(346 80% 55%);
+  --destructive: hsl(0 84.2% 60.2%);
+  --destructive-foreground: hsl(210 20% 98%);
+  --border: hsl(220 13% 91% / 0.3);
+  --input: hsl(220 13% 91% / 0.3);
+  --ring: hsl(346 80% 55%);
+  --radius: 1.5rem;
+
+  /* Chart palette (shadcn chart) */
+  --chart-1: hsl(346 80% 55%);
+  --chart-2: hsl(200 98% 49%);
+  --chart-3: hsl(160 84% 44%);
+  --chart-4: hsl(38 92% 50%);
+  --chart-5: hsl(262 83% 58%);
+
+  /* Glass Effects */
+  --glass-border: rgba(2, 6, 23, 0.08);
+  --glass-glow: rgba(255, 255, 255, 0.75);
+  --glass-overlay-top: rgba(255, 255, 255, 0.35);
+  --glass-overlay-bottom: rgba(255, 255, 255, 0.10);
+  --glass-radial: rgba(255, 255, 255, 0.25);
+  --glass-edge-strong: rgba(255, 255, 255, 0.65);
+  --glass-edge-soft: rgba(255, 255, 255, 0.25);
+  --glass-shadow: 0 18px 60px rgba(2, 6, 23, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  --glass-shadow-hover: 0 22px 80px rgba(2, 6, 23, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+
+  --app-card-radius: 20px;
+  --app-card-bg: var(--surface);
+  --app-card-border: hsl(215 25% 89% / .78);
+  --app-card-shadow: 0 8px 28px rgba(15, 23, 42, .06);
+  --app-card-shadow-hover: 0 12px 34px rgba(15, 23, 42, .09);
+  --app-control-radius: 12px;
+}
+
+/* --- Superficies (modo oscuro) --- */
+.dark {
+  --background: hsl(224 71% 4%);
+  --foreground: hsl(210 20% 98%);
+
+  --surface: hsl(217 60% 9%);
+  --surface-2: hsl(222 60% 6%);
+  --surface-fg: hsl(210 20% 98%);
+  --surface-border: hsl(215 20% 40%);
+  --surface-highlight: rgba(255, 255, 255, .16);
+  --surface-glow: rgba(244, 114, 182, .14);
+  --surface-shadow: 0 30px 90px -20px rgba(0, 0, 0, .65);
+
+  --card: var(--surface);
+  --card-foreground: var(--surface-fg);
+  --popover: var(--surface);
+  --popover-foreground: var(--surface-fg);
+  --primary: hsl(346 80% 55%);
+  --primary-foreground: hsl(0 0% 100%);
+  --secondary: hsl(222.2 47.4% 11.2%);
+  --secondary-foreground: hsl(210 20% 98%);
+  --muted: hsl(222.2 47.4% 11.2%);
+  --muted-foreground: hsl(215 20% 65%);
+  --accent: hsl(346 80% 55% / 0.2);
+  --accent-foreground: hsl(210 20% 98%);
+  --destructive: hsl(0 62.8% 30.6%);
+  --destructive-foreground: hsl(210 20% 98%);
+  --border: hsl(217.2 32.6% 17.5% / 0.2);
+  --input: hsl(217.2 32.6% 17.5% / 0.2);
+  --ring: hsl(346 80% 55%);
+
+  /* Chart palette (shadcn chart) */
+  --chart-1: hsl(346 80% 55%);
+  --chart-2: hsl(200 95% 55%);
+  --chart-3: hsl(160 70% 45%);
+  --chart-4: hsl(38 90% 55%);
+  --chart-5: hsl(262 75% 62%);
+
+  /* Glass Dark Effects */
+  --glass-border: rgba(255, 255, 255, 0.10);
+  --glass-glow: rgba(255, 255, 255, 0.20);
+  --glass-overlay-top: rgba(255, 255, 255, 0.08);
+  --glass-overlay-bottom: rgba(255, 255, 255, 0.02);
+  --glass-radial: rgba(255, 255, 255, 0.10);
+  --glass-edge-strong: rgba(255, 255, 255, 0.22);
+  --glass-edge-soft: rgba(255, 255, 255, 0.08);
+  --glass-shadow: 0 22px 80px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  --glass-shadow-hover: 0 28px 95px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+
+  --app-card-bg: var(--surface);
+  --app-card-border: hsl(215 20% 40% / .34);
+  --app-card-shadow: 0 10px 30px rgba(0, 0, 0, .24);
+  --app-card-shadow-hover: 0 14px 38px rgba(0, 0, 0, .32);
+}
+
+/* --- Dialog tokens (derivados de superficie) --- */
+:root {
+  --dialog-surface: var(--surface);
+  --dialog-surface-sunken: var(--surface-2);
+  --dialog-separator: var(--surface-border);
+}
+
+.dark {
+  --dialog-surface: var(--surface);
+  --dialog-surface-sunken: var(--surface-2);
+  --dialog-separator: var(--surface-border);
+}
+
+/* --- Auth tokens --- */
+:root {
+  --auth-surface: var(--surface);
+  --auth-surface-2: var(--surface-2);
+  --auth-fg: var(--surface-fg);
+  --auth-border: var(--surface-border);
+  --auth-shadow: var(--surface-shadow);
+  --auth-glow: var(--surface-glow);
+  --auth-muted-fg: var(--muted-foreground);
+
+  --auth-primary: #ec4899;
+  --auth-primary-strong: #e11d48;
+  --auth-muted: rgba(15, 23, 42, .04);
+  --auth-input: rgba(255, 255, 255, .75);
+  --auth-ring: rgba(236, 72, 153, .45);
+}
+
+.dark {
+  --auth-muted: rgba(248, 250, 252, .05);
+  --auth-input: rgba(2, 6, 23, .45);
+  --auth-ring: rgba(244, 114, 182, .55);
+}
+
+/* --- Marketing card tokens --- */
+:root {
+  --marketing-card-radius: var(--app-card-radius);
+  --marketing-card-border: var(--app-card-border);
+  --marketing-card-bg: var(--app-card-bg);
+  --marketing-card-shadow: var(--app-card-shadow);
+  --marketing-card-shadow-hover: var(--app-card-shadow-hover);
+}
+
+.dark {
+  --marketing-card-border: var(--app-card-border);
+  --marketing-card-bg: var(--app-card-bg);
+  --marketing-card-shadow: var(--app-card-shadow);
+  --marketing-card-shadow-hover: var(--app-card-shadow-hover);
+}
+
+/* --- Marketing page background --- */
+:root {
+  --marketing-page-base: #fdf7fa;
+  --marketing-page-background:
+    radial-gradient(circle at 72% 8%, rgba(236, 72, 153, .13), transparent 26%),
+    radial-gradient(circle at 91% 22%, rgba(244, 63, 94, .10), transparent 22%),
+    radial-gradient(circle at 8% 58%, rgba(236, 72, 153, .05), transparent 24%),
+    linear-gradient(180deg, #fefafe 0%, #fdf4f8 48%, #fdf7fa 100%);
+}
+
+.dark {
+  --marketing-page-base: #160714;
+  --marketing-page-background:
+    radial-gradient(circle at 70% 8%, rgba(236, 72, 153, .16), transparent 27%),
+    radial-gradient(circle at 92% 22%, rgba(246, 0, 112, .15), transparent 23%),
+    radial-gradient(circle at 7% 58%, rgba(236, 72, 153, .08), transparent 24%),
+    linear-gradient(180deg, #160714 0%, #1a0816 48%, #160714 100%);
+}
+
+/* --- Landing tokens --- */
+:root {
+  --land-bg: #fdf7fa;
+  --land-panel: rgba(255, 255, 255, .78);
+  --land-line: rgba(190, 24, 93, .14);
+  --land-soft: #5d6679;
+}
+
+.dark {
+  --land-bg: #160714;
+  --land-panel: rgba(26, 10, 22, .75);
+  --land-line: rgba(244, 114, 182, .2);
+  --land-soft: #9aa7bd;
+}

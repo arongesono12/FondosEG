@@ -7,7 +7,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
-import { MessageSquare, Send, Loader2, ChevronDown, ShieldCheck } from 'lucide-react';
+import { MessageSquare, Send, Loader2, ChevronDown, ShieldCheck } from '@/components/ui/hugeicons';
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -167,7 +167,7 @@ export function SupportModal({ open, onOpenChange, requestType = 'general', defa
                             </Avatar>
                             <div>
                               <p className="text-sm font-medium text-foreground">{selectedAdmin.name}</p>
-                              <p className="text-[10px] text-muted-foreground uppercase tracking-wider">
+                              <p className="text-xs text-muted-foreground uppercase tracking-wider">
                                 {isClient ? 'Gestor' : 'Administrador'}
                               </p>
                             </div>
@@ -202,7 +202,7 @@ export function SupportModal({ open, onOpenChange, requestType = 'general', defa
                               </Avatar>
                               <div>
                                 <p className="text-sm font-medium text-foreground">{admin.name}</p>
-                                <p className="text-[10px] text-muted-foreground">{admin.email}</p>
+                                <p className="text-xs text-muted-foreground">{admin.email}</p>
                               </div>
                               {selectedAdmin?.id === admin.id && (
                                 <ShieldCheck className="h-4 w-4 text-primary ml-auto" />

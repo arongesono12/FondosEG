@@ -1,33 +1,20 @@
 'use client';
 
 import { 
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogBody,
-  DialogTitle,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { 
+  Dialog, DialogContent, DialogHeader, DialogBody, DialogTitle 
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { ModalListSkeleton } from '@/components/skeletons/app-skeletons';
+import { Bell, CheckCircle, AlertCircle, Clock, Trash2, CheckCheck, Mail, MailOpen } from '@/components/ui/hugeicons';
 import { 
-  Bell, 
-  CheckCircle, 
-  AlertCircle, 
-  Clock, 
-  Trash2, 
-  CheckCheck,
-  Mail,
-  MailOpen,
-} from 'lucide-react';
-import {
-  getAdminNotifications,
-  getAgentNotifications,
-  getClientNotifications,
-  deleteNotification,
-  markNotificationAsRead,
-  markAllAdminNotificationsAsRead,
-  markAllClientNotificationsAsRead,
-  markAllNotificationsAsRead,
+  getAdminNotifications, getAgentNotifications, getClientNotifications, 
+  deleteNotification, markNotificationAsRead, 
+  markAllAdminNotificationsAsRead, markAllClientNotificationsAsRead, markAllNotificationsAsRead 
 } from '@/modules/notifications/http/client';
 import { useAppStore } from '@/lib/store';
 import { formatDistanceToNow, format } from 'date-fns';
@@ -36,59 +23,56 @@ import { useCallback, useEffect, useState } from 'react';
 import { Notification, Transfer } from '@/types';
 import { HttpError } from '@/services/http';
 import { isAdminRole } from '@/lib/roles';
-import { formatDateShort } from '@/lib/utils';
+import { cn, formatDateShort } from '@/lib/utils';
 
 type NotificationWithTransfer = Notification & {
   transfer?: Pick<Transfer, 'transfer_code' | 'sender_name' | 'receiver_name' | 'receiver_phone' | 'amount' | 'currency' | 'destination_city' | 'created_at'> | null;
 };
 
-interface NotificationModalProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+interface NotificationsDropdownProps {
+  notificationCount: number;
+  onCountChange?: (newCount: number) => void;
+  triggerClassName?: string;
+  badgeClassName?: string;
 }
 
-function cn(...classes: (string | boolean | undefined)[]) {
-  return classes.filter(Boolean).join(' ');
-}
+const DEFAULT_TRIGGER_CLASSES =
+  "p-2 hover:bg-pink-100 dark:hover:bg-pink-500/20 rounded-full transition-colors relative text-foreground/70 hover:text-pink-600 dark:hover:text-pink-400";
 
-export function NotificationModal({ open, onOpenChange }: NotificationModalProps) {
+const DEFAULT_BADGE_CLASSES =
+  "absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-rose-500 text-white text-xs font-bold rounded-full flex items-center justify-center px-1";
+
+export function NotificationsDropdown({ notificationCount, onCountChange, triggerClassName, badgeClassName }: NotificationsDropdownProps) {
   const { user } = useAppStore();
+  const [open, setOpen] = useState(false);
   const [notifications, setNotifications] = useState<NotificationWithTransfer[]>([]);
   const [loading, setLoading] = useState(false);
   const [deleting, setDeleting] = useState<string | null>(null);
   const [selectedNotification, setSelectedNotification] = useState<NotificationWithTransfer | null>(null);
   const [mounted, setMounted] = useState(false);
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  useEffect(() => { setMounted(true); }, []);
 
   const loadNotifications = useCallback(async () => {
     if (!user?.id) return;
     setLoading(true);
     try {
       let data;
-      if (isAdminRole(user.role)) {
-        data = await getAdminNotifications();
-      } else if (user.role === 'cliente') {
-        data = await getClientNotifications();
-      } else {
-        data = await getAgentNotifications();
-      }
-      setNotifications(data as NotificationWithTransfer[]);
+      if (isAdminRole(user.role)) data = await getAdminNotifications();
+      else if (user.role === 'cliente') data = await getClientNotifications();
+      else data = await getAgentNotifications();
+      const list = data as NotificationWithTransfer[];
+      setNotifications(list);
+      onCountChange?.(list.filter(n => !n.is_read).length);
     } catch (error) {
-      if (!(error instanceof HttpError && error.status === 401)) {
-        console.error('Error loading notifications:', error);
-      }
+      if (!(error instanceof HttpError && error.status === 401)) console.error('Error loading notifications:', error);
     } finally {
       setLoading(false);
     }
-  }, [user?.id, user?.role]);
+  }, [user?.id, user?.role, onCountChange]);
 
   useEffect(() => {
-    if (open && user?.id) {
-      loadNotifications();
-    }
+    if (open && user?.id) loadNotifications();
   }, [open, user?.id, loadNotifications]);
 
   const handleDelete = async (notificationId: string) => {
@@ -96,15 +80,15 @@ export function NotificationModal({ open, onOpenChange }: NotificationModalProps
     try {
       const result = await deleteNotification(notificationId);
       if (result.success) {
-        setNotifications(prev => prev.filter(n => n.id !== notificationId));
-        if (selectedNotification?.id === notificationId) {
-          setSelectedNotification(null);
-        }
+        setNotifications(prev => {
+          const next = prev.filter(n => n.id !== notificationId);
+          onCountChange?.(next.filter(n => !n.is_read).length);
+          return next;
+        });
+        if (selectedNotification?.id === notificationId) setSelectedNotification(null);
       }
     } catch (error) {
-      if (!(error instanceof HttpError && error.status === 401)) {
-        console.error('Error deleting notification:', error);
-      }
+      if (!(error instanceof HttpError && error.status === 401)) console.error('Error deleting notification:', error);
     } finally {
       setDeleting(null);
     }
@@ -114,17 +98,17 @@ export function NotificationModal({ open, onOpenChange }: NotificationModalProps
     try {
       const result = await markNotificationAsRead(notificationId);
       if (result.success) {
-        setNotifications(prev => prev.map(n => 
-          n.id === notificationId ? { ...n, is_read: true, read_at: new Date().toISOString() } : n
-        ));
+        setNotifications(prev => {
+          const next = prev.map(n => n.id === notificationId ? { ...n, is_read: true, read_at: new Date().toISOString() } : n);
+          onCountChange?.(next.filter(n => !n.is_read).length);
+          return next;
+        });
         if (selectedNotification?.id === notificationId) {
           setSelectedNotification(prev => prev ? { ...prev, is_read: true, read_at: new Date().toISOString() } : null);
         }
       }
     } catch (error) {
-      if (!(error instanceof HttpError && error.status === 401)) {
-        console.error('Error marking notification as read:', error);
-      }
+      if (!(error instanceof HttpError && error.status === 401)) console.error('Error marking notification as read:', error);
     }
   };
 
@@ -132,127 +116,129 @@ export function NotificationModal({ open, onOpenChange }: NotificationModalProps
     if (!user?.id) return;
     try {
       let result;
-      if (isAdminRole(user.role)) {
-        result = await markAllAdminNotificationsAsRead();
-      } else if (user.role === 'cliente') {
-        result = await markAllClientNotificationsAsRead();
-      } else {
-        result = await markAllNotificationsAsRead();
-      }
+      if (isAdminRole(user.role)) result = await markAllAdminNotificationsAsRead();
+      else if (user.role === 'cliente') result = await markAllClientNotificationsAsRead();
+      else result = await markAllNotificationsAsRead();
       if (result.success) {
-        setNotifications(prev => prev.map(n => ({ 
-          ...n, 
-          is_read: true, 
-          read_at: new Date().toISOString() 
-        })));
+        setNotifications(prev => {
+          const next = prev.map(n => ({ ...n, is_read: true, read_at: new Date().toISOString() }));
+          onCountChange?.(0);
+          return next;
+        });
       }
     } catch (error) {
-      if (!(error instanceof HttpError && error.status === 401)) {
-        console.error('Error marking all notifications as read:', error);
-      }
+      if (!(error instanceof HttpError && error.status === 401)) console.error('Error marking all notifications as read:', error);
     }
   };
 
   const handleOpenNotification = async (notification: NotificationWithTransfer) => {
     setSelectedNotification(notification);
-    if (!notification.is_read) {
-      try {
-        await handleMarkAsRead(notification.id);
-      } catch (error) {
-        if (!(error instanceof HttpError && error.status === 401)) {
-          console.error('Error opening notification:', error);
-        }
-      }
-    }
+    if (!notification.is_read) await handleMarkAsRead(notification.id);
   };
 
   const unreadCount = notifications.filter(n => !n.is_read).length;
 
   return (
     <>
-      <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-md max-h-[80vh] overflow-hidden p-0 flex flex-col">
-          <DialogHeader className="p-6 border-b border-border/10 shrink-0 text-left">
-            <div className="flex items-center justify-between">
-              <DialogTitle className="flex items-center gap-2 text-xl font-semibold text-foreground">
-                <Bell className="h-5 w-5 text-primary" /> Notificaciones
-              </DialogTitle>
+      <DropdownMenu open={open} onOpenChange={setOpen}>
+        <DropdownMenuTrigger asChild>
+          <button
+            type="button"
+            className={triggerClassName ?? DEFAULT_TRIGGER_CLASSES}
+            aria-label="Abrir notificaciones"
+          >
+            <Bell className="h-5 w-5" />
+            {notificationCount > 0 && (
+              <span className={badgeClassName ?? DEFAULT_BADGE_CLASSES}>
+                {notificationCount > 99 ? '99+' : notificationCount}
+              </span>
+            )}
+          </button>
+        </DropdownMenuTrigger>
+
+        <DropdownMenuContent 
+          className="w-[360px] max-h-[70vh] p-0 flex flex-col overflow-hidden" 
+          align="end"
+          sideOffset={8}
+        >
+          {/* Header */}
+          <div className="p-4 border-b border-border/10 shrink-0">
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-sm font-bold text-foreground flex items-center gap-2">
+                <Bell className="h-4 w-4 text-primary" /> Notificaciones
+              </p>
               {unreadCount > 0 && (
                 <button
                   onClick={handleMarkAllAsRead}
-                  className="text-xs font-bold text-primary hover:underline flex items-center gap-1"
+                  className="text-[11px] font-bold text-primary hover:underline flex items-center gap-1 shrink-0"
                 >
-                  <CheckCheck className="h-3 w-3" />
-                  Marcar todo como leído
+                  <CheckCheck className="h-3 w-3" /> Marcar todo como leído
                 </button>
               )}
             </div>
             {unreadCount > 0 && (
-              <p className="text-xs text-muted-foreground font-medium">
-                {unreadCount} notificación{unreadCount !== 1 ? 's' : ''} sin leer
+              <p className="text-[11px] text-muted-foreground font-medium mt-1">
+                {unreadCount} notificación{unreadCount !== 1 ? 'es' : ''} sin leer
               </p>
             )}
-          </DialogHeader>
-          
-          <DialogBody className="flex-1 overflow-y-auto p-4 space-y-3">
+          </div>
+
+          {/* List */}
+          <div className="flex-1 overflow-y-auto overscroll-contain p-2 space-y-1.5">
             {loading ? (
-              <div className="py-2">
-                <ModalListSkeleton rows={5} />
-              </div>
+              <ModalListSkeleton rows={4} />
             ) : notifications.length === 0 ? (
-              <div className="py-20 text-center">
-                <Bell className="h-12 w-12 text-muted/30 mx-auto mb-4" />
-                <p className="font-medium text-muted-foreground">No hay notificaciones</p>
+              <div className="py-10 text-center">
+                <Bell className="h-9 w-9 text-muted/30 mx-auto mb-2" />
+                <p className="text-sm font-medium text-muted-foreground">No hay notificaciones</p>
               </div>
             ) : (
               notifications.map((notif) => (
-                <div 
+                <div
                   key={notif.id}
                   onClick={() => handleOpenNotification(notif)}
                   className={cn(
-                    "p-4 rounded-2xl border transition-all cursor-pointer group relative",
+                    "p-3 rounded-xl border transition-all cursor-pointer group relative",
                     notif.is_read
                       ? "bg-muted/20 border-border/5 hover:bg-muted/30"
                       : "bg-primary/5 border-primary/10 hover:bg-primary/10"
                   )}
                 >
-                  <div className="flex items-start gap-3">
+                  <div className="flex items-start gap-2.5">
                     <div className={cn(
-                      "p-2 rounded-xl shrink-0 mt-0.5",
+                      "p-1.5 rounded-lg shrink-0 mt-0.5",
                       notif.status === 'sent' ? "bg-green-100 text-green-600 dark:bg-green-900/30" : 
                       notif.status === 'failed' ? "bg-red-100 text-red-600 dark:bg-red-900/30" : 
                       "bg-amber-100 text-amber-600 dark:bg-amber-900/30"
                     )}>
-                      {notif.status === 'sent' ? <CheckCircle className="h-4 w-4" /> : 
-                       notif.status === 'failed' ? <AlertCircle className="h-4 w-4" /> : 
-                       <Clock className="h-4 w-4" />}
+                      {notif.status === 'sent' ? <CheckCircle className="h-3.5 w-3.5" /> : 
+                       notif.status === 'failed' ? <AlertCircle className="h-3.5 w-3.5" /> : 
+                       <Clock className="h-3.5 w-3.5" />}
                     </div>
-                    
+
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-2">
-                        <p className="text-xs font-bold text-foreground uppercase tracking-tighter truncate">
+                        <p className="text-[11px] font-bold text-foreground uppercase tracking-tight truncate">
                           {notif.transfer?.transfer_code || 'ADMIN'}
                         </p>
                         <div className="flex items-center gap-1 shrink-0">
-                          {!notif.is_read && (
-                            <span className="w-2 h-2 rounded-full bg-primary shrink-0" />
-                          )}
-                          <span className="text-[10px] font-medium text-muted-foreground">
+                          {!notif.is_read && <span className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />}
+                          <span className="text-xs font-medium text-muted-foreground">
                             {mounted
                               ? formatDistanceToNow(new Date(notif.created_at), { addSuffix: true, locale: es })
                               : formatDateShort(notif.created_at)}
                           </span>
                         </div>
                       </div>
-                      <p className="text-xs font-medium text-foreground/70 leading-relaxed line-clamp-2 mt-1">
+                      <p className="text-[11px] font-medium text-foreground/70 leading-snug line-clamp-2 mt-0.5">
                         {notif.message}
                       </p>
-                      <div className="flex items-center gap-2 mt-2">
-                        <span className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">
+                      <div className="flex items-center gap-2 mt-1.5">
+                        <span className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
                           Para: {notif.transfer?.receiver_name || notif.phone}
                         </span>
                         <span className={cn(
-                          "text-[9px] font-bold uppercase tracking-widest",
+                          "text-[11px] font-bold uppercase tracking-widest",
                           notif.status === 'sent' ? "text-green-500" : "text-red-500"
                         )}>
                           SMS {notif.status === 'sent' ? '✓' : '✗'}
@@ -262,98 +248,80 @@ export function NotificationModal({ open, onOpenChange }: NotificationModalProps
                   </div>
 
                   <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleDelete(notif.id);
-                    }}
+                    onClick={(e) => { e.stopPropagation(); handleDelete(notif.id); }}
                     disabled={deleting === notif.id}
                     className="absolute top-2 right-2 p-1.5 rounded-lg bg-red-100 dark:bg-red-900/30 text-red-500 opacity-0 group-hover:opacity-100 transition-all hover:bg-red-200 dark:hover:bg-red-900/50 disabled:opacity-50"
                     title="Eliminar"
                   >
-                    {deleting === notif.id ? (
-                      <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-red-500 border-t-transparent" />
-                    ) : (
-                      <Trash2 className="h-3.5 w-3.5" />
-                    )}
+                    {deleting === notif.id
+                      ? <div className="h-3 w-3 animate-spin rounded-full border-2 border-red-500 border-t-transparent" />
+                      : <Trash2 className="h-3 w-3" />}
                   </button>
                 </div>
               ))
             )}
-          </DialogBody>
-
-          <div className="hidden p-3 bg-muted/20 border-t border-border/5 justify-center shrink-0 sm:flex">
-            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">
-              FondosEG Notification System
-            </p>
           </div>
-        </DialogContent>
-      </Dialog>
 
-      {/* Modal de Detalle de Notificación */}
+          <div className="hidden p-2 bg-muted/20 border-t border-border/5 justify-center shrink-0 sm:flex">
+            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest">FondosEG Notification System</p>
+          </div>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      {/* Detail Dialog */}
       <Dialog open={!!selectedNotification} onOpenChange={(open) => !open && setSelectedNotification(null)}>
         <DialogContent className="max-w-lg max-h-[88vh] overflow-hidden p-0 outline-none flex flex-col">
           <DialogHeader className="p-6 border-b border-border/10 shrink-0 text-left">
             <div className="flex items-center justify-between">
               <DialogTitle className="flex items-center gap-2 text-xl font-semibold text-foreground">
-                {selectedNotification?.is_read ? (
-                  <MailOpen className="h-5 w-5 text-muted-foreground" />
-                ) : (
-                  <Mail className="h-5 w-5 text-primary" />
-                )}
+                {selectedNotification?.is_read
+                  ? <MailOpen className="h-5 w-5 text-muted-foreground" />
+                  : <Mail className="h-5 w-5 text-primary" />}
                 Detalle de Notificación
               </DialogTitle>
             </div>
           </DialogHeader>
-          
+
           {selectedNotification && (
             <DialogBody className="flex-1 overflow-y-auto p-6 space-y-5">
-              {/* Estado */}
               <div className={cn(
                 "p-4 rounded-2xl flex items-center gap-3",
                 selectedNotification.status === 'sent' ? "bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800" :
                 selectedNotification.status === 'failed' ? "bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800" :
                 "bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800"
               )}>
-                {selectedNotification.status === 'sent' ? (
-                  <CheckCircle className="h-5 w-5 text-green-600" />
-                ) : selectedNotification.status === 'failed' ? (
-                  <AlertCircle className="h-5 w-5 text-red-600" />
-                ) : (
-                  <Clock className="h-5 w-5 text-amber-600" />
-                )}
+                {selectedNotification.status === 'sent'
+                  ? <CheckCircle className="h-5 w-5 text-green-600" />
+                  : selectedNotification.status === 'failed'
+                    ? <AlertCircle className="h-5 w-5 text-red-600" />
+                    : <Clock className="h-5 w-5 text-amber-600" />}
                 <div>
                   <p className="text-sm font-bold text-foreground">
                     {selectedNotification.status === 'sent' ? 'SMS Enviado exitosamente' : 
-                     selectedNotification.status === 'failed' ? 'SMS Fallido' : 
-                     'SMS Pendiente'}
+                     selectedNotification.status === 'failed' ? 'SMS Fallido' : 'SMS Pendiente'}
                   </p>
                   <p className="text-xs text-muted-foreground">
                     {selectedNotification.status === 'sent' && selectedNotification.sent_at 
-                        ? `Enviado el ${format(new Date(selectedNotification.sent_at), "dd 'de' MMMM 'de' yyyy 'a las' HH:mm", { locale: es })}`
-                        : selectedNotification.status === 'failed' && selectedNotification.error_message
+                      ? `Enviado el ${format(new Date(selectedNotification.sent_at), "dd 'de' MMMM 'de' yyyy 'a las' HH:mm", { locale: es })}`
+                      : selectedNotification.status === 'failed' && selectedNotification.error_message
                         ? selectedNotification.error_message
                         : 'Esperando procesamiento...'}
                   </p>
                 </div>
               </div>
 
-              {/* Código de transferencia */}
               <div className="space-y-2">
                 <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Código de Transferencia</label>
                 <p className="text-lg font-bold text-primary">{selectedNotification.transfer?.transfer_code || 'ADMIN'}</p>
               </div>
 
-              {/* Información del mensaje */}
               <div className="space-y-2">
                 <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Mensaje Enviado</label>
                 <div className="p-4 rounded-2xl bg-muted/30 border border-border/10">
-                  <p className="text-sm font-medium text-foreground whitespace-pre-wrap leading-relaxed">
-                    {selectedNotification.message}
-                  </p>
+                  <p className="text-sm font-medium text-foreground whitespace-pre-wrap leading-relaxed">{selectedNotification.message}</p>
                 </div>
               </div>
 
-              {/* Datos del destinatario */}
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                   <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Destinatario</label>
@@ -366,9 +334,7 @@ export function NotificationModal({ open, onOpenChange }: NotificationModalProps
                 <div className="space-y-2">
                   <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Monto</label>
                   <p className="text-sm font-semibold text-green-600">
-                    {selectedNotification.transfer
-                      ? `${selectedNotification.transfer.amount} ${selectedNotification.transfer.currency}`
-                      : 'N/A'}
+                    {selectedNotification.transfer ? `${selectedNotification.transfer.amount} ${selectedNotification.transfer.currency}` : 'N/A'}
                   </p>
                 </div>
                 <div className="space-y-2">
@@ -377,7 +343,6 @@ export function NotificationModal({ open, onOpenChange }: NotificationModalProps
                 </div>
               </div>
 
-              {/* Fechas */}
               <div className="grid grid-cols-1 gap-4 pt-2 border-t border-border/10 sm:grid-cols-2">
                 <div className="space-y-1">
                   <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Fecha de creación</label>
@@ -395,21 +360,18 @@ export function NotificationModal({ open, onOpenChange }: NotificationModalProps
                 )}
               </div>
 
-              {/* Teléfono del destinatario del SMS */}
               <div className="space-y-2">
                 <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Teléfono que recibió el SMS</label>
                 <p className="text-sm font-medium text-foreground">{selectedNotification.phone}</p>
               </div>
 
-              {/* Botones de acción */}
               <div className="flex flex-col gap-3 pt-2 sm:flex-row">
                 <Button
                   variant="outline"
                   onClick={() => handleDelete(selectedNotification.id)}
                   className="flex-1 h-11 rounded-xl font-bold text-red-500 border-red-200 hover:bg-red-50"
                 >
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Eliminar
+                  <Trash2 className="h-4 w-4 mr-2" /> Eliminar
                 </Button>
                 <Button
                   onClick={() => setSelectedNotification(null)}

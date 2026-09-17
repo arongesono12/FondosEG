@@ -9,7 +9,7 @@ import {
   FileCheck2,
   MessageSquareWarning,
   ShieldCheck,
-} from 'lucide-react';
+} from '@/components/ui/hugeicons';
 import { PAYMENT_COMPLAINT_TARGET_DAYS, PAYMENT_REGULATION } from '@/lib/compliance';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -83,8 +83,8 @@ export default function CompliancePage() {
 
   return (
     <div className="space-y-8">
-      <section className="rounded-[2rem] border border-border/10 bg-card/50 p-6 shadow-xl shadow-black/5 backdrop-blur-xl md:p-8">
-        <Badge className="rounded-full border border-white/20 bg-white/70 px-3 py-1 text-[10px] font-black uppercase tracking-[0.24em] text-slate-700 dark:border-white/10 dark:bg-white/10 dark:text-slate-200">
+      <section className="app-card p-6 md:p-8">
+        <Badge className="rounded-full border border-white/20 bg-white/70 px-3 py-1 text-xs font-black uppercase tracking-[0.24em] text-slate-700 dark:border-white/10 dark:bg-white/10 dark:text-slate-200">
           CEMAC / COBAC
         </Badge>
         <div className="mt-5 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
@@ -109,7 +109,7 @@ export default function CompliancePage() {
 
       <div className="grid gap-4 md:grid-cols-2">
         {controls.map((control) => (
-          <Card key={control.title} className="glass-premium border-border/10 bg-card/40 shadow-xl shadow-black/5">
+          <Card key={control.title}>
             <CardContent className="flex gap-4 p-5">
               <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
                 <CheckCircle2 className="h-5 w-5" />
@@ -123,7 +123,7 @@ export default function CompliancePage() {
         ))}
       </div>
 
-      <Card className="glass-premium border-border/10 bg-card/40 shadow-xl shadow-black/5">
+      <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-3 text-xl font-black">
             <MessageSquareWarning className="h-5 w-5 text-primary" />

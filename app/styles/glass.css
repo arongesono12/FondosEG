@@ -1,0 +1,28 @@
+/* Superficie sólida compartida. El nombre histórico `.glass` se conserva para
+   no romper llamadas existentes, pero ya no aplica vidrio ni desenfoque. */
+
+@layer components {
+  .glass,
+  .glass-premium,
+  .dialog-shell,
+  .auth-card-premium {
+    position: relative;
+    border: 1px solid var(--app-card-border);
+    border-radius: var(--app-card-radius);
+    background: var(--app-card-bg);
+    color: var(--surface-fg);
+    box-shadow: var(--app-card-shadow);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  .glass,
+  .glass-premium {
+    overflow: hidden;
+  }
+
+  .glass:hover,
+  .glass-premium:hover {
+    box-shadow: var(--app-card-shadow-hover);
+  }
+}

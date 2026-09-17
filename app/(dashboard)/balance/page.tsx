@@ -30,7 +30,7 @@ import {
   ShieldAlert,
   TrendingUp,
   Wallet,
-} from 'lucide-react';
+} from '@/components/ui/hugeicons';
 
 type BalanceResponse = { balances: ClientBalance[] };
 
@@ -48,11 +48,11 @@ function SummaryCard({
   tone: string;
 }) {
   return (
-    <Card className="glass-premium border-border/10 bg-card/40 shadow-xl shadow-black/5">
+    <Card>
       <CardContent className="p-5">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">{label}</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">{label}</p>
             <p className="mt-2 text-[clamp(1.125rem,1.4vw+0.75rem,1.5rem)] font-bold leading-tight tabular-nums text-foreground">{value}</p>
             <p className="mt-2 text-xs font-medium text-muted-foreground">{hint}</p>
           </div>
@@ -191,8 +191,8 @@ export default function BalancePage() {
   if (isAdmin) {
     return (
       <div className="space-y-8">
-        <section className="rounded-4xl border border-border/10 bg-[radial-gradient(circle_at_top_left,rgba(14,165,233,0.14),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(245,158,11,0.12),transparent_32%),linear-gradient(135deg,rgba(255,255,255,0.86),rgba(248,250,252,0.72))] p-6 shadow-2xl shadow-slate-200/40 backdrop-blur-xl dark:bg-[radial-gradient(circle_at_top_left,rgba(14,165,233,0.12),transparent_30%),radial-gradient(circle_at_bottom_right,rgba(245,158,11,0.10),transparent_34%),linear-gradient(135deg,rgba(15,23,42,0.88),rgba(2,6,23,0.82))] dark:shadow-black/20 md:p-8">
-          <Badge className="rounded-full border border-white/30 bg-white/70 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.24em] text-slate-700 shadow-sm dark:border-white/10 dark:bg-white/10 dark:text-slate-200">
+        <section className="app-card p-6 md:p-8">
+          <Badge className="rounded-full border border-white/30 bg-white/70 px-3 py-1 text-xs font-bold uppercase tracking-[0.24em] text-slate-700 shadow-sm dark:border-white/10 dark:bg-white/10 dark:text-slate-200">
             Tesorería central
           </Badge>
           <h1 className="mt-4 text-3xl font-bold tracking-tight text-foreground md:text-4xl">Gestión de float y disponibilidad</h1>
@@ -209,7 +209,7 @@ export default function BalancePage() {
           <SummaryCard label="Float medio" value={formatCurrency(avgFloat)} hint={`Efectivo medio ${formatCurrency(avgCash)}`} icon={TrendingUp} tone="border-fuchsia-500/20 bg-fuchsia-500 shadow-fuchsia-500/20" />
         </section>
 
-        <Card className="glass-premium overflow-hidden border-border/10 bg-card/40 shadow-xl shadow-black/5">
+        <Card className="overflow-hidden">
           <CardHeader className="border-b border-border/5 pb-5">
             <CardTitle className="flex items-center gap-2 text-xl font-bold text-foreground">
               <Wallet className="h-5 w-5 text-primary" />
@@ -221,13 +221,13 @@ export default function BalancePage() {
               <Table className="activity-records-table" wrapperClassName="is-stacked">
                 <TableHeader className="bg-muted/30">
                   <TableRow className="border-border/5 hover:bg-transparent">
-                    <TableHead className="pl-8 py-4 text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">Gestor</TableHead>
-                    <TableHead className="py-4 text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">Contacto</TableHead>
-                    <TableHead className="py-4 text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">Estado</TableHead>
-                    <TableHead className="py-4 text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground text-right">Float</TableHead>
-                    <TableHead className="py-4 text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground text-right">Efectivo</TableHead>
-                    <TableHead className="py-4 text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground text-right">Total recargado</TableHead>
-                    <TableHead className="pr-8 py-4 text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground text-right">Acción</TableHead>
+                    <TableHead className="pl-8 py-4 text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">Gestor</TableHead>
+                    <TableHead className="py-4 text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">Contacto</TableHead>
+                    <TableHead className="py-4 text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">Estado</TableHead>
+                    <TableHead className="py-4 text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground text-right">Float</TableHead>
+                    <TableHead className="py-4 text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground text-right">Efectivo</TableHead>
+                    <TableHead className="py-4 text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground text-right">Total recargado</TableHead>
+                    <TableHead className="pr-8 py-4 text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground text-right">Acción</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -237,16 +237,16 @@ export default function BalancePage() {
                       <TableRow key={agent.id} className="activity-record-row border-border/5 hover:bg-muted/30">
                         <TableCell data-label="Gestor" className="pl-8 py-4">
                           <p className="text-sm font-bold text-foreground">{agent.name}</p>
-                          <p className="text-[10px] font-semibold uppercase text-muted-foreground">{agent.email}</p>
+                          <p className="text-xs font-semibold uppercase text-muted-foreground">{agent.email}</p>
                         </TableCell>
                         <TableCell data-label="Contacto" className="text-xs font-semibold text-muted-foreground">{agent.phone}</TableCell>
                         <TableCell data-label="Estado">
                           <div className="flex flex-col gap-2">
-                            <Badge className={`w-fit rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] ${agent.is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-muted text-muted-foreground'}`}>
+                            <Badge className={`w-fit rounded-full px-3 py-1 text-xs font-bold uppercase tracking-[0.18em] ${agent.is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-muted text-muted-foreground'}`}>
                               {agent.is_active ? 'Activo' : 'Inactivo'}
                             </Badge>
                             {lowFloat && (
-                              <Badge className="w-fit rounded-full bg-amber-100 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-amber-700">
+                              <Badge className="w-fit rounded-full bg-amber-100 px-3 py-1 text-xs font-bold uppercase tracking-[0.18em] text-amber-700">
                                 Bajo float
                               </Badge>
                             )}
@@ -261,7 +261,7 @@ export default function BalancePage() {
                         <TableCell data-label="Total recargado" className="text-right">
                           <p className="text-base font-bold tabular-nums text-foreground">{formatCurrency(agent.topup_total || 0)}</p>
                           {agent.last_topup_at && (
-                            <p className="text-[10px] font-semibold uppercase text-muted-foreground">{formatDate(agent.last_topup_at)}</p>
+                            <p className="text-xs font-semibold uppercase text-muted-foreground">{formatDate(agent.last_topup_at)}</p>
                           )}
                         </TableCell>
                         <TableCell data-label="Acción" className="pr-8 text-right">
@@ -296,7 +296,7 @@ export default function BalancePage() {
               <DialogTitle className="text-2xl font-bold text-foreground">Recarga confirmada</DialogTitle>
             </DialogHeader>
             <div className="rounded-3xl border border-emerald-500/20 bg-emerald-500/10 p-6 text-center">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-700">Monto recargado</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-700">Monto recargado</p>
               <p className="mt-2 text-4xl font-bold text-foreground">{formatCurrency(successAmount)}</p>
             </div>
             <Button className="w-full rounded-2xl font-bold" onClick={() => setSuccessOpen(false)}>
@@ -315,7 +315,7 @@ export default function BalancePage() {
             </DialogHeader>
             <div className="space-y-5">
               <div className="space-y-2">
-                <Label htmlFor="topup-amount" className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
+                <Label htmlFor="topup-amount" className="text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">
                   Monto a recargar
                 </Label>
                 <Input
@@ -333,7 +333,7 @@ export default function BalancePage() {
               </div>
               {selectedAgent && (
                 <div className="rounded-2xl border border-border/10 bg-background/70 p-4">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Saldo actual</p>
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Saldo actual</p>
                   <p className="mt-2 text-2xl font-bold tabular-nums text-foreground">{formatCurrency(selectedAgent.balance)}</p>
                 </div>
               )}
@@ -369,11 +369,11 @@ export default function BalancePage() {
             </DialogHeader>
             <div className="space-y-4">
               <div className="rounded-2xl border border-border/10 bg-background/70 p-4 text-center">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Gestor</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Gestor</p>
                 <p className="mt-2 text-lg font-bold text-foreground">{selectedAgent?.name}</p>
               </div>
               <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 p-4 text-center">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-emerald-700 dark:text-emerald-300">Monto</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700 dark:text-emerald-300">Monto</p>
                 <p className="mt-2 text-3xl font-bold text-foreground">{formatCurrency(parseFloat(topUpAmount) || 0)}</p>
               </div>
               {errorMessage && (
@@ -435,8 +435,8 @@ export default function BalancePage() {
   if (isGestor) {
     return (
       <div className="space-y-8">
-        <section className="rounded-4xl border border-border/10 bg-card/50 p-6 shadow-xl shadow-black/5 backdrop-blur-xl md:p-8">
-          <Badge className="rounded-full border border-white/20 bg-white/70 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.24em] text-slate-700 dark:border-white/10 dark:bg-white/10 dark:text-slate-200">
+        <section className="app-card p-6 md:p-8">
+          <Badge className="rounded-full border border-white/20 bg-white/70 px-3 py-1 text-xs font-bold uppercase tracking-[0.24em] text-slate-700 dark:border-white/10 dark:bg-white/10 dark:text-slate-200">
             Liquidez del gestor
           </Badge>
           <h1 className="mt-4 text-3xl font-bold tracking-tight text-foreground md:text-4xl">Mi billetera operativa</h1>
@@ -452,7 +452,7 @@ export default function BalancePage() {
           <SummaryCard label="Total operado" value={formatCurrency(totalOperated)} hint="Salidas por transferencias" icon={ArrowDownUp} tone="border-fuchsia-500/20 bg-fuchsia-500 shadow-fuchsia-500/20" />
         </section>
 
-        <Card className="glass-premium overflow-hidden border-border/10 bg-card/40 shadow-xl shadow-black/5">
+        <Card className="overflow-hidden">
           <CardHeader className="border-b border-border/5 pb-5">
             <CardTitle className="flex items-center gap-2 text-xl font-bold text-foreground">
               <History className="h-5 w-5 text-primary" />
@@ -464,10 +464,10 @@ export default function BalancePage() {
               <Table className="wallet-movements-table">
                 <TableHeader className="bg-muted/30">
                   <TableRow className="border-border/5 hover:bg-transparent">
-                    <TableHead className="pl-8 py-4 text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">Operación</TableHead>
-                    <TableHead className="py-4 text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">Monto</TableHead>
-                    <TableHead className="py-4 text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">Detalle</TableHead>
-                    <TableHead className="pr-8 py-4 text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">Fecha</TableHead>
+                    <TableHead className="pl-8 py-4 text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">Operación</TableHead>
+                    <TableHead className="py-4 text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">Monto</TableHead>
+                    <TableHead className="py-4 text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">Detalle</TableHead>
+                    <TableHead className="pr-8 py-4 text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">Fecha</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -481,7 +481,7 @@ export default function BalancePage() {
                     transactions.map((transaction) => (
                       <TableRow key={transaction.id} className="wallet-movement-row border-border/5 hover:bg-muted/30">
                         <TableCell data-label="Operación" className="pl-8">
-                          <Badge className={`rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] ${transaction.amount >= 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`}>
+                          <Badge className={`rounded-full px-3 py-1 text-xs font-bold uppercase tracking-[0.18em] ${transaction.amount >= 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`}>
                             {transactionTypeLabel(transaction.type)}
                           </Badge>
                         </TableCell>
@@ -493,7 +493,7 @@ export default function BalancePage() {
                         </TableCell>
                         <TableCell data-label="Detalle">
                           <p className="text-sm font-bold text-foreground">{transaction.description || 'Sin descripción'}</p>
-                          <p className="text-[10px] font-semibold uppercase text-muted-foreground">
+                          <p className="text-xs font-semibold uppercase text-muted-foreground">
                             Saldo resultante: {formatCurrency(transaction.new_balance)}
                           </p>
                         </TableCell>
@@ -512,8 +512,8 @@ export default function BalancePage() {
 
   return (
     <div className="space-y-8">
-      <section className="rounded-4xl border border-border/10 bg-card/50 p-6 shadow-xl shadow-black/5 backdrop-blur-xl md:p-8">
-        <Badge className="rounded-full border border-white/20 bg-white/70 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.24em] text-slate-700 dark:border-white/10 dark:bg-white/10 dark:text-slate-200">
+      <section className="app-card p-6 md:p-8">
+        <Badge className="rounded-full border border-white/20 bg-white/70 px-3 py-1 text-xs font-bold uppercase tracking-[0.24em] text-slate-700 dark:border-white/10 dark:bg-white/10 dark:text-slate-200">
           Billetera del cliente
         </Badge>
         <h1 className="mt-4 text-3xl font-bold tracking-tight text-foreground md:text-4xl">Saldos por moneda y actividad</h1>
@@ -529,7 +529,7 @@ export default function BalancePage() {
         <SummaryCard label="Confirmadas" value={String(confirmedClientTransfers)} hint={`${pendingClientTransfers} pendientes`} icon={CheckCircle} tone="border-fuchsia-500/20 bg-fuchsia-500 shadow-fuchsia-500/20" />
       </section>
 
-      <Card className="glass-premium overflow-hidden border-border/10 bg-card/40 shadow-xl shadow-black/5">
+      <Card className="overflow-hidden">
         <CardHeader className="border-b border-border/5 pb-5">
           <CardTitle className="flex items-center gap-2 text-xl font-bold text-foreground">
             <Wallet className="h-5 w-5 text-primary" />
@@ -539,7 +539,7 @@ export default function BalancePage() {
         <CardContent className="grid gap-4 p-6 md:grid-cols-2 xl:grid-cols-3">
           {currencySnapshots.map((snapshot) => (
             <div key={snapshot.currency} className="rounded-[1.75rem] border border-border/10 bg-background/70 p-5">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">{snapshot.currency}</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">{snapshot.currency}</p>
               <p className="mt-3 text-2xl font-bold text-foreground">{formatCurrency(snapshot.available, snapshot.currency)}</p>
               <div className="mt-4 space-y-2 text-xs font-semibold text-muted-foreground">
                 <div className="flex items-center justify-between">
@@ -556,7 +556,7 @@ export default function BalancePage() {
         </CardContent>
       </Card>
 
-      <Card className="glass-premium overflow-hidden border-border/10 bg-card/40 shadow-xl shadow-black/5">
+      <Card className="overflow-hidden">
         <CardHeader className="flex flex-row items-center justify-between gap-4 border-b border-border/5 pb-5">
           <CardTitle className="flex items-center gap-2 text-xl font-bold text-foreground">
             <HandCoins className="h-5 w-5 text-primary" />
@@ -577,17 +577,17 @@ export default function BalancePage() {
                 <div className="flex items-start justify-between gap-4">
                   <div>
                     <p className="text-sm font-bold tracking-[0.12em] text-foreground">{withdrawal.withdrawal_code}</p>
-                    <p className="mt-1 text-[10px] font-semibold text-muted-foreground">
+                    <p className="mt-1 text-xs font-semibold text-muted-foreground">
                       {withdrawal.destination_city ? `${withdrawal.destination_city} · ` : ''}
                       {formatDate(withdrawal.created_at)}
                     </p>
                     {withdrawal.status === 'pending' && withdrawal.expires_at && (
-                      <p className="mt-1 text-[10px] font-semibold text-amber-600 dark:text-amber-400">
+                      <p className="mt-1 text-xs font-semibold text-amber-600 dark:text-amber-400">
                         Retenido hasta {formatDate(withdrawal.expires_at)}
                       </p>
                     )}
                   </div>
-                  <Badge className={`rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] ${withdrawal.status === 'paid_out' ? 'bg-emerald-100 text-emerald-700' : withdrawal.status === 'pending' ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-600'}`}>
+                  <Badge className={`rounded-full px-3 py-1 text-xs font-bold uppercase tracking-[0.18em] ${withdrawal.status === 'paid_out' ? 'bg-emerald-100 text-emerald-700' : withdrawal.status === 'pending' ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-600'}`}>
                     {getWithdrawalStatusLabel(withdrawal.status)}
                   </Badge>
                 </div>
@@ -600,7 +600,7 @@ export default function BalancePage() {
         </CardContent>
       </Card>
 
-      <Card className="glass-premium overflow-hidden border-border/10 bg-card/40 shadow-xl shadow-black/5">
+      <Card className="overflow-hidden">
         <CardHeader className="border-b border-border/5 pb-5">
           <CardTitle className="flex items-center gap-2 text-xl font-bold text-foreground">
             <History className="h-5 w-5 text-primary" />
@@ -621,11 +621,11 @@ export default function BalancePage() {
                     <p className="mt-1 text-xs font-semibold text-muted-foreground">
                       {transfer.sender_name} · {transfer.receiver_name}
                     </p>
-                    <p className="mt-1 text-[10px] font-semibold text-muted-foreground">
+                    <p className="mt-1 text-xs font-semibold text-muted-foreground">
                       {transfer.destination_city} · {formatDate(transfer.created_at)}
                     </p>
                   </div>
-                  <Badge className={`rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] ${getStatusColor(transfer.status)}`}>
+                  <Badge className={`rounded-full px-3 py-1 text-xs font-bold uppercase tracking-[0.18em] ${getStatusColor(transfer.status)}`}>
                     {transfer.status}
                   </Badge>
                 </div>
@@ -651,7 +651,7 @@ export default function BalancePage() {
             <DialogTitle className="text-2xl font-bold text-foreground">Recarga confirmada</DialogTitle>
           </DialogHeader>
           <div className="rounded-3xl border border-emerald-500/20 bg-emerald-500/10 p-6 text-center">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-700">Monto recargado</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-700">Monto recargado</p>
             <p className="mt-2 text-4xl font-bold text-foreground">{formatCurrency(successAmount)}</p>
           </div>
           <Button className="w-full rounded-2xl font-bold" onClick={() => setSuccessOpen(false)}>
@@ -670,7 +670,7 @@ export default function BalancePage() {
           </DialogHeader>
           <div className="space-y-5">
             <div className="space-y-2">
-              <Label htmlFor="topup-amount" className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
+              <Label htmlFor="topup-amount" className="text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">
                 Monto a recargar
               </Label>
               <Input
@@ -688,7 +688,7 @@ export default function BalancePage() {
             </div>
             {selectedAgent && (
               <div className="rounded-2xl border border-border/10 bg-background/70 p-4">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Saldo actual</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Saldo actual</p>
                 <p className="mt-2 text-2xl font-bold tabular-nums text-foreground">{formatCurrency(selectedAgent.balance)}</p>
               </div>
             )}
@@ -724,11 +724,11 @@ export default function BalancePage() {
           </DialogHeader>
           <div className="space-y-4">
             <div className="rounded-2xl border border-border/10 bg-background/70 p-4 text-center">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Gestor</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Gestor</p>
               <p className="mt-2 text-lg font-bold text-foreground">{selectedAgent?.name}</p>
             </div>
             <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 p-4 text-center">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-emerald-700 dark:text-emerald-300">Monto</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700 dark:text-emerald-300">Monto</p>
               <p className="mt-2 text-3xl font-bold text-foreground">{formatCurrency(parseFloat(topUpAmount) || 0)}</p>
             </div>
             {errorMessage && (

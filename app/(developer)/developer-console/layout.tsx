@@ -1,7 +1,9 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { Code2, LayoutDashboard, LogOut } from 'lucide-react';
+import { Code2, LayoutDashboard, LogOut } from '@/components/ui/hugeicons';
 import { AppProvider } from '@/components/providers/app-provider';
+import { DashboardLogo } from '@/components/layout/dashboard-logo';
+import { ThemeToggle } from '@/components/theme-toggle';
 import { Button } from '@/components/ui/button';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { getOptionalAuthState, getProductAccess } from '@/lib/server/authz';
@@ -44,21 +46,52 @@ export default async function DeveloperConsoleLayout({ children }: { children: R
 
   return (
     <AppProvider initialUser={consoleUser}>
-      <div className="min-h-screen bg-background">
-        <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur">
-          <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4">
-            <Link href="/developer-console" className="flex items-center gap-2 font-semibold">
-              <Code2 className="h-5 w-5 text-pink-500" /> Portal de desarrolladores
-            </Link>
-            <div className="flex items-center gap-2">
-              {dashboardAccess?.status === 'active' && (
-                <Button variant="outline" size="sm" asChild><Link href="/dashboard"><LayoutDashboard className="mr-2 h-4 w-4" />Dashboard</Link></Button>
-              )}
-              <Button variant="ghost" size="sm" asChild><Link href="/force-signout"><LogOut className="mr-2 h-4 w-4" />Salir</Link></Button>
+      <div suppressHydrationWarning className="dashboard-public-page main-container min-h-screen font-sans">
+        <div className="dashboard-shell mx-auto w-full relative flex flex-col lg:max-w-[1440px] lg:min-h-[calc(100vh-4rem)] lg:rounded-[2.5rem] lg:shadow-xl lg:shadow-slate-200/20 dark:lg:shadow-black/20 lg:border lg:border-border/10 h-dvh lg:h-auto">
+          {/* Desktop header */}
+          <header className="dashboard-desktop-header hidden lg:grid h-20 items-center px-10 border-b border-border/10 shrink-0 transition-all duration-300 z-50 bg-linear-to-b from-white to-slate-50 dark:from-slate-900 dark:to-slate-950 lg:rounded-t-[2.5rem]">
+            <div className="dashboard-desktop-brand-nav flex items-center gap-2">
+              <Link href="/developer-console" className="flex items-center gap-2">
+                <DashboardLogo size="md" labelClassName="text-xl md:text-2xl" />
+              </Link>
             </div>
-          </div>
-        </header>
-        <main>{children}</main>
+
+            <nav className="dashboard-desktop-nav hidden lg:flex items-center gap-1 justify-center" aria-label="Navegación principal">
+              <Link href="/developer-console" aria-current="page">
+                <Code2 className="h-4 w-4" /> Portal
+              </Link>
+              {dashboardAccess?.status === 'active' && (
+                <Link href="/dashboard">
+                  <LayoutDashboard className="h-4 w-4" /> Dashboard
+                </Link>
+              )}
+            </nav>
+
+            <div className="dashboard-desktop-tools flex items-center gap-1 md:gap-4">
+              <ThemeToggle />
+              <Button variant="outline" size="sm" asChild>
+                <Link href="/force-signout"><LogOut className="mr-2 h-4 w-4" />Salir</Link>
+              </Button>
+            </div>
+          </header>
+
+          {/* Mobile header */}
+          <header className="dashboard-mobile-header lg:hidden">
+            <Link href="/developer-console" className="dashboard-mobile-brand" aria-label="FondosEG portal de desarrolladores">
+              <DashboardLogo size="sm" labelClassName="text-lg" />
+            </Link>
+            <div className="dashboard-mobile-header-actions">
+              <ThemeToggle />
+              <Link href="/force-signout" aria-label="Cerrar sesión" className="dashboard-mobile-header-action">
+                <LogOut className="h-5 w-5" />
+              </Link>
+            </div>
+          </header>
+
+          <main className="dashboard-main flex-1 min-h-0 overflow-y-auto overscroll-y-contain lg:overflow-visible lg:overscroll-auto bg-transparent p-4 pb-28 lg:p-10">
+            {children}
+          </main>
+        </div>
       </div>
     </AppProvider>
   );

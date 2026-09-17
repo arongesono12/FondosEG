@@ -137,3 +137,21 @@ supabase functions deploy fondoseg-transfer --no-verify-jwt
 supabase functions deploy fondoseg-wallet-transfer --no-verify-jwt
 supabase functions deploy fondoseg-health --no-verify-jwt
 ```
+
+## Nota de seguridad
+
+- Todas las funciones comparten el MIMO par de credenciales
+  (`FONDOSEG_API_KEY` + `FONDOSEG_API_SECRET`). La API de FondosEG sólo ve una
+  cuenta, así que la telemetria de `api_request_logs` **no distingue** que
+  funcion origino cada llamada. Para distinguir integrantes, genera una clave
+  distinta por funcion o incluye un `(opts?.headers)` propio en cada destino.
+- Desplegar con `--no-verify-jwt` es lo correcto aqui porque la autenticacion
+  real es el par `x-api-key`/`x-api-secret` hacia FondosEG (una cuenta de
+  servidor). NO expongas `FONDOSEG_API_KEY` en el cliente: estas funciones son
+  de servidor a servidor.
+- Al rotar `FONDOSEG_API_KEY`/`FONDOSEG_API_SECRET` en el dashboard de
+  FondosEG, actualiza los secretos y **re-despliega** cada funcion
+  (`supabase secrets set ... && supabase functions deploy`). Hasta que se
+  redepliega, el proceso en caliente sigue guardando el valor anterior.
+- En local, `supabase functions serve` NO reconstruye el entorno por cada
+  peticion: edita `.env.local` y reinicia el proceso de serve.
