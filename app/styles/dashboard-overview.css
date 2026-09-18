@@ -6,6 +6,7 @@
   background: var(--background);
 }
 .dashboard-shell { background: var(--background); }
+.dark .dashboard-shell { background: transparent; }
 .dashboard-content { display: flex; flex-direction: column; gap: 22px; }
 .overview { display: flex; flex-direction: column; gap: 22px; min-width: 0; }
 .overview :is(button, a, input, select):focus-visible,

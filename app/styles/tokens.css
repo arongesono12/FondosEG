@@ -66,7 +66,7 @@
 
 /* --- Superficies (modo oscuro) --- */
 .dark {
-  --background: hsl(224 71% 4%);
+  --background: #020611;
   --foreground: hsl(210 20% 98%);
 
   --surface: hsl(217 60% 9%);
@@ -182,12 +182,12 @@
 }
 
 .dark {
-  --marketing-page-base: #160714;
+  --marketing-page-base: #020611;
   --marketing-page-background:
-    radial-gradient(circle at 70% 8%, rgba(236, 72, 153, .16), transparent 27%),
-    radial-gradient(circle at 92% 22%, rgba(246, 0, 112, .15), transparent 23%),
-    radial-gradient(circle at 7% 58%, rgba(236, 72, 153, .08), transparent 24%),
-    linear-gradient(180deg, #160714 0%, #1a0816 48%, #160714 100%);
+    radial-gradient(circle at 74% 12%, rgba(0, 146, 255, .13), transparent 22%),
+    radial-gradient(circle at 94% 22%, rgba(246, 0, 112, .19), transparent 22%),
+    radial-gradient(circle at 8% 58%, rgba(23, 104, 255, .08), transparent 25%),
+    linear-gradient(180deg, #020611 0%, #030918 52%, #020611 100%);
 }
 
 /* --- Landing tokens --- */
@@ -199,8 +199,8 @@
 }
 
 .dark {
-  --land-bg: #160714;
-  --land-panel: rgba(26, 10, 22, .75);
-  --land-line: rgba(244, 114, 182, .2);
+  --land-bg: #020611;
+  --land-panel: #07101f;
+  --land-line: rgba(105, 126, 164, .28);
   --land-soft: #9aa7bd;
 }

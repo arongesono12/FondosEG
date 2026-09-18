@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import { DashboardOverview } from '@/components/dashboard/dashboard-overview';
-import Link from 'next/link';
 import { useAppStore } from '@/lib/store';
 import { getAgentTransferStats, getAgentsCommissionStats, getDashboardStats, getDailyTransferStats, getRecentTransfers } from '@/services/dashboard';
 import type { AgentTransferStats, AgentsCommissionStats, DashboardStats, DailyTransferStats, Transfer } from '@/types';
@@ -17,27 +16,21 @@ import {
   AlertTriangle,
   BarChart3,
   Clock3,
-  ChevronDown,
   Coins,
   Gauge,
   Landmark,
   MousePointerClick,
   Send,
   ShieldCheck,
-  Sparkles,
   Target,
   TrendingUp,
   Users,
   Wallet,
 } from '@/components/ui/hugeicons';
-import { Area, AreaChart, Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts';
-import { type ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
+import { Bar, BarChart, XAxis, YAxis } from 'recharts';
+import { type ChartConfig, ChartContainer } from '@/components/ui/chart';
 
 type SupportRequestType = 'balance_topup' | 'report_error' | 'general';
-
-const cashFlowConfig = {
-  amount: { label: 'Volumen', color: 'var(--chart-1)' },
-} satisfies ChartConfig;
 
 const settlementRateConfig = {
   value: { label: 'Tasa de liquidación', color: 'var(--chart-3)' },
@@ -122,13 +115,6 @@ export default function DashboardPage() {
   }, [user, isAdmin, isClient, isSuperAdmin]);
 
   const fmt = (amount: number) => formatCurrency(convertCurrency(amount, 'XAF', currency), currency);
-  const trend = dailyStats.slice(-7);
-
-  const volumeTrend = trend.map((item) => ({
-    date: formatDateShort(item.date).slice(0, 5),
-    amount: Math.round(convertCurrency(item.total_amount, 'XAF', currency)),
-  }));
-
   const reservedBalance = stats?.reservedBalance ?? stats?.pendingExposure ?? 0;
   const totalStates = (stats?.completedTransfers ?? 0) + (stats?.pendingTransfers ?? 0) + (stats?.cancelledTransfers ?? 0);
   const settlementRate = stats?.settlementRate ?? 0;
@@ -136,26 +122,17 @@ export default function DashboardPage() {
   const cancelledRate = totalStates ? Math.round(((stats?.cancelledTransfers ?? 0) / totalStates) * 100) : 0;
   const primaryAction = isGestor ? { href: '/transfers', label: 'Nuevo envío', icon: Send } : isAdmin ? { href: '/balance', label: 'Gestionar tesorería', icon: Landmark } : { href: '/balance', label: 'Ver billetera', icon: Wallet };
 
-  const compactAmount = (value: number) => {
-    const abs = Math.abs(value);
-    if (abs >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`;
-    if (abs >= 1_000) return `${Math.round(value / 1_000)}k`;
-    return `${Math.round(value)}`;
-  };
-
-  const treasuryRows: { label: string; value: string; icon: React.ElementType; tone: string }[] = isClient
-    ? [
-        { label: 'Volumen 30 días', value: fmt(stats?.monthlyVolume ?? 0), icon: TrendingUp, tone: 'border-sky-500/20 bg-sky-500 shadow-sky-500/20' },
-        { label: 'Confirmación', value: `${settlementRate}%`, icon: ShieldCheck, tone: 'border-emerald-500/20 bg-emerald-500 shadow-emerald-500/20' },
-        { label: 'Saldo retenido', value: fmt(reservedBalance), icon: Clock3, tone: 'border-amber-500/20 bg-amber-500 shadow-amber-500/20' },
-        { label: 'Ticket medio', value: fmt(stats?.averageTicket ?? 0), icon: Target, tone: 'border-fuchsia-500/20 bg-fuchsia-500 shadow-fuchsia-500/20' },
-      ]
-    : [
-        { label: 'Capital operativo', value: fmt(stats?.totalBalance ?? 0), icon: Landmark, tone: 'border-emerald-500/20 bg-emerald-500 shadow-emerald-500/20' },
-        { label: 'Recarga proyectada 24h', value: fmt(stats?.projectedTopups24h ?? 0), icon: TrendingUp, tone: 'border-sky-500/20 bg-sky-500 shadow-sky-500/20' },
-        { label: 'Cobertura de float', value: `${(stats?.liquidityCoverageDays ?? 0).toFixed(1)} días`, icon: Gauge, tone: 'border-violet-500/20 bg-violet-500 shadow-violet-500/20' },
-        { label: 'Utilización del float', value: `${stats?.floatUtilization ?? 0}%`, icon: Target, tone: 'border-fuchsia-500/20 bg-fuchsia-500 shadow-fuchsia-500/20' },
-      ];
+  const additionalMetrics: { label: string; value: string; icon: React.ElementType; tone: string }[] = [
+    { label: 'Volumen 30 días', value: fmt(stats?.monthlyVolume ?? 0), icon: BarChart3, tone: 'border-sky-500/20 bg-sky-500 shadow-sky-500/20' },
+    { label: 'Ticket medio', value: fmt(stats?.averageTicket ?? 0), icon: Target, tone: 'border-fuchsia-500/20 bg-fuchsia-500 shadow-fuchsia-500/20' },
+    ...(isClient
+      ? [{ label: 'Tasa de cancelación', value: `${cancelledRate}%`, icon: AlertTriangle, tone: 'border-rose-500/20 bg-rose-500 shadow-rose-500/20' }]
+      : [
+          { label: 'Recarga proyectada 24h', value: fmt(stats?.projectedTopups24h ?? 0), icon: TrendingUp, tone: 'border-emerald-500/20 bg-emerald-500 shadow-emerald-500/20' },
+          { label: 'Cobertura de float', value: `${(stats?.liquidityCoverageDays ?? 0).toFixed(1)} días`, icon: Gauge, tone: 'border-violet-500/20 bg-violet-500 shadow-violet-500/20' },
+          { label: 'Utilización del float', value: `${stats?.floatUtilization ?? 0}%`, icon: Target, tone: 'border-amber-500/20 bg-amber-500 shadow-amber-500/20' },
+        ]),
+  ];
 
   if (loading) {
     return (
@@ -179,93 +156,26 @@ export default function DashboardPage() {
     <div className="dashboard-content">
       <DashboardOverview stats={stats} dailyStats={dailyStats} transfers={recentTransfers} currency={currency} isClient={isClient} primaryAction={primaryAction}
         onSupport={() => { setSupportRequestType(isGestor ? 'balance_topup' : 'general'); setSupportModalOpen(true); }} />
-      <details className="dashboard-insights">
-        <summary>Más información financiera y operativa <ChevronDown aria-hidden="true" /></summary>
-        <div className="dashboard-insights-content">
-      {/* Fila de gráficos: flujo de caja (área) + saldos y tesorería */}
-      <section className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1.45fr)_minmax(0,0.95fr)]">
-        <Card className="min-w-0 overflow-hidden">
-          <CardHeader className="border-b border-border/5 pb-5">
-            <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-              <div>
-                <CardTitle className="flex items-center gap-2 text-xl font-bold text-foreground"><TrendingUp className="h-5 w-5 text-primary" /> Flujo de caja</CardTitle>
-                <p className="mt-2 text-sm font-medium text-muted-foreground">
-                  {isClient ? 'Revisa el detalle y el histórico de tu actividad en el historial.' : 'Pulso de volumen de los últimos 7 días cerrados.'}
-                </p>
-              </div>
-              <div className="rounded-2xl border border-border/10 bg-background px-4 py-3 text-right">
-                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">Promedio ticket</p>
-                <p className="mt-1 text-xl font-bold text-foreground">{fmt(stats?.averageTicket ?? 0)}</p>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-5 p-6">
-            {!isClient && trend.length > 0 ? (
-              <div className="rounded-[1.75rem] border border-border/10 bg-background/70 p-5">
-                <div className="mb-4 flex items-center justify-between">
-                  <div><p className="text-sm font-bold text-foreground">Volumen diario</p><p className="text-xs font-medium text-muted-foreground">Últimos 7 días cerrados</p></div>
-                  <div className="text-right"><p className="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">Volumen 30 días</p><p className="text-lg font-bold text-foreground">{fmt(stats?.monthlyVolume ?? 0)}</p></div>
-                </div>
-                <ChartContainer config={cashFlowConfig} className="aspect-auto h-64 w-full min-w-0 sm:h-72">
-                  <AreaChart accessibilityLayer data={volumeTrend} margin={{ left: 0, right: 8 }}>
-                    <CartesianGrid vertical={false} stroke="var(--border)" strokeDasharray="3 3" />
-                    <XAxis
-                      dataKey="date"
-                      tickLine={false}
-                      tickMargin={8}
-                      axisLine={false}
-                      tick={{ fontSize: 10, fill: 'currentColor', fontWeight: 700 }}
-                      className="text-muted-foreground"
-                    />
-                    <YAxis
-                      tickLine={false}
-                      axisLine={false}
-                      tickMargin={8}
-                      width={56}
-                      tick={{ fontSize: 10, fill: 'currentColor', fontWeight: 700 }}
-                      className="text-muted-foreground"
-                      tickFormatter={(value: number) => compactAmount(value)}
-                    />
-                    <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="line" />} />
-                    <defs>
-                      <linearGradient id="cashFlowFill" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="var(--color-amount)" stopOpacity={0.35} />
-                        <stop offset="95%" stopColor="var(--color-amount)" stopOpacity={0.02} />
-                      </linearGradient>
-                    </defs>
-                    <Area dataKey="amount" type="monotone" fill="url(#cashFlowFill)" stroke="var(--color-amount)" strokeWidth={2} />
-                  </AreaChart>
-                </ChartContainer>
-              </div>
-            ) : (
-              <div className="rounded-[1.75rem] border border-dashed border-border/20 bg-background/50 px-5 py-10 text-center">
-                <p className="text-sm font-semibold text-muted-foreground">Todavía no hay datos de flujo para mostrar. Revisa el histórico de tus operaciones.</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5" aria-label="Indicadores financieros y operativos">
+        {additionalMetrics.map((metric) => {
+          const MetricIcon = metric.icon;
 
-        <Card className="min-w-0 overflow-hidden">
-          <CardHeader className="border-b border-border/5 pb-5">
-            <CardTitle className="flex items-center gap-2 text-xl font-bold text-foreground"><Landmark className="h-5 w-5 text-primary" /> Saldos y tesorería</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4 p-6">
-            {treasuryRows.map((row) => (
-              <div key={row.label} className="flex items-center justify-between gap-4 rounded-3xl border border-border/10 bg-background/70 p-4">
-                <div className="flex min-w-0 items-center gap-3">
-                  <div className={cn('flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border text-white shadow-lg', row.tone)}>
-                    <row.icon className="h-5 w-5" />
-                  </div>
-                  <p className="text-sm font-bold text-foreground">{row.label}</p>
+          return (
+            <Card key={metric.label} className="min-w-0 overflow-hidden">
+              <CardContent className="flex items-center justify-between gap-4 p-5">
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">{metric.label}</p>
+                  <p className="mt-2 truncate text-2xl font-bold tabular-nums text-foreground">{metric.value}</p>
                 </div>
-                <p className="shrink-0 text-lg font-bold tabular-nums text-foreground">{row.value}</p>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
+                <div className={cn('flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border text-white shadow-lg', metric.tone)}>
+                  <MetricIcon className="h-5 w-5" />
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
       </section>
-
-      {/* Operativo: salud + top gestores/resumen + acciones rápidas */}
+      {!isClient && (
       <section className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
         <Card className="min-w-0 overflow-hidden">
           <CardHeader className="border-b border-border/5 pb-5">
@@ -320,13 +230,15 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        <div className="space-y-6">
+        {isAdmin && (
           <Card className="min-w-0 overflow-hidden">
             <CardHeader className="border-b border-border/5 pb-5">
-              <CardTitle className="flex items-center gap-2 text-xl font-bold text-foreground">{isAdmin ? <Users className="h-5 w-5 text-primary" /> : <Sparkles className="h-5 w-5 text-primary" />}{isAdmin ? ' Top gestores por volumen' : ' Resumen ejecutivo'}</CardTitle>
+              <CardTitle className="flex items-center gap-2 text-xl font-bold text-foreground"><Users className="h-5 w-5 text-primary" /> Top gestores por volumen</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4 p-6">
-              {isAdmin ? agentStats.slice(0, 5).map((agent, index) => (
+              {agentStats.length === 0 ? (
+                <p className="rounded-3xl border border-dashed border-border/20 p-5 text-sm font-medium text-muted-foreground">Todavía no hay actividad de gestores para mostrar.</p>
+              ) : agentStats.slice(0, 5).map((agent, index) => (
                 <div key={agent.agent_id} className="flex items-center justify-between rounded-3xl border border-border/10 bg-background/70 p-4">
                   <div className="flex items-center gap-3">
                     <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-900 text-xs font-bold text-white dark:bg-white dark:text-slate-900">#{index + 1}</div>
@@ -334,30 +246,12 @@ export default function DashboardPage() {
                   </div>
                   <div className="text-right"><p className="text-sm font-bold text-foreground">{fmt(agent.total_sent)}</p><p className="text-xs font-medium text-muted-foreground">{formatDateShort(agent.last_transfer)}</p></div>
                 </div>
-              )) : (
-                <>
-                  <div className="rounded-3xl border border-border/10 bg-background/70 p-5"><p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Volumen del mes</p><p className="mt-2 text-2xl font-bold tabular-nums text-foreground">{fmt(stats?.monthlyVolume ?? 0)}</p></div>
-                  <div className="rounded-3xl border border-border/10 bg-background/70 p-5"><p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Meta de consistencia</p><div className="mt-3 flex items-center justify-between"><p className="text-2xl font-bold text-foreground">{settlementRate}%</p><Target className="h-5 w-5 text-emerald-500" /></div></div>
-                </>
-              )}
+              ))}
             </CardContent>
           </Card>
-
-          <Card className="min-w-0 overflow-hidden">
-            <CardHeader className="border-b border-border/5 pb-5">
-              <CardTitle className="flex items-center gap-2 text-xl font-bold text-foreground"><BarChart3 className="h-5 w-5 text-primary" /> Acciones rápidas</CardTitle>
-            </CardHeader>
-            <CardContent className="grid gap-3 p-6">
-              <Link href={isAdmin ? '/stats' : '/history'}><div className="rounded-3xl border border-border/10 bg-background/70 p-4 hover:bg-background"><p className="text-sm font-bold text-foreground">{isAdmin ? 'Analítica avanzada' : 'Historial operativo'}</p><p className="mt-1 text-xs font-medium text-muted-foreground">{isAdmin ? 'Explora tendencia, red y concentración por gestor.' : 'Revisa operaciones, estados y fechas clave.'}</p></div></Link>
-              <Link href="/balance"><div className="rounded-3xl border border-border/10 bg-background/70 p-4 hover:bg-background"><p className="text-sm font-bold text-foreground">{isAdmin ? 'Tesorería de red' : 'Mi liquidez'}</p><p className="mt-1 text-xs font-medium text-muted-foreground">{isAdmin ? 'Recarga saldos y controla disponibilidad por gestor.' : 'Consulta movimientos y saldo operativo en tiempo real.'}</p></div></Link>
-              <button type="button" className="rounded-3xl border border-border/10 bg-background/70 p-4 text-left hover:bg-background" onClick={() => { setSupportRequestType(isGestor ? 'balance_topup' : 'general'); setSupportModalOpen(true); }}>
-                <p className="text-sm font-bold text-foreground">Escalar incidencia</p>
-                <p className="mt-1 text-xs font-medium text-muted-foreground">Contacta con administración para recargas, errores o seguimiento.</p>
-              </button>
-            </CardContent>
-          </Card>
-        </div>
+        )}
       </section>
+      )}
 
       {!isClient && (
         <section className="grid grid-cols-1 gap-6">
@@ -379,11 +273,7 @@ export default function DashboardPage() {
             <CardContent className="space-y-4 p-6">
               {isAdmin ? (
                 <>
-                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                    <div className="rounded-3xl border border-emerald-500/20 bg-emerald-500/10 p-5">
-                      <p className="text-xs font-semibold uppercase tracking-[0.22em] text-emerald-700 dark:text-emerald-300">Hoy</p>
-                      <p className="mt-2 text-2xl font-bold tabular-nums text-foreground">{fmt(commissionStats?.todayCommission ?? 0)}</p>
-                    </div>
+                  <div className="grid gap-4 sm:grid-cols-2">
                     <div className="rounded-3xl border border-sky-500/20 bg-sky-500/10 p-5">
                       <p className="text-xs font-semibold uppercase tracking-[0.22em] text-sky-700 dark:text-sky-300">Mes actual</p>
                       <p className="mt-2 text-2xl font-bold tabular-nums text-foreground">{fmt(commissionStats?.monthCommission ?? 0)}</p>
@@ -391,10 +281,6 @@ export default function DashboardPage() {
                     <div className="rounded-3xl border border-violet-500/20 bg-violet-500/10 p-5">
                       <p className="text-xs font-semibold uppercase tracking-[0.22em] text-violet-700 dark:text-violet-300">Año actual</p>
                       <p className="mt-2 text-2xl font-bold tabular-nums text-foreground">{fmt(commissionStats?.yearCommission ?? 0)}</p>
-                    </div>
-                    <div className="rounded-3xl border border-fuchsia-500/20 bg-fuchsia-500/10 p-5">
-                      <p className="text-xs font-semibold uppercase tracking-[0.22em] text-fuchsia-700 dark:text-fuchsia-300">Acumulado</p>
-                      <p className="mt-2 text-2xl font-bold tabular-nums text-foreground">{fmt(commissionStats?.totalCommission ?? 0)}</p>
                     </div>
                   </div>
 
@@ -444,12 +330,7 @@ export default function DashboardPage() {
                   </div>
                 </>
               ) : (
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                  <div className="rounded-3xl border border-emerald-500/20 bg-emerald-500/10 p-5">
-                    <p className="text-xs font-semibold uppercase tracking-[0.22em] text-emerald-700 dark:text-emerald-300">Hoy</p>
-                    <p className="mt-2 text-2xl font-bold tabular-nums text-foreground">{fmt(stats?.todayCommission ?? 0)}</p>
-                    <p className="mt-1 text-xs font-medium text-muted-foreground">Comisión generada hoy</p>
-                  </div>
+                <div className="grid gap-4 sm:grid-cols-2">
                   <div className="rounded-3xl border border-sky-500/20 bg-sky-500/10 p-5">
                     <p className="text-xs font-semibold uppercase tracking-[0.22em] text-sky-700 dark:text-sky-300">Mes actual</p>
                     <p className="mt-2 text-2xl font-bold tabular-nums text-foreground">{fmt(stats?.monthlyCommission ?? 0)}</p>
@@ -459,11 +340,6 @@ export default function DashboardPage() {
                     <p className="text-xs font-semibold uppercase tracking-[0.22em] text-violet-700 dark:text-violet-300">Año actual</p>
                     <p className="mt-2 text-2xl font-bold tabular-nums text-foreground">{fmt(stats?.yearlyCommission ?? 0)}</p>
                     <p className="mt-1 text-xs font-medium text-muted-foreground">Comisión acumulada del año</p>
-                  </div>
-                  <div className="rounded-3xl border border-fuchsia-500/20 bg-fuchsia-500/10 p-5">
-                    <p className="text-xs font-semibold uppercase tracking-[0.22em] text-fuchsia-700 dark:text-fuchsia-300">Acumulado</p>
-                    <p className="mt-2 text-2xl font-bold tabular-nums text-foreground">{fmt(stats?.totalCommission ?? 0)}</p>
-                    <p className="mt-1 text-xs font-medium text-muted-foreground">Total histórico generado</p>
                   </div>
                 </div>
               )}
@@ -615,8 +491,6 @@ export default function DashboardPage() {
         </section>
       )}
 
-        </div>
-      </details>
       <SupportModal open={supportModalOpen} onOpenChange={setSupportModalOpen} requestType={supportRequestType} />
     </div>
   );

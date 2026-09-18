@@ -18,17 +18,17 @@
 
 .landing-root .landing-footer {
   border-radius: 0;
-  border-top-color: rgba(105,126,164,.16);
-  background: radial-gradient(circle at 12% 0%,rgba(37,99,235,.12),transparent 30%),radial-gradient(circle at 82% 100%,rgba(236,22,116,.08),transparent 32%),#061022;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.025);
+  border-top-color: var(--land-line);
+  background: radial-gradient(circle at 12% 0%,rgba(37,99,235,.08),transparent 30%),radial-gradient(circle at 82% 100%,rgba(236,22,116,.07),transparent 32%),var(--surface);
+  box-shadow: inset 0 1px 0 var(--surface-highlight);
 }
 
-.dark .landing-footer {
+.dark .landing-root .landing-footer {
   border-top-color: rgba(148, 163, 184, .14);
   background:
-    radial-gradient(circle at 12% 0%, rgba(236, 72, 153, .10), transparent 28%),
-    radial-gradient(circle at 88% 100%, rgba(244, 63, 94, .09), transparent 30%),
-    rgba(23, 8, 20, .55);
+    radial-gradient(circle at 12% 0%,rgba(37,99,235,.12),transparent 30%),
+    radial-gradient(circle at 82% 100%,rgba(236,22,116,.08),transparent 32%),
+    #061022;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, .035);
 }
 

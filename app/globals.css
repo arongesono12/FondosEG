@@ -92,6 +92,10 @@
   background-size: cover;
 }
 .landing-root { --land-bg: var(--marketing-page-base); }
+.dark .dashboard-public-page.main-container {
+  background-color: var(--marketing-page-base);
+  background-image: var(--marketing-page-background);
+}
 @media (max-width: 1023.98px), (hover: none) and (pointer: coarse) {
   .landing-root, .info-page, .legal-page, .auth-public-page, .dashboard-public-page { background-attachment: scroll; }
 }

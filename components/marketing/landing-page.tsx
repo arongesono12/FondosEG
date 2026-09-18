@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/hugeicons';
 
 import { DashboardLogo } from '@/components/layout/dashboard-logo';
+import { ThemeToggle } from '@/components/theme-toggle';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 import {
@@ -80,6 +81,7 @@ function Header() {
         </div>
       </nav>
       <div className="landing-actions">
+        <ThemeToggle />
         {/* Hasta que Clerk resuelve la sesión se muestran los enlaces públicos:
             evita un hueco durante la carga y no filtra estado de sesión. */}
         {isSignedIn ? (

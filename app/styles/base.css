@@ -18,6 +18,18 @@ body {
   transition: background-color 0.15s ease, color 0.15s ease;
 }
 
+.dark body {
+  background-color: var(--marketing-page-base);
+  background-image: var(--marketing-page-background);
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+
+@media (max-width: 1023.98px), (hover: none) and (pointer: coarse) {
+  .dark body { background-attachment: scroll; }
+}
+
 button,
 input,
 textarea,
