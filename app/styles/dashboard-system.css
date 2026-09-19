@@ -1,0 +1,889 @@
+/* Authenticated application surfaces. Marketing, documentation and auth keep
+   their own visual language; every rule here is dashboard- or panel-scoped. */
+.dashboard-public-page,
+.dashboard-module-panel {
+  /* Las familias viven en tokens.css; aquí solo se les da el rol de la pantalla. */
+  --dashboard-font-heading: var(--font-fondoseg-primary);
+  --dashboard-font-body: var(--font-fondoseg-secondary);
+  --dashboard-card-bg: var(--surface);
+  --dashboard-card-border: color-mix(in srgb, var(--surface-border) 78%, transparent);
+  --dashboard-card-radius: 20px;
+  --dashboard-card-padding: 20px;
+  --dashboard-card-shadow: none;
+  --dashboard-panel-bg: var(--background);
+  font-family: var(--dashboard-font-body);
+}
+
+.dashboard-public-page.font-sans {
+  font-family: var(--dashboard-font-body);
+}
+
+:is(.dashboard-public-page, .dashboard-module-panel) :is(h1, h2, h3, h4, h5, h6, .app-card-title, .dashboard-card-title),
+.dashboard-module-panel-header h2 {
+  font-family: var(--dashboard-font-heading);
+  font-weight: 600;
+}
+
+:is(.dashboard-public-page .dashboard-main, .dashboard-module-panel) :is(
+  .tabular-nums,
+  .overview-metric-value,
+  .overview-transfer-amount,
+  .overview-detail-tiles strong,
+  .overview-detail-footer strong,
+  .overview-wallet span
+) {
+  font-family: var(--dashboard-font-heading);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+:is(.dashboard-public-page .dashboard-main, .dashboard-module-panel) :is(
+  table,
+  input,
+  select,
+  textarea,
+  label,
+  .recharts-text,
+  .recharts-label,
+  .overview-chart-legend
+) {
+  font-family: var(--dashboard-font-body);
+}
+
+.dark .dashboard-public-page,
+.dark .dashboard-module-panel {
+  --dashboard-card-bg: hsl(217 60% 9%);
+  --dashboard-card-border: hsl(215 20% 40% / .34);
+  --dashboard-panel-bg: hsl(224 71% 4%);
+}
+
+.dashboard-public-page.main-container {
+  background-color: var(--background) !important;
+  background-image: none !important;
+}
+
+html.dark .dashboard-public-page.main-container {
+  background-color: var(--background) !important;
+  background-image: none !important;
+}
+
+.dashboard-public-page .dashboard-shell {
+  border-color: var(--dashboard-card-border) !important;
+  background: var(--background) !important;
+  box-shadow: none !important;
+}
+
+.dashboard-public-page .dashboard-desktop-header {
+  background: var(--background) !important;
+  box-shadow: none !important;
+}
+
+.dashboard-card-surface {
+  display: block;
+  min-width: 0;
+  border: 1px solid var(--dashboard-card-border) !important;
+  border-radius: var(--dashboard-card-radius) !important;
+  background: var(--dashboard-card-bg) !important;
+  background-image: none !important;
+  color: var(--surface-fg);
+  box-shadow: var(--dashboard-card-shadow) !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
+.dashboard-card-metric {
+  min-height: 242px;
+  overflow: hidden;
+}
+
+.dashboard-card-nested {
+  --dashboard-card-radius: 16px;
+}
+
+.dashboard-card-interactive {
+  cursor: pointer;
+  transition: border-color .18s ease, background-color .18s ease;
+}
+
+.dashboard-card-interactive:hover {
+  border-color: color-mix(in srgb, var(--primary) 34%, var(--dashboard-card-border)) !important;
+  box-shadow: none !important;
+}
+
+.dashboard-card-interactive:focus-visible {
+  outline: 3px solid var(--ring);
+  outline-offset: 3px;
+}
+
+.dashboard-card-header {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: var(--dashboard-card-padding);
+  padding-bottom: 0;
+}
+
+.dashboard-card-content {
+  padding: var(--dashboard-card-padding);
+}
+
+.dashboard-card-footer {
+  display: flex;
+  align-items: center;
+  margin-top: auto;
+  padding: 0 var(--dashboard-card-padding) var(--dashboard-card-padding);
+}
+
+:is(.dashboard-public-page, .dashboard-module-panel) :is(
+  .app-card,
+  .glass,
+  .glass-premium,
+  .dashboard-card,
+  .dialog-shell
+) {
+  border-color: var(--dashboard-card-border) !important;
+  border-radius: var(--dashboard-card-radius) !important;
+  background-color: var(--dashboard-card-bg) !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
+:is(.dashboard-public-page, .dashboard-module-panel) :is(
+  .app-card,
+  .glass,
+  .glass-premium,
+  .dashboard-card
+):hover {
+  box-shadow: none !important;
+}
+
+:is(.dashboard-public-page .dashboard-main, .dashboard-module-panel) :is(
+  article,
+  section,
+  div,
+  li
+)[class*="rounded-"][class*="border"] {
+  box-shadow: none !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
+:is(.dashboard-public-page .dashboard-main, .dashboard-module-panel) :is(
+  article,
+  section,
+  div,
+  li
+)[class*="rounded-3xl"][class*="border"] {
+  border-radius: var(--dashboard-card-radius) !important;
+}
+
+:is(.dashboard-public-page .dashboard-main, .dashboard-module-panel) :is(
+  article,
+  section,
+  div,
+  li
+)[class*="rounded-2xl"][class*="border"] {
+  border-radius: 16px !important;
+}
+
+:is(.dashboard-public-page .dashboard-main, .dashboard-module-panel) [class*="backdrop-blur"] {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
+:is(.dashboard-public-page .dashboard-main, .dashboard-module-panel) [class*="shadow-"] {
+  box-shadow: none !important;
+}
+
+:is(.dashboard-public-page .dashboard-main, .dashboard-module-panel) :is(
+  input:not([type="checkbox"]):not([type="radio"]),
+  select
+) {
+  border-radius: var(--app-control-radius);
+}
+
+:is(.dashboard-public-page .dashboard-main, .dashboard-module-panel) textarea {
+  border-radius: var(--app-control-radius-multiline);
+}
+
+/* Dashboard overview: the screenshot's four equal, opaque financial cards. */
+.dashboard-public-page .overview-metric {
+  height: 242px;
+  padding: 22px 22px 0;
+  border-color: var(--dashboard-card-border) !important;
+  border-radius: var(--dashboard-card-radius) !important;
+  background: var(--dashboard-card-bg) !important;
+  box-shadow: none !important;
+}
+
+.dashboard-public-page .overview-metric-label {
+  min-height: 28px;
+}
+
+.dashboard-public-page .overview-metric h2 {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -.015em;
+}
+
+.dashboard-public-page .overview-metric-label > svg {
+  width: 20px;
+  height: 20px;
+  stroke-width: 1.8;
+}
+
+.dashboard-public-page .overview-metric-value {
+  margin-top: 14px;
+  font-size: clamp(28px, 2.25vw, 34px);
+  font-weight: 600;
+  letter-spacing: -.9px;
+}
+
+.dashboard-public-page .overview-metric-value small {
+  font-size: 19px;
+}
+
+.dashboard-public-page .overview-metric-caption {
+  margin-top: 9px;
+  column-gap: 5px;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.dashboard-public-page .overview-metric-caption svg {
+  width: 14px;
+  height: 14px;
+}
+
+.dashboard-public-page .overview-chart-legend {
+  left: 22px;
+  bottom: 8px;
+  font-size: 12px;
+}
+
+.dashboard-public-page .overview-balance .overview-metric-label .overview-icon-button {
+  width: 34px;
+  height: 34px;
+  border-radius: 11px;
+}
+
+.dashboard-public-page .overview-balance .overview-metric-label .overview-icon-button svg {
+  width: 18px;
+  height: 18px;
+}
+
+.dashboard-public-page .overview-wallets {
+  left: 18px;
+  right: 18px;
+  gap: 7px;
+}
+
+.dashboard-public-page .overview-wallet {
+  height: 100px;
+  gap: 8px;
+  padding-top: 15px;
+  font-size: 12px;
+}
+
+.dashboard-public-page .overview-wallet.is-featured {
+  height: 112px;
+}
+
+.dashboard-public-page .overview-wallet > svg {
+  width: 19px;
+  height: 19px;
+}
+
+.dashboard-public-page .overview-wallet strong {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.dashboard-public-page .overview-wallet span {
+  font-size: 12px;
+}
+
+.dashboard-public-page .overview-filters {
+  gap: 13px;
+  --overview-control-height: 46px;
+}
+
+.dashboard-public-page .overview-filter-label {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.dashboard-public-page .overview-filter-label b {
+  width: 21px;
+  height: 21px;
+  font-size: 12px;
+}
+
+/* La altura la fija `--overview-control-height` en la propia barra; aquí sólo
+   se ensancha el acolchado lateral en el dashboard. */
+.dashboard-public-page .overview :is(.overview-select, .overview-date, .overview-search) {
+  padding-inline: 14px;
+}
+
+
+
+.dashboard-public-page .overview-filters :is(.overview-select, .overview-date, .overview-search) > svg {
+  width: 15px;
+  height: 15px;
+}
+
+.dashboard-public-page .overview-icon-button,
+.dashboard-public-page .overview-primary-action,
+.dashboard-public-page .overview-wallet,
+.dashboard-public-page .overview-operation-tabs button,
+.dashboard-public-page .overview-detail-action {
+  box-shadow: none !important;
+}
+
+.dashboard-public-page .overview-wallet.is-featured,
+.dashboard-public-page .overview-operation-tabs button.is-active,
+.dashboard-public-page .overview-transfer.is-selected {
+  background: var(--primary) !important;
+  background-image: none !important;
+  box-shadow: none !important;
+}
+
+.dashboard-public-page .overview-transfer-detail {
+  border: 1px solid hsl(215 20% 40% / .34);
+  background: var(--dashboard-ink) !important;
+  background-image: none !important;
+  box-shadow: none !important;
+}
+
+.dashboard-public-page .dashboard-desktop-nav a[aria-current="page"] {
+  background: var(--primary) !important;
+  background-image: none !important;
+  box-shadow: none !important;
+}
+
+/* Half-screen module surface. It is portalled to <body>, so it carries the
+   dashboard tokens itself instead of depending on DOM ancestry. */
+.dashboard-module-overlay {
+  z-index: 50;
+  background: rgb(2 6 23 / .62) !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
+.dashboard-module-panel {
+  position: fixed !important;
+  inset: 0 0 0 auto !important;
+  z-index: 50;
+  display: flex !important;
+  width: 50vw !important;
+  max-width: none !important;
+  height: 100vh !important;
+  height: 100dvh !important;
+  max-height: none !important;
+  min-height: 0;
+  translate: none !important;
+  transform: none !important;
+  overflow: hidden !important;
+  border: 0 !important;
+  border-left: 1px solid var(--dashboard-card-border) !important;
+  /* Sin curvatura: ocupa media pantalla de arriba abajo, y una esquina
+     redondeada sólo en el lado izquierdo leía como una tarjeta a medias. */
+  border-radius: 0 !important;
+  background: var(--dashboard-panel-bg) !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  container: dashboard-module / inline-size;
+}
+
+.dashboard-module-panel[data-state="open"] {
+  animation: dashboard-module-in .24s cubic-bezier(.22, 1, .36, 1);
+}
+
+.dashboard-module-panel[data-state="closed"] {
+  animation: dashboard-module-out .18s ease-in;
+}
+
+.dashboard-module-panel-header {
+  position: sticky;
+  top: 0;
+  z-index: 4;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 82px;
+  padding: 18px 22px;
+  border-bottom: 1px solid var(--dashboard-card-border);
+  background: var(--dashboard-panel-bg);
+}
+
+.dashboard-module-panel-header h2 {
+  margin-top: 3px;
+  font-size: clamp(20px, 2vw, 28px);
+  font-weight: 600;
+  letter-spacing: -.035em;
+}
+
+.dashboard-module-eyebrow {
+  display: block;
+  color: var(--primary);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+}
+
+.dashboard-module-close {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  flex: none;
+  place-items: center;
+  border: 1px solid var(--dashboard-card-border);
+  border-radius: var(--app-control-radius);
+  background: var(--dashboard-card-bg);
+  color: var(--surface-fg);
+  transition: border-color .18s ease, background-color .18s ease;
+}
+
+.dashboard-module-close:hover {
+  border-color: color-mix(in srgb, var(--primary) 36%, var(--dashboard-card-border));
+  background: var(--accent);
+}
+
+.dashboard-module-close:focus-visible {
+  outline: 3px solid var(--ring);
+  outline-offset: 3px;
+}
+
+.dashboard-module-close svg {
+  width: 19px;
+  height: 19px;
+}
+
+.dashboard-module-panel-body {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding: 22px;
+  scrollbar-gutter: stable;
+}
+
+.dashboard-module-viewport {
+  min-width: 0;
+  container: module-content / inline-size;
+}
+
+.dashboard-module-viewport > * {
+  min-width: 0;
+}
+
+.dashboard-module-loading {
+  display: grid;
+  gap: 16px;
+}
+
+.dashboard-module-notice {
+  position: fixed;
+  top: max(18px, env(safe-area-inset-top));
+  right: max(18px, env(safe-area-inset-right));
+  z-index: 80;
+  max-width: min(360px, calc(100vw - 36px));
+  padding: 13px 16px;
+  border: 1px solid var(--dashboard-card-border);
+  border-radius: 14px;
+  background: var(--surface);
+  color: var(--surface-fg);
+  box-shadow: none;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+@media (min-width: 1024px) {
+  .dashboard-module-panel :is(
+    [class*="lg:grid-cols-3"],
+    [class*="lg:grid-cols-4"],
+    [class*="xl:grid-cols-3"],
+    [class*="xl:grid-cols-4"],
+    [class*="xl:grid-cols-5"],
+    [class*="xl:grid-cols-6"]
+  ) {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .dashboard-module-panel table {
+    min-width: 680px;
+  }
+}
+
+@media (max-width: 1023.98px) {
+  .dashboard-public-page .overview-metric {
+    padding: 19px 17px 0;
+  }
+
+  .dashboard-public-page .overview-metric h2 {
+    font-size: 14px;
+  }
+
+  .dashboard-public-page .overview-metric-value {
+    font-size: clamp(24px, 4.2vw, 30px);
+  }
+
+  .dashboard-public-page .overview-metric-caption {
+    font-size: 12px;
+  }
+
+  .dashboard-module-panel {
+    width: 100vw !important;
+    width: 100dvw !important;
+    border-left: 0 !important;
+  }
+
+  .dashboard-module-panel-header {
+    min-height: 72px;
+    padding: max(14px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) 14px max(18px, env(safe-area-inset-left));
+  }
+
+  .dashboard-module-panel-body {
+    padding: 18px max(18px, env(safe-area-inset-right)) calc(24px + env(safe-area-inset-bottom)) max(18px, env(safe-area-inset-left));
+  }
+}
+
+@media (max-width: 700px) {
+  .dashboard-public-page .overview-metric {
+    padding-inline: 14px;
+  }
+
+  .dashboard-public-page .overview-metric h2 {
+    font-size: 13px;
+  }
+
+  .dashboard-public-page .overview-metric-value {
+    font-size: clamp(22px, 6vw, 27px);
+  }
+
+  .dashboard-public-page .overview-wallets {
+    left: 9px;
+    right: 9px;
+    gap: 3px;
+  }
+
+  .dashboard-public-page .overview-wallet {
+    gap: 6px;
+    font-size: 10px;
+  }
+
+  .dashboard-public-page .overview-wallet > svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .dashboard-public-page .overview-wallet strong {
+    font-size: 11px;
+  }
+
+  .dashboard-public-page .overview-wallet span {
+    font-size: 10px;
+  }
+}
+
+@keyframes dashboard-module-in {
+  from { opacity: .85; transform: translateX(100%); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes dashboard-module-out {
+  from { opacity: 1; transform: translateX(0); }
+  to { opacity: .85; transform: translateX(100%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-card-interactive,
+  .dashboard-module-panel[data-state] {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* =========================================================================
+   ESCALA TIPOGRÁFICA DEL DASHBOARD
+   -------------------------------------------------------------------------
+   El dashboard acumulaba dieciséis tamaños distintos entre 9px y 36px, así
+   que dos textos del mismo rango visual acababan a 11px y a 15px según la
+   pantalla. Aquí se reducen a cinco pasos y se remapean tanto las utilidades
+   de Tailwind como los tamaños sueltos del overview, para no tener que tocar
+   cientos de `className`.
+
+   Regla: el cuerpo vive entre 14px y 16px; 12px queda reservado a etiquetas
+   secundarias compactas. El heurístico para distinguirlas es `uppercase`:
+   en este código las etiquetas de metadato siempre llevan `uppercase` con
+   tracking, mientras que un `text-xs` suelto es cuerpo encogido.
+   ========================================================================= */
+:is(.dashboard-public-page .dashboard-main, .dashboard-module-panel) {
+  --dashboard-text-meta: 12px;     /* etiqueta secundaria compacta */
+  --dashboard-text-body: 14px;     /* cuerpo, tablas, inputs, botones */
+  --dashboard-text-lead: 16px;     /* cuerpo destacado y cifra de tarjeta */
+  --dashboard-text-title: 18px;    /* título de tarjeta */
+  --dashboard-text-metric: 26px;   /* cifra de la tarjeta grande del overview */
+  --dashboard-text-display: 30px;  /* h1 de página */
+  font-size: var(--dashboard-text-body);
+  line-height: 1.5;
+}
+
+/* Suelo de 12px: por debajo no baja nada. */
+:is(.dashboard-public-page .dashboard-main, .dashboard-module-panel) :is(
+  .text-\[9px\],
+  .text-\[10px\],
+  .text-\[11px\],
+  .text-\[12px\],
+  .text-xs.uppercase
+) {
+  font-size: var(--dashboard-text-meta);
+  line-height: 1.45;
+}
+
+:is(.dashboard-public-page .dashboard-main, .dashboard-module-panel) :is(
+  .text-xs:not(.uppercase),
+  .text-\[13px\],
+  .text-sm
+) {
+  font-size: var(--dashboard-text-body);
+  line-height: 1.5;
+}
+
+:is(.dashboard-public-page .dashboard-main, .dashboard-module-panel) :is(
+  .text-\[15px\],
+  .text-base
+) {
+  font-size: var(--dashboard-text-lead);
+  line-height: 1.5;
+}
+
+:is(.dashboard-public-page .dashboard-main, .dashboard-module-panel) :is(
+  .text-lg,
+  .text-xl
+) {
+  font-size: var(--dashboard-text-title);
+  line-height: 1.35;
+}
+
+/* Cifra de tarjeta y título comparten utilidad (`text-2xl`, `text-3xl`) pero
+   no rol, así que los separa el elemento: una cifra vive en <p>, <span> o
+   <strong>; un título, en un encabezado —DialogTitle renderiza un <h2>.
+   Las cifras van al mismo paso que los importes de «Operaciones recientes»:
+   a 26px se salían de su caja y truncaban («525.000 X…»). */
+:is(.dashboard-public-page .dashboard-main, .dashboard-module-panel) :is(p, span, strong, b, dd, dt, div, li):is(.text-2xl, .text-3xl) {
+  font-size: var(--dashboard-text-lead);
+  line-height: 1.4;
+}
+
+:is(.dashboard-public-page .dashboard-main, .dashboard-module-panel) :is(h1, h2, h3, h4, h5, h6).text-2xl {
+  font-size: var(--dashboard-text-title);
+  line-height: 1.35;
+}
+
+:is(.dashboard-public-page .dashboard-main, .dashboard-module-panel) :is(h1, h2, h3, h4, h5, h6):is(.text-3xl, .text-4xl, .text-5xl),
+:is(.dashboard-public-page .dashboard-main, .dashboard-module-panel) :is(p, span, strong, b, dd, dt, div, li):is(.text-4xl, .text-5xl) {
+  font-size: var(--dashboard-text-display);
+  line-height: 1.2;
+}
+
+/* El overview declara sus tamaños en píxeles sueltos; se reconducen a la
+   misma escala por rol. La especificidad de estos selectores está por encima
+   de las reglas de `dashboard-overview.css` y de los bloques responsive de
+   más arriba, así que no dependen del orden de importación. */
+:is(.dashboard-public-page .dashboard-main, .dashboard-module-panel) :is(
+  .overview-metric-caption,
+  .overview-chart-legend,
+  .overview-chart-empty,
+  .overview-date > span,
+  .overview-transfer-state,
+  .overview-detail-label,
+  .overview-detail-heading small,
+  .overview-detail-code > span,
+  .overview-detail-tiles span,
+  .overview-detail-footer span,
+  .overview-wallet,
+  .overview-wallet strong,
+  .overview-wallet span,
+  .overview-operations-heading > div > span,
+  .dashboard-module-eyebrow
+) {
+  font-size: var(--dashboard-text-meta);
+  line-height: 1.45;
+}
+
+:is(.dashboard-public-page .dashboard-main, .dashboard-module-panel) :is(
+  .overview-title-group p,
+  .overview-primary-action,
+  .overview-metric h2,
+  .overview-filter-label,
+  .overview-filter-label b,
+  .overview-filters input,
+  .overview-filters select,
+  .overview-operations-heading h2,
+  .overview-operation-tabs button,
+  .overview-operation-tabs button > span,
+  .overview-transfer-identity strong,
+  .overview-transfer-identity small,
+  .overview-transfer-amount,
+  .overview-detail-heading strong,
+  .overview-detail-action,
+  .overview-transfer-notes,
+  .overview-empty,
+  .overview-empty-detail p,
+  .overview-empty-detail a,
+  .dashboard-insights > summary
+) {
+  font-size: var(--dashboard-text-body);
+  line-height: 1.5;
+}
+
+:is(.dashboard-public-page .dashboard-main, .dashboard-module-panel) :is(
+  .overview-metric-value small,
+  .overview-detail-tiles strong,
+  .overview-detail-footer strong
+) {
+  font-size: var(--dashboard-text-lead);
+  line-height: 1.4;
+}
+
+:is(.dashboard-public-page .dashboard-main, .dashboard-module-panel) :is(
+  .overview-detail-code h3,
+  .overview-empty-detail h3,
+  .app-card-title,
+  .dashboard-card-title
+) {
+  font-size: var(--dashboard-text-title);
+  line-height: 1.35;
+}
+
+:is(.dashboard-public-page .dashboard-main, .dashboard-module-panel) .overview-metric-value {
+  font-size: var(--dashboard-text-metric);
+  line-height: 1.2;
+}
+
+:is(.dashboard-public-page .dashboard-main, .dashboard-module-panel) .overview h1 {
+  font-size: var(--dashboard-text-display);
+  line-height: 1.2;
+}
+
+/* En móvil sólo se mueven los dos pasos grandes: el cuerpo se queda en 14px
+   porque encogerlo es justo lo que producía el desequilibrio. */
+@media (max-width: 700px) {
+  :is(.dashboard-public-page .dashboard-main, .dashboard-module-panel) {
+    --dashboard-text-metric: 22px;
+    --dashboard-text-display: 24px;
+    --dashboard-text-title: 17px;
+  }
+}
+
+/* =========================================================================
+   BANDEJA DE INDICADORES
+   -------------------------------------------------------------------------
+   Los cinco KPIs, «Salud operativa» y «Top gestores» dejan de ser tres
+   bloques sueltos sobre el fondo de página y comparten una sola superficie
+   oscura: la misma tinta (`--dashboard-ink`) que ya usan la bandeja de
+   operaciones y el detalle de transferencia del overview.
+
+   Dentro se redefinen los tokens de color en lugar de reescribir las clases
+   de Tailwind del JSX: `text-foreground`, `text-muted-foreground`,
+   `bg-background/70` y `border-border/10` se resuelven contra estos valores,
+   así que todo el subárbol queda legible sobre la tinta sin duplicar cada
+   utilidad con su variante `dark:`. La bandeja es oscura en los dos temas,
+   igual que las otras superficies de tinta.
+   ========================================================================= */
+.dashboard-tray {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+  padding: 18px;
+  border: 1px solid hsl(215 20% 40% / .34);
+  border-radius: 26px;
+  /* El panel modular se portalea a <body> y no hereda los tokens de
+     `.dashboard-public-page`, de ahí el valor de respaldo. */
+  background: var(--dashboard-ink, #0f172a);
+  color: var(--dashboard-on-ink, #f8fafc);
+
+  /* Tarjetas de dentro: blanco translúcido sobre la tinta. */
+  --dashboard-card-bg: rgb(255 255 255 / .06);
+  --dashboard-card-border: rgb(255 255 255 / .12);
+
+  /* Tokens que leen las utilidades de Tailwind del subárbol. */
+  --color-foreground: #f8fafc;
+  --color-card-foreground: #f8fafc;
+  --color-muted-foreground: #9fb0c6;
+  --color-background: #223047;
+  --color-card: #223047;
+  --color-border: #cbd5e1;
+  --color-accent: rgb(255 255 255 / .08);
+}
+
+.dashboard-tray > * {
+  min-width: 0;
+}
+
+/* Los separadores a 5% de un gris claro se perdían sobre la tinta. */
+.dashboard-tray :is(.border-b, .border-t) {
+  border-color: rgb(255 255 255 / .1) !important;
+}
+
+@media (max-width: 700px) {
+  .dashboard-tray {
+    gap: 12px;
+    padding: 14px;
+    border-radius: 20px;
+  }
+}
+
+/* =========================================================================
+   CAJONES LATERALES
+   -------------------------------------------------------------------------
+   «Usuarios conectados» y el detalle de operación comparten la clase
+   `.dashboard-drawer`, y ahora también la superficie del panel de módulo:
+   mismo fondo, mismo borde, sin sombra y sin curvatura. Son el mismo tipo de
+   pantalla —algo que entra por la derecha sobre el dashboard—, así que no
+   tiene sentido que cada una llegue con su propio color.
+
+   Los cajones son `position: fixed` pero cuelgan del árbol del dashboard, de
+   ahí que hereden los tokens; el valor de respaldo cubre el caso de que se
+   monten fuera.
+   ========================================================================= */
+.dashboard-drawer {
+  border-radius: 0;
+  border-left: 1px solid var(--dashboard-card-border, var(--surface-border));
+  background: var(--dashboard-panel-bg, var(--background));
+  box-shadow: none;
+}
+
+/* =========================================================================
+   RADIO DE BOTÓN
+   -------------------------------------------------------------------------
+   El primitivo `Button` ya sale en píldora, pero la aplicación tiene botones
+   escritos a mano con su propio `rounded-*`. Esta regla los reconduce al
+   mismo token sin ir fichero por fichero.
+
+   Excepciones, y el motivo de cada una:
+   - `.overview-transfer` es una fila de lista que se marcó como <button> por
+     accesibilidad. Mide 58px de alto y ocupa todo el ancho: en píldora deja
+     dos cápsulas en los extremos y deja de leerse como fila.
+   - Las tarjetas clicables (`asChild` sobre un <button>) son superficies, no
+     controles, y llevan el radio de tarjeta.
+   - `rounded-none` explícito se respeta: quien lo escribe lo quiere cuadrado.
+   - El widget de Clerk (`cl-*`) trae su propia configuración de radios.
+   ========================================================================= */
+:is(
+  .dashboard-public-page,
+  .dashboard-module-panel,
+  .dashboard-drawer,
+  .dialog-shell,
+  .landing-root,
+  .auth-public-page
+) button:not(.overview-transfer):not([data-dashboard-card]):not(.app-card):not([class*="rounded-none"]):not([class*="cl-"]) {
+  border-radius: var(--app-control-radius);
+}

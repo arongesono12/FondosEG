@@ -8,7 +8,7 @@
 /* Tailwind @theme bridge */
 @theme {
   --font-sans: var(--font-fondoseg-primary);
-  --font-mono: var(--font-fondoseg-secondary);
+  --font-mono: var(--font-fondoseg-mono);
   --font-serif: var(--font-fondoseg-primary);
 
   --color-background: var(--background);
@@ -41,6 +41,142 @@
   --radius-lg: calc(var(--radius) - 2px);
   --radius-md: calc(var(--radius) - 4px);
   --radius-sm: calc(var(--radius) - 8px);
+}
+
+/* =========================================================================
+   PALETA — una sola marca y tres estados
+   -------------------------------------------------------------------------
+   El código traía 914 usos de color crudo de Tailwind repartidos en 17
+   familias, y eso es lo que rompía la uniformidad: cinco KPIs con cinco
+   tonos distintos sin que el tono significara nada.
+
+   En vez de perseguir esas clases por el JSX, se redefine la propia paleta:
+   Tailwind v4 genera `bg-sky-500` como `var(--color-sky-500)`, así que
+   apuntar ese token a la marca reconduce la clase y todas sus variantes
+   (`hover:`, `dark:`, `/10`...) de una vez y sin `!important`.
+
+   Los cuatro roles:
+     marca   → var(--primary)        sky, blue, indigo, violet, purple,
+                                     fuchsia, pink, teal
+     éxito   → var(--state-success)  emerald, green
+     aviso   → var(--state-warning)  amber, yellow, orange
+     error   → var(--state-danger)   rose, red
+
+   `slate` se queda: ya es el neutro del proyecto (mismo rango de tono que
+   --foreground y --muted-foreground). `gray` se pliega sobre él para dejar
+   una sola rampa neutra.
+
+   Los cinco colores de --chart-* NO se tocan: ahí el tono sí significa algo,
+   distingue series de datos. La regla es que viven dentro de los gráficos.
+   ========================================================================= */
+@theme {
+
+  /* MARCA - sky, blue, indigo, violet, purple, fuchsia, pink, teal */
+  --color-blue-50: color-mix(in srgb, var(--primary) 8%, white);
+  --color-blue-100: color-mix(in srgb, var(--primary) 14%, white);
+  --color-blue-300: color-mix(in srgb, var(--primary) 40%, white);
+  --color-blue-400: color-mix(in srgb, var(--primary) 68%, white);
+  --color-blue-500: var(--primary);
+  --color-blue-600: color-mix(in srgb, var(--primary) 88%, black);
+  --color-blue-700: color-mix(in srgb, var(--primary) 72%, black);
+  --color-blue-800: color-mix(in srgb, var(--primary) 58%, black);
+  --color-blue-900: color-mix(in srgb, var(--primary) 46%, black);
+  --color-fuchsia-300: color-mix(in srgb, var(--primary) 40%, white);
+  --color-fuchsia-400: color-mix(in srgb, var(--primary) 68%, white);
+  --color-fuchsia-500: var(--primary);
+  --color-fuchsia-700: color-mix(in srgb, var(--primary) 72%, black);
+  --color-indigo-500: var(--primary);
+  --color-pink-50: color-mix(in srgb, var(--primary) 8%, white);
+  --color-pink-100: color-mix(in srgb, var(--primary) 14%, white);
+  --color-pink-200: color-mix(in srgb, var(--primary) 24%, white);
+  --color-pink-300: color-mix(in srgb, var(--primary) 40%, white);
+  --color-pink-400: color-mix(in srgb, var(--primary) 68%, white);
+  --color-pink-500: var(--primary);
+  --color-pink-600: color-mix(in srgb, var(--primary) 88%, black);
+  --color-pink-700: color-mix(in srgb, var(--primary) 72%, black);
+  --color-pink-800: color-mix(in srgb, var(--primary) 58%, black);
+  --color-purple-50: color-mix(in srgb, var(--primary) 8%, white);
+  --color-purple-400: color-mix(in srgb, var(--primary) 68%, white);
+  --color-purple-500: var(--primary);
+  --color-purple-900: color-mix(in srgb, var(--primary) 46%, black);
+  --color-sky-100: color-mix(in srgb, var(--primary) 14%, white);
+  --color-sky-200: color-mix(in srgb, var(--primary) 24%, white);
+  --color-sky-300: color-mix(in srgb, var(--primary) 40%, white);
+  --color-sky-400: color-mix(in srgb, var(--primary) 68%, white);
+  --color-sky-500: var(--primary);
+  --color-sky-600: color-mix(in srgb, var(--primary) 88%, black);
+  --color-sky-700: color-mix(in srgb, var(--primary) 72%, black);
+  --color-teal-500: var(--primary);
+  --color-violet-300: color-mix(in srgb, var(--primary) 40%, white);
+  --color-violet-500: var(--primary);
+  --color-violet-700: color-mix(in srgb, var(--primary) 72%, black);
+
+  /* EXITO - emerald, green */
+  --color-emerald-50: color-mix(in srgb, var(--state-success) 8%, white);
+  --color-emerald-100: color-mix(in srgb, var(--state-success) 14%, white);
+  --color-emerald-200: color-mix(in srgb, var(--state-success) 24%, white);
+  --color-emerald-300: color-mix(in srgb, var(--state-success) 40%, white);
+  --color-emerald-400: color-mix(in srgb, var(--state-success) 68%, white);
+  --color-emerald-500: var(--state-success);
+  --color-emerald-600: color-mix(in srgb, var(--state-success) 88%, black);
+  --color-emerald-700: color-mix(in srgb, var(--state-success) 72%, black);
+  --color-emerald-800: color-mix(in srgb, var(--state-success) 58%, black);
+  --color-emerald-900: color-mix(in srgb, var(--state-success) 46%, black);
+  --color-green-50: color-mix(in srgb, var(--state-success) 8%, white);
+  --color-green-100: color-mix(in srgb, var(--state-success) 14%, white);
+  --color-green-200: color-mix(in srgb, var(--state-success) 24%, white);
+  --color-green-400: color-mix(in srgb, var(--state-success) 68%, white);
+  --color-green-500: var(--state-success);
+  --color-green-600: color-mix(in srgb, var(--state-success) 88%, black);
+  --color-green-800: color-mix(in srgb, var(--state-success) 58%, black);
+  --color-green-900: color-mix(in srgb, var(--state-success) 46%, black);
+
+  /* AVISO - amber, yellow, orange */
+  --color-amber-50: color-mix(in srgb, var(--state-warning) 8%, white);
+  --color-amber-100: color-mix(in srgb, var(--state-warning) 14%, white);
+  --color-amber-200: color-mix(in srgb, var(--state-warning) 24%, white);
+  --color-amber-300: color-mix(in srgb, var(--state-warning) 40%, white);
+  --color-amber-400: color-mix(in srgb, var(--state-warning) 68%, white);
+  --color-amber-500: var(--state-warning);
+  --color-amber-600: color-mix(in srgb, var(--state-warning) 88%, black);
+  --color-amber-700: color-mix(in srgb, var(--state-warning) 72%, black);
+  --color-amber-800: color-mix(in srgb, var(--state-warning) 58%, black);
+  --color-amber-900: color-mix(in srgb, var(--state-warning) 46%, black);
+  --color-orange-500: var(--state-warning);
+  --color-yellow-100: color-mix(in srgb, var(--state-warning) 14%, white);
+  --color-yellow-300: color-mix(in srgb, var(--state-warning) 40%, white);
+  --color-yellow-800: color-mix(in srgb, var(--state-warning) 58%, black);
+
+  /* ERROR - rose, red */
+  --color-red-50: color-mix(in srgb, var(--state-danger) 8%, white);
+  --color-red-100: color-mix(in srgb, var(--state-danger) 14%, white);
+  --color-red-200: color-mix(in srgb, var(--state-danger) 24%, white);
+  --color-red-300: color-mix(in srgb, var(--state-danger) 40%, white);
+  --color-red-400: color-mix(in srgb, var(--state-danger) 68%, white);
+  --color-red-500: var(--state-danger);
+  --color-red-600: color-mix(in srgb, var(--state-danger) 88%, black);
+  --color-red-700: color-mix(in srgb, var(--state-danger) 72%, black);
+  --color-red-800: color-mix(in srgb, var(--state-danger) 58%, black);
+  --color-red-900: color-mix(in srgb, var(--state-danger) 46%, black);
+  --color-red-950: color-mix(in srgb, var(--state-danger) 32%, black);
+  --color-rose-50: color-mix(in srgb, var(--state-danger) 8%, white);
+  --color-rose-100: color-mix(in srgb, var(--state-danger) 14%, white);
+  --color-rose-200: color-mix(in srgb, var(--state-danger) 24%, white);
+  --color-rose-300: color-mix(in srgb, var(--state-danger) 40%, white);
+  --color-rose-400: color-mix(in srgb, var(--state-danger) 68%, white);
+  --color-rose-500: var(--state-danger);
+  --color-rose-600: color-mix(in srgb, var(--state-danger) 88%, black);
+  --color-rose-700: color-mix(in srgb, var(--state-danger) 72%, black);
+  --color-rose-900: color-mix(in srgb, var(--state-danger) 46%, black);
+  --color-rose-950: color-mix(in srgb, var(--state-danger) 32%, black);
+
+  /* NEUTRO - gray se pliega sobre slate para dejar una sola rampa neutra. */
+  --color-gray-100: var(--color-slate-100);
+  --color-gray-300: var(--color-slate-300);
+  --color-gray-600: var(--color-slate-600);
+  --color-gray-700: var(--color-slate-700);
+  --color-gray-800: var(--color-slate-800);
+  --color-gray-900: var(--color-slate-900);
 }
 
 /* Glass & Surface System */
@@ -82,6 +218,9 @@
 
 /* Final shared surface overrides */
 @import "./styles/system-surfaces.css";
+
+/* Authenticated dashboard surface and module panel */
+@import "./styles/dashboard-system.css";
 
 /* Shared Marketing Background */
 .landing-root, .info-page, .legal-page, .auth-public-page, .dashboard-public-page {

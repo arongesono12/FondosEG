@@ -6,8 +6,8 @@ import { useAppStore } from '@/lib/store';
 import { getAgentTransferStats, getAgentsCommissionStats, getDashboardReconciliation, getDashboardStats, getDailyTransferStats, getRecentTransfers } from '@/services/dashboard';
 import type { AgentTransferStats, AgentsCommissionStats, DashboardStats, DailyTransferStats, ReconciliationSummary, Transfer } from '@/types';
 import { cn, convertCurrency, formatCurrency, formatDateShort, formatMonthYear, getStatusColor } from '@/lib/utils';
-import { HttpError } from '@/services/http';
-import { isAdminRole } from '@/lib/roles';
+import { fetchJSON, HttpError } from '@/services/http';
+import { isAdminRole, isSuperAdminRole } from '@/lib/roles';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -36,12 +36,39 @@ import {
   ArrowUpRight,
   BarChart3,
   CreditCard,
+  MousePointerClick,
   PieChart as PieChartIcon,
   ShieldCheck,
   Sparkles,
   TrendingUp,
   Users,
 } from '@/components/ui/hugeicons';
+
+// Captación de la portada comercial. Vive aquí y no en el dashboard porque
+// /stats ya es la pantalla de analítica y sólo abre para admin.
+type MarketingStatsResponse = {
+  totals: {
+    total_events: number;
+    events_7d: number;
+    events_30d: number;
+    cta_clicks: number;
+    form_submits: number;
+    audience_switches: number;
+  };
+  byAudience: { label: string; count: number }[];
+  byCta: { label: string; count: number }[];
+  byTarget: { label: string; count: number }[];
+  byTheme: { label: string; count: number }[];
+  audienceSelections: { label: string; count: number }[];
+  recent: {
+    action: string;
+    audience: string | null;
+    cta: string | null;
+    target: string | null;
+    theme: string | null;
+    created_at: string;
+  }[];
+};
 
 const lineChartConfig = {
   amount: { label: 'Volumen', color: 'var(--chart-1)' },
@@ -91,22 +118,25 @@ export default function StatsPage() {
   const [recentTransfers, setRecentTransfers] = useState<Transfer[]>([]);
   const [commissionStats, setCommissionStats] = useState<AgentsCommissionStats | null>(null);
   const [reconciliation, setReconciliation] = useState<ReconciliationSummary | null>(null);
+  const [marketingStats, setMarketingStats] = useState<MarketingStatsResponse | null>(null);
   const [loading, setLoading] = useState(true);
 
   const isAdmin = isAdminRole(user?.role);
+  const isSuperAdmin = isSuperAdminRole(user?.role);
   const isGestor = user?.role === 'gestor';
   const currency = preferredCurrency || 'XAF';
 
   useEffect(() => {
     async function loadData() {
       try {
-        const [statsData, dailyData, recentData, agentsData, commissionData, reconciliationData] = await Promise.all([
+        const [statsData, dailyData, recentData, agentsData, commissionData, reconciliationData, marketingData] = await Promise.all([
           getDashboardStats(),
           getDailyTransferStats(30),
           getRecentTransfers(8),
           isAdmin ? getAgentTransferStats() : Promise.resolve([]),
           isAdmin ? getAgentsCommissionStats() : Promise.resolve(null),
           isAdmin ? getDashboardReconciliation(4) : Promise.resolve(null),
+          isSuperAdmin ? fetchJSON<MarketingStatsResponse>('/api/marketing/stats') : Promise.resolve(null),
         ]);
 
         setStats(statsData);
@@ -115,6 +145,7 @@ export default function StatsPage() {
         setAgentStats(agentsData);
         setCommissionStats(commissionData);
         setReconciliation(reconciliationData);
+        setMarketingStats(marketingData);
       } catch (error) {
         if (!(error instanceof HttpError && error.status === 401)) {
           console.error('Error loading stats:', error);
@@ -127,7 +158,7 @@ export default function StatsPage() {
     if (user) {
       loadData();
     }
-  }, [user, isAdmin]);
+  }, [user, isAdmin, isSuperAdmin]);
 
   const fmt = (amount: number) => formatCurrency(convertCurrency(amount, 'XAF', currency), currency);
 
@@ -149,7 +180,10 @@ export default function StatsPage() {
     value: Math.round(convertCurrency(agent.total_sent, 'XAF', currency)),
     ops: agent.transfer_count,
   }));
-  const commissionLeaders = (commissionStats?.agents || []).slice(0, 5);
+  // Sin recorte: la tabla de comisiones del dashboard —retirada por estar
+  // duplicada aquí— listaba a todos los gestores, y esta tarjeta se llama
+  // «Comisiones por gestor», no «Top 5».
+  const commissionAgents = commissionStats?.agents || [];
 
   const totalOps = (stats?.completedTransfers ?? 0) + (stats?.pendingTransfers ?? 0) + (stats?.cancelledTransfers ?? 0);
   const settlementRate = stats?.settlementRate ?? 0;
@@ -395,19 +429,31 @@ export default function StatsPage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3 p-6">
+            {isAdmin && (
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="rounded-3xl border border-border/10 bg-background/70 p-4">
+                  <p className="text-xs font-black uppercase tracking-[0.18em] text-muted-foreground">Mes actual</p>
+                  <p className="mt-2 text-2xl font-black tabular-nums text-foreground">{fmt(commissionStats?.monthCommission ?? 0)}</p>
+                </div>
+                <div className="rounded-3xl border border-border/10 bg-background/70 p-4">
+                  <p className="text-xs font-black uppercase tracking-[0.18em] text-muted-foreground">Año actual</p>
+                  <p className="mt-2 text-2xl font-black tabular-nums text-foreground">{fmt(commissionStats?.yearCommission ?? 0)}</p>
+                </div>
+              </div>
+            )}
             {isAdmin ? (
-              commissionLeaders.length === 0 ? (
+              commissionAgents.length === 0 ? (
                 <div className="rounded-3xl border border-dashed border-border/20 bg-background/50 px-6 py-10 text-center">
                   <p className="text-sm font-bold text-muted-foreground">No hay datos de comisión todavía.</p>
                 </div>
               ) : (
-                commissionLeaders.map((agent) => (
+                commissionAgents.map((agent) => (
                   <div key={agent.agent_id} className="rounded-3xl border border-border/10 bg-background/70 p-4">
                     <div className="flex items-start justify-between gap-4">
                       <div>
                         <p className="text-sm font-black text-foreground">{agent.agent_name}</p>
                         <p className="mt-1 text-xs font-semibold text-muted-foreground">
-                          {agent.transfer_count} operaciones · hoy {fmt(agent.today_commission)}
+                          {agent.transfer_count} operaciones
                         </p>
                         <p className="mt-1 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
                           Costo est. {fmt(agent.estimated_cost)} · margen {agent.net_margin}%
@@ -417,10 +463,23 @@ export default function StatsPage() {
                         Neto estimado
                       </Badge>
                     </div>
-                    <div className="mt-4 flex items-center justify-between">
+                    <div className="mt-4">
                       <p className="text-lg font-black text-foreground">{fmt(agent.net_profit)}</p>
-                      <p className="text-xs font-semibold uppercase text-muted-foreground">Comisión {fmt(agent.total_commission)}</p>
                     </div>
+                    {/* Las cuatro columnas que tenía la tabla del dashboard. */}
+                    <dl className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2 border-t border-border/10 pt-3 sm:grid-cols-4">
+                      {([
+                        ['Hoy', agent.today_commission],
+                        ['Mes', agent.month_commission],
+                        ['Año', agent.year_commission],
+                        ['Acumulado', agent.total_commission],
+                      ] as const).map(([label, value]) => (
+                        <div key={label} className="min-w-0">
+                          <dt className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">{label}</dt>
+                          <dd className="mt-1 truncate font-semibold tabular-nums text-foreground">{fmt(value)}</dd>
+                        </div>
+                      ))}
+                    </dl>
                   </div>
                 ))
               )
@@ -500,6 +559,114 @@ export default function StatsPage() {
                   </div>
                 </div>
               )}
+            </CardContent>
+          </Card>
+        </section>
+      )}
+      {isSuperAdmin && marketingStats && (
+        <section className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
+          <Card className="min-w-0">
+            <CardHeader className="border-b border-border/5 pb-5">
+              <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2 text-xl font-black text-foreground">
+                    <MousePointerClick className="h-5 w-5 text-primary" />
+                    Rendimiento de la landing
+                  </CardTitle>
+                  <p className="mt-2 text-sm font-medium text-muted-foreground">
+                    Interacciones por audiencia, CTA y formularios enviados desde la portada comercial.
+                  </p>
+                </div>
+                <Badge className="rounded-full border border-border/20 bg-background/70 px-3 py-1 text-xs font-black uppercase tracking-[0.18em] text-muted-foreground">
+                  Solo superadmin
+                </Badge>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-5 p-6">
+              <div className="grid gap-4 md:grid-cols-3 xl:grid-cols-6">
+                {([
+                  ['Eventos', marketingStats.totals.total_events],
+                  ['CTA clicks', marketingStats.totals.cta_clicks],
+                  ['Form submits', marketingStats.totals.form_submits],
+                  ['Cambios audiencia', marketingStats.totals.audience_switches],
+                  ['7 días', marketingStats.totals.events_7d],
+                  ['30 días', marketingStats.totals.events_30d],
+                ] as const).map(([label, value]) => (
+                  <div key={label} className="rounded-3xl border border-border/10 bg-background/70 p-4">
+                    <p className="text-xs font-black uppercase tracking-[0.18em] text-muted-foreground">{label}</p>
+                    <p className="mt-2 text-2xl font-black tabular-nums text-foreground">{value}</p>
+                  </div>
+                ))}
+              </div>
+
+              <div className="grid gap-5 lg:grid-cols-3">
+                {([
+                  ['Audiencias', marketingStats.byAudience],
+                  ['Top CTA', marketingStats.byCta],
+                  ['Temas usados', marketingStats.byTheme],
+                ] as const).map(([label, items]) => (
+                  <div key={label} className="rounded-3xl border border-border/10 bg-background/70 p-5">
+                    <p className="text-xs font-black uppercase tracking-[0.18em] text-muted-foreground">{label}</p>
+                    <div className="mt-4 space-y-3">
+                      {(items.length ? items : [{ label: 'Sin datos', count: 0 }]).map((item) => (
+                        <div key={item.label} className="flex items-center justify-between gap-3 text-sm">
+                          <span className="truncate font-semibold text-foreground">{item.label}</span>
+                          <span className="shrink-0 tabular-nums text-muted-foreground">{item.count}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="min-w-0">
+            <CardHeader className="border-b border-border/5 pb-5">
+              <CardTitle className="flex items-center gap-2 text-xl font-black text-foreground">
+                <BarChart3 className="h-5 w-5 text-primary" />
+                Actividad reciente de captación
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4 p-6">
+              {([
+                ['Selección de audiencias', marketingStats.audienceSelections],
+                ['Targets más usados', marketingStats.byTarget],
+              ] as const).map(([label, items]) => (
+                <div key={label} className="rounded-3xl border border-border/10 bg-background/70 p-4">
+                  <p className="text-xs font-black uppercase tracking-[0.18em] text-muted-foreground">{label}</p>
+                  <div className="mt-3 space-y-2">
+                    {(items.length ? items : [{ label: 'Sin datos', count: 0 }]).map((item) => (
+                      <div key={item.label} className="flex items-center justify-between gap-3 text-sm">
+                        <span className="truncate font-semibold text-foreground">{item.label}</span>
+                        <span className="shrink-0 tabular-nums text-muted-foreground">{item.count}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+
+              <div className="space-y-3">
+                {marketingStats.recent.length === 0 ? (
+                  <div className="rounded-3xl border border-dashed border-border/20 bg-background/50 px-5 py-6 text-center text-sm font-semibold text-muted-foreground">
+                    Aún no hay eventos recientes de marketing.
+                  </div>
+                ) : (
+                  marketingStats.recent.map((event, index) => (
+                    <div key={`${event.created_at}-${event.action}-${index}`} className="rounded-3xl border border-border/10 bg-background/70 p-4">
+                      <div className="flex items-center justify-between gap-3">
+                        <p className="truncate text-sm font-black text-foreground">{event.cta || event.action}</p>
+                        <Badge className="shrink-0 rounded-full border border-border/20 bg-background/70 px-2 py-1 text-xs font-black uppercase tracking-[0.16em] text-muted-foreground">
+                          {event.audience || 'landing'}
+                        </Badge>
+                      </div>
+                      <p className="mt-1 text-xs font-medium text-muted-foreground">
+                        {event.target || 'sin target'} · {event.theme || 'theme n/d'} · {formatDateShort(event.created_at)}
+                      </p>
+                    </div>
+                  ))
+                )}
+              </div>
             </CardContent>
           </Card>
         </section>

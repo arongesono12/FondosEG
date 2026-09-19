@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useState, useEffect, useCallback } from 'react';
 import { useClerk } from '@clerk/nextjs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -47,6 +47,13 @@ import { getAgentBalance } from '@/services/agent';
 import { useTheme } from '@/components/theme-provider';
 import { HttpError } from '@/services/http';
 import { getRoleLabel, isAdminRole } from '@/lib/roles';
+import { DashboardModulePanel } from '@/components/dashboard/dashboard-module-panel';
+import {
+  canAccessDashboardModule,
+  getDashboardModuleFromPath,
+  getDashboardNavigationHref,
+  parseDashboardModule,
+} from '@/components/dashboard/dashboard-modules';
 
 const COOKIE_CONSENT_STORAGE_KEY_PREFIX = 'fondoseg_cookie_consent_v2';
 const COOKIE_CONSENT_GLOBAL_STORAGE_KEY = `${COOKIE_CONSENT_STORAGE_KEY_PREFIX}:site`;
@@ -143,6 +150,7 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
   const { user, setUser } = useAppStore();
   const pathname = usePathname();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { signOut } = useClerk();
   const { resolvedTheme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
@@ -158,12 +166,37 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
   const [notificationCount, setNotificationCount] = useState(0);
   const [lowBalance, setLowBalance] = useState(false);
   const [usersPanelOpen, setUsersPanelOpen] = useState(false);
+  const [moduleNotice, setModuleNotice] = useState<string | null>(null);
   
   const isDark = mounted && resolvedTheme === 'dark';
+  const requestedModuleValue = searchParams.get('module');
+  const requestedModule = parseDashboardModule(requestedModuleValue);
+  const activeModule = requestedModule && canAccessDashboardModule(requestedModule, user?.role)
+    ? requestedModule
+    : null;
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  useEffect(() => {
+    if (!requestedModuleValue) return;
+
+    if (!requestedModule || !canAccessDashboardModule(requestedModule, user?.role)) {
+      setModuleNotice(
+        requestedModule
+          ? 'No tienes permisos para abrir este módulo.'
+          : 'El módulo solicitado no existe.',
+      );
+      router.replace('/dashboard', { scroll: false });
+    }
+  }, [requestedModule, requestedModuleValue, router, user?.role]);
+
+  useEffect(() => {
+    if (!moduleNotice) return;
+    const timeout = window.setTimeout(() => setModuleNotice(null), 3600);
+    return () => window.clearTimeout(timeout);
+  }, [moduleNotice]);
 
   useEffect(() => {
     if (!mounted || !user?.id) return;
@@ -213,6 +246,10 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
     document.querySelector('main')?.scrollTo({ top: 0, behavior: 'smooth' });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
+
+  const closeModulePanel = useCallback(() => {
+    router.replace('/dashboard', { scroll: false });
+  }, [router]);
 
   useEffect(() => {
     document.querySelector('main')?.scrollTo({ top: 0 });
@@ -473,12 +510,17 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
           {/* Center: Nav pills */}
           <nav className="dashboard-desktop-nav hidden lg:flex items-center gap-1 justify-center" aria-label="Navegación principal">
             {navItems.map((item) => {
-              const isActive = pathname === item.href;
+              const moduleId = getDashboardModuleFromPath(item.href);
+              const navigationHref = getDashboardNavigationHref(item.href);
+              const isActive = item.href === '/dashboard'
+                ? pathname === '/dashboard' && !activeModule
+                : activeModule === moduleId || (pathname === item.href && !activeModule);
               return (
                 <Link
                   key={item.href}
-                  href={item.href}
-                  onClick={scrollMainToTop}
+                  href={navigationHref}
+                  scroll={item.href === '/dashboard'}
+                  onClick={item.href === '/dashboard' ? scrollMainToTop : undefined}
                   aria-current={isActive ? 'page' : undefined}
                   className={cn(
                     "px-5 py-2 rounded-full text-sm font-bold transition-all duration-300",
@@ -649,13 +691,18 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
         <nav className="dashboard-mobile-bottom-bar lg:hidden" aria-label="Navegación principal del dashboard">
           <div className="dashboard-mobile-bottom-scroll">
             {primaryNavItems.map((item) => {
-              const isActive = pathname === item.href;
+              const moduleId = getDashboardModuleFromPath(item.href);
+              const navigationHref = getDashboardNavigationHref(item.href);
+              const isActive = item.href === '/dashboard'
+                ? pathname === '/dashboard' && !activeModule
+                : activeModule === moduleId || (pathname === item.href && !activeModule);
               const Icon = item.icon;
               return (
                 <Link
                   key={item.href}
-                  href={item.href}
-                  onClick={scrollMainToTop}
+                  href={navigationHref}
+                  scroll={item.href === '/dashboard'}
+                  onClick={item.href === '/dashboard' ? scrollMainToTop : undefined}
                   aria-current={isActive ? 'page' : undefined}
                   className={cn("dashboard-mobile-action", isActive && "is-active")}
                 >
@@ -671,7 +718,10 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
                     type="button"
                     className={cn(
                       "dashboard-mobile-action",
-                      overflowNavItems.some((item) => item.href === pathname) && "is-active"
+                      overflowNavItems.some((item) => {
+                        const moduleId = getDashboardModuleFromPath(item.href);
+                        return activeModule === moduleId || item.href === pathname;
+                      }) && "is-active"
                     )}
                   >
                     <MoreHorizontal className="h-5 w-5" />
@@ -682,7 +732,10 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
                   {overflowNavItems.map((item) => {
                     const Icon = item.icon;
                     return (
-                      <DropdownMenuItem key={item.href} onClick={() => router.push(item.href)}>
+                      <DropdownMenuItem
+                        key={item.href}
+                        onClick={() => router.push(getDashboardNavigationHref(item.href), { scroll: false })}
+                      >
                         <Icon className="mr-2 h-4 w-4" />
                         <span>{item.label}</span>
                       </DropdownMenuItem>
@@ -705,6 +758,14 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
         </nav>
 
         {/* Modals */}
+        {activeModule && (
+          <DashboardModulePanel moduleId={activeModule} onClose={closeModulePanel} />
+        )}
+        {moduleNotice && (
+          <div className="dashboard-module-notice" role="status" aria-live="polite">
+            {moduleNotice}
+          </div>
+        )}
         <UsersPanel open={usersPanelOpen} onClose={() => setUsersPanelOpen(false)} />
         <SearchModal open={searchOpen} onOpenChange={setSearchOpen} />
         <SettingsModal open={settingsOpen} onOpenChange={setSettingsOpen} />

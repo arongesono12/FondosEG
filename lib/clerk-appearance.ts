@@ -31,7 +31,7 @@ export const clerkAppearance = {
     colorDanger: '#e11d48',
     colorSuccess: '#10b981',
     colorWarning: '#f59e0b',
-    // Hereda Poppins/Roboto ya cargadas por el layout: no añade otra fuente
+    // Hereda Poppins/Plus Jakarta Sans ya cargadas por el layout: no añade otra fuente
     // de red sólo para la pantalla de acceso.
     fontFamily: 'inherit',
     fontFamilyButtons: 'inherit',

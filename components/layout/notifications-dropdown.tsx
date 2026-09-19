@@ -36,11 +36,13 @@ interface NotificationsDropdownProps {
   badgeClassName?: string;
 }
 
+// Misma medida y mismo color que el resto de controles de la cabecera; ver la
+// nota en components/theme-toggle.tsx.
 const DEFAULT_TRIGGER_CLASSES =
-  "p-2 hover:bg-pink-100 dark:hover:bg-pink-500/20 rounded-full transition-colors relative text-foreground/70 hover:text-pink-600 dark:hover:text-pink-400";
+  "relative flex h-10 w-10 items-center justify-center rounded-full border border-border/60 bg-card text-muted-foreground transition-colors hover:bg-accent hover:text-primary";
 
 const DEFAULT_BADGE_CLASSES =
-  "absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-rose-500 text-white text-xs font-bold rounded-full flex items-center justify-center px-1";
+  "absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-[var(--state-danger)] text-white text-xs font-bold rounded-full flex items-center justify-center px-1";
 
 export function NotificationsDropdown({ notificationCount, onCountChange, triggerClassName, badgeClassName }: NotificationsDropdownProps) {
   const { user } = useAppStore();

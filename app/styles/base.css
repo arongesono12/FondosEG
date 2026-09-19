@@ -42,7 +42,7 @@ pre,
 kbd,
 samp,
 .font-mono {
-  font-family: var(--font-fondoseg-secondary) !important;
+  font-family: var(--font-fondoseg-mono) !important;
 }
 
 /* Theme transition — optimized for performance */

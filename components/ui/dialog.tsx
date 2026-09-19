@@ -45,10 +45,11 @@ const DialogContent = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> & {
     mobile?: DialogMobileMode
     hideClose?: boolean
+    overlayClassName?: string
   }
->(({ className, children, mobile = "centered", hideClose = false, ...props }, ref) => (
+>(({ className, children, mobile = "centered", hideClose = false, overlayClassName, ...props }, ref) => (
   <DialogPortal>
-    <DialogOverlay />
+    <DialogOverlay className={overlayClassName} />
     <DialogPrimitive.Content
       ref={ref}
       data-mobile={mobile}

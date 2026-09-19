@@ -74,7 +74,7 @@ export function HeaderSearch() {
           inputMode="search"
           enterKeyHint="search"
           placeholder="Buscar..."
-          className="pl-9 pr-3 h-9 w-48 lg:w-64 rounded-full bg-muted/50 border-border/30 text-sm placeholder:text-muted-foreground/50 focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:border-primary/40 focus-visible:bg-background transition-all"
+          className="pl-9 pr-3 h-9 w-48 lg:w-64 bg-muted/50 border-border/30 text-sm placeholder:text-muted-foreground/50 focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:border-primary/40 focus-visible:bg-background transition-all"
           value={query}
           onChange={(e) => { setQuery(e.target.value); setOpen(true); }}
           onFocus={() => setOpen(true)}

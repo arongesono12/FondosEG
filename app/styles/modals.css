@@ -103,7 +103,10 @@
   .dialog-shell[data-mobile='fullscreen'] [class*="grid-cols-4"] { grid-template-columns: minmax(0, 1fr); }
 
   .dialog-shell input:not([type='checkbox']):not([type='radio']),
-  .dialog-shell select, .dialog-shell textarea { min-height: 46px; font-size: 16px; border-radius: 16px; }
+  .dialog-shell select, .dialog-shell textarea { min-height: 46px; font-size: 16px; }
+  .dialog-shell input:not([type='checkbox']):not([type='radio']),
+  .dialog-shell select { border-radius: var(--app-control-radius); }
+  .dialog-shell textarea { border-radius: var(--app-control-radius-multiline); }
   .dialog-shell textarea { min-height: 96px; }
   .dialog-shell button:not([aria-label]):not([data-radix-collection-item]) { min-height: 44px; }
 

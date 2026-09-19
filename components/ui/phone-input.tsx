@@ -59,7 +59,7 @@ export function PhoneInput({ value, onChange, placeholder = 'Número de teléfon
           <button
             type="button"
             onClick={() => setIsOpen(!isOpen)}
-            className="phone-country-trigger flex h-11 items-center gap-1 px-3 rounded-l-lg border border-r-0 transition-colors focus:ring-2 focus:ring-pink-500/50"
+            className="phone-country-trigger flex h-11 items-center gap-1 px-3 rounded-l-[var(--app-control-radius)] border border-r-0 transition-colors focus:ring-2 focus:ring-pink-500/50"
           >
             <span className="phone-country-prefix text-xs font-medium">{selectedCountry.prefix}</span>
             <ChevronDown className={`phone-country-chevron h-3 w-3 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
@@ -75,7 +75,7 @@ export function PhoneInput({ value, onChange, placeholder = 'Número de teléfon
                     placeholder="Buscar..."
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    className="phone-country-search w-full h-11 pl-8 pr-2 rounded-md border text-base focus:outline-none focus:ring-2 focus:ring-pink-500/50"
+                    className="phone-country-search w-full h-11 pl-8 pr-4 rounded-[var(--app-control-radius)] border text-base focus:outline-none focus:ring-2 focus:ring-pink-500/50"
                   />
                 </div>
               </div>
@@ -105,7 +105,7 @@ export function PhoneInput({ value, onChange, placeholder = 'Número de teléfon
           onChange={handleNumberChange}
           placeholder={placeholder}
           required={required}
-          className="phone-number-input h-11 flex-1 px-3 rounded-r-lg border text-base focus:outline-none focus:ring-2 focus:ring-pink-500/50 transition-colors"
+          className="phone-number-input h-11 flex-1 px-3 rounded-r-[var(--app-control-radius)] border text-base focus:outline-none focus:ring-2 focus:ring-pink-500/50 transition-colors"
         />
       </div>
     </div>

@@ -37,6 +37,14 @@ export const radius = {
   full: '9999px',
 } as const;
 
+/** Radios de control, espejo de --app-control-radius en app/styles/tokens.css. */
+export const controlRadius = {
+  /** Una línea: input, select y la barra de filtros. Píldora, como el buscador del header. */
+  single: '999px',
+  /** Multilínea: un textarea alto con 999px saca esquinas en media luna. */
+  multiline: '16px',
+} as const;
+
 export const colors = {
   brand: {
     primary: 'hsl(346 80% 55%)',
@@ -110,8 +118,12 @@ export const colors = {
 } as const;
 
 export const fonts = {
+  /** Títulos y cifras grandes (KPIs), peso 600. */
   primary: '"Poppins", sans-serif',
-  secondary: '"Roboto", sans-serif',
+  /** Cuerpo, tablas, gráficos y etiquetas. */
+  secondary: '"Plus Jakarta Sans", sans-serif',
+  /** Códigos de transferencia, referencias y API keys. */
+  mono: 'ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace',
 } as const;
 
 export const typography = {

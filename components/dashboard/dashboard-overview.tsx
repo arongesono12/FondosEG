@@ -8,6 +8,7 @@ import { Area, AreaChart, Bar, BarChart, XAxis } from 'recharts';
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from '@/components/ui/chart';
 import { cn, convertCurrency, formatCurrency, formatDateShort, getInitials } from '@/lib/utils';
 import type { DashboardStats, DailyTransferStats, Transfer } from '@/types';
+import { DashboardCard } from '@/components/dashboard/dashboard-card';
 
 const chartConfig = { amount: { label: 'Volumen', color: 'var(--chart-1)' } } satisfies ChartConfig;
 const statusLabels: Record<Transfer['status'], string> = {
@@ -74,13 +75,16 @@ export function DashboardOverview({ stats, dailyStats, transfers, currency, isCl
       </div>
 
       <section className="overview-metrics" aria-label="Resumen financiero">
+        <DashboardCard asChild variant="metric">
         <article className="overview-metric overview-metric-desk">
           <div className="overview-metric-label"><h2>{isClient ? 'Saldo retenido' : 'En tránsito'}</h2><Clock3 className="overview-tone-warning" /></div>
           <p className="overview-metric-value">{fmt(reserved)}</p>
           <p className="overview-metric-caption"><span className="overview-tone-warning">{stats?.pendingTransfers ?? 0} pendientes</span> de liquidación</p>
           <div className="overview-desk"><Image src="/images/dashboard-desk.png" alt="" fill sizes="(max-width: 600px) 50vw, 25vw" /></div>
         </article>
+        </DashboardCard>
 
+        <DashboardCard asChild variant="metric">
         <article className="overview-metric">
           <div className="overview-metric-label"><h2>Volumen de la semana</h2><CalendarDays className="overview-tone-primary" /></div>
           <p className="overview-metric-value">{fmt(stats?.weeklyVolume ?? 0)}</p>
@@ -94,7 +98,9 @@ export function DashboardOverview({ stats, dailyStats, transfers, currency, isCl
             </BarChart>
           </ChartContainer> : <div className="overview-chart-empty"><BarChartPlaceholder /><span>{isClient ? 'Consulta tu actividad en el historial' : 'Tu actividad aparecerá aquí'}</span></div>}
         </article>
+        </DashboardCard>
 
+        <DashboardCard asChild variant="metric">
         <article className="overview-metric">
           <div className="overview-metric-label"><h2>{isClient ? 'Tasa de cierre' : 'Comisiones generadas'}</h2><CheckCheck className="overview-tone-success" /></div>
           <p className="overview-metric-value">{isClient ? <>{stats?.settlementRate ?? 0}<small> %</small></> : fmt(stats?.totalCommission ?? 0)}</p>
@@ -108,7 +114,9 @@ export function DashboardOverview({ stats, dailyStats, transfers, currency, isCl
           </ChartContainer> : <div className="overview-rate"><span style={{ width: `${Math.max(0, Math.min(stats?.settlementRate ?? 0, 100))}%` }} /><p>{stats?.settlementRate ?? 0}% de operaciones liquidadas</p></div>}
           {trend.length > 0 && <span className="overview-chart-legend">Evolución del volumen · 7 días</span>}
         </article>
+        </DashboardCard>
 
+        <DashboardCard asChild variant="metric">
         <article className="overview-metric overview-balance">
           <div className="overview-metric-label"><h2>Disponible para operar</h2><Link href="/balance" aria-label="Ver saldo y movimientos" className="overview-icon-button"><ArrowUpRight /></Link></div>
           <p className="overview-metric-value">{fmt(balance)}</p>
@@ -119,14 +127,15 @@ export function DashboardOverview({ stats, dailyStats, transfers, currency, isCl
             <Link className="overview-wallet" href="/history"><Receipt /><strong>Actividad</strong><span>Ver historial</span></Link>
           </div>
         </article>
+        </DashboardCard>
       </section>
 
       <section className="overview-filters" aria-label="Filtrar operaciones recientes">
-        <div className="overview-filter-label"><Filter /><span>Filtros</span><b>{activeFilters}</b>{activeFilters > 0 && <button onClick={clearFilters} aria-label="Limpiar filtros"><X /></button>}</div>
+        <div className="overview-filter-label"><Filter /><span>Filtros</span><b data-active={activeFilters > 0}>{activeFilters}</b>{activeFilters > 0 && <button onClick={clearFilters} aria-label="Limpiar filtros"><X /></button>}</div>
         <label className="overview-select"><span className="sr-only">Ciudad de destino</span><select value={city} onChange={(event) => setCity(event.target.value)}><option value="all">Todas las ciudades</option>{cities.map((item) => <option key={item}>{item}</option>)}</select><ChevronDown /></label>
         <label className="overview-select"><span className="sr-only">Estado de la operación</span><select value={status} onChange={(event) => setStatus(event.target.value)}><option value="all">Todos los estados</option>{Object.entries(statusLabels).map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select><ChevronDown /></label>
-        <label className="overview-date"><span>Desde</span><input type="date" aria-label="Fecha inicial" value={fromDate} max={toDate || undefined} onChange={(event) => setFromDate(event.target.value)} /></label>
-        <label className="overview-date"><span>Hasta</span><input type="date" aria-label="Fecha final" value={toDate} min={fromDate || undefined} onChange={(event) => setToDate(event.target.value)} /></label>
+        <label className="overview-date"><span>Desde</span><input type="date" aria-label="Fecha inicial" data-empty={!fromDate} value={fromDate} max={toDate || undefined} onChange={(event) => setFromDate(event.target.value)} /></label>
+        <label className="overview-date"><span>Hasta</span><input type="date" aria-label="Fecha final" data-empty={!toDate} value={toDate} min={fromDate || undefined} onChange={(event) => setToDate(event.target.value)} /></label>
         <label className="overview-search"><span className="sr-only">Buscar por código o nombre</span><input placeholder="Buscar operación" value={query} onChange={(event) => setQuery(event.target.value)} /><Search /></label>
       </section>
 

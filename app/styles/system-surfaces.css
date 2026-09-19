@@ -64,10 +64,16 @@
 .cta-section { border-radius: var(--app-card-radius); }
 
 /* Form controls outside the shared React primitives. */
-.landing-root :is(input:not([type="checkbox"]):not([type="radio"]), textarea, select),
-.auth-public-page :is(input:not([type="checkbox"]):not([type="radio"]), textarea, select),
-.dashboard-main :is(input:not([type="checkbox"]):not([type="radio"]), textarea, select) {
+.landing-root :is(input:not([type="checkbox"]):not([type="radio"]), select),
+.auth-public-page :is(input:not([type="checkbox"]):not([type="radio"]), select),
+.dashboard-main :is(input:not([type="checkbox"]):not([type="radio"]), select) {
   border-radius: var(--app-control-radius);
+}
+
+.landing-root textarea,
+.auth-public-page textarea,
+.dashboard-main textarea {
+  border-radius: var(--app-control-radius-multiline);
 }
 
 @media (prefers-reduced-motion: reduce) {

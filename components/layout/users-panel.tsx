@@ -117,7 +117,10 @@ export function UsersPanel({ open, onClose }: UsersPanelProps) {
       <aside
         aria-hidden={!open}
         className={cn(
-          'dashboard-drawer fixed right-0 top-0 z-50 h-dvh w-[360px] max-w-full bg-card border-l border-border/20 shadow-2xl flex flex-col transition-transform duration-300 ease-in-out',
+          // El fondo, el borde y la ausencia de sombra los pone
+          // `.dashboard-drawer` en dashboard-system.css: el cajón comparte
+          // superficie con el panel de módulo.
+          'dashboard-drawer fixed right-0 top-0 z-50 h-dvh w-[360px] max-w-full flex flex-col transition-transform duration-300 ease-in-out',
           open ? 'translate-x-0' : 'translate-x-full pointer-events-none'
         )}
       >

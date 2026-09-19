@@ -6,8 +6,16 @@
 
 /* --- Superficies (modo claro) --- */
 :root {
+  /* Pareja tipográfica del producto: Poppins 600 para títulos y cifras grandes,
+     Plus Jakarta Sans para cuerpo, tablas, gráficos y etiquetas.
+     `dashboard-system.css` reexpone estos dos tokens como
+     --dashboard-font-heading / --dashboard-font-body; no declares familias
+     sueltas fuera de aquí. */
   --font-fondoseg-primary: "Poppins", sans-serif;
-  --font-fondoseg-secondary: "Roboto", sans-serif;
+  --font-fondoseg-secondary: "Plus Jakarta Sans", sans-serif;
+  /* Códigos de transferencia, referencias y API keys. Antes apuntaba a Roboto,
+     que no es monoespaciada: los dígitos no alineaban en columna. */
+  --font-fondoseg-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
   --background: hsl(220 33% 98%);
   --foreground: hsl(224 71.4% 4.1%);
 
@@ -36,6 +44,15 @@
   --border: hsl(220 13% 91% / 0.3);
   --input: hsl(220 13% 91% / 0.3);
   --ring: hsl(346 80% 55%);
+
+  /* --- Estados semánticos ---
+     La aplicación se pinta con un solo acento de marca (--primary) más estos
+     tres estados. Cualquier familia cruda de Tailwind (emerald, sky, violet,
+     amber, rose...) se remapea sobre ellos en el @theme de globals.css, así
+     que no hay que perseguir clases por el JSX para mantener la uniformidad. */
+  --state-success: hsl(160 84% 44%);
+  --state-warning: hsl(38 92% 50%);
+  --state-danger: hsl(0 78% 55%);
   --radius: 1.5rem;
 
   /* Chart palette (shadcn chart) */
@@ -61,7 +78,13 @@
   --app-card-border: hsl(215 25% 89% / .78);
   --app-card-shadow: 0 8px 28px rgba(15, 23, 42, .06);
   --app-card-shadow-hover: 0 12px 34px rgba(15, 23, 42, .09);
-  --app-control-radius: 12px;
+  /* Píldora, el radio del buscador del header. Es el radio de todo control
+     de una línea: input, select, botón y los envoltorios de la barra de
+     filtros. En un botón cuadrado (los de icono) sale un círculo. */
+  --app-control-radius: 999px;
+  /* Un textarea es alto: con 999px las esquinas salen medias lunas, así que
+     los controles multilínea llevan su propio radio. */
+  --app-control-radius-multiline: 16px;
 }
 
 /* --- Superficies (modo oscuro) --- */
@@ -94,6 +117,11 @@
   --border: hsl(217.2 32.6% 17.5% / 0.2);
   --input: hsl(217.2 32.6% 17.5% / 0.2);
   --ring: hsl(346 80% 55%);
+
+  /* --- Estados semánticos (oscuro) --- */
+  --state-success: hsl(160 70% 48%);
+  --state-warning: hsl(38 90% 56%);
+  --state-danger: hsl(0 74% 60%);
 
   /* Chart palette (shadcn chart) */
   --chart-1: hsl(346 80% 55%);

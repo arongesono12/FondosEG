@@ -17,16 +17,16 @@
 .overview-title-group, .overview-heading-actions { display: flex; align-items: center; gap: 15px; }
 .overview h1 { font-size: clamp(26px, 2.4vw, 36px); line-height: 1.2; font-weight: 600; letter-spacing: -1.3px; }
 .overview-title-group p { margin-top: 6px; font-size: 14px; color: var(--muted-foreground); }
-.overview-icon-button { display: inline-flex; align-items: center; justify-content: center; width: 38px; height: 38px; flex: none; border-radius: 13px; background: var(--surface); color: var(--foreground); box-shadow: 0 4px 16px var(--glass-border); }
+.overview-icon-button { display: inline-flex; align-items: center; justify-content: center; width: 38px; height: 38px; flex: none; border-radius: var(--app-control-radius); background: var(--surface); color: var(--foreground); box-shadow: 0 4px 16px var(--glass-border); }
 .overview-icon-button:hover { background: var(--accent); }
-.overview-primary-action { display: inline-flex; align-items: center; justify-content: center; gap: 9px; min-height: 42px; padding: 0 19px; border-radius: 15px; background: var(--dashboard-brand); color: #fff; font-size: 14px; font-weight: 500; box-shadow: 0 5px 14px color-mix(in srgb, var(--primary) 20%, transparent); }
+.overview-primary-action { display: inline-flex; align-items: center; justify-content: center; gap: 9px; min-height: 42px; padding: 0 19px; border-radius: var(--app-control-radius); background: var(--dashboard-brand); color: #fff; font-size: 14px; font-weight: 500; box-shadow: 0 5px 14px color-mix(in srgb, var(--primary) 20%, transparent); }
 .overview-primary-action:hover { filter: brightness(.96); }
 .overview-metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
 .overview-metric { min-width: 0; height: 242px; padding: 20px 20px 0; border: 1px solid var(--glass-border); border-radius: 18px; background: linear-gradient(140deg, var(--surface), var(--background)); position: relative; overflow: hidden; }
 .overview-metric-label { display: flex; justify-content: space-between; align-items: center; gap: 7px; min-height: 25px; }
 .overview-metric h2 { font-size: 13px; font-weight: 500; line-height: 1.4; }
-.overview-metric-value { margin-top: 13px; white-space: nowrap; font-family: var(--font-fondoseg-secondary); font-size: clamp(18px, 1.85vw, 27px); font-weight: 600; line-height: 1.25; letter-spacing: -.7px; font-variant-numeric: tabular-nums; }
-.overview-metric-value small { font-family: var(--font-fondoseg-primary); font-size: 17px; font-weight: 400; }
+.overview-metric-value { margin-top: 13px; white-space: nowrap; font-family: var(--font-fondoseg-primary); font-size: clamp(18px, 1.85vw, 27px); font-weight: 600; line-height: 1.25; letter-spacing: -.7px; font-variant-numeric: tabular-nums; }
+.overview-metric-value small { font-family: var(--font-fondoseg-secondary); font-size: 17px; font-weight: 400; }
 .overview-metric-caption { display: flex; align-items: center; flex-wrap: wrap; column-gap: 4px; margin-top: 8px; font-size: 12px; color: var(--muted-foreground); }
 .overview-metric-caption svg { width: 12px; height: 12px; }
 .overview-tone-primary { color: var(--primary); }
@@ -43,39 +43,78 @@
 .overview-rate { margin-top: 45px; height: 7px; border-radius: 8px; background: var(--accent); }
 .overview-rate > span { display: block; height: 7px; border-radius: inherit; background: var(--dashboard-brand); }
 .overview-rate p { padding-top: 10px; font-size: 12px; color: var(--muted-foreground); }
-.overview-balance .overview-metric-label .overview-icon-button { width: 29px; height: 29px; border-radius: 10px; }
+.overview-balance .overview-metric-label .overview-icon-button { width: 29px; height: 29px; border-radius: var(--app-control-radius); }
 .overview-wallets { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; position: absolute; bottom: 0; left: 18px; right: 18px; align-items: end; }
 .overview-wallet { display: flex; flex-direction: column; align-items: center; gap: 9px; height: 96px; padding: 16px 3px 9px; border-radius: 12px 12px 0 0; background: var(--muted); font-size: 11px; text-align: center; }
 .overview-wallet strong { font-size: 12px; font-weight: 500; }
-.overview-wallet span { font-family: var(--font-fondoseg-secondary); font-size: 11px; }
+.overview-wallet span { font-family: var(--font-fondoseg-primary); font-size: 11px; }
 .overview-wallet.is-featured { height: 108px; color: #fff; background: var(--dashboard-brand); box-shadow: 0 0 24px color-mix(in srgb, var(--primary) 17%, transparent); }
 .overview-wallet:hover { transform: translateY(-3px); }
-.overview-filters { display: grid; grid-template-columns: auto 1fr 1fr 1fr 1fr 1.2fr; align-items: center; gap: 12px; }
-.overview-filter-label { display: flex; align-items: center; gap: 7px; padding-right: 8px; font-size: 13px; font-weight: 500; }
-.overview-filter-label > svg { width: 13px; height: 13px; }
-.overview-filter-label b { display: grid; place-items: center; width: 19px; height: 19px; border-radius: 50%; font-size: 12px; background: var(--dashboard-ink); color: var(--dashboard-on-ink); }
-.overview-filter-label button { display: grid; place-items: center; min-width: 25px; min-height: 32px; }
-.overview :is(.overview-select, .overview-date, .overview-search) { min-width: 0; display: flex; align-items: center; gap: 6px; min-height: 42px; padding: 0 12px; border: 1px solid var(--glass-border); border-radius: 12px; background: var(--surface); }
-.overview-filters :is(input, select) { min-width: 0; width: 100%; background: transparent; font-size: 12px; color: var(--foreground); border: 0; outline-offset: 2px; }
-.overview-select select { appearance: none; min-height: 38px; }
+/* =========================================================================
+   BARRA DE FILTROS
+   -------------------------------------------------------------------------
+   Los seis controles comparten ahora la caja del `Input` del proyecto
+   (components/ui/input.tsx): misma altura, mismo radio --app-control-radius,
+   mismo borde --input y el mismo anillo de foco --ring. Antes cada uno traía
+   su propia medida y el `<input type="date">` se veía tal cual lo pinta el
+   navegador.
+
+   El control nativo de fecha se queda: da formato por idioma, entrada por
+   teclado, selector nativo en móvil y respeta min/max sin una línea de JS.
+   Lo que se corrige es que su cromado se note —el indicador de calendario y
+   el texto vacío `dd/mm/aaaa`, que salía a color de texto pleno y gritaba más
+   que el contenido real.
+   ========================================================================= */
+.overview-filters { display: grid; grid-template-columns: auto 1fr 1fr 1fr 1fr 1.2fr; align-items: center; gap: 12px; --overview-control-height: 44px; }
+.overview-filter-label { display: flex; align-items: center; gap: 7px; padding-right: 8px; font-weight: 500; }
+.overview-filter-label > svg { width: 15px; height: 15px; }
+/* El contador sólo se enciende cuando hay filtros puestos. Antes iba siempre
+   en tinta, que sobre la barra oscura no se veía. */
+.overview-filter-label b { display: grid; place-items: center; width: 21px; height: 21px; border-radius: 50%; background: var(--muted); color: var(--muted-foreground); font-weight: 600; }
+.overview-filter-label b[data-active="true"] { background: var(--primary); color: var(--primary-foreground); }
+.overview-filter-label button { display: grid; place-items: center; min-width: 28px; min-height: 32px; border-radius: var(--app-control-radius); color: var(--muted-foreground); }
+.overview-filter-label button:hover { background: var(--accent); color: var(--primary); }
+
+.overview :is(.overview-select, .overview-date, .overview-search) {
+  min-width: 0; display: flex; align-items: center; gap: 8px;
+  height: var(--overview-control-height); padding: 0 12px;
+  border: 1px solid var(--input); border-radius: var(--app-control-radius);
+  background: var(--surface);
+  transition: border-color .18s ease, box-shadow .18s ease;
+}
+/* El foco se dibuja sobre la caja visible, no sobre el input desnudo que hay
+   dentro: ahí el contorno quedaba flotando por dentro del borde. */
+.overview :is(.overview-select, .overview-date, .overview-search):focus-within {
+  border-color: color-mix(in srgb, var(--primary) 50%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ring) 15%, transparent);
+}
+.overview-filters :is(input, select) { min-width: 0; width: 100%; height: 100%; background: transparent; color: var(--foreground); border: 0; padding: 0; }
+.overview-filters :is(input, select):focus-visible { outline: none; }
+.overview-filters input::placeholder { color: var(--muted-foreground); }
+.overview-select select { appearance: none; cursor: pointer; }
 .overview-select option { background: var(--surface); color: var(--foreground); }
-.overview-filters svg { width: 13px; height: 13px; }
-.overview-date { flex-wrap: wrap; gap: 0 !important; padding-block: 4px !important; }
-.overview-date > span { color: var(--muted-foreground); font-size: 10px; }
+.overview-filters > label > svg { width: 16px; height: 16px; flex: none; color: var(--muted-foreground); }
+
+.overview-date > span { flex: none; color: var(--muted-foreground); }
 .overview-date input { font-family: var(--font-fondoseg-secondary); color-scheme: light; }
 .dark .overview-date input { color-scheme: dark; }
-.overview-search input { min-height: 38px; }
+/* Campo sin fecha: el `dd/mm/aaaa` del navegador es un marcador, así que se
+   lee como marcador. `data-empty` lo marca el componente, porque un input
+   controlado y vacío no responde a :placeholder-shown. */
+.overview-date input[data-empty="true"] { color: var(--muted-foreground); }
+.overview-date input::-webkit-calendar-picker-indicator { width: 16px; height: 16px; padding: 0; margin: 0; opacity: .6; cursor: pointer; }
+.overview-date input::-webkit-calendar-picker-indicator:hover { opacity: 1; }
 .overview-operations { padding: 0 16px 16px; border-radius: 28px; background: var(--dashboard-ink); color: var(--dashboard-on-ink); }
 .overview-operations-heading { display: grid; grid-template-columns: 34% 1fr auto; align-items: center; gap: 12px; min-height: 62px; padding-inline: 10px; }
 .overview-operations-heading h2 { font-size: 14px; font-weight: 500; }
 .overview-operations-heading > div > span { display: block; margin-top: 3px; font-size: 11px; color: #b4bdcd; }
 .overview-operation-tabs { display: flex; align-items: center; gap: 4px; justify-self: start; border: 5px solid var(--background); border-top: 0; padding: 7px 5px 5px; margin-top: -1px; border-radius: 0 0 25px 25px; background: var(--background); align-self: start; }
-.overview-operation-tabs button { display: flex; justify-content: center; align-items: center; gap: 9px; padding: 9px 15px; color: var(--foreground); border-radius: 30px; font-size: 12px; white-space: nowrap; }
+.overview-operation-tabs button { display: flex; justify-content: center; align-items: center; gap: 9px; padding: 9px 15px; color: var(--foreground); border-radius: var(--app-control-radius); font-size: 12px; white-space: nowrap; }
 .overview-operation-tabs button > span { font-family: var(--font-fondoseg-secondary); font-size: 12px; }
 .overview-operation-tabs button.is-active { background: var(--dashboard-brand); color: #fff; box-shadow: 0 3px 12px color-mix(in srgb, var(--primary) 22%, transparent); }
 .overview-operation-tabs button.is-active > span { display: grid; place-items: center; min-width: 17px; height: 17px; padding-inline: 3px; border-radius: 50%; background: #fff; color: var(--primary); }
 .overview-operation-tabs button:not(.is-active):hover { background: var(--accent); }
-.overview-history-link { display: flex; align-items: center; justify-content: center; gap: 6px; width: 45px; height: 35px; border: 1px solid #ffffff16; border-radius: 12px; }
+.overview-history-link { display: flex; align-items: center; justify-content: center; gap: 6px; width: 45px; height: 35px; border: 1px solid #ffffff16; border-radius: var(--app-control-radius); }
 .overview-history-link svg:last-child { width: 12px; height: 12px; }
 .overview-operations-body { display: grid; grid-template-columns: minmax(0, 34%) minmax(0, 1fr); gap: 16px; }
 .overview-transfer-list { display: flex; flex-direction: column; gap: 4px; max-height: 310px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #ffffff35 transparent; padding-right: 1px; }
@@ -89,7 +128,7 @@
 .overview-transfer-state { padding: 5px 7px; background: #ffffff05; border-radius: 16px; font-size: 10px; color: #cbd5e1; }
 .overview-transfer.is-selected .overview-transfer-state { background: #fff; color: var(--dashboard-ink); }
 .overview-transfer.is-selected small { color: #fff; }
-.overview-transfer-amount { font-family: var(--font-fondoseg-secondary); font-size: 13px; font-weight: 500; white-space: nowrap; }
+.overview-transfer-amount { font-family: var(--font-fondoseg-primary); font-size: 13px; font-weight: 500; white-space: nowrap; }
 .overview-transfer-detail { display: flex; flex-direction: column; min-width: 0; min-height: 300px; padding: 24px 24px 18px; border-radius: 25px; background: linear-gradient(125deg, color-mix(in srgb, #ec4899 68%, #0f172a), color-mix(in srgb, #f43f5e 66%, #0f172a)); color: #fff; }
 .overview-detail-heading { display: grid; grid-template-columns: 1.2fr 1fr 1fr; gap: 18px; }
 .overview-detail-label { display: block; font-size: 11px; margin-bottom: 13px; color: #ffffffcb; }
@@ -102,7 +141,7 @@
 .overview-detail-tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)) minmax(80px, .8fr); gap: 10px; margin-top: 24px; }
 .overview-detail-tiles > div { position: relative; display: flex; flex-direction: column; justify-content: space-between; gap: 15px; min-width: 0; min-height: 100px; padding: 19px 12px; border-radius: 15px; background: #ffffff17; }
 .overview-detail-tiles > div > svg { position: absolute; top: 14px; right: 12px; width: 12px; height: 12px; color: #ffffffb8; }
-.overview-detail-tiles strong { font-family: var(--font-fondoseg-secondary); font-size: 16px; font-weight: 400; padding-right: 10px; overflow-wrap: anywhere; }
+.overview-detail-tiles strong { font-family: var(--font-fondoseg-primary); font-size: 16px; font-weight: 400; padding-right: 10px; overflow-wrap: anywhere; }
 .overview-detail-tiles span { font-size: 11px; color: #ffffffde; }
 .overview-add-transfer { display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 10px; border: 1px dashed #ffffff52; border-radius: 15px; }
 .overview-add-transfer:hover { background: #ffffff13; }
@@ -110,8 +149,8 @@
 .overview-detail-footer { display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 12px; align-items: center; border-top: 1px solid #ffffff25; padding-top: 16px; margin-top: auto; }
 .overview-detail-footer > div { min-width: 0; }
 .overview-detail-footer span { display: block; color: #ffffffbf; font-size: 11px; margin-bottom: 5px; }
-.overview-detail-footer strong { display: block; font-family: var(--font-fondoseg-secondary); font-size: 14px; font-weight: 400; overflow-wrap: anywhere; }
-.overview-detail-action { display: flex; align-items: center; justify-content: center; gap: 7px; min-height: 36px; padding: 9px 15px; border-radius: 30px; background: #fff; color: var(--dashboard-ink); font-size: 12px; font-weight: 500; }
+.overview-detail-footer strong { display: block; font-family: var(--font-fondoseg-primary); font-size: 14px; font-weight: 400; overflow-wrap: anywhere; }
+.overview-detail-action { display: flex; align-items: center; justify-content: center; gap: 7px; min-height: 36px; padding: 9px 15px; border-radius: var(--app-control-radius); background: #fff; color: var(--dashboard-ink); font-size: 12px; font-weight: 500; }
 .overview-detail-action svg { width: 13px; height: 13px; }
 .overview-empty { display: flex; flex: 1; flex-direction: column; align-items: center; justify-content: center; gap: 14px; min-height: 190px; padding: 25px; text-align: center; font-size: 13px; color: #cbd5e1; }
 .overview-empty > svg { width: 27px; height: 27px; }
@@ -142,7 +181,8 @@
   .dashboard-desktop-tools { gap: 10px; flex-shrink: 0; }
   .dashboard-desktop-tools > div:last-child { border: 0; padding-left: 0; }
   .dashboard-desktop-user-label { display: none; }
-  .dashboard-desktop-tools button { background: var(--surface); border-radius: 12px; }
+  /* Los controles de cabecera son círculos de 40px: el mismo ritmo que el avatar. */
+  .dashboard-desktop-tools button { background: var(--surface); border-radius: var(--app-control-radius); }
   .dashboard-main { padding: 0 30px 24px; }
 }
 @media (min-width: 1024px) and (max-width: 1200px) {
