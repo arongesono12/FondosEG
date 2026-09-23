@@ -28,8 +28,6 @@ import {
   LogOut,
   BarChart3,
   Settings,
-  Moon,
-  Sun,
   AlertTriangle,
   FileText,
   ShieldCheck,
@@ -44,7 +42,6 @@ import { SupportModal } from './support-modal';
 import { CookieConsentModal, type CookieConsentPreferences } from './cookie-consent-modal';
 import { getUnreadNotificationCount, getClientUnreadNotificationCount, getAdminUnreadNotificationCount } from '@/modules/notifications/http/client';
 import { getAgentBalance } from '@/services/agent';
-import { useTheme } from '@/components/theme-provider';
 import { HttpError } from '@/services/http';
 import { getRoleLabel, isAdminRole } from '@/lib/roles';
 import { DashboardModulePanel } from '@/components/dashboard/dashboard-module-panel';
@@ -155,7 +152,6 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
   const router = useRouter();
   const searchParams = useSearchParams();
   const { signOut } = useClerk();
-  const { resolvedTheme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -181,7 +177,6 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
     [],
   );
   
-  const isDark = mounted && resolvedTheme === 'dark';
   const requestedModuleValue = searchParams.get('module');
   const requestedModule = parseDashboardModule(requestedModuleValue);
   const activeModule = requestedModule && canAccessDashboardModule(requestedModule, user?.role)
@@ -659,14 +654,9 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
             <DashboardLogo size="sm" labelClassName="text-lg" />
           </Link>
           <div className="dashboard-mobile-header-actions">
-            <button
-              type="button"
-              className="dashboard-mobile-header-action"
-              onClick={() => setTheme(isDark ? 'light' : 'dark')}
-              aria-label={isDark ? 'Activar modo claro' : 'Activar modo oscuro'}
-            >
-              {isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-            </button>
+            {/* El mismo interruptor que la cabecera de escritorio, en vez de
+                un botón propio con sol y luna. */}
+            <ThemeToggle />
             <NotificationsDropdown
               notificationCount={notificationCount}
               onCountChange={setNotificationCount}

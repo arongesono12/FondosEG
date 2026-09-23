@@ -75,7 +75,9 @@ function Header() {
   }, []);
   return <header className={cn('landing-header', scrolled && 'landing-header--scrolled')}>
     <div className="landing-nav">
-      <Link href="/" aria-label="FondosEG inicio"><DashboardLogo size="md" priority labelClassName="text-xl" /></Link>
+      {/* Mismas medidas que la marca del dashboard: el logotipo se ve igual
+          en toda la aplicación. */}
+      <Link href="/" aria-label="FondosEG inicio"><DashboardLogo size="md" priority labelClassName="text-xl md:text-2xl" /></Link>
       <nav className="landing-navlinks">
         <Link href="/landing/gestores">Gestores</Link><Link href="/landing/aliados">Aliados</Link><Link href="/landing/developers">Developers</Link>
         <div

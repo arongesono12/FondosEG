@@ -39,19 +39,9 @@
   box-shadow: none;
 }
 
-.documentation-theme-control svg {
-  display: none;
-}
-
-.documentation-theme-control button::after {
-  content: "";
-  display: block;
-  width: 15px;
-  height: 15px;
-  border-radius: 999px;
-  background: #dbe4f0;
-  box-shadow: 5px -4px 0 0 #111827;
-}
+/* El control de tema es el interruptor compartido (theme-switch.css): aquí
+   se ocultaba su icono y se dibujaba una luna a mano con un `box-shadow`,
+   que era otra forma distinta del mismo control. */
 
 .documentation-sidebar {
   scrollbar-width: thin;

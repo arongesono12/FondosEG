@@ -223,6 +223,10 @@
 /* Authenticated dashboard surface and module panel */
 @import "./styles/dashboard-system.css";
 
+/* Theme switch — se importa después del dashboard para ganar al fondo que
+   `.dashboard-desktop-tools button` pinta sobre todos los botones. */
+@import "./styles/theme-switch.css";
+
 /* Restaurados de antes del commit 644d1ee. Van detrás de dashboard-mobile y
    dashboard-system porque la compresión en horizontal reescribe medidas de
    la barra inferior con la misma especificidad; frente a los `!important`

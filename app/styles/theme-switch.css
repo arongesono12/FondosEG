@@ -1,0 +1,81 @@
+/* =========================================================================
+   INTERRUPTOR DE TEMA (components/theme-toggle.tsx)
+   -------------------------------------------------------------------------
+   Antes era un botón redondo con un sol que giraba y se encogía para dejar
+   paso a una luna. Ahora es lo que de verdad representa —un ajuste con dos
+   estados— y se lee igual en la landing, en el dashboard, en el acceso y en
+   la documentación.
+
+   Va en su propio fichero y se importa el último a propósito: la cabecera de
+   escritorio pinta un fondo de superficie sobre TODOS sus botones
+   (`.dashboard-desktop-tools button`, sin capa, en dashboard-overview.css) y
+   eso dibujaba una píldora detrás del interruptor. El selector `button.…`
+   iguala esa especificidad y gana por orden de importación.
+   ========================================================================= */
+button.theme-switch {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  /* La pista mide 26px de alto: el área táctil de 44px la pone el botón. */
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--app-control-radius);
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+button.theme-switch:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.theme-switch-track {
+  position: relative;
+  display: block;
+  width: 44px;
+  height: 26px;
+  border: 1px solid var(--surface-border);
+  border-radius: 999px;
+  background: var(--muted);
+  transition: background-color .18s ease, border-color .18s ease;
+}
+
+button.theme-switch[aria-checked='true'] .theme-switch-track {
+  border-color: var(--primary);
+  background: var(--primary);
+}
+
+.theme-switch-knob {
+  position: absolute;
+  top: 50%;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  margin-top: -9px;
+  border-radius: 999px;
+  /* Blanco fijo y no `--surface`: en modo oscuro el mando tiene que
+     recortarse sobre la pista, que ahí es la del color de marca. */
+  background: #fff;
+  box-shadow: 0 1px 2px rgb(15 23 42 / .3);
+  transition: translate .18s ease;
+}
+
+button.theme-switch[aria-checked='true'] .theme-switch-knob {
+  translate: 18px 0;
+}
+
+/* Marcador del primer render (antes de saber el tema): misma caja, sin
+   movimiento, para que la cabecera no dé un salto al montar. */
+.theme-switch[data-pending='true'] .theme-switch-knob {
+  opacity: .45;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .theme-switch-track,
+  .theme-switch-knob {
+    transition: none;
+  }
+}

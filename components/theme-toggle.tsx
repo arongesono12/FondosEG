@@ -1,21 +1,23 @@
 "use client"
 
 import * as React from "react"
-import { Moon, Sun } from "lucide-react"
 import { useTheme } from "@/components/theme-provider"
-import { Button } from "@/components/ui/button"
+import { cn } from "@/lib/utils"
 
 /**
- * Los tres controles de la cabecera —notificaciones, tema y avatar— comparten
- * una sola medida: 40px en círculo. El avatar ya venía a 40px, así que es él
- * quien fija el ritmo; antes este botón medía 44px con esquinas de 16px y
- * rompía la fila. El color sale de los tokens del proyecto: nada de rosas ni
- * grises sueltos de la paleta de Tailwind.
+ * Interruptor de tema: un control de dos estados, no un icono que cambia de
+ * forma. Es el mismo en la cabecera del dashboard, en la landing, en el
+ * acceso, en el onboarding, en el portal de desarrolladores y en la
+ * documentación; la apariencia vive en `app/styles/theme-switch.css`.
+ *
+ * `role="switch"` + `aria-checked` en vez de un botón con dos iconos: un
+ * lector de pantalla anuncia «Modo oscuro, activado» y no hay que deducir el
+ * estado a partir de si se ve un sol o una luna.
+ *
+ * Hasta que monta no se sabe el tema resuelto (el servidor no lo conoce), así
+ * que se pinta la misma caja desactivada: sin eso la cabecera daba un salto.
  */
-const TRIGGER_CLASSES =
-  "h-10 w-10 rounded-full border border-border/60 bg-card text-muted-foreground transition-colors hover:bg-accent hover:text-primary"
-
-export function ThemeToggle() {
+export function ThemeToggle({ className }: { className?: string }) {
   const { resolvedTheme, setTheme } = useTheme()
   const [mounted, setMounted] = React.useState(false)
 
@@ -23,25 +25,38 @@ export function ThemeToggle() {
     setMounted(true)
   }, [])
 
+  const isDark = mounted && resolvedTheme === "dark"
+
+  const track = (
+    <span className="theme-switch-track" aria-hidden="true">
+      <span className="theme-switch-knob" />
+    </span>
+  )
+
   if (!mounted) {
     return (
-      <Button variant="ghost" size="icon" className={TRIGGER_CLASSES} disabled aria-hidden="true">
-        <Sun className="h-5 w-5" />
-        <span className="sr-only">Cambiar tema</span>
-      </Button>
+      <button
+        type="button"
+        className={cn("theme-switch", className)}
+        data-pending="true"
+        disabled
+        aria-hidden="true"
+      >
+        {track}
+      </button>
     )
   }
 
   return (
-    <Button
-      variant="ghost"
-      size="icon"
-      className={`relative ${TRIGGER_CLASSES}`}
-      onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
+    <button
+      type="button"
+      role="switch"
+      aria-checked={isDark}
+      aria-label="Modo oscuro"
+      className={cn("theme-switch", className)}
+      onClick={() => setTheme(isDark ? "light" : "dark")}
     >
-      <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-      <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-      <span className="sr-only">Cambiar tema</span>
-    </Button>
+      {track}
+    </button>
   )
 }
