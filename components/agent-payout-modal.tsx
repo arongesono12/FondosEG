@@ -1,7 +1,15 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogBody,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -65,6 +73,9 @@ export function AgentPayoutModal({ open, onOpenChange, onSuccess }: AgentPayoutM
   };
 
   const handleLookup = async () => {
+    // Con el <form>, Intro lanza la búsqueda: mientras se confirma un pago
+    // no puede vaciar el objetivo ni cambiar el tipo de operación en curso.
+    if (loading || confirming) return;
     const normalized = code.trim().toUpperCase();
     if (!normalized) {
       setError('Ingresa el código de retiro o de envío');
@@ -138,10 +149,10 @@ export function AgentPayoutModal({ open, onOpenChange, onSuccess }: AgentPayoutM
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md p-0 overflow-hidden outline-none">
+      <DialogContent size="md" className="outline-none">
         {!success ? (
           <>
-            <DialogHeader className="p-6 border-b border-border/10">
+            <DialogHeader>
               <DialogTitle className="flex items-center gap-2 text-xl font-bold text-foreground">
                 <HandCoins className="h-5 w-5 text-primary" />
                 Pagar en efectivo
@@ -150,21 +161,42 @@ export function AgentPayoutModal({ open, onOpenChange, onSuccess }: AgentPayoutM
                 Busca el envío de ventanilla o el retiro de billetera y confirma la entrega.
               </DialogDescription>
             </DialogHeader>
-            <div className="p-6 space-y-4">
-              <div className="space-y-2">
-                <label className="text-xs font-semibold text-muted-foreground">Código de retiro o envío</label>
+            <DialogBody className="space-y-4">
+              {/* Un <form> para que Intro lance la búsqueda, como en cualquier
+                  buscador. El marcador corto cabe en 320px; el formato completo
+                  va en la línea de ayuda. */}
+              <form
+                className="space-y-2"
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  handleLookup();
+                }}
+              >
+                <label htmlFor="payout-code" className="text-xs font-semibold text-muted-foreground">Código de retiro o envío</label>
                 <div className="flex gap-2">
                   <Input
+                    id="payout-code"
                     value={code}
                     onChange={(e) => setCode(e.target.value.toUpperCase())}
-                    placeholder="TRX-2026-000000 / RET-2026-000000"
-                    className="h-12 rounded-xl font-bold tracking-[0.18em]"
+                    placeholder="TRX-… o RET-…"
+                    enterKeyHint="search"
+                    aria-describedby="payout-code-hint"
+                    className="h-12 min-w-0 rounded-xl font-bold tracking-[0.08em] @sm:tracking-[0.18em]"
                   />
-                  <Button variant="outline" className="rounded-xl font-bold" onClick={handleLookup} disabled={loading}>
+                  <Button
+                    type="submit"
+                    variant="outline"
+                    aria-label="Buscar código"
+                    className="size-12 shrink-0 rounded-xl font-bold"
+                    disabled={loading || confirming}
+                  >
                     {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
                   </Button>
                 </div>
-              </div>
+                <p id="payout-code-hint" className="text-xs text-muted-foreground">
+                  Formato: TRX-2026-000000 o RET-2026-000000
+                </p>
+              </form>
 
               {loading && !target && !error && (
                 <PanelSkeleton rows={2} className="rounded-2xl border border-border/10 bg-background/70 p-4" />
@@ -172,14 +204,14 @@ export function AgentPayoutModal({ open, onOpenChange, onSuccess }: AgentPayoutM
 
               {target?.kind === 'transfer' && (
                 <div className="rounded-2xl border border-border/10 bg-background/70 p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-bold text-foreground">{target.transfer.receiver_name}</p>
-                      <p className="text-xs font-semibold text-muted-foreground">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-sm font-bold text-foreground wrap-break-word">{target.transfer.receiver_name}</p>
+                      <p className="text-xs font-semibold text-muted-foreground wrap-break-word">
                         {target.transfer.sender_name} · {target.transfer.destination_city}
                       </p>
                     </div>
-                    <Badge className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold uppercase tracking-[0.18em] text-emerald-700">
+                    <Badge className="shrink-0 rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold uppercase tracking-[0.18em] text-emerald-700">
                       Envío
                     </Badge>
                   </div>
@@ -191,12 +223,12 @@ export function AgentPayoutModal({ open, onOpenChange, onSuccess }: AgentPayoutM
 
               {target?.kind === 'withdrawal' && (
                 <div className="rounded-2xl border border-border/10 bg-background/70 p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-bold text-foreground">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-sm font-bold text-foreground wrap-break-word">
                         {target.withdrawal.client?.name || 'Cliente registrado'}
                       </p>
-                      <p className="text-xs font-semibold text-muted-foreground">
+                      <p className="text-xs font-semibold text-muted-foreground wrap-break-word">
                         {target.withdrawal.client?.document_type || 'DIP'}
                         {target.withdrawal.client?.document_number
                           ? `: ${target.withdrawal.client.document_number}`
@@ -208,7 +240,7 @@ export function AgentPayoutModal({ open, onOpenChange, onSuccess }: AgentPayoutM
                         </p>
                       )}
                     </div>
-                    <Badge className="rounded-full bg-sky-100 px-3 py-1 text-xs font-bold uppercase tracking-[0.18em] text-sky-700">
+                    <Badge className="shrink-0 rounded-full bg-sky-100 px-3 py-1 text-xs font-bold uppercase tracking-[0.18em] text-sky-700">
                       Retiro
                     </Badge>
                   </div>
@@ -224,12 +256,14 @@ export function AgentPayoutModal({ open, onOpenChange, onSuccess }: AgentPayoutM
               )}
 
               {error && (
-                <div className="flex items-center gap-2 rounded-xl bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-600">
+                <div role="alert" className="flex items-center gap-2 rounded-xl bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-600">
                   <AlertCircle className="h-4 w-4 shrink-0" />
                   {error}
                 </div>
               )}
+            </DialogBody>
 
+            <DialogFooter>
               <Button
                 className="w-full rounded-xl bg-brand-gradient text-white font-bold"
                 onClick={handlePayout}
@@ -237,25 +271,28 @@ export function AgentPayoutModal({ open, onOpenChange, onSuccess }: AgentPayoutM
               >
                 {confirming ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Confirmar pago'}
               </Button>
-            </div>
+            </DialogFooter>
           </>
         ) : (
-          <div className="p-6 text-center space-y-4">
-            <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto">
-              <CheckCircle2 className="h-8 w-8 text-emerald-600" />
-            </div>
-            <div>
-              <p className="text-lg font-bold">Pago confirmado</p>
-              <p className="text-sm text-muted-foreground mt-1">
+          <>
+            {/* Resultado sin detalle: sólo cabecera y pie, sin cuerpo. */}
+            <DialogHeader align="center">
+              <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto">
+                <CheckCircle2 className="h-8 w-8 text-emerald-600" />
+              </div>
+              <DialogTitle className="text-lg font-bold">Pago confirmado</DialogTitle>
+              <DialogDescription className="text-sm text-muted-foreground">
                 {target?.kind === 'withdrawal'
                   ? 'El retiro fue entregado y tu saldo digital ha sido actualizado.'
                   : 'La transferencia fue pagada y tu saldo digital ha sido actualizado.'}
-              </p>
-            </div>
-            <Button variant="brand" className="w-full rounded-xl font-bold" onClick={() => onOpenChange(false)}>
-              Cerrar
-            </Button>
-          </div>
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button variant="brand" className="w-full rounded-xl font-bold" onClick={() => onOpenChange(false)}>
+                Cerrar
+              </Button>
+            </DialogFooter>
+          </>
         )}
       </DialogContent>
     </Dialog>

@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   ArrowRight,
   BookOpen,
@@ -478,6 +478,36 @@ function ApiHeroVisual() {
 export function ApiDocumentation() {
   const [language, setLanguage] = useState<keyof typeof examples>('typescript');
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const menuToggleRef = useRef<HTMLButtonElement>(null);
+
+  // El menú móvil es una capa sobre la página: se cierra con Escape (y el
+  // foco vuelve al botón que lo abrió), bloquea el scroll del documento
+  // mientras está abierto y se cierra solo si la ventana pasa a escritorio,
+  // donde la barra lateral ya está siempre visible.
+  useEffect(() => {
+    if (!mobileNavOpen) return;
+
+    const desktop = window.matchMedia('(min-width: 1024px)');
+    const closeOnDesktop = () => {
+      if (desktop.matches) setMobileNavOpen(false);
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      setMobileNavOpen(false);
+      menuToggleRef.current?.focus();
+    };
+
+    const previousOverflow = document.documentElement.style.overflow;
+    document.documentElement.style.overflow = 'hidden';
+    document.addEventListener('keydown', handleKeyDown);
+    desktop.addEventListener('change', closeOnDesktop);
+
+    return () => {
+      document.documentElement.style.overflow = previousOverflow;
+      document.removeEventListener('keydown', handleKeyDown);
+      desktop.removeEventListener('change', closeOnDesktop);
+    };
+  }, [mobileNavOpen]);
 
   return (
     <div className="documentation-page dark min-h-screen font-sans text-foreground">
@@ -495,7 +525,16 @@ export function ApiDocumentation() {
             <Button asChild className="hidden rounded-2xl bg-brand-gradient px-6 font-bold text-white shadow-[0_14px_45px_rgba(236,72,153,0.35)] sm:inline-flex">
               <Link href="/developers-portal">Obtener credenciales <ArrowRight className="h-4 w-4" /></Link>
             </Button>
-            <Button variant="ghost" size="icon" className="border border-border text-foreground dark:border-white/10 dark:text-white lg:hidden" onClick={() => setMobileNavOpen(!mobileNavOpen)}>
+            <Button
+              ref={menuToggleRef}
+              variant="ghost"
+              size="icon"
+              className="border border-border text-foreground dark:border-white/10 dark:text-white lg:hidden"
+              onClick={() => setMobileNavOpen(!mobileNavOpen)}
+              aria-label={mobileNavOpen ? 'Cerrar el índice de la documentación' : 'Abrir el índice de la documentación'}
+              aria-expanded={mobileNavOpen}
+              aria-controls="documentation-sidebar"
+            >
               {mobileNavOpen ? <X /> : <Menu />}
             </Button>
           </div>
@@ -503,11 +542,15 @@ export function ApiDocumentation() {
       </header>
 
       <div className="documentation-layout grid w-full lg:grid-cols-[240px_minmax(0,1fr)] lg:pl-[clamp(0px,10.5vw,240px)]">
-        <aside className={cn('documentation-sidebar border-r border-white/10 bg-[#040b17] px-5 py-7 lg:sticky lg:top-[68px] lg:block lg:h-[calc(100vh-68px)]', mobileNavOpen ? 'block' : 'hidden')}>
+        {mobileNavOpen && (
+          <div className="documentation-backdrop" aria-hidden="true" onClick={() => setMobileNavOpen(false)} />
+        )}
+        {/* Altura en `dvh` con reserva en `vh` para los navegadores que no lo conocen. */}
+        <aside id="documentation-sidebar" className={cn('documentation-sidebar border-r border-white/10 bg-[#040b17] px-5 py-7 lg:sticky lg:top-[68px] lg:block lg:h-[calc(100vh-68px)] lg:supports-[height:100dvh]:h-[calc(100dvh-68px)]', mobileNavOpen ? 'block' : 'hidden')}>
           <p className="mb-1 px-3 text-[10px] font-bold uppercase tracking-[0.36em] text-muted-foreground">Guía de integración</p>
           <nav className="space-y-1">
             {sections.map((section) => (
-              <a key={section.id} href={`#${section.id}`} onClick={() => setMobileNavOpen(false)} className="group flex items-center justify-between rounded-xl px-3 py-2.5 text-[15px] font-medium text-muted-foreground transition hover:bg-accent hover:text-foreground dark:hover:bg-white/[0.04] dark:hover:text-white">
+              <a key={section.id} href={`#${section.id}`} onClick={() => setMobileNavOpen(false)} className="group flex min-h-11 items-center justify-between rounded-xl px-3 py-2.5 text-[15px] font-medium text-muted-foreground transition hover:bg-accent hover:text-foreground dark:hover:bg-white/[0.04] dark:hover:text-white">
                 {section.label}<ChevronRight className="h-3.5 w-3.5 opacity-0 transition group-hover:opacity-100" />
               </a>
             ))}
@@ -521,7 +564,7 @@ export function ApiDocumentation() {
         </aside>
 
         <main className="min-w-0">
-          <section id="introduccion" className="documentation-hero relative flex min-h-[calc(100vh-68px)] min-w-0 flex-col overflow-hidden border-b border-white/10 bg-[#020817] px-5 sm:px-8 lg:px-10">
+          <section id="introduccion" className="documentation-hero relative flex min-h-[calc(100vh-68px)] supports-[min-height:100dvh]:min-h-[calc(100dvh-68px)] min-w-0 flex-col overflow-hidden border-b border-white/10 bg-[#020817] px-5 sm:px-8 lg:px-10">
             <div className="documentation-hero-grid-pattern pointer-events-none absolute inset-0" />
             <div className="documentation-hero-aura pointer-events-none absolute inset-y-0 right-0 w-[58%]" />
             <div className="documentation-hero-grid relative flex-1">

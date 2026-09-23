@@ -6,6 +6,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogBody,
+  DialogFooter,
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Search, MapPin, User, ArrowRight } from '@/components/ui/hugeicons';
@@ -14,7 +15,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { ModalListSkeleton } from '@/components/skeletons/app-skeletons';
 import { searchTransfers } from '@/modules/transfers/http/client';
 import { useAppStore } from '@/lib/store';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency, getStatusText } from '@/lib/utils';
 import { Transfer } from '@/types';
 import Link from 'next/link';
 import { HttpError } from '@/services/http';
@@ -64,8 +65,10 @@ export function SearchModal({ open, onOpenChange }: SearchModalProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl p-0 overflow-hidden outline-none max-h-[80vh] flex flex-col">
-        <DialogHeader className="p-6 border-b border-border/10 shrink-0">
+      <DialogContent size="xl" className="outline-none" aria-describedby={undefined}>
+        {/* El campo de búsqueda vive en la cabecera fija: los resultados se
+            desplazan en el cuerpo sin que el campo se vaya con ellos. */}
+        <DialogHeader>
           <DialogTitle className="sr-only">Buscador Global</DialogTitle>
           <div className="relative">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none" />
@@ -84,7 +87,7 @@ export function SearchModal({ open, onOpenChange }: SearchModalProps) {
           </div>
         </DialogHeader>
 
-        <DialogBody className="flex-1 overflow-y-auto p-4">
+        <DialogBody>
           {query.length <= 2 ? (
             <div className="py-12 text-center space-y-2">
               <p className="text-sm font-black text-muted-foreground uppercase tracking-widest">Escribe al menos 3 caracteres</p>
@@ -103,30 +106,32 @@ export function SearchModal({ open, onOpenChange }: SearchModalProps) {
                   key={result.id} 
                   href="/history" 
                   onClick={() => onOpenChange(false)}
-                  className="flex items-center justify-between p-4 rounded-2xl hover:bg-muted/50 transition-all border border-transparent hover:border-border/10 group"
+                  // En columna hasta que el cuerpo del modal (no la ventana)
+                  // mide 28rem: en un móvil la fila no cabía en horizontal.
+                  className="flex flex-col gap-2 p-4 rounded-2xl hover:bg-muted/50 transition-all border border-transparent hover:border-border/10 group @md:flex-row @md:items-center @md:justify-between"
                 >
-                  <div className="flex items-center gap-4">
-                    <div className="h-10 w-10 rounded-xl bg-primary/5 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+                  <div className="flex min-w-0 items-center gap-4">
+                    <div className="h-10 w-10 shrink-0 rounded-xl bg-primary/5 flex items-center justify-center text-primary group-hover:scale-110 transition-transform motion-reduce:transition-none motion-reduce:group-hover:scale-100">
                       <span className="font-black text-xs">SD</span>
                     </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <p className="text-sm font-black text-foreground uppercase tracking-tighter">{result.transfer_code}</p>
-                        <span className="text-xs font-black px-1.5 py-0.5 rounded bg-muted text-muted-foreground uppercase">
-                          {result.status}
+                    <div className="min-w-0">
+                      <div className="flex min-w-0 items-center gap-2">
+                        <p className="min-w-0 truncate text-sm font-black text-foreground uppercase tracking-tighter">{result.transfer_code}</p>
+                        <span className="shrink-0 text-xs font-black px-1.5 py-0.5 rounded bg-muted text-muted-foreground uppercase">
+                          {getStatusText(result.status)}
                         </span>
                       </div>
-                      <div className="flex items-center gap-3 mt-0.5">
-                        <span className="flex items-center gap-1 text-xs font-bold text-muted-foreground">
-                          <User className="h-3 w-3" /> {result.receiver_name}
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-0.5">
+                        <span className="flex min-w-0 items-center gap-1 text-xs font-bold text-muted-foreground">
+                          <User className="h-3 w-3 shrink-0" /> <span className="truncate">{result.receiver_name}</span>
                         </span>
-                        <span className="flex items-center gap-1 text-xs font-bold text-muted-foreground">
-                          <MapPin className="h-3 w-3" /> {result.destination_city}
+                        <span className="flex min-w-0 items-center gap-1 text-xs font-bold text-muted-foreground">
+                          <MapPin className="h-3 w-3 shrink-0" /> <span className="truncate">{result.destination_city}</span>
                         </span>
                       </div>
                     </div>
                   </div>
-                  <div className="text-right flex items-center gap-4">
+                  <div className="flex shrink-0 items-center justify-between gap-4 @md:justify-end @md:text-right">
                     <div>
                       <p className="text-sm font-black text-foreground">{formatCurrency(result.amount, result.currency)}</p>
                       <p className="text-xs font-bold text-muted-foreground uppercase">Monto enviado</p>
@@ -139,16 +144,18 @@ export function SearchModal({ open, onOpenChange }: SearchModalProps) {
           )}
         </DialogBody>
 
-        <div className="p-4 bg-muted/20 border-t border-border/5 flex justify-between items-center px-8 shrink-0">
-          <p className="text-xs font-black text-muted-foreground uppercase tracking-widest">
+        {/* Barra de estado, no de acciones: se queda en fila también en móvil.
+            El atajo ESC sólo se anuncia donde hay teclado físico probable. */}
+        <DialogFooter className="flex-row items-center justify-between bg-muted/20">
+          <p className="w-auto text-xs font-black text-muted-foreground uppercase tracking-widest">
             {results.length} resultados encontrados
           </p>
-          <div className="flex gap-4">
+          <div className="hidden w-auto gap-4 [@media(hover:hover)]:flex">
             <span className="text-[11px] font-black text-muted-foreground uppercase flex items-center gap-1">
               <kbd className="px-1.5 py-0.5 rounded bg-muted-foreground/10">ESC</kbd> Cerrar
             </span>
           </div>
-        </div>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

@@ -212,6 +212,7 @@
 
 /* Auth & Onboarding */
 @import "./styles/auth.css";
+@import "./styles/phone-input.css";
 
 /* Print Styles */
 @import "./styles/print.css";
@@ -221,6 +222,14 @@
 
 /* Authenticated dashboard surface and module panel */
 @import "./styles/dashboard-system.css";
+
+/* Restaurados de antes del commit 644d1ee. Van detrás de dashboard-mobile y
+   dashboard-system porque la compresión en horizontal reescribe medidas de
+   la barra inferior con la misma especificidad; frente a los `!important`
+   de las superficies no compiten (tocan otras propiedades). */
+@import "./styles/tables.css";
+@import "./styles/dashboard-responsive.css";
+@import "./styles/cookie-consent.css";
 
 /* Shared Marketing Background */
 .landing-root, .info-page, .legal-page, .auth-public-page, .dashboard-public-page {

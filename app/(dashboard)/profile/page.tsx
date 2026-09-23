@@ -9,7 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogBody, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { useAppStore } from '@/lib/store';
 
@@ -308,7 +308,9 @@ export default function ProfilePage() {
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full bg-rose-600 text-white shadow-sm transition hover:bg-rose-700"
+                  // El dibujo sigue siendo de 28px sobre el avatar; el
+                  // pseudo-elemento `-inset-2` lleva la zona pulsable a 44×44.
+                  className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full bg-rose-600 text-white shadow-sm transition hover:bg-rose-700 before:absolute before:-inset-2 before:content-[''] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                   aria-label="Cambiar avatar"
                   disabled={isUploadingAvatar}
                 >
@@ -476,7 +478,7 @@ export default function ProfilePage() {
         </>
       )}
       <Dialog open={Boolean(avatarDraftUrl)} onOpenChange={(open) => !open && !isUploadingAvatar && closeAvatarCropper()}>
-        <DialogContent mobile="centered" className="max-w-md p-5">
+        <DialogContent size="md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-xl font-semibold text-foreground">
               <ImageIcon className="h-5 w-5 text-primary" />
@@ -487,8 +489,11 @@ export default function ProfilePage() {
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-5">
-            <div className="mx-auto aspect-square w-[min(16rem,68vw)] overflow-hidden rounded-full border-4 border-primary/20 bg-muted shadow-inner">
+          <DialogBody className="space-y-5">
+            {/* El círculo de recorte no encoge con el cuerpo (que se desplaza),
+                pero se acota también por el alto: en una ventana de 600px de
+                alto el deslizador de zoom sigue a la vista bajo el círculo. */}
+            <div className="mx-auto aspect-square w-[min(16rem,100%,40dvh)] overflow-hidden rounded-full border-4 border-primary/20 bg-muted shadow-inner">
               {avatarDraftUrl && (
                 <img
                   src={avatarDraftUrl}
@@ -542,9 +547,9 @@ export default function ProfilePage() {
                 />
               </label>
             </div>
-          </div>
+          </DialogBody>
 
-          <DialogFooter className="gap-2 sm:gap-2">
+          <DialogFooter>
             <Button type="button" variant="outline" className="rounded-xl" onClick={closeAvatarCropper} disabled={isUploadingAvatar}>
               Cancelar
             </Button>

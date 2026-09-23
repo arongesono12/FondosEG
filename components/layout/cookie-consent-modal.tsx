@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import {
   ArrowLeft,
@@ -34,6 +34,7 @@ export function CookieConsentModal({
 }: CookieConsentModalProps) {
   const [showConfiguration, setShowConfiguration] = useState(false);
   const [preferences, setPreferences] = useState<CookieConsentPreferences>(initialPreferences);
+  const toastRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (open) {
@@ -41,6 +42,30 @@ export function CookieConsentModal({
       setPreferences(initialPreferences);
     }
   }, [initialPreferences, open]);
+
+  /**
+   * El aviso flota sobre la página, así que el dashboard tiene que reservar
+   * su alto por debajo o el final del contenido queda inalcanzable. Ese alto
+   * se publica aquí en `--consent-height` en lugar de estar escrito a mano en
+   * el CSS: cambia con el texto, con el ancho de la pantalla y al abrir
+   * «Personalizar», y unas cifras fijas se desajustan a la primera.
+   */
+  useEffect(() => {
+    const node = toastRef.current;
+    if (!open || !node || typeof ResizeObserver === 'undefined') return;
+
+    const root = document.documentElement;
+    const observer = new ResizeObserver(([entry]) => {
+      const height = entry.borderBoxSize?.[0]?.blockSize ?? node.getBoundingClientRect().height;
+      root.style.setProperty('--consent-height', `${Math.round(height)}px`);
+    });
+    observer.observe(node);
+
+    return () => {
+      observer.disconnect();
+      root.style.removeProperty('--consent-height');
+    };
+  }, [open]);
 
   if (!open) return null;
 
@@ -56,14 +81,23 @@ export function CookieConsentModal({
           'Usamos cookies esenciales para mantener FondosEG seguro y, con tu permiso, cookies de preferencias para recordar cómo usas la plataforma.',
       };
 
+  // Con movimiento reducido los botones no se elevan al pasar el ratón.
+  // Tailwind v4 mueve con la propiedad `translate`, no con `transform`, así
+  // que el reinicio es `translate-none` (un `transform-none` no lo anularía).
+  const motionSafe = 'motion-reduce:transition-none motion-reduce:hover:translate-none';
+
   const secondaryButton =
-    'cookie-consent-secondary flex min-h-11 items-center justify-center gap-2 rounded-xl border border-border/60 bg-background/70 px-3 text-sm font-semibold text-foreground transition-all hover:-translate-y-0.5 hover:bg-muted/60 active:translate-y-0';
+    `cookie-consent-secondary flex min-h-11 items-center justify-center gap-2 rounded-xl border border-border/60 bg-background/70 px-3 text-sm font-semibold text-foreground transition-all hover:-translate-y-0.5 hover:bg-muted/60 active:translate-y-0 ${motionSafe}`;
 
   return (
     <div
+      ref={toastRef}
       aria-label="Preferencias de cookies"
       role="region"
-      className="cookie-consent-toast fixed inset-x-0 bottom-0 z-[70] border-t border-border/20 px-4 py-4 shadow-[0_-18px_50px_rgba(15,23,42,0.12)] dark:shadow-[0_-18px_50px_rgba(0,0,0,0.35)]"
+      // Por debajo de 1024px se apoya encima de la barra inferior fija (72px +
+      // zona segura) en vez de taparla; la superficie opaca y el aspecto de
+      // tarjeta flotante vienen de app/styles/cookie-consent.css.
+      className="cookie-consent-toast fixed inset-x-0 bottom-[calc(72px+env(safe-area-inset-bottom))] lg:bottom-0 z-(--z-consent) border-t border-border/20 px-4 py-4 shadow-[0_-18px_50px_rgba(15,23,42,0.12)] dark:shadow-[0_-18px_50px_rgba(0,0,0,0.35)]"
       onKeyDown={(event) => {
         if (event.key === 'Escape') event.preventDefault();
       }}
@@ -84,12 +118,13 @@ export function CookieConsentModal({
           </div>
         </div>
 
+        {/* Botones en una columna en teléfonos: a 320–430px tres no cabían. */}
         {!showConfiguration ? (
-          <div className="cookie-consent-actions grid w-full grid-cols-3 gap-2.5 lg:w-[520px]">
+          <div className="cookie-consent-actions grid w-full grid-cols-1 gap-2 sm:grid-cols-3 lg:w-[520px]">
             <button
               type="button"
               onClick={onAcceptAll}
-              className="cookie-consent-primary flex min-h-11 items-center justify-center gap-2 rounded-xl bg-brand-gradient px-3 text-sm font-semibold text-white shadow-lg shadow-pink-500/20 transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-pink-500/25 active:translate-y-0"
+              className={`cookie-consent-primary flex min-h-11 items-center justify-center gap-2 rounded-xl bg-brand-gradient px-3 text-sm font-semibold text-white shadow-lg shadow-pink-500/20 transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-pink-500/25 active:translate-y-0 ${motionSafe}`}
             >
               <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
               Aceptar todas
@@ -104,7 +139,7 @@ export function CookieConsentModal({
             </button>
           </div>
         ) : (
-          <div className="cookie-consent-actions grid w-full grid-cols-3 gap-2.5 lg:w-[520px]">
+          <div className="cookie-consent-actions grid w-full grid-cols-1 gap-2 sm:grid-cols-3 lg:w-[520px]">
             <button
               type="button"
               aria-pressed={preferences.preferences}
@@ -128,7 +163,7 @@ export function CookieConsentModal({
             <button
               type="button"
               onClick={() => onSaveConfiguration(preferences)}
-              className="cookie-consent-primary flex min-h-11 items-center justify-center gap-2 rounded-xl bg-brand-gradient px-4 text-sm font-semibold text-white shadow-lg shadow-pink-500/20 transition-all hover:-translate-y-0.5 hover:shadow-xl active:translate-y-0"
+              className={`cookie-consent-primary flex min-h-11 items-center justify-center gap-2 rounded-xl bg-brand-gradient px-4 text-sm font-semibold text-white shadow-lg shadow-pink-500/20 transition-all hover:-translate-y-0.5 hover:shadow-xl active:translate-y-0 ${motionSafe}`}
             >
               <Save className="h-4 w-4" aria-hidden="true" /> Guardar preferencias
             </button>

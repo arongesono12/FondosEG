@@ -185,10 +185,28 @@
   .dashboard-desktop-tools button { background: var(--surface); border-radius: var(--app-control-radius); }
   .dashboard-main { padding: 0 30px 24px; }
 }
+/* Menú de escritorio de admin y superadmin: siete enlaces sin salto de línea,
+   el buscador de 256px y las herramientas no cabían entre 1024 y ~1400px y la
+   cabecera se desbordaba. Por debajo de `xl` (1280px) sólo van en línea los
+   cinco primeros y el resto pasa a «Más»; el buscador se pliega a un icono
+   por debajo de `2xl` (lo decide dashboard-layout-wrapper.tsx). */
+@media (min-width: 1024px) {
+  .dashboard-desktop-nav-more { display: inline-flex; align-items: center; justify-content: center; gap: 5px; padding: 11px 15px; font-size: 13px; font-weight: 500; white-space: nowrap; color: var(--dashboard-on-ink); }
+  .dashboard-desktop-nav-more svg { width: 15px; height: 15px; }
+  .dashboard-desktop-nav-more:hover { color: #fff; background: #ffffff16; }
+  .dashboard-desktop-nav-more[data-active="true"] { color: #fff; background: var(--primary); }
+  .dashboard-desktop-nav :is(a, .dashboard-desktop-nav-more):focus-visible { outline: 3px solid var(--ring); outline-offset: 2px; }
+}
+@media (min-width: 1024px) and (max-width: 1279.98px) {
+  .dashboard-desktop-nav a.is-overflow { display: none; }
+}
+@media (min-width: 1280px) {
+  .dashboard-desktop-nav-more { display: none; }
+}
 @media (min-width: 1024px) and (max-width: 1200px) {
   .dashboard-desktop-header { gap: 12px; padding-inline: 24px; }
   .dashboard-desktop-brand-nav { gap: 12px; }
-  .dashboard-desktop-nav a { padding-inline: 11px; font-size: 12px; }
+  .dashboard-desktop-nav :is(a, .dashboard-desktop-nav-more) { padding-inline: 11px; font-size: 12px; }
   .dashboard-desktop-brand-nav > a span { font-size: 18px; }
   .dashboard-main { padding-inline: 24px; }
   .overview-transfer { grid-template-columns: 28px minmax(0, 1fr) auto; gap: 6px; padding-inline: 8px; }
@@ -202,9 +220,11 @@
   .overview-heading { padding-block: 4px; }
   .overview-title-group > .overview-icon-button { display: none; }
   .overview-title-group p { max-width: 320px; font-size: 12px; }
-  .overview-metrics { gap: 10px; }
-  .overview-metric { padding: 16px 14px 0; height: 220px; }
-  .overview-metric-value { font-size: 21px; }
+  /* Cuatro columnas aguantaban hasta 700px y la cifra, que no puede partirse,
+     se recortaba. Dos columnas por debajo de 1024px y una en teléfonos
+     estrechos (más abajo). Altura, relleno y tamaño de la cifra los fija
+     dashboard-system.css: los que había aquí nunca llegaban a aplicarse. */
+  .overview-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
   .overview-metric-caption { font-size: 11px; }
   .overview-metric h2 { font-size: 12px; }
   .overview-filters { grid-template-columns: auto 1fr 1fr; gap: 8px; }
@@ -224,20 +244,23 @@
   .overview-detail-footer { grid-template-columns: 1fr 1fr; }
 }
 @media (max-width: 700px) {
-  .overview-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .overview-heading { align-items: flex-start; }
+  /* El botón de soporte (LifeBuoy) se ocultaba aquí y en móvil no había otra
+     vía hacia él desde el overview. Ahora se queda, a 44px como la acción
+     principal, y la cabecera se parte en dos líneas si no caben. */
+  .overview-heading { align-items: flex-start; flex-wrap: wrap; row-gap: 12px; }
   .overview-heading-actions { gap: 6px; }
-  .overview-heading-actions > button { display: none; }
-  .overview-primary-action { padding: 0 12px; min-height: 40px; font-size: 12px; }
+  .overview-heading-actions > .overview-icon-button { width: 44px; height: 44px; }
+  .overview-primary-action { padding: 0 12px; min-height: 44px; font-size: 12px; }
   .overview-title-group p { max-width: 210px; font-size: 12px; line-height: 1.6; }
   .overview h1 { font-size: 27px; }
   .overview-filters { grid-template-columns: 1fr 1fr; }
   .overview-filter-label { grid-column: 1 / -1; }
   .overview-search { grid-column: 1 / -1; }
-  .overview-filters :is(input, select) { font-size: 12px; }
   .overview-operations { padding-inline: 10px; padding-bottom: 10px; border-radius: 22px; }
   .overview-operations-body { grid-template-columns: 1fr; }
-  .overview-transfer-list { max-height: 190px; }
+  /* Sin tope de altura: dentro de un `<main>` que ya se desplaza, una lista
+     con su propio scroll atrapaba el gesto y escondía operaciones. */
+  .overview-transfer-list { max-height: none; overflow-y: visible; }
   .overview-transfer { min-height: 56px; grid-template-columns: 32px minmax(0, 1fr) auto auto; }
   .overview-transfer-state { display: block; }
   .overview-transfer-identity strong { font-size: 12px; }
@@ -249,9 +272,14 @@
   .overview-empty { min-height: 100px; }
   .overview-empty-detail { min-height: 220px; }
 }
+@media (max-width: 479.98px) {
+  .overview-metrics { grid-template-columns: minmax(0, 1fr); }
+  /* Tres columnas de 70px partían los importes a mitad de cifra. */
+  .overview-detail-tiles { grid-template-columns: 1fr 1fr; }
+  /* `.dashboard-main` delante para superar al remapeo tipográfico (0,3,1). */
+  .dashboard-main .overview .overview-detail-tiles > div > strong { padding-right: 0; overflow-wrap: normal; white-space: nowrap; font-size: clamp(13px, 4vw, 16px); }
+}
 @media (max-width: 380px) {
-  .overview-metric { padding-inline: 11px; }
-  .overview-metric-value { font-size: 18px; }
   .overview-wallets { left: 9px; right: 9px; gap: 3px; }
   .overview-wallet strong { font-size: 10px; }
   .overview-wallet span { font-size: 9px; }
@@ -261,6 +289,21 @@
   .overview-detail-tiles { gap: 6px; }
   .overview-detail-tiles > div { padding-inline: 9px; }
   .overview-detail-tiles strong { font-size: 13px; }
+}
+/* Objetivo táctil de 44px sin cambiar el dibujo: los botones de icono del
+   overview miden 28–38px (34px el de saldo, en dashboard-system.css). Un
+   pseudo-elemento centrado amplía la zona pulsable hasta 44×44. */
+@media (pointer: coarse) {
+  .overview :is(.overview-icon-button, .overview-history-link, .overview-filter-label button) { position: relative; }
+  .overview :is(.overview-icon-button, .overview-history-link, .overview-filter-label button)::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: max(100%, 44px);
+    height: max(100%, 44px);
+    transform: translate(-50%, -50%);
+  }
 }
 @media (prefers-reduced-motion: reduce) {
   .overview *, .dashboard-desktop-header, .dashboard-desktop-nav * { transition: none; animation: none; }

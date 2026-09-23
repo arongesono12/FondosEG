@@ -13,7 +13,7 @@ import {
 
 import { DashboardLogo } from '@/components/layout/dashboard-logo';
 import { ThemeToggle } from '@/components/theme-toggle';
-import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogBody, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 import {
   FadeIn, FadeInDown, FadeInLeft, FadeInRight,
@@ -49,6 +49,18 @@ function Header() {
   const [mobileResourcesOpen, setMobileResourcesOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const resourcesRef = useRef<HTMLDivElement>(null);
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
+  // El menú móvil se cierra con Escape y devuelve el foco al botón que lo abrió.
+  useEffect(() => {
+    if (!open) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      setOpen(false);
+      menuButtonRef.current?.focus();
+    };
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
+  }, [open]);
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
     onScroll(); window.addEventListener('scroll', onScroll, { passive: true });
@@ -95,10 +107,11 @@ function Header() {
             <Link className="btn-primary" href="/register">Comenzar gratis <ArrowRight /></Link>
           </>
         )}
-        <button className="menu-button" onClick={() => setOpen(!open)} aria-label="Abrir menú">{open ? <X /> : <Menu />}</button>
+        <button ref={menuButtonRef} type="button" className="menu-button" onClick={() => setOpen(!open)} aria-label="Abrir menú" aria-expanded={open} aria-controls="landing-mobile-menu">{open ? <X /> : <Menu />}</button>
       </div>
     </div>
-    {open && <nav className="mobile-menu"><Link href="/landing/gestores">Gestores</Link><Link href="/landing/aliados">Aliados</Link><Link href="/landing/developers">Developers</Link><button type="button" onClick={() => setMobileResourcesOpen(current => !current)}>Recursos <ChevronDown className={cn(mobileResourcesOpen && 'rotate-180')} /></button>{mobileResourcesOpen && <Link className="mobile-submenu-link" href="/documentation"><BookOpen /> Documentación</Link>}{isSignedIn ? <Link href="/dashboard">Ir al dashboard</Link> : <Link href="/login">Entrar</Link>}</nav>}
+    {/* Cualquier enlace del menú lo cierra al navegar (delegación en el <nav>). */}
+    {open && <nav id="landing-mobile-menu" aria-label="Menú principal" className="mobile-menu" onClick={(event) => { if ((event.target as HTMLElement).closest('a')) setOpen(false); }}><Link href="/landing/gestores">Gestores</Link><Link href="/landing/aliados">Aliados</Link><Link href="/landing/developers">Developers</Link><button type="button" onClick={() => setMobileResourcesOpen(current => !current)}>Recursos <ChevronDown className={cn(mobileResourcesOpen && 'rotate-180')} /></button>{mobileResourcesOpen && <Link className="mobile-submenu-link" href="/documentation"><BookOpen /> Documentación</Link>}{isSignedIn ? <Link href="/dashboard">Ir al dashboard</Link> : <Link href="/login">Entrar</Link>}</nav>}
   </header>;
 }
 
@@ -148,22 +161,40 @@ export function LandingPage() {
   <FadeIn><section className="cta-section"><div><h2>Comienza con <span>FondosEG</span></h2><p>Crea tu cuenta gratis y comienza a mover tu dinero<br/>con velocidad, control y confianza.</p></div><form action="/register"><div><input type="email" name="email" placeholder="Correo electrónico" aria-label="Correo electrónico"/><button className="btn-primary">Comenzar gratis <ArrowRight /></button></div><p><span><Check/> Sin tarjeta de crédito</span><span><Check/> Configuración en minutos</span><span><Check/> Cancela cuando quieras</span></p></form></section></FadeIn>
 
   <Dialog open={demoOpen} onOpenChange={setDemoOpen}>
-    <DialogContent mobile="none" className="demo-dialog" aria-describedby="demo-description">
-      <div className="demo-dialog-copy">
-        <span>RECORRIDO DE LA PLATAFORMA</span>
-        <DialogTitle>Descubre cómo funciona FondosEG</DialogTitle>
+    {/* La demo usa la especificación común de modales (`xl`). Antes era
+        `mobile="none"` sin CSS propio (se perdió al partir globals.css):
+        vivía de las utilidades del primitivo y en móvil salía a sangre, sin
+        margen lateral. El reproductor reserva su 16:9 con `aspect-video`, así
+        que no hay salto de maquetación al cargar el vídeo. */}
+    <DialogContent size="xl" className="demo-dialog" aria-describedby="demo-description">
+      <DialogHeader className="demo-dialog-copy">
+        <span className="text-xs tracking-[0.2em] text-primary">RECORRIDO DE LA PLATAFORMA</span>
+        <DialogTitle className="text-2xl tracking-tight">Descubre cómo funciona FondosEG</DialogTitle>
         <DialogDescription id="demo-description">Del acceso seguro al envío de dinero y el seguimiento desde el dashboard.</DialogDescription>
-      </div>
-      <div className="demo-player">
-        {!videoUnavailable ? <video controls playsInline preload="metadata" poster="/mockup.png" onError={() => setVideoUnavailable(true)}>
-          <source src="/fondoseg-demo.mp4" type="video/mp4" />
-        </video> : <div className="demo-preview">
-          <Image src="/mockup.png" alt="Vista previa del dashboard de FondosEG" width={2048} height={1228} />
-          <div><Play /><strong>Demo en preparación</strong><p>El reproductor está listo para incorporar la grabación final de FondosEG.</p></div>
-        </div>}
-      </div>
-      <div className="demo-chapters"><span><b>01</b> Inicio de sesión</span><span><b>02</b> Envío de dinero</span><span><b>03</b> Dashboard y seguimiento</span></div>
-      <div className="demo-dialog-actions"><Link href="/login" className="demo-button" onClick={() => setDemoOpen(false)}>Explorar la aplicación</Link><Link href="/register" className="btn-primary" onClick={() => setDemoOpen(false)}>Crear cuenta <ArrowRight /></Link></div>
+      </DialogHeader>
+      <DialogBody className="space-y-4">
+        <div className="demo-player aspect-video w-full overflow-hidden rounded-2xl border border-border/40 bg-black">
+          {!videoUnavailable ? <video className="size-full object-cover" controls playsInline preload="metadata" poster="/mockup.png" onError={() => setVideoUnavailable(true)}>
+            <source src="/fondoseg-demo.mp4" type="video/mp4" />
+          </video> : <div className="demo-preview relative grid size-full place-items-center">
+            <Image src="/mockup.png" alt="Vista previa del dashboard de FondosEG" width={2048} height={1228} sizes="(max-width:640px) 100vw, 720px" className="absolute inset-0 size-full object-cover opacity-35" />
+            <div className="relative grid justify-items-center gap-1 p-5 text-center text-white">
+              <Play className="size-11 rounded-full bg-brand-gradient p-3 text-white" aria-hidden="true" />
+              <strong className="mt-2 text-lg">Demo en preparación</strong>
+              <p className="text-xs text-white/75">El reproductor está listo para incorporar la grabación final de FondosEG.</p>
+            </div>
+          </div>}
+        </div>
+        <div className="demo-chapters grid gap-2 @md:grid-cols-3">
+          <span className="flex items-center gap-2 rounded-xl border border-border/40 px-3 py-2.5 text-xs text-muted-foreground"><b className="text-primary">01</b> Inicio de sesión</span>
+          <span className="flex items-center gap-2 rounded-xl border border-border/40 px-3 py-2.5 text-xs text-muted-foreground"><b className="text-primary">02</b> Envío de dinero</span>
+          <span className="flex items-center gap-2 rounded-xl border border-border/40 px-3 py-2.5 text-xs text-muted-foreground"><b className="text-primary">03</b> Dashboard y seguimiento</span>
+        </div>
+      </DialogBody>
+      <DialogFooter className="demo-dialog-actions">
+        <Link href="/login" className="demo-button w-full sm:w-auto" onClick={() => setDemoOpen(false)}>Explorar la aplicación</Link>
+        <Link href="/register" className="btn-primary w-full sm:w-auto" onClick={() => setDemoOpen(false)}>Crear cuenta <ArrowRight /></Link>
+      </DialogFooter>
     </DialogContent>
   </Dialog>
   </Shell>;

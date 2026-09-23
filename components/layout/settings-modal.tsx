@@ -2,8 +2,10 @@
 
 import { 
   Dialog, 
-  DialogContent, 
-  DialogHeader, 
+  DialogContent,
+  DialogHeader,
+  DialogBody,
+  DialogFooter,
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
@@ -46,8 +48,8 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md overflow-hidden p-0 outline-none">
-        <DialogHeader className="p-6 border-b border-border/10">
+      <DialogContent size="md" className="outline-none">
+        <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-xl font-semibold text-foreground">
             <Settings className="h-5 w-5 text-primary" /> Configuración
           </DialogTitle>
@@ -56,17 +58,19 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
           </DialogDescription>
         </DialogHeader>
         
-        <div className="p-6 space-y-6">
+        <DialogBody className="space-y-6">
           {/* Moneda preferida */}
           <div className="space-y-3">
             <label className="flex items-center gap-2 text-sm font-medium text-foreground">
               <DollarSign className="h-4 w-4 text-primary" />
               Moneda para envíos
             </label>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 gap-2 @xs:grid-cols-2">
               {currencies.map((curr) => (
                 <button
                   key={curr.code}
+                  type="button"
+                  aria-pressed={localCurrency === curr.code}
                   onClick={() => setLocalCurrency(curr.code)}
                   className={`p-3 rounded-xl border-2 transition-all text-left ${
                     localCurrency === curr.code
@@ -94,6 +98,8 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
             </label>
             <div className="flex gap-2">
               <button
+                type="button"
+                aria-pressed={localTheme === 'light'}
                 onClick={() => setLocalTheme('light')}
                 className={`flex-1 p-3 rounded-xl border-2 transition-all ${
                   localTheme === 'light'
@@ -107,6 +113,8 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
                 </div>
               </button>
               <button
+                type="button"
+                aria-pressed={localTheme === 'dark'}
                 onClick={() => setLocalTheme('dark')}
                 className={`flex-1 p-3 rounded-xl border-2 transition-all ${
                   localTheme === 'dark'
@@ -129,6 +137,9 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
               Notificaciones
             </label>
             <button
+              type="button"
+              role="switch"
+              aria-checked={notifications}
               onClick={() => setNotifications(!notifications)}
               className={`w-full p-3 rounded-xl border-2 transition-all flex items-center justify-between ${
                 notifications
@@ -137,27 +148,29 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
               }`}
             >
               <span className="text-sm font-medium">Recibir notificaciones</span>
-              <div className={`w-12 h-6 rounded-full transition-all ${notifications ? 'bg-pink-500' : 'bg-gray-300 dark:bg-gray-600'}`}>
-                <div className={`w-5 h-5 rounded-full bg-white shadow transition-transform ${notifications ? 'translate-x-6' : 'translate-x-0.5'} mt-0.5`} />
+              <div aria-hidden="true" className={`w-12 h-6 shrink-0 rounded-full transition-all motion-reduce:transition-none ${notifications ? 'bg-pink-500' : 'bg-gray-300 dark:bg-gray-600'}`}>
+                <div className={`w-5 h-5 rounded-full bg-white shadow transition-transform motion-reduce:transition-none ${notifications ? 'translate-x-6' : 'translate-x-0.5'} mt-0.5`} />
               </div>
             </button>
           </div>
-        </div>
+        </DialogBody>
 
-        <div className="p-4 bg-muted/20 border-t border-border/5 flex gap-2">
+        <DialogFooter className="bg-muted/20">
           <button
+            type="button"
             onClick={() => onOpenChange(false)}
-            className="flex-1 py-3 px-4 rounded-xl border border-border/20 font-bold text-sm hover:bg-muted/50 transition-colors"
+            className="py-3 px-4 rounded-xl border border-border/20 font-bold text-sm hover:bg-muted/50 transition-colors"
           >
             Cancelar
           </button>
           <button
+            type="button"
             onClick={handleSave}
-            className="flex-1 py-3 px-4 rounded-xl bg-brand-gradient text-white font-bold text-sm shadow-lg shadow-pink-500/20 hover:scale-[1.02] active:scale-95 transition-all"
+            className="py-3 px-4 rounded-xl bg-brand-gradient text-white font-bold text-sm shadow-lg shadow-pink-500/20 hover:scale-[1.02] active:scale-95 transition-all motion-reduce:transition-none motion-reduce:hover:scale-100 motion-reduce:active:scale-100"
           >
             Guardar cambios
           </button>
-        </div>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

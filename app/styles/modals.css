@@ -1,5 +1,29 @@
 /* =========================================================================
-   MODALS — Sistema de modales fullscreen (móvil) y centrados
+   MODALES — una sola especificación para todos los breakpoints
+   -------------------------------------------------------------------------
+   Antes cada modal traía su propio `max-w-*`, `max-h-*` y relleno, había seis
+   alturas máximas distintas mezclando `vh` y `dvh`, y por debajo de 1024px
+   una regla sin capa encogía todos los modales a 460px: los anchos (historial,
+   staff, transferencias, buscador) saltaban de 460px a 672/896px justo en
+   1024. Ahora la geometría es una sola fórmula fluida:
+
+     ancho = 100dvw − 2·margen lateral, con tope en --dialog-width (`size`)
+     alto  ≤ 100dvh − 2·margen vertical, con tope en 900px
+
+   de modo que el modal crece hasta su tope sin saltos entre móvil, tableta y
+   escritorio. `dvh` y no `vh`: en Safari de iOS `100vh` incluye la zona que
+   tapa la barra del navegador y el pie del modal quedaba fuera de la vista.
+
+   Anatomía única: tarjeta en columna sin relleno propio; cabecera y pie fijos
+   con separador; sólo `.dialog-body` se desplaza.
+
+   Todo va en `@layer components` para que sea predecible, lo que implica que
+   cualquier utilidad de Tailwind del JSX gana: los call sites NO deben pasar
+   geometría (max-w, max-h, p-*, overflow, flex) a DialogContent ni a sus
+   partes. `data-mobile='none'` (hoy sólo el panel de módulos del dashboard)
+   queda fuera de todo esto y trae su propio diseño.
+
+   Velo y capas: `--dialog-scrim` y la escala `--z-*` viven en tokens.css.
    ========================================================================= */
 
 /* Animations */
@@ -14,35 +38,145 @@
 .dialog-overlay[data-state='closed'] { animation: dialog-overlay-out .15s ease-in; }
 .dialog-shell[data-state='open'] { animation: dialog-card-in .18s ease-out; }
 .dialog-shell[data-state='closed'] { animation: dialog-card-out .15s ease-in; }
-.dialog-body { min-height: 0; }
-
-/* Scroll contract */
-.dialog-shell:not(:has(> .dialog-body)) { overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; scroll-padding: 20px; }
-.dialog-shell:has(> .dialog-body) { display: flex; flex-direction: column; overflow: hidden; }
-.dialog-shell:has(> .dialog-body) > .dialog-header, .dialog-shell:has(> .dialog-body) > .dialog-footer { flex: none; }
-.dialog-shell:has(> .dialog-body) > .dialog-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; scroll-padding-block: 16px; }
 
 @layer components {
-  .dialog-shell { max-height: min(88dvh, 900px); }
+  /* ---- Geometría ------------------------------------------------------- */
+  .dialog-shell:not([data-mobile='none']) {
+    /* El margen respeta las zonas seguras: el modal está centrado, así que
+       se toma la mayor de las dos del mismo eje. */
+    --dialog-gutter-x: max(12px, env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px));
+    --dialog-gutter-y: max(16px, env(safe-area-inset-top, 0px), env(safe-area-inset-bottom, 0px));
+    --dialog-pad: 20px;
+    /* Botón de cierre: 12px desde el borde + 44px + 8px de aire. */
+    --dialog-close-clearance: 64px;
 
+    display: flex;
+    flex-direction: column;
+    width: calc(100vw - 2 * var(--dialog-gutter-x));
+    width: calc(100dvw - 2 * var(--dialog-gutter-x));
+    max-width: var(--dialog-width, 480px);
+    max-height: min(900px, calc(100vh - 2 * var(--dialog-gutter-y)));
+    max-height: min(900px, calc(100dvh - 2 * var(--dialog-gutter-y)));
+    padding: 0;
+    overflow: hidden;
+  }
+  .dialog-shell[data-size='sm'] { --dialog-width: 420px; }
+  .dialog-shell[data-size='md'] { --dialog-width: 480px; }
+  .dialog-shell[data-size='lg'] { --dialog-width: 560px; }
+  .dialog-shell[data-size='xl'] { --dialog-width: 720px; }
+  .dialog-shell[data-size='2xl'] { --dialog-width: 960px; }
+
+  @media (min-width: 640px) {
+    .dialog-shell:not([data-mobile='none']) {
+      --dialog-gutter-x: max(24px, env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px));
+      --dialog-gutter-y: max(24px, env(safe-area-inset-top, 0px), env(safe-area-inset-bottom, 0px));
+      --dialog-pad: 24px;
+    }
+  }
+
+  /* ---- Botón de cierre ------------------------------------------------- */
+  /* 44×44 con cualquier puntero: es el objetivo táctil mínimo cómodo y así
+     el hueco que le reserva la cabecera es una constante. */
   .dialog-close {
-    display: grid; place-items: center; width: 40px; height: 40px;
+    display: grid; place-items: center; width: 44px; height: 44px;
     border-radius: 999px; color: var(--surface-fg); background-color: transparent;
     transition: background-color .15s ease-out;
   }
   .dialog-close:hover { background-color: var(--muted); }
-  @media (pointer: coarse) { .dialog-close { width: 44px; height: 44px; } }
-  .dialog-shell:not([data-mobile='fullscreen']) > .dialog-header { padding-right: 44px; }
+
+  /* ---- Anatomía: cabecera / cuerpo / pie ------------------------------- */
+  .dialog-shell:not([data-mobile='none']) .dialog-header {
+    flex: none;
+    padding: var(--dialog-pad) var(--dialog-pad) 16px;
+  }
+  /* El botón de cierre es absoluto: la cabecera siempre le deja su hueco,
+     también cuando trae una fila con acciones propias. */
+  .dialog-shell:not([data-mobile='none']):has(> .dialog-close) .dialog-header {
+    padding-inline-end: var(--dialog-close-clearance);
+  }
+  /* Cabecera centrada (`<DialogHeader align="center">`): recupera el relleno
+     normal a ambos lados. Reservar los 64px del botón de cierre en los dos
+     dejaba 166px de texto en un móvil de 320px y la descripción de los
+     resultados se partía en cinco líneas. Estas cabeceras empiezan siempre
+     por un icono de estado centrado —estrecho y muy lejos del botón—, así
+     que no hay nada que pueda quedar debajo de él. */
+  .dialog-shell:not([data-mobile='none']):has(> .dialog-close) .dialog-header[data-align='center'] {
+    padding-inline: var(--dialog-pad);
+  }
+
+  .dialog-shell:not([data-mobile='none']) .dialog-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    padding: var(--dialog-pad);
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    scroll-padding-block: 16px;
+    /* Contenedor de consultas: las rejillas del cuerpo usan `@sm:`/`@md:`
+       (ancho del modal) en vez de `sm:`/`md:` (ancho de la ventana). */
+    container-type: inline-size;
+  }
+
+  .dialog-shell:not([data-mobile='none']) .dialog-footer {
+    flex: none;
+    padding: 16px var(--dialog-pad) var(--dialog-pad);
+  }
+
+  /* Separadores: sólo cuando hay un cuerpo entre cabecera y pie, que es lo
+     que puede desplazarse; así se ve dónde empieza y acaba la zona móvil. */
+  .dialog-shell:not([data-mobile='none']):has(.dialog-body) .dialog-header {
+    border-bottom: 1px solid var(--dialog-separator);
+  }
+  .dialog-shell:not([data-mobile='none']):has(.dialog-body) .dialog-footer {
+    border-top: 1px solid var(--dialog-separator);
+  }
+
+  /* Distribución de las acciones del pie, en cualquier modo. */
+  .dialog-footer { display: flex; flex-direction: column-reverse; gap: 8px; }
+  .dialog-footer > * { width: 100%; }
+  @media (min-width: 640px) {
+    .dialog-footer { flex-direction: row; justify-content: flex-end; gap: 12px; }
+    .dialog-footer > * { width: auto; }
+  }
+
+  /* ---- Reserva: modal sin <DialogBody> --------------------------------- */
+  /* Se desplaza la tarjeta entera (la cabecera se va con el scroll, por eso
+     todo modal debería usar el cuerpo) y el contenido suelto recibe el mismo
+     margen lateral que tendría dentro de `.dialog-body`. También cubre las
+     vistas que sólo tienen cabecera y pie, como un resultado sin detalle. */
+  .dialog-shell:not([data-mobile='none']):not(:has(.dialog-body)) {
+    row-gap: 16px;
+    padding-bottom: var(--dialog-pad);
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    scroll-padding: 20px;
+  }
+  .dialog-shell:not([data-mobile='none']):not(:has(.dialog-body)):has(> .dialog-footer) { padding-bottom: 0; }
+  .dialog-shell:not([data-mobile='none']):not(:has(.dialog-body)) > * { flex: none; }
+  .dialog-shell:not([data-mobile='none']):not(:has(.dialog-body)) > .dialog-header { padding-bottom: 0; }
+  .dialog-shell:not([data-mobile='none']):not(:has(.dialog-body)) > .dialog-footer { padding-top: 0; }
+  .dialog-shell:not([data-mobile='none']):not(:has(.dialog-body)) > :not(.dialog-header, .dialog-footer, .dialog-close) {
+    margin-inline: var(--dialog-pad);
+  }
 }
 
-/* Mobile: fullscreen modals */
+/* =========================================================================
+   `fullscreen` (<1024px): vista nativa a pantalla completa
+   -------------------------------------------------------------------------
+   Sin capa a propósito: tiene que ganar a las utilidades de posicionamiento
+   del primitivo (`fixed left-1/2 -translate-*`). La anatomía (cabecera y pie
+   fijos, cuerpo desplazable) es la misma; aquí sólo se cambia la geometría y
+   se suman las zonas seguras al relleno. Hoy ningún modal lo usa.
+   ========================================================================= */
 @media (max-width: 1023.98px) {
   .dialog-shell[data-mobile='fullscreen'] {
-    position: fixed; inset: 0; left: 0; top: 0; right: 0; bottom: 0; z-index: 50;
-    display: flex; flex-direction: column; gap: 0;
+    position: fixed; inset: 0; z-index: var(--z-overlay);
     width: 100vw; width: 100dvw; min-width: 0; max-width: none;
     height: 100vh; height: 100dvh; min-height: 0; max-height: none;
-    margin: 0; padding: 0; translate: none; transform: none;
+    margin: 0; translate: none; transform: none;
     border: 0; border-radius: 0;
     background-color: var(--dialog-surface); background-image: none;
     color: var(--foreground); box-shadow: none;
@@ -50,36 +184,28 @@
   }
   .dialog-shell[data-mobile='fullscreen'][data-state='open'] { animation: dialog-sheet-in .2s ease-out; }
   .dialog-shell[data-mobile='fullscreen'][data-state='closed'] { animation: dialog-sheet-out .15s ease-in; }
-  .dialog-shell[data-mobile='fullscreen'] > * { flex: none; }
-  .dialog-shell[data-mobile='fullscreen']:not(:has(> .dialog-body)) { overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
-  .dialog-shell[data-mobile='fullscreen']:has(> .dialog-body) { overflow: hidden; }
-  .dialog-shell[data-mobile='fullscreen'] > .dialog-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
 
-  .dialog-shell[data-mobile='fullscreen'] > .dialog-header {
-    position: sticky; top: 0; z-index: 4;
-    padding: max(16px, env(safe-area-inset-top)) calc(60px + env(safe-area-inset-right)) 14px max(18px, env(safe-area-inset-left));
-    border-bottom: 1px solid var(--dialog-separator); background-color: var(--dialog-surface); text-align: left;
+  .dialog-shell[data-mobile='fullscreen'] .dialog-header {
+    padding-top: max(var(--dialog-pad), env(safe-area-inset-top));
   }
-
-  .dialog-shell[data-mobile='fullscreen'] > *:not(.dialog-header):not(.dialog-close):not(.dialog-layer) {
-    padding-left: max(18px, env(safe-area-inset-left)); padding-right: max(18px, env(safe-area-inset-right));
+  .dialog-shell[data-mobile='fullscreen'] .dialog-header:not([data-align='center']) {
+    padding-left: max(var(--dialog-pad), env(safe-area-inset-left));
   }
-  .dialog-shell[data-mobile='fullscreen'] > *:last-of-type:not(.dialog-header):not(.dialog-layer):not(.dialog-close) {
-    padding-bottom: calc(20px + env(safe-area-inset-bottom));
+  .dialog-shell[data-mobile='fullscreen']:has(> .dialog-close) .dialog-header {
+    padding-right: calc(var(--dialog-close-clearance) + env(safe-area-inset-right));
   }
-  .dialog-shell[data-mobile='fullscreen'] > .dialog-header + *:not(.dialog-layer) { padding-top: 16px; }
-
-  .dialog-shell[data-mobile='fullscreen'] > .dialog-footer {
-    position: sticky; bottom: 0; z-index: 4; flex-direction: column-reverse; gap: 10px;
-    padding: 14px max(18px, env(safe-area-inset-right)) calc(14px + env(safe-area-inset-bottom)) max(18px, env(safe-area-inset-left));
-    border-top: 1px solid var(--dialog-separator); background-color: var(--dialog-surface);
+  .dialog-shell[data-mobile='fullscreen'] :is(.dialog-body, .dialog-footer) {
+    padding-left: max(var(--dialog-pad), env(safe-area-inset-left));
+    padding-right: max(var(--dialog-pad), env(safe-area-inset-right));
   }
-  .dialog-shell[data-mobile='fullscreen'] > .dialog-footer > * { width: 100%; margin: 0; }
+  .dialog-shell[data-mobile='fullscreen'] .dialog-footer { padding-bottom: calc(16px + env(safe-area-inset-bottom)); }
+  .dialog-shell[data-mobile='fullscreen']:not(:has(.dialog-footer)) .dialog-body {
+    padding-bottom: calc(var(--dialog-pad) + env(safe-area-inset-bottom));
+  }
 
   .dialog-shell[data-mobile='fullscreen'] > .dialog-close {
-    position: fixed; top: max(14px, env(safe-area-inset-top)); right: max(14px, env(safe-area-inset-right));
-    z-index: 6; display: grid; place-items: center; width: 38px; height: 38px;
-    border-radius: 999px; background-color: var(--muted); color: var(--foreground); opacity: 1;
+    top: max(12px, env(safe-area-inset-top)); right: max(12px, env(safe-area-inset-right));
+    z-index: 6; background-color: var(--muted); color: var(--foreground);
   }
 
   .dialog-shell[data-mobile='fullscreen'] [class^="bg-white/"],
@@ -101,30 +227,48 @@
   .dialog-shell[data-mobile='fullscreen'] [class*="grid-cols-2"],
   .dialog-shell[data-mobile='fullscreen'] [class*="grid-cols-3"],
   .dialog-shell[data-mobile='fullscreen'] [class*="grid-cols-4"] { grid-template-columns: minmax(0, 1fr); }
-
-  .dialog-shell input:not([type='checkbox']):not([type='radio']),
-  .dialog-shell select, .dialog-shell textarea { min-height: 46px; font-size: 16px; }
-  .dialog-shell input:not([type='checkbox']):not([type='radio']),
-  .dialog-shell select { border-radius: var(--app-control-radius); }
-  .dialog-shell textarea { border-radius: var(--app-control-radius-multiline); }
-  .dialog-shell textarea { min-height: 96px; }
-  .dialog-shell button:not([aria-label]):not([data-radix-collection-item]) { min-height: 44px; }
-
-  /* Drawers */
-  .dashboard-drawer { width: 100vw; width: 100dvw; max-width: none; border-left: 0; box-shadow: none; background-color: var(--dialog-surface); }
-  .dashboard-drawer-header { padding: max(16px, env(safe-area-inset-top)) max(18px, env(safe-area-inset-right)) 14px max(18px, env(safe-area-inset-left)); border-bottom: 1px solid var(--dialog-separator); }
-  .dashboard-drawer-body { padding: 18px max(18px, env(safe-area-inset-right)) calc(24px + env(safe-area-inset-bottom)) max(18px, env(safe-area-inset-left)); overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
-
-  /* Centered cards */
-  .dialog-shell[data-mobile='centered'] {
-    --dialog-gutter-x: max(14px, env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px));
-    --dialog-gutter-y: max(16px, env(safe-area-inset-top, 0px), env(safe-area-inset-bottom, 0px));
-    width: min(460px, calc(100dvw - (2 * var(--dialog-gutter-x))));
-    max-width: min(460px, calc(100dvw - (2 * var(--dialog-gutter-x))));
-    max-height: min(680px, calc(100dvh - (2 * var(--dialog-gutter-y))));
-  }
-  .dialog-shell[data-mobile='centered']:not(.p-0) { padding: 20px; }
 }
+
+/* =========================================================================
+   Controles táctiles dentro de los modales
+   -------------------------------------------------------------------------
+   16px de fuente para que Safari de iOS no haga zoom al enfocar un campo y
+   44px de alto para campos y botones (WCAG 2.5.8 con margen). Se decide por
+   el puntero, no por el ancho: un iPad en horizontal mide más de 1024px y
+   también hacía zoom, mientras que una ventana estrecha de escritorio no
+   necesita controles táctiles.
+
+   Sólo modales del sistema: el panel de módulos (`none`) enseña las mismas
+   páginas que el dashboard y con estas reglas se veían distintas dentro y
+   fuera del panel. Fuera también los `range` (los deslizadores del recorte
+   de avatar se inflaban a 46px) y los `file`.
+   ========================================================================= */
+@media (pointer: coarse) {
+  .dialog-shell:not([data-mobile='none']) input:not([type='checkbox'], [type='radio'], [type='range'], [type='file']),
+  .dialog-shell:not([data-mobile='none']) select,
+  .dialog-shell:not([data-mobile='none']) textarea { min-height: 46px; font-size: 16px; }
+  .dialog-shell:not([data-mobile='none']) input:not([type='checkbox'], [type='radio'], [type='range'], [type='file']),
+  .dialog-shell:not([data-mobile='none']) select { border-radius: var(--app-control-radius); }
+  .dialog-shell:not([data-mobile='none']) textarea { border-radius: var(--app-control-radius-multiline); min-height: 96px; }
+  .dialog-shell:not([data-mobile='none']) button:not([aria-label]):not([data-radix-collection-item]) { min-height: 44px; }
+
+  /* Los `range` quedan fuera de la regla de 46px de alto —se deformaban—,
+     pero su pulsador sí necesita ser agarrable con el dedo: son los dos
+     deslizadores del recorte de avatar. */
+  .dialog-shell:not([data-mobile='none']) input[type='range'] { height: 24px; }
+  .dialog-shell:not([data-mobile='none']) input[type='range']::-webkit-slider-thumb { width: 24px; height: 24px; }
+  .dialog-shell:not([data-mobile='none']) input[type='range']::-moz-range-thumb { width: 24px; height: 24px; }
+}
+
+/* =========================================================================
+   Menús flotantes (Radix popper)
+   -------------------------------------------------------------------------
+   Desplegables, selects y menús se miden por su disparador y pueden salirse
+   por el lado de una pantalla estrecha. Esta regla se perdió al partir
+   globals.css. Vive aquí porque es la misma familia que el velo y las capas:
+   superficies que se montan por encima de la página.
+   ========================================================================= */
+[data-radix-popper-content-wrapper] { max-width: calc(100vw - 16px); }
 
 @media (prefers-reduced-motion: reduce) {
   .dialog-overlay[data-state], .dialog-shell[data-state] { animation: none; }

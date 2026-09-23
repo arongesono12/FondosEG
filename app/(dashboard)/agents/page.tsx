@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogBody, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { getAgents, toggleAgentStatus, topUpAgentBalance, resetAgentBalance, createAgent } from '@/services/agent';
 import { formatCurrency, formatDate } from '@/lib/utils';
@@ -175,7 +175,8 @@ export default function AgentsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      {/* `@xl:` mira el contenedor (main o el panel de media pantalla), no la ventana. */}
+      <div className="flex flex-col gap-4 @xl:flex-row @xl:items-center @xl:justify-between">
         <div className="min-w-0">
           <h1 className="text-3xl font-bold">Gestores</h1>
           <p className="text-muted-foreground">
@@ -194,83 +195,88 @@ export default function AgentsPage() {
               Nuevo gestor
             </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent size="md" aria-describedby={undefined}>
             <DialogHeader>
               <DialogTitle>Crear nuevo gestor</DialogTitle>
             </DialogHeader>
-            <form onSubmit={handleCreateAgent} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Nombre completo</Label>
-                <Input
-                  id="name"
-                  value={newAgent.name}
-                  onChange={(e) => setNewAgent({ ...newAgent, name: e.target.value })}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="email">Correo electrónico</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={newAgent.email}
-                  onChange={(e) => setNewAgent({ ...newAgent, email: e.target.value })}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="phone">Teléfono</Label>
-                <Input
-                  id="phone"
-                  type="tel"
-                  value={newAgent.phone}
-                  onChange={(e) => setNewAgent({ ...newAgent, phone: e.target.value })}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="password">Contraseña</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  value={newAgent.password}
-                  onChange={(e) => setNewAgent({ ...newAgent, password: e.target.value })}
-                  required
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
+            <DialogBody>
+              {/* El botón de envío va en el pie y se enlaza con `form`. */}
+              <form id="agent-create-form" onSubmit={handleCreateAgent} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="doc_type">Tipo documento</Label>
-                  <Select
-                    value={newAgent.document_type}
-                    onValueChange={(v) => setNewAgent({ ...newAgent, document_type: v })}
-                  >
-                    <SelectTrigger className="bg-muted/20 border-border/10 focus:ring-primary/20">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="dni">DNI</SelectItem>
-                      <SelectItem value="nie">NIE</SelectItem>
-                      <SelectItem value="pasaporte">Pasaporte</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="doc_number">Número</Label>
+                  <Label htmlFor="name">Nombre completo</Label>
                   <Input
-                    id="doc_number"
-                    value={newAgent.document_number}
-                    onChange={(e) => setNewAgent({ ...newAgent, document_number: e.target.value })}
+                    id="name"
+                    value={newAgent.name}
+                    onChange={(e) => setNewAgent({ ...newAgent, name: e.target.value })}
+                    required
                   />
                 </div>
-              </div>
-              {createError && (
-                <p className="text-sm font-semibold text-rose-500">{createError}</p>
-              )}
-              <Button type="submit" className="w-full bg-linear-to-r from-pink-500 to-rose-600 hover:from-pink-600 hover:to-rose-700 text-white shadow-lg shadow-pink-500/25" disabled={creating}>
+                <div className="space-y-2">
+                  <Label htmlFor="email">Correo electrónico</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={newAgent.email}
+                    onChange={(e) => setNewAgent({ ...newAgent, email: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="phone">Teléfono</Label>
+                  <Input
+                    id="phone"
+                    type="tel"
+                    value={newAgent.phone}
+                    onChange={(e) => setNewAgent({ ...newAgent, phone: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="password">Contraseña</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    value={newAgent.password}
+                    onChange={(e) => setNewAgent({ ...newAgent, password: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className="grid grid-cols-1 gap-4 @xs:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="doc_type">Tipo documento</Label>
+                    <Select
+                      value={newAgent.document_type}
+                      onValueChange={(v) => setNewAgent({ ...newAgent, document_type: v })}
+                    >
+                      <SelectTrigger id="doc_type" className="bg-muted/20 border-border/10 focus:ring-primary/20">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="dni">DNI</SelectItem>
+                        <SelectItem value="nie">NIE</SelectItem>
+                        <SelectItem value="pasaporte">Pasaporte</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="doc_number">Número</Label>
+                    <Input
+                      id="doc_number"
+                      value={newAgent.document_number}
+                      onChange={(e) => setNewAgent({ ...newAgent, document_number: e.target.value })}
+                    />
+                  </div>
+                </div>
+                {createError && (
+                  <p className="text-sm font-semibold text-rose-500">{createError}</p>
+                )}
+              </form>
+            </DialogBody>
+            <DialogFooter>
+              <Button type="submit" form="agent-create-form" className="w-full bg-linear-to-r from-pink-500 to-rose-600 hover:from-pink-600 hover:to-rose-700 text-white shadow-lg shadow-pink-500/25" disabled={creating}>
                 {creating ? 'Creando...' : 'Crear gestor'}
               </Button>
-            </form>
+            </DialogFooter>
           </DialogContent>
         </Dialog>
       </div>
@@ -339,7 +345,9 @@ export default function AgentsPage() {
                         onClick={() => handleToggleStatus(agent.id, agent.is_active)}
                         aria-pressed={agent.is_active}
                         aria-label={agent.is_active ? `Desactivar a ${agent.name}` : `Activar a ${agent.name}`}
-                        className="inline-flex min-h-[32px] items-center rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                        // Escrito a mano, así que no le llega el mínimo táctil
+                        // del primitivo `Button`: lo lleva aquí.
+                        className="inline-flex min-h-[32px] [@media(pointer:coarse)]:min-h-11 items-center rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                       >
                         <Badge variant={agent.is_active ? 'default' : 'secondary'}>
                           {agent.is_active ? 'Activo' : 'Inactivo'}
@@ -393,57 +401,61 @@ export default function AgentsPage() {
       </Card>
 
       <Dialog open={topUpOpen} onOpenChange={setTopUpOpen}>
-        <DialogContent mobile="centered">
+        <DialogContent size="md" aria-describedby={undefined}>
           <DialogHeader>
             <DialogTitle>Recargar saldo</DialogTitle>
           </DialogHeader>
           {selectedAgent && (
-            <div className="space-y-4">
-              <div className="p-4 bg-muted rounded-lg">
-                <p className="font-medium">{selectedAgent.name}</p>
-                <p className="text-sm text-muted-foreground">Saldo actual: {formatCurrency(selectedAgent.balance)}</p>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="topup_amount">Monto a recargar</Label>
-                <Input
-                  id="topup_amount"
-                  type="number"
-                  inputMode="decimal"
-                  onWheel={(e) => e.currentTarget.blur()}
-                  min="1"
-                  step="0.01"
-                  placeholder="0.00"
-                  value={topUpAmount}
-                  onChange={(e) => setTopUpAmount(e.target.value)}
-                />
-              </div>
-              {errorMessage && (
-                <div className="flex items-center gap-2 p-3 text-sm text-red-500 bg-red-50 rounded-md">
-                  <AlertCircle className="h-4 w-4" />
-                  {errorMessage}
+            <>
+              <DialogBody className="space-y-4">
+                <div className="p-4 bg-muted rounded-lg">
+                  <p className="font-medium wrap-break-word">{selectedAgent.name}</p>
+                  <p className="text-sm text-muted-foreground">Saldo actual: {formatCurrency(selectedAgent.balance)}</p>
                 </div>
-              )}
-              <Button 
-                className="w-full bg-linear-to-r from-pink-500 to-rose-600 hover:from-pink-600 hover:to-rose-700 text-white shadow-lg shadow-pink-500/25"
-                onClick={handleTopUp}
-                disabled={!topUpAmount || parseFloat(topUpAmount) <= 0 || topUpLoading}
-              >
-                {topUpLoading ? 'Recargando...' : 'Recargar saldo'}
-              </Button>
-            </div>
+                <div className="space-y-2">
+                  <Label htmlFor="topup_amount">Monto a recargar</Label>
+                  <Input
+                    id="topup_amount"
+                    type="number"
+                    inputMode="decimal"
+                    onWheel={(e) => e.currentTarget.blur()}
+                    min="1"
+                    step="0.01"
+                    placeholder="0.00"
+                    value={topUpAmount}
+                    onChange={(e) => setTopUpAmount(e.target.value)}
+                  />
+                </div>
+                {errorMessage && (
+                  <div className="flex items-center gap-2 p-3 text-sm text-red-500 bg-red-50 rounded-md">
+                    <AlertCircle className="h-4 w-4 shrink-0" />
+                    {errorMessage}
+                  </div>
+                )}
+              </DialogBody>
+              <DialogFooter>
+                <Button
+                  className="w-full bg-linear-to-r from-pink-500 to-rose-600 hover:from-pink-600 hover:to-rose-700 text-white shadow-lg shadow-pink-500/25"
+                  onClick={handleTopUp}
+                  disabled={!topUpAmount || parseFloat(topUpAmount) <= 0 || topUpLoading}
+                >
+                  {topUpLoading ? 'Recargando...' : 'Recargar saldo'}
+                </Button>
+              </DialogFooter>
+            </>
           )}
         </DialogContent>
       </Dialog>
 
       <Dialog open={successOpen} onOpenChange={setSuccessOpen}>
-        <DialogContent mobile="centered">
+        <DialogContent size="sm" aria-describedby={undefined}>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-green-600">
               <CheckCircle className="h-5 w-5" />
               Recarga exitosa
             </DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
+          <DialogBody className="space-y-4">
             <div className="text-center py-4">
               <div className="h-16 w-16 mx-auto rounded-full bg-green-100 flex items-center justify-center">
                 <CheckCircle className="h-8 w-8 text-green-600" />
@@ -454,17 +466,19 @@ export default function AgentsPage() {
             </p>
             <div className="p-4 bg-muted rounded-lg text-center">
               <p className="text-sm text-muted-foreground">Monto recargado</p>
-              <p className="text-2xl font-bold text-green-600">{formatCurrency(successAmount)}</p>
+              <p className="text-2xl font-bold text-green-600 tabular-nums wrap-break-word">{formatCurrency(successAmount)}</p>
             </div>
+          </DialogBody>
+          <DialogFooter>
             <Button className="w-full bg-linear-to-r from-pink-500 to-rose-600 hover:from-pink-600 hover:to-rose-700 text-white shadow-lg shadow-pink-500/25" onClick={() => setSuccessOpen(false)}>
               Aceptar
             </Button>
-          </div>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 
       <Dialog open={resetOpen} onOpenChange={setResetOpen}>
-        <DialogContent mobile="centered">
+        <DialogContent size="md" aria-describedby={undefined}>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <RotateCcw className="h-5 w-5" />
@@ -472,42 +486,46 @@ export default function AgentsPage() {
             </DialogTitle>
           </DialogHeader>
           {selectedAgent && (
-            <div className="space-y-4">
-              <div className="p-4 bg-muted rounded-lg">
-                <p className="font-medium">{selectedAgent.name}</p>
-                <p className="text-sm text-muted-foreground">Saldo actual: {formatCurrency(selectedAgent.balance)}</p>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="reset_amount">Nuevo saldo</Label>
-                <Input
-                  id="reset_amount"
-                  type="number"
-                  inputMode="decimal"
-                  onWheel={(e) => e.currentTarget.blur()}
-                  min="0"
-                  step="0.01"
-                  placeholder="0.00"
-                  value={resetAmount}
-                  onChange={(e) => setResetAmount(e.target.value)}
-                />
-                <p className="text-xs text-muted-foreground">
-                  Ingrese 0 para dejar el saldo en cero
-                </p>
-              </div>
-              {errorMessage && (
-                <div className="flex items-center gap-2 p-3 text-sm text-red-500 bg-red-50 rounded-md">
-                  <AlertCircle className="h-4 w-4" />
-                  {errorMessage}
+            <>
+              <DialogBody className="space-y-4">
+                <div className="p-4 bg-muted rounded-lg">
+                  <p className="font-medium wrap-break-word">{selectedAgent.name}</p>
+                  <p className="text-sm text-muted-foreground">Saldo actual: {formatCurrency(selectedAgent.balance)}</p>
                 </div>
-              )}
-              <Button 
-                className="w-full bg-linear-to-r from-pink-500 to-rose-600 hover:from-pink-600 hover:to-rose-700 text-white shadow-lg shadow-pink-500/25"
-                onClick={handleReset}
-                disabled={resetLoading}
-              >
-                {resetLoading ? 'Restableciendo...' : 'Restablecer saldo'}
-              </Button>
-            </div>
+                <div className="space-y-2">
+                  <Label htmlFor="reset_amount">Nuevo saldo</Label>
+                  <Input
+                    id="reset_amount"
+                    type="number"
+                    inputMode="decimal"
+                    onWheel={(e) => e.currentTarget.blur()}
+                    min="0"
+                    step="0.01"
+                    placeholder="0.00"
+                    value={resetAmount}
+                    onChange={(e) => setResetAmount(e.target.value)}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Ingrese 0 para dejar el saldo en cero
+                  </p>
+                </div>
+                {errorMessage && (
+                  <div className="flex items-center gap-2 p-3 text-sm text-red-500 bg-red-50 rounded-md">
+                    <AlertCircle className="h-4 w-4 shrink-0" />
+                    {errorMessage}
+                  </div>
+                )}
+              </DialogBody>
+              <DialogFooter>
+                <Button
+                  className="w-full bg-linear-to-r from-pink-500 to-rose-600 hover:from-pink-600 hover:to-rose-700 text-white shadow-lg shadow-pink-500/25"
+                  onClick={handleReset}
+                  disabled={resetLoading}
+                >
+                  {resetLoading ? 'Restableciendo...' : 'Restablecer saldo'}
+                </Button>
+              </DialogFooter>
+            </>
           )}
         </DialogContent>
       </Dialog>

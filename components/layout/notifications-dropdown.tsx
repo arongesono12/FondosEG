@@ -1,12 +1,13 @@
 'use client';
 
-import { 
+import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { 
-  Dialog, DialogContent, DialogHeader, DialogBody, DialogTitle 
+  Dialog, DialogContent, DialogHeader, DialogBody, DialogFooter, DialogTitle
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { ModalListSkeleton } from '@/components/skeletons/app-skeletons';
@@ -159,9 +160,13 @@ export function NotificationsDropdown({ notificationCount, onCountChange, trigge
         </DropdownMenuTrigger>
 
         <DropdownMenuContent 
-          className="w-[360px] max-h-[70vh] p-0 flex flex-col overflow-hidden" 
+          // 360px desbordaban un móvil de 320px, y `70vh` no descontaba la
+          // barra de Safari: ancho y alto se acotan al espacio que Radix
+          // calcula como disponible, con 8px de margen a los bordes.
+          className="w-[min(360px,calc(100vw-16px))] max-h-[min(70dvh,var(--radix-dropdown-menu-content-available-height))] p-0 flex flex-col overflow-hidden"
           align="end"
           sideOffset={8}
+          collisionPadding={8}
         >
           {/* Header */}
           <div className="p-4 border-b border-border/10 shrink-0">
@@ -169,13 +174,16 @@ export function NotificationsDropdown({ notificationCount, onCountChange, trigge
               <p className="text-sm font-bold text-foreground flex items-center gap-2">
                 <Bell className="h-4 w-4 text-primary" /> Notificaciones
               </p>
+              {/* Elemento del menú y no un <button> suelto: así entra en la
+                  navegación con flechas de Radix. `preventDefault` mantiene el
+                  menú abierto para ver cómo se marcan las filas. */}
               {unreadCount > 0 && (
-                <button
-                  onClick={handleMarkAllAsRead}
-                  className="text-[11px] font-bold text-primary hover:underline flex items-center gap-1 shrink-0"
+                <DropdownMenuItem
+                  onSelect={(event) => { event.preventDefault(); handleMarkAllAsRead(); }}
+                  className="w-auto shrink-0 gap-1 rounded-lg px-2 py-1 text-xs font-bold text-primary hover:underline focus:bg-primary/10 focus:text-primary"
                 >
                   <CheckCheck className="h-3 w-3" /> Marcar todo como leído
-                </button>
+                </DropdownMenuItem>
               )}
             </div>
             {unreadCount > 0 && (
@@ -195,15 +203,27 @@ export function NotificationsDropdown({ notificationCount, onCountChange, trigge
                 <p className="text-sm font-medium text-muted-foreground">No hay notificaciones</p>
               </div>
             ) : (
+              // Cada fila es un elemento del menú: antes era un <div onClick>,
+              // inalcanzable con teclado dentro del menú de Radix. Al elegirla se
+              // cierra el menú y se abre el detalle, que ya trae «Eliminar»; por
+              // eso desaparece el botón de borrar que sólo salía al pasar el ratón.
               notifications.map((notif) => (
-                <div
+                <DropdownMenuItem
                   key={notif.id}
-                  onClick={() => handleOpenNotification(notif)}
+                  // El detalle se abre en el siguiente fotograma: si se monta
+                  // en el mismo tick en que Radix cierra el menú, el menú
+                  // devuelve el foco a la campana y el modal se abre sin foco
+                  // dentro, de modo que Escape y el tabulador se van a la
+                  // página en vez de al modal.
+                  onSelect={(event) => {
+                    event.preventDefault();
+                    requestAnimationFrame(() => handleOpenNotification(notif));
+                  }}
                   className={cn(
-                    "p-3 rounded-xl border transition-all cursor-pointer group relative",
+                    "block p-3 rounded-xl border font-normal transition-all cursor-pointer focus:text-foreground",
                     notif.is_read
-                      ? "bg-muted/20 border-border/5 hover:bg-muted/30"
-                      : "bg-primary/5 border-primary/10 hover:bg-primary/10"
+                      ? "bg-muted/20 border-border/5 hover:bg-muted/30 focus:bg-muted/40"
+                      : "bg-primary/5 border-primary/10 hover:bg-primary/10 focus:bg-primary/15"
                   )}
                 >
                   <div className="flex items-start gap-2.5">
@@ -248,18 +268,7 @@ export function NotificationsDropdown({ notificationCount, onCountChange, trigge
                       </div>
                     </div>
                   </div>
-
-                  <button
-                    onClick={(e) => { e.stopPropagation(); handleDelete(notif.id); }}
-                    disabled={deleting === notif.id}
-                    className="absolute top-2 right-2 p-1.5 rounded-lg bg-red-100 dark:bg-red-900/30 text-red-500 opacity-0 group-hover:opacity-100 transition-all hover:bg-red-200 dark:hover:bg-red-900/50 disabled:opacity-50"
-                    title="Eliminar"
-                  >
-                    {deleting === notif.id
-                      ? <div className="h-3 w-3 animate-spin rounded-full border-2 border-red-500 border-t-transparent" />
-                      : <Trash2 className="h-3 w-3" />}
-                  </button>
-                </div>
+                </DropdownMenuItem>
               ))
             )}
           </div>
@@ -272,8 +281,8 @@ export function NotificationsDropdown({ notificationCount, onCountChange, trigge
 
       {/* Detail Dialog */}
       <Dialog open={!!selectedNotification} onOpenChange={(open) => !open && setSelectedNotification(null)}>
-        <DialogContent className="max-w-lg max-h-[88vh] overflow-hidden p-0 outline-none flex flex-col">
-          <DialogHeader className="p-6 border-b border-border/10 shrink-0 text-left">
+        <DialogContent size="lg" className="outline-none" aria-describedby={undefined}>
+          <DialogHeader>
             <div className="flex items-center justify-between">
               <DialogTitle className="flex items-center gap-2 text-xl font-semibold text-foreground">
                 {selectedNotification?.is_read
@@ -285,104 +294,107 @@ export function NotificationsDropdown({ notificationCount, onCountChange, trigge
           </DialogHeader>
 
           {selectedNotification && (
-            <DialogBody className="flex-1 overflow-y-auto p-6 space-y-5">
-              <div className={cn(
-                "p-4 rounded-2xl flex items-center gap-3",
-                selectedNotification.status === 'sent' ? "bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800" :
-                selectedNotification.status === 'failed' ? "bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800" :
-                "bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800"
-              )}>
-                {selectedNotification.status === 'sent'
-                  ? <CheckCircle className="h-5 w-5 text-green-600" />
-                  : selectedNotification.status === 'failed'
-                    ? <AlertCircle className="h-5 w-5 text-red-600" />
-                    : <Clock className="h-5 w-5 text-amber-600" />}
-                <div>
-                  <p className="text-sm font-bold text-foreground">
-                    {selectedNotification.status === 'sent' ? 'SMS Enviado exitosamente' : 
-                     selectedNotification.status === 'failed' ? 'SMS Fallido' : 'SMS Pendiente'}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {selectedNotification.status === 'sent' && selectedNotification.sent_at 
-                      ? `Enviado el ${format(new Date(selectedNotification.sent_at), "dd 'de' MMMM 'de' yyyy 'a las' HH:mm", { locale: es })}`
-                      : selectedNotification.status === 'failed' && selectedNotification.error_message
-                        ? selectedNotification.error_message
-                        : 'Esperando procesamiento...'}
-                  </p>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Código de Transferencia</label>
-                <p className="text-lg font-bold text-primary">{selectedNotification.transfer?.transfer_code || 'ADMIN'}</p>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Mensaje Enviado</label>
-                <div className="p-4 rounded-2xl bg-muted/30 border border-border/10">
-                  <p className="text-sm font-medium text-foreground whitespace-pre-wrap leading-relaxed">{selectedNotification.message}</p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <div className="space-y-2">
-                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Destinatario</label>
-                  <p className="text-sm font-medium text-foreground">{selectedNotification.transfer?.receiver_name || 'Administración'}</p>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Teléfono</label>
-                  <p className="text-sm font-medium text-foreground">{selectedNotification.transfer?.receiver_phone || selectedNotification.phone}</p>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Monto</label>
-                  <p className="text-sm font-semibold text-green-600">
-                    {selectedNotification.transfer ? `${selectedNotification.transfer.amount} ${selectedNotification.transfer.currency}` : 'N/A'}
-                  </p>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Ciudad</label>
-                  <p className="text-sm font-medium text-foreground">{selectedNotification.transfer?.destination_city || 'Sistema'}</p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 gap-4 pt-2 border-t border-border/10 sm:grid-cols-2">
-                <div className="space-y-1">
-                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Fecha de creación</label>
-                  <p className="text-xs font-medium text-foreground">
-                    {format(new Date(selectedNotification.created_at), "dd 'de' MMMM 'de' yyyy 'a las' HH:mm", { locale: es })}
-                  </p>
-                </div>
-                {selectedNotification.read_at && (
-                  <div className="space-y-1">
-                    <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Fecha de lectura</label>
-                    <p className="text-xs font-medium text-foreground">
-                      {format(new Date(selectedNotification.read_at), "dd 'de' MMMM 'de' yyyy 'a las' HH:mm", { locale: es })}
+            <>
+              <DialogBody className="space-y-5">
+                <div className={cn(
+                  "p-4 rounded-2xl flex items-center gap-3",
+                  selectedNotification.status === 'sent' ? "bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800" :
+                  selectedNotification.status === 'failed' ? "bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800" :
+                  "bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800"
+                )}>
+                  {selectedNotification.status === 'sent'
+                    ? <CheckCircle className="h-5 w-5 text-green-600" />
+                    : selectedNotification.status === 'failed'
+                      ? <AlertCircle className="h-5 w-5 text-red-600" />
+                      : <Clock className="h-5 w-5 text-amber-600" />}
+                  <div>
+                    <p className="text-sm font-bold text-foreground">
+                      {selectedNotification.status === 'sent' ? 'SMS Enviado exitosamente' : 
+                       selectedNotification.status === 'failed' ? 'SMS Fallido' : 'SMS Pendiente'}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {selectedNotification.status === 'sent' && selectedNotification.sent_at 
+                        ? `Enviado el ${format(new Date(selectedNotification.sent_at), "dd 'de' MMMM 'de' yyyy 'a las' HH:mm", { locale: es })}`
+                        : selectedNotification.status === 'failed' && selectedNotification.error_message
+                          ? selectedNotification.error_message
+                          : 'Esperando procesamiento...'}
                     </p>
                   </div>
-                )}
-              </div>
+                </div>
 
-              <div className="space-y-2">
-                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Teléfono que recibió el SMS</label>
-                <p className="text-sm font-medium text-foreground">{selectedNotification.phone}</p>
-              </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Código de Transferencia</label>
+                  <p className="text-lg font-bold text-primary">{selectedNotification.transfer?.transfer_code || 'ADMIN'}</p>
+                </div>
 
-              <div className="flex flex-col gap-3 pt-2 sm:flex-row">
+                <div className="space-y-2">
+                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Mensaje Enviado</label>
+                  <div className="p-4 rounded-2xl bg-muted/30 border border-border/10">
+                    <p className="text-sm font-medium text-foreground whitespace-pre-wrap leading-relaxed">{selectedNotification.message}</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 gap-4 @md:grid-cols-2">
+                  <div className="space-y-2">
+                    <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Destinatario</label>
+                    <p className="text-sm font-medium text-foreground">{selectedNotification.transfer?.receiver_name || 'Administración'}</p>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Teléfono</label>
+                    <p className="text-sm font-medium text-foreground">{selectedNotification.transfer?.receiver_phone || selectedNotification.phone}</p>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Monto</label>
+                    <p className="text-sm font-semibold text-green-600">
+                      {selectedNotification.transfer ? `${selectedNotification.transfer.amount} ${selectedNotification.transfer.currency}` : 'N/A'}
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Ciudad</label>
+                    <p className="text-sm font-medium text-foreground">{selectedNotification.transfer?.destination_city || 'Sistema'}</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 gap-4 pt-2 border-t border-border/10 @md:grid-cols-2">
+                  <div className="space-y-1">
+                    <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Fecha de creación</label>
+                    <p className="text-xs font-medium text-foreground">
+                      {format(new Date(selectedNotification.created_at), "dd 'de' MMMM 'de' yyyy 'a las' HH:mm", { locale: es })}
+                    </p>
+                  </div>
+                  {selectedNotification.read_at && (
+                    <div className="space-y-1">
+                      <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Fecha de lectura</label>
+                      <p className="text-xs font-medium text-foreground">
+                        {format(new Date(selectedNotification.read_at), "dd 'de' MMMM 'de' yyyy 'a las' HH:mm", { locale: es })}
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Teléfono que recibió el SMS</label>
+                  <p className="text-sm font-medium text-foreground">{selectedNotification.phone}</p>
+                </div>
+              </DialogBody>
+
+              <DialogFooter>
                 <Button
                   variant="outline"
                   onClick={() => handleDelete(selectedNotification.id)}
-                  className="flex-1 h-11 rounded-xl font-bold text-red-500 border-red-200 hover:bg-red-50"
+                  disabled={deleting === selectedNotification.id}
+                  className="h-11 rounded-xl font-bold text-red-500 border-red-200 hover:bg-red-50"
                 >
                   <Trash2 className="h-4 w-4 mr-2" /> Eliminar
                 </Button>
                 <Button
                   onClick={() => setSelectedNotification(null)}
-                  className="flex-1 h-11 rounded-xl bg-brand-gradient text-white font-bold shadow-lg"
+                  className="h-11 rounded-xl bg-brand-gradient text-white font-bold shadow-lg"
                 >
                   Cerrar
                 </Button>
-              </div>
-            </DialogBody>
+              </DialogFooter>
+            </>
           )}
         </DialogContent>
       </Dialog>

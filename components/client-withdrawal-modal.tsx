@@ -3,8 +3,10 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
   Dialog,
+  DialogBody,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
@@ -205,10 +207,10 @@ export function ClientWithdrawalModal({ open, onOpenChange, onSuccess }: ClientW
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md p-0 overflow-hidden outline-none">
+      <DialogContent size="md" className="outline-none">
         {step === 'form' && (
           <>
-            <DialogHeader className="p-6 border-b border-border/10">
+            <DialogHeader>
               <DialogTitle className="flex items-center gap-2 text-xl font-bold text-foreground">
                 <HandCoins className="h-5 w-5 text-primary" />
                 Retirar efectivo
@@ -218,7 +220,7 @@ export function ClientWithdrawalModal({ open, onOpenChange, onSuccess }: ClientW
               </DialogDescription>
             </DialogHeader>
 
-            <div className="max-h-[70vh] overflow-y-auto p-6 space-y-4">
+            <DialogBody className="space-y-4">
               <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 dark:border-emerald-800 dark:bg-emerald-900/20">
                 <p className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">
                   Saldo disponible: {formatCurrency(available, currency)}
@@ -292,11 +294,11 @@ export function ClientWithdrawalModal({ open, onOpenChange, onSuccess }: ClientW
                       key={item.id}
                       className="flex items-center justify-between gap-3 rounded-xl border border-border/10 bg-background/70 p-3"
                     >
-                      <div>
-                        <p className="text-sm font-bold tracking-[0.12em] text-foreground">
+                      <div className="min-w-0">
+                        <p className="text-sm font-bold tracking-[0.12em] text-foreground break-all">
                           {item.withdrawal_code}
                         </p>
-                        <p className="text-xs font-semibold text-muted-foreground">
+                        <p className="text-xs font-semibold text-muted-foreground wrap-break-word">
                           {formatCurrency(Number(item.amount), item.currency)}
                           {item.expires_at ? ` · caduca ${formatDate(item.expires_at)}` : ''}
                         </p>
@@ -304,7 +306,7 @@ export function ClientWithdrawalModal({ open, onOpenChange, onSuccess }: ClientW
                       <Button
                         variant="outline"
                         size="sm"
-                        className="rounded-xl text-xs font-bold"
+                        className="shrink-0 rounded-xl text-xs font-bold"
                         disabled={cancellingId === item.id}
                         onClick={() => handleCancel(item.id)}
                       >
@@ -318,7 +320,9 @@ export function ClientWithdrawalModal({ open, onOpenChange, onSuccess }: ClientW
                   ))}
                 </div>
               )}
+            </DialogBody>
 
+            <DialogFooter>
               <Button
                 onClick={handleSubmit}
                 disabled={loading || !amount}
@@ -332,13 +336,13 @@ export function ClientWithdrawalModal({ open, onOpenChange, onSuccess }: ClientW
                   </>
                 )}
               </Button>
-            </div>
+            </DialogFooter>
           </>
         )}
 
         {step === 'code' && withdrawal && (
           <>
-            <DialogHeader className="p-6 border-b border-border/10">
+            <DialogHeader>
               <DialogTitle className="flex items-center gap-2 text-xl font-bold text-foreground">
                 <QrCode className="h-5 w-5 text-primary" />
                 Tu código de retiro
@@ -348,7 +352,7 @@ export function ClientWithdrawalModal({ open, onOpenChange, onSuccess }: ClientW
               </DialogDescription>
             </DialogHeader>
 
-            <div className="max-h-[70vh] overflow-y-auto p-6 space-y-4">
+            <DialogBody className="space-y-4">
               <div className="space-y-2 text-center">
                 <p className="text-sm font-semibold text-muted-foreground">Importe a recibir</p>
                 <p className="text-3xl font-bold text-emerald-600">
@@ -365,8 +369,10 @@ export function ClientWithdrawalModal({ open, onOpenChange, onSuccess }: ClientW
                 <p className="text-xs font-semibold uppercase text-muted-foreground">
                   Código de retiro
                 </p>
-                <div className="flex items-center gap-2">
-                  <p className="text-xl font-bold tracking-[0.2em]">{withdrawal.withdrawal_code}</p>
+                {/* En 320px el código con tracking ancho y el botón de copiar no
+                    cabían en una línea: el código parte y el botón baja. */}
+                <div className="flex max-w-full flex-wrap items-center justify-center gap-2">
+                  <p className="min-w-0 text-center text-lg font-bold tracking-widest break-all @sm:text-xl @sm:tracking-[0.2em]">{withdrawal.withdrawal_code}</p>
                   <Button
                     variant="ghost"
                     size="icon"
@@ -393,28 +399,27 @@ export function ClientWithdrawalModal({ open, onOpenChange, onSuccess }: ClientW
                   {error}
                 </div>
               )}
+            </DialogBody>
 
-              <div className="flex gap-3">
-                <Button
-                  variant="outline"
-                  className="flex-1"
-                  disabled={cancellingId === withdrawal.id}
-                  onClick={() => handleCancel(withdrawal.id)}
-                >
-                  {cancellingId === withdrawal.id ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    'Anular retiro'
-                  )}
-                </Button>
-                <Button
-                  className="flex-1 bg-brand-gradient font-bold text-white"
-                  onClick={() => onOpenChange(false)}
-                >
-                  Listo
-                </Button>
-              </div>
-            </div>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                disabled={cancellingId === withdrawal.id}
+                onClick={() => handleCancel(withdrawal.id)}
+              >
+                {cancellingId === withdrawal.id ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  'Anular retiro'
+                )}
+              </Button>
+              <Button
+                className="bg-brand-gradient font-bold text-white"
+                onClick={() => onOpenChange(false)}
+              >
+                Listo
+              </Button>
+            </DialogFooter>
           </>
         )}
       </DialogContent>

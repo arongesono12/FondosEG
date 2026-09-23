@@ -49,7 +49,8 @@ export default async function DeveloperConsoleLayout({ children }: { children: R
       <div suppressHydrationWarning className="dashboard-public-page main-container min-h-screen font-sans">
         <div className="dashboard-shell mx-auto w-full relative flex flex-col lg:max-w-[1440px] lg:min-h-[calc(100vh-4rem)] lg:rounded-[2.5rem] lg:shadow-xl lg:shadow-slate-200/20 dark:lg:shadow-black/20 lg:border lg:border-border/10 h-dvh lg:h-auto">
           {/* Desktop header */}
-          <header className="dashboard-desktop-header hidden lg:grid h-20 items-center px-10 border-b border-border/10 shrink-0 transition-all duration-300 z-50 bg-linear-to-b from-white to-slate-50 dark:from-slate-900 dark:to-slate-950 lg:rounded-t-[2.5rem]">
+          {/* Capa propia por debajo del velo de los modales (ver tokens.css). */}
+          <header className="dashboard-desktop-header hidden lg:grid h-20 items-center px-10 border-b border-border/10 shrink-0 transition-all duration-300 z-(--z-header) bg-linear-to-b from-white to-slate-50 dark:from-slate-900 dark:to-slate-950 lg:rounded-t-[2.5rem]">
             <div className="dashboard-desktop-brand-nav flex items-center gap-2">
               <Link href="/developer-console" className="flex items-center gap-2">
                 <DashboardLogo size="md" labelClassName="text-xl md:text-2xl" />
@@ -81,6 +82,13 @@ export default async function DeveloperConsoleLayout({ children }: { children: R
               <DashboardLogo size="sm" labelClassName="text-lg" />
             </Link>
             <div className="dashboard-mobile-header-actions">
+              {/* En escritorio el enlace al dashboard va en la navegación; en
+                  móvil no había ninguna forma de volver a él. */}
+              {dashboardAccess?.status === 'active' && (
+                <Link href="/dashboard" aria-label="Ir al dashboard" className="dashboard-mobile-header-action">
+                  <LayoutDashboard className="h-5 w-5" />
+                </Link>
+              )}
               <ThemeToggle />
               <Link href="/force-signout" aria-label="Cerrar sesión" className="dashboard-mobile-header-action">
                 <LogOut className="h-5 w-5" />
@@ -88,7 +96,9 @@ export default async function DeveloperConsoleLayout({ children }: { children: R
             </div>
           </header>
 
-          <main className="dashboard-main flex-1 min-h-0 overflow-y-auto overscroll-y-contain lg:overflow-visible lg:overscroll-auto bg-transparent p-4 pb-28 lg:p-10">
+          {/* Aquí no hay barra inferior fija: el `pb-28` copiado del dashboard
+              dejaba 112px vacíos al final. Sólo se respeta la zona segura. */}
+          <main className="dashboard-main @container flex-1 min-h-0 overflow-y-auto overscroll-y-contain lg:overflow-visible lg:overscroll-auto bg-transparent p-4 pb-[max(1rem,env(safe-area-inset-bottom))] md:px-6 md:pt-6 lg:p-10">
             {children}
           </main>
         </div>

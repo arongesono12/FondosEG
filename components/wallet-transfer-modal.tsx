@@ -3,8 +3,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import { 
   Dialog, 
-  DialogContent, 
-  DialogHeader, 
+  DialogContent,
+  DialogHeader,
+  DialogBody,
+  DialogFooter,
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
@@ -155,10 +157,10 @@ export function WalletTransferModal({ open, onOpenChange, onSuccess }: WalletTra
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md p-0 overflow-hidden outline-none">
+      <DialogContent size="md" className="outline-none">
         {step === 'form' && (
           <>
-            <DialogHeader className="p-6 border-b border-border/10">
+            <DialogHeader>
               <DialogTitle className="flex items-center gap-2 text-xl font-bold text-foreground">
                 <Wallet className="h-5 w-5 text-primary" />
                 Transferir a Cliente
@@ -167,8 +169,8 @@ export function WalletTransferModal({ open, onOpenChange, onSuccess }: WalletTra
                 Transfiere fondos de tu billetera a otro cliente sin comisión
               </DialogDescription>
             </DialogHeader>
-            
-            <div className="p-6 space-y-4">
+
+            <DialogBody className="space-y-4">
               <div className="p-3 rounded-xl bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800">
                 <p className="text-xs font-semibold text-green-600 dark:text-green-400">
                   Saldo disponible: {formatCurrency(balance, currency)}
@@ -224,7 +226,7 @@ export function WalletTransferModal({ open, onOpenChange, onSuccess }: WalletTra
               </div>
 
               {error && (
-                <div className="flex items-center gap-2 p-3 rounded-xl bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-sm">
+                <div role="alert" className="flex items-center gap-2 p-3 rounded-xl bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-sm">
                   <AlertCircle className="h-4 w-4 shrink-0" />
                   {error}
                 </div>
@@ -241,21 +243,35 @@ export function WalletTransferModal({ open, onOpenChange, onSuccess }: WalletTra
                   <p>Plazo: entrega inmediata en la billetera del beneficiario.</p>
                   <p>Esta operación no se puede deshacer una vez enviada.</p>
                 </div>
-                <label className="mt-4 flex cursor-pointer items-start gap-3 text-xs font-semibold text-foreground">
-                  <input
-                    type="checkbox"
-                    checked={complianceConsent}
-                    onChange={(event) => setComplianceConsent(event.target.checked)}
-                    className="mt-0.5 h-4 w-4 accent-pink-600"
-                  />
-                  <span>
-                    Autorizo esta orden de pago y acepto la información previa conforme al Reglamento{' '}
-                    {PAYMENT_REGULATION.code}.
-                  </span>
-                </label>
               </div>
+            </DialogBody>
 
-              <Button 
+            {/* La casilla de consentimiento va en el pie, junto al botón que
+                desbloquea: si quedaba al final del cuerpo desplazable, en un
+                móvil el botón aparecía deshabilitado sin motivo visible. En
+                columna también desde 640px, casilla encima del botón.
+                Encima de la casilla va el resumen de lo que se acepta: la
+                «Información previa» completa sigue en el cuerpo, pero en un
+                móvil puede quedar fuera de la vista y el consentimiento no
+                debe darse sobre condiciones que no aparecieron en pantalla. */}
+            <DialogFooter className="flex-col">
+              <p className="text-xs font-semibold text-muted-foreground">
+                {formatCurrency(Number(amount) || 0, currency)} · Comisión {formatCurrency(0, currency)} ·{' '}
+                {receiverName || 'Beneficiario pendiente'} · Entrega inmediata · No se puede deshacer
+              </p>
+              <label className="flex cursor-pointer items-start gap-3 text-xs font-semibold text-foreground">
+                <input
+                  type="checkbox"
+                  checked={complianceConsent}
+                  onChange={(event) => setComplianceConsent(event.target.checked)}
+                  className="mt-0.5 h-4 w-4 shrink-0 accent-pink-600"
+                />
+                <span>
+                  Autorizo esta orden de pago y acepto la información previa conforme al Reglamento{' '}
+                  {PAYMENT_REGULATION.code}.
+                </span>
+              </label>
+              <Button
                 onClick={handleSubmit}
                 disabled={loading || !receiverPhone || !receiverName || !amount || !complianceConsent}
                 className="w-full h-12 rounded-xl bg-brand-gradient text-white font-bold shadow-lg shadow-pink-500/20"
@@ -268,43 +284,47 @@ export function WalletTransferModal({ open, onOpenChange, onSuccess }: WalletTra
                   </>
                 )}
               </Button>
-            </div>
+            </DialogFooter>
           </>
         )}
 
         {step === 'success' && transfer && (
-          <div className="p-6 text-center space-y-4">
-            <div className="w-16 h-16 bg-green-100 dark:bg-green-900/20 rounded-full flex items-center justify-center mx-auto">
-              <CheckCircle2 className="h-8 w-8 text-green-600" />
-            </div>
-            <div>
-              <p className="text-lg font-bold">Dinero entregado</p>
-              <p className="text-sm text-muted-foreground mt-1">
+          <>
+            <DialogHeader align="center">
+              <div className="w-16 h-16 bg-green-100 dark:bg-green-900/20 rounded-full flex items-center justify-center mx-auto">
+                <CheckCircle2 className="h-8 w-8 text-green-600" />
+              </div>
+              <DialogTitle className="text-lg font-bold">Dinero entregado</DialogTitle>
+              <DialogDescription className="text-sm text-muted-foreground">
                 El importe ya está en la billetera de {transfer.receiver_name}. No
                 hace falta ningún código: puede usarlo desde ahora mismo.
-              </p>
-            </div>
-            <div className="p-4 rounded-xl bg-muted/50 space-y-2">
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Monto:</span>
-                <span className="font-semibold">{formatCurrency(transfer.amount, transfer.currency)}</span>
+              </DialogDescription>
+            </DialogHeader>
+            <DialogBody>
+              <div className="p-4 rounded-xl bg-muted/50 space-y-2">
+                <div className="flex justify-between gap-3 text-sm">
+                  <span className="shrink-0 text-muted-foreground">Monto:</span>
+                  <span className="min-w-0 text-right font-semibold wrap-break-word">{formatCurrency(transfer.amount, transfer.currency)}</span>
+                </div>
+                <div className="flex justify-between gap-3 text-sm">
+                  <span className="shrink-0 text-muted-foreground">Para:</span>
+                  <span className="min-w-0 text-right font-semibold wrap-break-word">{transfer.receiver_name}</span>
+                </div>
+                <div className="flex justify-between gap-3 text-sm">
+                  <span className="shrink-0 text-muted-foreground">Estado:</span>
+                  <span className="min-w-0 text-right font-semibold text-green-600">Completada</span>
+                </div>
               </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Para:</span>
-                <span className="font-semibold">{transfer.receiver_name}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Estado:</span>
-                <span className="font-semibold text-green-600">Completada</span>
-              </div>
-            </div>
-            <Button 
-              onClick={() => onOpenChange(false)}
+            </DialogBody>
+            <DialogFooter>
+              <Button
+                onClick={() => onOpenChange(false)}
                 className="w-full bg-brand-gradient text-white font-bold"
-            >
-              Cerrar
-            </Button>
-          </div>
+              >
+                Cerrar
+              </Button>
+            </DialogFooter>
+          </>
         )}
       </DialogContent>
     </Dialog>

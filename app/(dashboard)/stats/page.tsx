@@ -199,13 +199,13 @@ export default function StatsPage() {
     return (
       <div className="space-y-6">
         <Skeleton className="h-36 w-full rounded-4xl" />
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 @xl:grid-cols-2 @4xl:grid-cols-4">
           <Skeleton className="h-28" />
           <Skeleton className="h-28" />
           <Skeleton className="h-28" />
           <Skeleton className="h-28" />
         </div>
-        <div className="grid gap-6 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,0.95fr)]">
+        <div className="grid gap-6 @4xl:grid-cols-[minmax(0,1.35fr)_minmax(0,0.95fr)]">
           <Skeleton className="h-96" />
           <Skeleton className="h-96" />
         </div>
@@ -238,9 +238,13 @@ export default function StatsPage() {
   }
 
   return (
+    // Las rejillas usan variantes de contenedor (`@xl:` ≈ `sm:`, `@2xl:` ≈
+    // `md:`, `@4xl:` ≈ `lg:`, `@6xl:` ≈ `xl:`): la página también se pinta en
+    // el panel de media pantalla, y a 1024px de viewport ese panel sólo deja
+    // ~470px de ancho útil aunque `lg:` ya se hubiera disparado.
     <div className="space-y-8">
-      <section className="app-card p-6 md:p-8">
-        <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+      <section className="app-card p-6 @2xl:p-8">
+        <div className="flex flex-col gap-5 @4xl:flex-row @4xl:items-end @4xl:justify-between">
           <div className="max-w-3xl">
             <Badge className="rounded-full border border-white/30 bg-white/70 px-3 py-1 text-xs font-black uppercase tracking-[0.24em] text-slate-700 shadow-sm dark:border-white/10 dark:bg-white/10 dark:text-slate-200">
               {isAdmin ? 'Dirección analítica' : 'Analítica del gestor'}
@@ -255,7 +259,7 @@ export default function StatsPage() {
             </p>
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid gap-3 @xl:grid-cols-2">
             <div className="rounded-2xl border border-sky-500/20 bg-sky-500/10 px-4 py-3">
               <p className="text-xs font-black uppercase tracking-[0.2em] text-sky-700 dark:text-sky-300">Volumen 30 días</p>
               <p className="mt-1 text-xl font-black text-foreground">{fmt(stats?.monthlyVolume ?? 0)}</p>
@@ -268,14 +272,14 @@ export default function StatsPage() {
         </div>
       </section>
 
-      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <section className="grid gap-4 @xl:grid-cols-2 @4xl:grid-cols-4">
         <StatChip label="Volumen total" value={fmt(stats?.monthlyVolume ?? 0)} hint="Acumulado de 30 días" icon={TrendingUp} tone="border-sky-500/20 bg-sky-500 shadow-sky-500/20" />
         <StatChip label="Operaciones" value={String(totalOps)} hint={`${stats?.todayTransfers ?? 0} registradas hoy`} icon={BarChart3} tone="border-indigo-500/20 bg-indigo-500 shadow-indigo-500/20" />
         <StatChip label="Ticket promedio" value={fmt(stats?.averageTicket ?? 0)} hint="Promedio por envío completado" icon={CreditCard} tone="border-fuchsia-500/20 bg-fuchsia-500 shadow-fuchsia-500/20" />
         <StatChip label={isAdmin ? 'Gestores activos' : 'Clientes únicos'} value={String(isAdmin ? stats?.activeAgents ?? 0 : stats?.totalClients ?? 0)} hint={isAdmin ? 'Participando en la red' : 'Atendidos en el período'} icon={Users} tone="border-emerald-500/20 bg-emerald-500 shadow-emerald-500/20" />
       </section>
 
-      <section className="grid gap-6 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,0.95fr)]">
+      <section className="grid gap-6 @4xl:grid-cols-[minmax(0,1.35fr)_minmax(0,0.95fr)]">
         <Card className="min-w-0">
           <CardHeader className="border-b border-border/5 pb-5">
             <CardTitle className="flex items-center gap-2 text-xl font-black text-foreground">
@@ -284,7 +288,7 @@ export default function StatsPage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-5 p-6">
-            <div className="h-64 w-full min-w-0 sm:h-80">
+            <div className="h-64 w-full min-w-0 @xl:h-80">
               <ChartContainer config={lineChartConfig} className="aspect-auto h-full w-full">
                 <LineChart data={chartData} margin={{ top: 8, right: 12, bottom: 0, left: -12 }}>
                   <CartesianGrid strokeDasharray="4 4" vertical={false} stroke="rgba(148,163,184,0.18)" />
@@ -298,7 +302,7 @@ export default function StatsPage() {
               </ChartContainer>
             </div>
 
-            <div className="grid gap-4 md:grid-cols-3">
+            <div className="grid gap-4 @2xl:grid-cols-3">
               <div className="rounded-3xl border border-border/10 bg-background/70 p-4">
                 <p className="text-xs font-black uppercase tracking-[0.18em] text-muted-foreground">Semana actual</p>
                 <p className="mt-2 text-2xl font-black tabular-nums text-foreground">{fmt(stats?.weeklyVolume ?? 0)}</p>
@@ -323,7 +327,7 @@ export default function StatsPage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-5 p-6">
-            <div className="h-64 min-w-0 sm:h-72">
+            <div className="h-64 min-w-0 @xl:h-72">
               <ChartContainer
                 config={{
                   value: { label: 'Valor' },
@@ -337,8 +341,10 @@ export default function StatsPage() {
                     nameKey="name"
                     cx="50%"
                     cy="50%"
-                    innerRadius={62}
-                    outerRadius={104}
+                    // Radios relativos: con 62/104px fijos el anillo se salía del lienzo
+                    // cuando la tarjeta estrechaba (panel de media pantalla, teléfono).
+                    innerRadius="55%"
+                    outerRadius="90%"
                     paddingAngle={4}
                   >
                     {(isAdmin ? concentrationData : statusData).map((_, index) => (
@@ -368,7 +374,7 @@ export default function StatsPage() {
         </Card>
       </section>
 
-      <section className="grid gap-6 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
+      <section className="grid gap-6 @4xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
         <Card className="min-w-0">
           <CardHeader className="border-b border-border/5 pb-5">
             <CardTitle className="flex items-center gap-2 text-xl font-black text-foreground">
@@ -393,7 +399,7 @@ export default function StatsPage() {
               </div>
             </div>
 
-            <div className="grid gap-3 sm:grid-cols-2">
+            <div className="grid gap-3 @xl:grid-cols-2">
               <div className="rounded-3xl border border-border/10 bg-background/70 p-4">
                 <p className="text-xs font-black uppercase tracking-[0.18em] text-muted-foreground">Pendientes</p>
                 <p className="mt-2 text-2xl font-black tabular-nums text-foreground">{stats?.pendingTransfers ?? 0}</p>
@@ -430,7 +436,7 @@ export default function StatsPage() {
           </CardHeader>
           <CardContent className="space-y-3 p-6">
             {isAdmin && (
-              <div className="grid gap-3 sm:grid-cols-2">
+              <div className="grid gap-3 @xl:grid-cols-2">
                 <div className="rounded-3xl border border-border/10 bg-background/70 p-4">
                   <p className="text-xs font-black uppercase tracking-[0.18em] text-muted-foreground">Mes actual</p>
                   <p className="mt-2 text-2xl font-black tabular-nums text-foreground">{fmt(commissionStats?.monthCommission ?? 0)}</p>
@@ -467,7 +473,7 @@ export default function StatsPage() {
                       <p className="text-lg font-black text-foreground">{fmt(agent.net_profit)}</p>
                     </div>
                     {/* Las cuatro columnas que tenía la tabla del dashboard. */}
-                    <dl className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2 border-t border-border/10 pt-3 sm:grid-cols-4">
+                    <dl className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2 border-t border-border/10 pt-3 @xl:grid-cols-4">
                       {([
                         ['Hoy', agent.today_commission],
                         ['Mes', agent.month_commission],
@@ -564,10 +570,10 @@ export default function StatsPage() {
         </section>
       )}
       {isSuperAdmin && marketingStats && (
-        <section className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
+        <section className="grid grid-cols-1 gap-6 @4xl:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
           <Card className="min-w-0">
             <CardHeader className="border-b border-border/5 pb-5">
-              <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+              <div className="flex flex-col gap-3 @2xl:flex-row @2xl:items-center @2xl:justify-between">
                 <div>
                   <CardTitle className="flex items-center gap-2 text-xl font-black text-foreground">
                     <MousePointerClick className="h-5 w-5 text-primary" />
@@ -583,7 +589,7 @@ export default function StatsPage() {
               </div>
             </CardHeader>
             <CardContent className="space-y-5 p-6">
-              <div className="grid gap-4 md:grid-cols-3 xl:grid-cols-6">
+              <div className="grid gap-4 @2xl:grid-cols-3 @6xl:grid-cols-6">
                 {([
                   ['Eventos', marketingStats.totals.total_events],
                   ['CTA clicks', marketingStats.totals.cta_clicks],
@@ -599,7 +605,7 @@ export default function StatsPage() {
                 ))}
               </div>
 
-              <div className="grid gap-5 lg:grid-cols-3">
+              <div className="grid gap-5 @4xl:grid-cols-3">
                 {([
                   ['Audiencias', marketingStats.byAudience],
                   ['Top CTA', marketingStats.byCta],

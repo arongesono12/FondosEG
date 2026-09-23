@@ -2,9 +2,19 @@
    LANDING — Estilos de páginas de marketing (hero, footer, cards, nav)
    ========================================================================= */
 
+/* `overflow-x: clip` en lugar de `overflow: hidden`: sigue recortando el
+   desborde lateral del mockup del héroe, pero ya no convierte la raíz en
+   contenedor de recorte vertical (tapaba las acciones de la cabecera cuando
+   no cabían) ni rompe la cabecera `sticky`. `hidden` queda de reserva.
+   --landing-gutter es el margen lateral común de todas las secciones: entre
+   561 y ~1240px las rejillas llegaban hasta el borde de la ventana. */
 .landing-root{
-  position:relative;min-height:100vh;overflow:hidden;color:var(--foreground);color-scheme:light;
+  position:relative;min-height:100vh;overflow-x:hidden;overflow-x:clip;color:var(--foreground);color-scheme:light;
+  --landing-gutter:clamp(16px,4vw,32px);
 }
+/* La cabecera fija mide ~100px: sin este margen, el foco o un ancla quedaban
+   tapados por ella (WCAG 2.2 SC 2.4.11). */
+html:has(.landing-root){scroll-padding-top:112px}
 .dark .landing-root{color-scheme:dark}
 .landing-root::before{content:"";position:absolute;inset:0;z-index:0;background:linear-gradient(color-mix(in srgb,var(--primary) 5%,transparent) 1px,transparent 1px),linear-gradient(90deg,color-mix(in srgb,var(--primary) 4%,transparent) 1px,transparent 1px);background-size:72px 72px;mask-image:linear-gradient(to bottom,transparent 0,#000 12%,#000 78%,transparent 100%);pointer-events:none}
 .landing-root>*{position:relative;z-index:1}
@@ -14,11 +24,16 @@
 .landing-header{position:relative;z-index:50;padding:24px 28px 0}
 .landing-header--scrolled{position:sticky;top:0}
 .landing-nav{max-width:1280px;height:76px;margin:auto;padding:0 38px;display:flex;align-items:center;justify-content:space-between;border:1px solid var(--app-card-border);border-radius:18px;background:var(--surface);box-shadow:0 16px 45px rgba(0,0,0,.28)}
-.landing-navlinks{display:flex;gap:42px;margin-left:80px}
+/* Separaciones fluidas: con 42px + 80px fijos el menú no cabía entre 901 y ~1110px. */
+.landing-navlinks{display:flex;gap:clamp(20px,2.6vw,42px);margin-left:clamp(16px,4vw,80px)}
 .landing-navlinks a{display:flex;align-items:center;gap:5px;color:var(--foreground);font-size:12px;font-weight:500}
 .landing-actions{display:flex;align-items:center;gap:12px}
 .landing-actions>.btn-secondary{padding:12px 28px}
 .resources-dropdown{position:relative;display:flex;align-items:center}
+/* Restaurado de antes del commit 644d1ee: puente invisible sobre los 14px que
+   separan «Recursos» de su menú. Sin él, el menú (que se abre al pasar el
+   ratón) se cerraba al cruzar ese hueco y no había forma de alcanzarlo. */
+.resources-dropdown::after{content:'';position:absolute;top:100%;left:-10px;width:calc(100% + 20px);height:18px}
 .resources-dropdown>button{display:flex;align-items:center;gap:5px;color:inherit;font-size:13px;font-weight:600}
 .resources-dropdown>button svg{width:13px;height:13px;transition:transform .2s ease}
 .resources-menu{position:absolute;top:calc(100% + 14px);right:0;width:292px;padding:8px;z-index:70}
@@ -27,7 +42,7 @@
 .resources-menu a>svg:first-child{width:20px;color:var(--primary)}
 .resources-menu a>svg:last-child{width:14px;color:var(--muted-foreground)}
 .resources-menu span{display:grid;gap:2px}
-.resources-menu small{color:var(--muted-foreground);font-size:11px}
+.resources-menu small{color:var(--muted-foreground);font-size:12px}
 
 /* Buttons */
 .btn-primary,.btn-secondary,.demo-button{display:inline-flex;align-items:center;justify-content:center;gap:12px;min-height:48px;border-radius:var(--app-control-radius);font-size:14px;font-weight:700;white-space:nowrap}
@@ -36,6 +51,12 @@
 .btn-secondary,.demo-button{padding:0 25px;border:1px solid var(--app-card-border);background:var(--surface);color:var(--foreground);box-shadow:var(--app-card-shadow)}
 .demo-button{border-color:rgba(14,165,233,.72);box-shadow:inset 0 1px 0 rgba(255,255,255,.035)}
 .menu-button,.mobile-menu{display:none}
+.menu-button{width:44px;height:44px}
+
+/* Ancho común de las secciones: 1200px como máximo y siempre el margen
+   lateral de --landing-gutter. Sustituye a los rellenos sueltos de 18px que
+   sólo aparecían por debajo de 560px. */
+.hero-section,.stats-grid,.feature-grid,.trust-grid,.testimonial-grid,.role-grid,.cta-section,.footer-grid,.copyright{width:min(1200px,100% - 2 * var(--landing-gutter,16px));margin-inline:auto}
 
 /* Hero */
 .hero-section{position:relative;max-width:1200px;min-height:570px;margin:auto;padding:42px 0 12px;display:grid;grid-template-columns:38% 62%;align-items:center;gap:24px}
@@ -46,7 +67,7 @@
 .hero-copy h1 span,.section-heading h2 span,.cta-section h2 span{background:linear-gradient(90deg,#159cff 0%,#ec4899 56%,#f43f5e 100%);background-clip:text;-webkit-background-clip:text;color:transparent}
 .hero-copy>p{max-width:470px;margin-top:22px;color:var(--land-soft);font-size:13px;line-height:1.8}
 .hero-buttons{display:flex;gap:18px;margin-top:30px}
-.hero-checks{display:flex;gap:18px;margin-top:24px;color:var(--land-soft);font-size:10px}
+.hero-checks{display:flex;gap:18px;margin-top:24px;color:var(--land-soft);font-size:12px}
 .hero-checks span{display:flex;align-items:center;gap:6px}
 .hero-checks svg{width:15px;color:#18bf8b}
 .hero-visual{position:relative;overflow:visible;border-radius:24px}
@@ -64,7 +85,7 @@
 .landing-section{padding:74px 0 0}
 .roles-section{padding-top:78px}
 .section-heading{text-align:center;margin-bottom:26px}
-.section-heading>p{color:#7f8ba3;font-size:9px;font-weight:700;letter-spacing:.22em;text-transform:uppercase}
+.section-heading>p{color:#7f8ba3;font-size:12px;font-weight:700;letter-spacing:.22em;text-transform:uppercase}
 .section-heading h2{margin:10px 0;font-size:clamp(27px,2.6vw,36px);line-height:1.12;letter-spacing:-.035em;font-weight:650}
 
 /* Roles */
@@ -87,9 +108,12 @@
 .cta-section form>div{display:grid;grid-template-columns:1fr auto;gap:10px}
 .cta-section input{min-width:0;height:48px;padding:0 16px;border:1px solid var(--app-card-border);border-radius:12px;background:var(--surface-2);color:var(--foreground);outline:none}
 .cta-section input:focus{border-color:var(--ring);box-shadow:0 0 0 3px color-mix(in srgb,var(--ring) 15%,transparent)}
-.cta-section form>p{display:flex;flex-wrap:wrap;gap:16px;margin-top:12px;color:var(--land-soft);font-size:10px}
+.cta-section form>p{display:flex;flex-wrap:wrap;gap:16px;margin-top:12px;color:var(--land-soft);font-size:12px}
 .cta-section form>p span{display:flex;align-items:center;gap:5px}
 .cta-section form>p svg{width:13px;color:#10b981}
 
-@media(max-width:900px){.landing-navlinks,.landing-actions>.btn-secondary,.landing-actions>.btn-primary{display:none}.menu-button{display:grid;place-items:center;background:none}.mobile-menu{display:grid;gap:16px;padding:20px 30px;margin:8px auto 0;max-width:calc(100% - 20px);border:1px solid var(--app-card-border);border-radius:var(--app-card-radius);background:var(--surface);box-shadow:var(--app-card-shadow)}.mobile-menu button{display:flex;align-items:center;justify-content:space-between}.mobile-menu svg{width:16px}.mobile-submenu-link{padding-left:14px;color:var(--muted-foreground)}.hero-section{grid-template-columns:1fr;padding-top:50px;text-align:center}.hero-copy>p{margin-left:auto;margin-right:auto;max-width:620px}.hero-pill{margin:auto}.hero-buttons,.hero-checks{justify-content:center}.hero-visual{margin:30px -80px 0}.stats-grid,.feature-grid,.trust-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.role-grid{grid-template-columns:1fr}.footer-grid{grid-template-columns:repeat(3,1fr)}.cta-section{margin-left:18px;margin-right:18px;padding:28px;grid-template-columns:1fr;gap:22px}.role-detail{grid-template-columns:1fr;gap:30px}}
-@media(max-width:560px){.landing-header{padding:10px}.landing-nav{height:62px;padding:0 15px}.hero-copy h1,.role-detail h1{font-size:40px}.hero-section{min-height:auto;padding:38px 22px 10px}.hero-copy>p{font-size:13px}.hero-buttons{flex-direction:column}.hero-checks{gap:9px;flex-wrap:wrap}.hero-visual{margin:25px -44px 0}.stats-grid,.feature-grid,.trust-grid,.testimonial-grid{grid-template-columns:1fr;padding:0 18px}.landing-section{padding-top:76px}.role-grid{padding:0 18px}.stat-card{min-height:105px}.section-heading{padding:0 22px}.section-heading h2{font-size:27px}.feature-card{min-height:250px}.cta-section{padding:25px 20px}.cta-section h2{font-size:26px}.cta-section form>div{display:grid;grid-template-columns:1fr;gap:8px}.cta-section input,.cta-section button{border-radius:var(--app-control-radius)}.cta-section form>p{flex-direction:column;gap:6px}.footer-grid{grid-template-columns:1fr 1fr}.footer-grid>div:first-child{grid-column:1/-1}.role-detail{padding:65px 20px 10px}}
+/* El menú se pliega por debajo de 1024px (antes a 900px, y entre 901 y
+   ~1110px los enlaces y los dos botones no cabían en la barra). */
+@media(max-width:1023.98px){.landing-navlinks,.landing-actions>.btn-secondary,.landing-actions>.btn-primary{display:none}.menu-button{display:grid;place-items:center;background:none}.mobile-menu{display:grid;gap:16px;padding:20px 30px;margin:8px auto 0;max-width:calc(100% - 20px);border:1px solid var(--app-card-border);border-radius:var(--app-card-radius);background:var(--surface);box-shadow:var(--app-card-shadow)}.mobile-menu :is(a,button){min-height:44px;display:flex;align-items:center}.mobile-menu button{justify-content:space-between}.mobile-menu svg{width:16px}.mobile-submenu-link{padding-left:14px;color:var(--muted-foreground)}}
+@media(max-width:900px){.hero-section{grid-template-columns:1fr;padding-top:50px;text-align:center}.hero-copy>p{margin-left:auto;margin-right:auto;max-width:620px}.hero-pill{margin:auto}.hero-buttons,.hero-checks{justify-content:center}.hero-visual{margin:30px -80px 0}.stats-grid,.feature-grid,.trust-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.role-grid{grid-template-columns:1fr}.footer-grid{grid-template-columns:repeat(3,1fr)}.cta-section{padding:28px;grid-template-columns:1fr;gap:22px}.role-detail{grid-template-columns:1fr;gap:30px}}
+@media(max-width:560px){.landing-header{padding:10px}.landing-nav{height:62px;padding:0 15px}.hero-copy h1,.role-detail h1{font-size:40px}.hero-section{min-height:auto;padding:38px 0 10px}.hero-copy>p{font-size:13px}.hero-buttons{flex-direction:column}.hero-checks{gap:9px;flex-wrap:wrap}.hero-visual{margin:25px -44px 0}.stats-grid,.feature-grid,.trust-grid,.testimonial-grid{grid-template-columns:1fr}.landing-section{padding-top:76px}.stat-card{min-height:105px}.section-heading{padding:0 22px}.section-heading h2{font-size:27px}.feature-card{min-height:250px}.cta-section{padding:25px 20px}.cta-section h2{font-size:26px}.cta-section form>div{display:grid;grid-template-columns:1fr;gap:8px}.cta-section input,.cta-section button{border-radius:var(--app-control-radius)}.cta-section form>p{flex-direction:column;gap:6px}.footer-grid{grid-template-columns:1fr 1fr}.footer-grid>div:first-child{grid-column:1/-1}.role-detail{padding:65px 20px 10px}}

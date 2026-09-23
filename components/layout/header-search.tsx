@@ -81,8 +81,9 @@ export function HeaderSearch() {
         />
       </div>
 
+      {/* La lista comparte capa con el resto de desplegables (ver tokens.css). */}
       {open && (
-        <div className="absolute top-full left-0 right-0 mt-2 w-80 lg:w-96 rounded-2xl border border-border/10 bg-background shadow-xl shadow-black/8 z-50 overflow-hidden">
+        <div className="absolute top-full left-0 right-0 mt-2 w-80 lg:w-96 rounded-2xl border border-border/10 bg-background shadow-xl shadow-black/8 z-(--z-popover) overflow-hidden">
           {!hasQuery ? (
             <div className="py-8 text-center space-y-1">
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">Escribe al menos 3 caracteres</p>

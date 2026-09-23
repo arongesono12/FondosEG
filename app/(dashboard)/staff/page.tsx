@@ -21,6 +21,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
   Dialog,
+  DialogBody,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -363,7 +364,10 @@ export default function StaffPage() {
 
   return (
     <div className="space-y-8">
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+      {/* Variantes de contenedor (`@2xl:` ≈ `md:`): la página también se pinta
+          en el panel de media pantalla, donde las de viewport se disparaban
+          con ~470px de ancho útil. */}
+      <div className="flex flex-col gap-4 @2xl:flex-row @2xl:items-center @2xl:justify-between">
         <div>
           <h1 className="text-3xl font-black text-foreground">Control de administración</h1>
           <p className="text-sm font-semibold text-muted-foreground">
@@ -383,40 +387,44 @@ export default function StaffPage() {
               Nuevo administrador
             </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent size="lg">
             <DialogHeader>
               <DialogTitle>Crear administrador</DialogTitle>
               <DialogDescription>
                 La cuenta se creará ya verificada y podrá acceder al dashboard inmediatamente.
               </DialogDescription>
             </DialogHeader>
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="staff_name">Nombre</Label>
-                <Input id="staff_name" value={form.name} onChange={(e) => setForm((current) => ({ ...current, name: e.target.value }))} />
+            <DialogBody className="space-y-4">
+              {/* Dos columnas según el ancho del cuerpo del modal (`@md:`), no
+                  de la ventana: por eso `lg` y no `md`, que dejaba 200px por campo. */}
+              <div className="grid gap-4 @md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="staff_name">Nombre</Label>
+                  <Input id="staff_name" value={form.name} onChange={(e) => setForm((current) => ({ ...current, name: e.target.value }))} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="staff_email">Correo</Label>
+                  <Input id="staff_email" type="email" value={form.email} onChange={(e) => setForm((current) => ({ ...current, email: e.target.value }))} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="staff_phone">Teléfono</Label>
+                  <Input id="staff_phone" value={form.phone} onChange={(e) => setForm((current) => ({ ...current, phone: e.target.value }))} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="staff_password">Contraseña temporal</Label>
+                  <Input id="staff_password" type="password" value={form.password} onChange={(e) => setForm((current) => ({ ...current, password: e.target.value }))} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="staff_country">País</Label>
+                  <Input id="staff_country" value={form.country} onChange={(e) => setForm((current) => ({ ...current, country: e.target.value }))} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="staff_city">Ciudad</Label>
+                  <Input id="staff_city" value={form.city} onChange={(e) => setForm((current) => ({ ...current, city: e.target.value }))} />
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="staff_email">Correo</Label>
-                <Input id="staff_email" type="email" value={form.email} onChange={(e) => setForm((current) => ({ ...current, email: e.target.value }))} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="staff_phone">Teléfono</Label>
-                <Input id="staff_phone" value={form.phone} onChange={(e) => setForm((current) => ({ ...current, phone: e.target.value }))} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="staff_password">Contraseña temporal</Label>
-                <Input id="staff_password" type="password" value={form.password} onChange={(e) => setForm((current) => ({ ...current, password: e.target.value }))} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="staff_country">País</Label>
-                <Input id="staff_country" value={form.country} onChange={(e) => setForm((current) => ({ ...current, country: e.target.value }))} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="staff_city">Ciudad</Label>
-                <Input id="staff_city" value={form.city} onChange={(e) => setForm((current) => ({ ...current, city: e.target.value }))} />
-              </div>
-            </div>
-            {error && <p className="text-sm font-semibold text-rose-500">{error}</p>}
+              {error && <p className="text-sm font-semibold text-rose-500">{error}</p>}
+            </DialogBody>
             <DialogFooter>
               <Button type="button" variant="outline" className="rounded-xl font-black" onClick={() => setCreateOpen(false)}>
                 Cancelar
@@ -435,7 +443,7 @@ export default function StaffPage() {
         </div>
       )}
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
+      <div className="grid grid-cols-2 gap-3 @xl:grid-cols-3 @6xl:grid-cols-6">
         <Card className="min-w-0">
           <CardHeader className="p-4 pb-0">
             <CardTitle className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.12em] text-muted-foreground">
@@ -568,8 +576,8 @@ export default function StaffPage() {
               Consulta agentes y clientes, y abre su historial de movimientos recientes dentro del sistema.
             </p>
           </div>
-          <div className="flex flex-col gap-3 md:flex-row">
-            <div className="relative w-full md:max-w-sm">
+          <div className="flex flex-col gap-3 @2xl:flex-row">
+            <div className="relative w-full @2xl:max-w-sm">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 value={userSearch}
@@ -579,7 +587,7 @@ export default function StaffPage() {
               />
             </div>
             <Select value={roleFilter} onValueChange={(value: 'all' | 'gestor' | 'cliente') => setRoleFilter(value)}>
-              <SelectTrigger className="w-full md:w-52">
+              <SelectTrigger className="w-full @2xl:w-52">
                 <SelectValue placeholder="Filtrar por rol" />
               </SelectTrigger>
               <SelectContent>
@@ -642,7 +650,9 @@ export default function StaffPage() {
                       <p className="font-semibold tabular-nums">{member.movement_count}</p>
                     </TableCell>
                     <TableCell data-label="Alta">{formatDate(member.created_at)}</TableCell>
-                    <TableCell data-label="Acciones" className="text-right">
+                    {/* Misma etiqueta que la cabecera de la columna («Detalle»):
+                        en las tarjetas apiladas es lo que se lee en su lugar. */}
+                    <TableCell data-label="Detalle" className="text-right">
                       <Button type="button" variant="outline" size="sm" className="rounded-xl font-black" onClick={() => openUserMovements(member)}>
                         <Eye className="mr-2 h-4 w-4" />
                         Ver movimientos
@@ -666,7 +676,7 @@ export default function StaffPage() {
           ) : (
             activity.map((item) => (
               <div key={item.id} className="rounded-2xl border border-border/10 p-4">
-                <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+                <div className="flex flex-col gap-2 @2xl:flex-row @2xl:items-center @2xl:justify-between">
                   <div>
                     <p className="font-black text-foreground">{item.actor_name}</p>
                     <p className="text-xs font-semibold text-muted-foreground">
@@ -682,7 +692,7 @@ export default function StaffPage() {
       </Card>
 
       <Dialog open={!!selectedUser} onOpenChange={(open) => !open && setSelectedUser(null)}>
-        <DialogContent className="max-h-[85vh] overflow-hidden sm:max-w-4xl">
+        <DialogContent size="2xl">
           <DialogHeader>
             <DialogTitle>Movimientos del usuario</DialogTitle>
             {selectedUser ? (
@@ -690,33 +700,41 @@ export default function StaffPage() {
                 {`${selectedUser.name} · ${getRoleLabel(selectedUser.role)} · ${selectedUser.email}`}
               </DialogDescription>
             ) : (
-              <Skeleton className="h-4 w-72 rounded-xl" />
+              <Skeleton className="h-4 w-72 max-w-full rounded-xl" />
             )}
           </DialogHeader>
 
-          <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
-            <div className="rounded-2xl border border-border/10 p-4">
-              <p className="text-xs font-black uppercase tracking-[0.18em] text-muted-foreground">Rol</p>
-              <p className="mt-2 font-bold text-foreground">{selectedUser ? getRoleLabel(selectedUser.role) : '-'}</p>
+          {/* Un único cuerpo desplazable: antes había un scroll interno
+              (`overflow-y-auto pr-1`) dentro de una tarjeta que ya recortaba.
+              Las rejillas usan el ancho del cuerpo (`@3xl:`, `@4xl:`), no el
+              de la ventana. */}
+          <DialogBody className="space-y-4">
+            <div className="grid grid-cols-2 gap-3 @3xl:grid-cols-4">
+              <div className="min-w-0 rounded-2xl border border-border/10 p-4">
+                <p className="text-xs font-black uppercase tracking-[0.08em] text-muted-foreground @md:tracking-[0.18em]">Rol</p>
+                <p className="mt-2 font-bold text-foreground wrap-break-word">{selectedUser ? getRoleLabel(selectedUser.role) : '-'}</p>
+              </div>
+              <div className="min-w-0 rounded-2xl border border-border/10 p-4">
+                <p className="text-xs font-black uppercase tracking-[0.08em] text-muted-foreground @md:tracking-[0.18em]">Estado</p>
+                <p className="mt-2 font-bold text-foreground wrap-break-word">{selectedUser?.is_active ? 'Activo' : 'Inactivo'}</p>
+              </div>
+              <div className="min-w-0 rounded-2xl border border-border/10 p-4">
+                <p className="text-xs font-black uppercase tracking-[0.08em] text-muted-foreground @md:tracking-[0.18em]">Movimientos</p>
+                <p className="mt-2 font-bold text-foreground wrap-break-word">{selectedUser?.movement_count ?? 0}</p>
+              </div>
+              <div className="min-w-0 rounded-2xl border border-border/10 p-4">
+                <p className="text-xs font-black uppercase tracking-[0.08em] text-muted-foreground @md:tracking-[0.18em]">Último</p>
+                <p className="mt-2 font-bold text-foreground wrap-break-word">
+                  {selectedUser?.last_movement_at ? formatDate(selectedUser.last_movement_at) : 'Sin datos'}
+                </p>
+              </div>
             </div>
-            <div className="rounded-2xl border border-border/10 p-4">
-              <p className="text-xs font-black uppercase tracking-[0.18em] text-muted-foreground">Estado</p>
-              <p className="mt-2 font-bold text-foreground">{selectedUser?.is_active ? 'Activo' : 'Inactivo'}</p>
-            </div>
-            <div className="rounded-2xl border border-border/10 p-4">
-              <p className="text-xs font-black uppercase tracking-[0.18em] text-muted-foreground">Movimientos</p>
-              <p className="mt-2 font-bold text-foreground">{selectedUser?.movement_count ?? 0}</p>
-            </div>
-            <div className="rounded-2xl border border-border/10 p-4">
-              <p className="text-xs font-black uppercase tracking-[0.18em] text-muted-foreground">Último</p>
-              <p className="mt-2 font-bold text-foreground">
-                {selectedUser?.last_movement_at ? formatDate(selectedUser.last_movement_at) : 'Sin datos'}
-              </p>
-            </div>
-          </div>
 
-          <div className="mt-2 overflow-y-auto pr-1">
-            <div className="mb-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-[1.2fr_repeat(4,minmax(0,1fr))]">
+            {/* `@3xl` (768px) y no `@4xl` (896px): el cuerpo del modal 2xl mide
+                910px, y con la barra de desplazamiento clásica de Windows se
+                queda en ~893px, así que la fila de cinco columnas no llegaba a
+                aparecer en Windows y sí en macOS. */}
+            <div className="grid gap-3 @xl:grid-cols-2 @3xl:grid-cols-[1.2fr_repeat(4,minmax(0,1fr))]">
               <div className="relative">
                 <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
@@ -763,29 +781,17 @@ export default function StaffPage() {
               />
             </div>
 
-            <div className="mb-4 flex flex-col gap-3 rounded-2xl border border-border/10 bg-muted/20 p-4 md:flex-row md:items-center md:justify-between">
-              <div>
-                <p className="text-sm font-black text-foreground">
-                  {filteredUserMovements.length} movimiento{filteredUserMovements.length !== 1 ? 's' : ''} visible{filteredUserMovements.length !== 1 ? 's' : ''}
-                </p>
-                <p className="text-xs font-semibold text-muted-foreground">
-                  {movementDateFrom || movementDateTo
-                    ? `Rango: ${movementDateFrom || 'inicio'} -> ${movementDateTo || 'hoy'}`
-                    : 'Sin límite de fechas'}
-                </p>
-              </div>
-              <div className="flex flex-col gap-2 sm:flex-row">
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="rounded-xl font-black"
-                  onClick={exportFilteredMovementsToCsv}
-                  disabled={filteredUserMovements.length === 0}
-                >
-                  <Download className="mr-2 h-4 w-4" />
-                  Exportar CSV
-                </Button>
-              </div>
+            {/* "Exportar CSV" pasó al pie, junto a "Cerrar": es una acción del
+                modal, no de esta franja de resumen. */}
+            <div className="rounded-2xl border border-border/10 bg-muted/20 p-4">
+              <p className="text-sm font-black text-foreground">
+                {filteredUserMovements.length} movimiento{filteredUserMovements.length !== 1 ? 's' : ''} visible{filteredUserMovements.length !== 1 ? 's' : ''}
+              </p>
+              <p className="text-xs font-semibold text-muted-foreground">
+                {movementDateFrom || movementDateTo
+                  ? `Rango: ${movementDateFrom || 'inicio'} -> ${movementDateTo || 'hoy'}`
+                  : 'Sin límite de fechas'}
+              </p>
             </div>
 
             {movementsLoading ? (
@@ -804,8 +810,8 @@ export default function StaffPage() {
               <div className="space-y-3">
                 {filteredUserMovements.map((movement) => (
                   <div key={movement.id} className="rounded-2xl border border-border/10 p-4">
-                    <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-                      <div className="space-y-2">
+                    <div className="flex flex-col gap-3 @md:flex-row @md:items-start @md:justify-between">
+                      <div className="min-w-0 space-y-2">
                         <div className="flex flex-wrap items-center gap-2">
                           <Badge className={cn('border-none', movementKindTone(movement.kind))}>
                             {movement.kind === 'transfer'
@@ -823,11 +829,11 @@ export default function StaffPage() {
                           )}
                         </div>
                         <div>
-                          <p className="font-black text-foreground">{movement.title}</p>
-                          <p className="text-sm font-medium text-muted-foreground">{movement.description}</p>
+                          <p className="font-black text-foreground wrap-break-word">{movement.title}</p>
+                          <p className="text-sm font-medium text-muted-foreground wrap-break-word">{movement.description}</p>
                         </div>
                       </div>
-                      <div className="text-left md:text-right">
+                      <div className="shrink-0 text-left @md:text-right">
                         {typeof movement.amount === 'number' && (
                           <p className="text-base font-black text-foreground">
                             {formatCurrency(movement.amount, movement.currency || 'XAF')}
@@ -853,11 +859,21 @@ export default function StaffPage() {
                 )}
               </div>
             )}
-          </div>
+          </DialogBody>
 
           <DialogFooter>
             <Button type="button" variant="outline" className="rounded-xl font-black" onClick={() => setSelectedUser(null)}>
               Cerrar
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              className="rounded-xl font-black"
+              onClick={exportFilteredMovementsToCsv}
+              disabled={filteredUserMovements.length === 0}
+            >
+              <Download className="mr-2 h-4 w-4" />
+              Exportar CSV
             </Button>
           </DialogFooter>
         </DialogContent>

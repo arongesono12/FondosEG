@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useClerk } from '@clerk/nextjs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn, getInitials } from '@/lib/utils';
@@ -59,6 +59,9 @@ const COOKIE_CONSENT_STORAGE_KEY_PREFIX = 'fondoseg_cookie_consent_v2';
 const COOKIE_CONSENT_GLOBAL_STORAGE_KEY = `${COOKIE_CONSENT_STORAGE_KEY_PREFIX}:site`;
 const COOKIE_CONSENT_COOKIE_NAME = 'fondoseg_cookie_consent';
 const COOKIE_CONSENT_MAX_AGE_SECONDS = 60 * 60 * 24 * 400;
+
+// Enlaces que caben en línea en la cabecera de escritorio por debajo de 1280px.
+const DESKTOP_INLINE_NAV_ITEMS = 5;
 
 type CookieConsentStatus = 'accepted' | 'rejected' | 'configured';
 
@@ -167,6 +170,16 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
   const [lowBalance, setLowBalance] = useState(false);
   const [usersPanelOpen, setUsersPanelOpen] = useState(false);
   const [moduleNotice, setModuleNotice] = useState<string | null>(null);
+
+  // «Usuarios conectados» se abre desde una opción del menú de usuario, que
+  // desaparece con el menú: al cerrar el panel el foco caería en <body>. Se
+  // devuelve al disparador del menú que esté visible (escritorio o móvil).
+  const desktopUserMenuRef = useRef<HTMLButtonElement>(null);
+  const mobileUserMenuRef = useRef<HTMLButtonElement>(null);
+  const getUserMenuTrigger = useCallback(
+    () => [desktopUserMenuRef.current, mobileUserMenuRef.current].find((element) => element && element.offsetParent !== null) ?? undefined,
+    [],
+  );
   
   const isDark = mounted && resolvedTheme === 'dark';
   const requestedModuleValue = searchParams.get('module');
@@ -345,17 +358,29 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
   const primaryNavItems = navItems.slice(0, 4);
   const overflowNavItems = navItems.slice(4);
 
-  const userMenuDropdown = (avatarClassName?: string, showMobileName = false) => (
+  // Cabecera de escritorio: el mismo reparto, con cinco en línea. Sólo
+  // admin (6) y superadmin (7) llegan a tener «Más».
+  const desktopOverflowNavItems = navItems.slice(DESKTOP_INLINE_NAV_ITEMS);
+
+  const isNavItemActive = (href: string) => (
+    href === '/dashboard'
+      ? pathname === '/dashboard' && !activeModule
+      : activeModule === getDashboardModuleFromPath(href) || (pathname === href && !activeModule)
+  );
+
+  // Menú de usuario de la cabecera móvil. Antes tenía dos ramas según un
+  // parámetro que la única llamada fijaba a `true`: se ha eliminado la rama
+  // muerta (la del parámetro en `false`) y se ha conservado la que sí se
+  // pintaba, arreglando de paso su texto con la codificación rota. El menú de
+  // escritorio vive en la propia cabecera de escritorio, más abajo.
+  const userMenuDropdown = (avatarClassName?: string) => (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <button
+          ref={mobileUserMenuRef}
           type="button"
-          className={cn(
-            "cursor-pointer transition-transform hover:scale-[1.02] active:scale-[0.98]",
-            showMobileName
-              ? "dashboard-mobile-user-trigger"
-              : "rounded-full"
-          )}
+          aria-label="Menú de usuario"
+          className="dashboard-mobile-user-trigger cursor-pointer transition-transform hover:scale-[1.02] active:scale-[0.98] motion-reduce:transition-none motion-reduce:hover:scale-100 motion-reduce:active:scale-100"
         >
           <Avatar className={cn("border border-border/20 shadow-sm", avatarClassName || "h-10 w-10")}>
             <AvatarImage src={user?.avatar_url} />
@@ -365,58 +390,6 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
           </Avatar>
         </button>
       </DropdownMenuTrigger>
-      {showMobileName ? (
-        <DropdownMenuContent className="w-[min(calc(100vw-24px),16rem)] rounded-2xl" align="end" sideOffset={10} forceMount>
-          <DropdownMenuLabel className="font-normal">
-            <div className="flex flex-col space-y-1">
-              <p className="text-sm font-semibold leading-none">{user?.name}</p>
-              <p className="text-xs font-medium text-muted-foreground capitalize">
-                {getRoleLabel(user?.role)}
-              </p>
-            </div>
-          </DropdownMenuLabel>
-          {user?.role === 'gestor' && lowBalance && (
-            <DropdownMenuItem
-              className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 cursor-pointer"
-              onClick={() => setSupportOpen(true)}
-            >
-              <AlertTriangle className="mr-2 h-4 w-4 text-amber-500" />
-              <span className="text-amber-600 dark:text-amber-400 font-bold text-xs">
-                Saldo bajo - Contacte administrador
-              </span>
-            </DropdownMenuItem>
-          )}
-          <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={() => setSettingsOpen(true)}>
-            <Settings className="mr-2 h-4 w-4" />
-            <span>Configuración</span>
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => router.push('/profile')}>
-            <UserCog className="mr-2 h-4 w-4" />
-            <span>Mi Perfil</span>
-          </DropdownMenuItem>
-          {isAdminRole(user?.role) && (
-            <DropdownMenuItem onClick={() => setUsersPanelOpen(true)}>
-              <Users className="mr-2 h-4 w-4" />
-              <span>Usuarios conectados</span>
-            </DropdownMenuItem>
-          )}
-          <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={() => router.push('/landing/privacidad')}>
-            <ShieldCheck className="mr-2 h-4 w-4" />
-            <span>Privacidad</span>
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => router.push('/landing/terminos')}>
-            <FileText className="mr-2 h-4 w-4" />
-            <span>Términos y condiciones</span>
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={handleSignOut} className="text-rose-500 focus:text-rose-500 focus:bg-rose-500/10">
-            <LogOut className="mr-2 h-4 w-4" />
-            <span>Cerrar sesión</span>
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      ) : (
       <DropdownMenuContent className="w-[min(calc(100vw-24px),16rem)] rounded-2xl" align="end" sideOffset={10} forceMount>
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
@@ -433,7 +406,7 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
           >
             <AlertTriangle className="mr-2 h-4 w-4 text-amber-500" />
             <span className="text-amber-600 dark:text-amber-400 font-bold text-xs">
-              âš ï¸ Saldo bajo - Contacte administrador
+              Saldo bajo - Contacte administrador
             </span>
           </DropdownMenuItem>
         )}
@@ -467,7 +440,6 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
           <span>Cerrar sesión</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
-      )}
     </DropdownMenu>
   );
 
@@ -486,7 +458,8 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
       )}>
         {/* Top Header Navigation - grid 3 columnas: logo | nav centrado | tools */}
         <header className={cn(
-          "dashboard-desktop-header hidden lg:grid h-20 items-center px-10 border-b border-border/10 shrink-0 transition-all duration-300 z-50",
+          // Capa propia por debajo del velo de los modales (ver tokens.css).
+          "dashboard-desktop-header hidden lg:grid h-20 items-center px-10 border-b border-border/10 shrink-0 transition-all duration-300 z-(--z-header)",
           "bg-linear-to-b from-white to-slate-50 dark:from-slate-900 dark:to-slate-950",
           "lg:rounded-t-[2.5rem]",
           scrolled && "h-16 shadow-lg shadow-black/5"
@@ -509,21 +482,19 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
 
           {/* Center: Nav pills */}
           <nav className="dashboard-desktop-nav hidden lg:flex items-center gap-1 justify-center" aria-label="Navegación principal">
-            {navItems.map((item) => {
-              const moduleId = getDashboardModuleFromPath(item.href);
-              const navigationHref = getDashboardNavigationHref(item.href);
-              const isActive = item.href === '/dashboard'
-                ? pathname === '/dashboard' && !activeModule
-                : activeModule === moduleId || (pathname === item.href && !activeModule);
+            {navItems.map((item, index) => {
+              const isActive = isNavItemActive(item.href);
               return (
                 <Link
                   key={item.href}
-                  href={navigationHref}
+                  href={getDashboardNavigationHref(item.href)}
                   scroll={item.href === '/dashboard'}
                   onClick={item.href === '/dashboard' ? scrollMainToTop : undefined}
                   aria-current={isActive ? 'page' : undefined}
                   className={cn(
                     "px-5 py-2 rounded-full text-sm font-bold transition-all duration-300",
+                    // Entre 1024 y 1279px estos enlaces se ocultan y pasan a «Más».
+                    index >= DESKTOP_INLINE_NAV_ITEMS && "is-overflow",
                     isActive
                       ? "bg-brand-gradient text-white shadow-lg shadow-pink-500/20"
                       : "text-muted-foreground hover:text-pink-600 dark:hover:text-pink-400 hover:bg-pink-100 dark:hover:bg-pink-500/20"
@@ -533,32 +504,94 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
                 </Link>
               );
             })}
+            {desktopOverflowNavItems.length > 0 && (() => {
+              // Entre 1024 y 1279px los enlaces de dentro se ocultan con
+              // `display: none`, así que su `aria-current` desaparece también
+              // del árbol accesible: la sección actual se dice en el nombre
+              // del botón, que es lo único que queda en la cabecera.
+              const activeOverflowItem = desktopOverflowNavItems.find((item) => isNavItemActive(item.href));
+              return (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    type="button"
+                    className="dashboard-desktop-nav-more"
+                    data-active={activeOverflowItem ? 'true' : undefined}
+                    aria-label={activeOverflowItem ? `Más secciones — sección actual: ${activeOverflowItem.label}` : 'Más secciones'}
+                  >
+                    Más <MoreHorizontal aria-hidden="true" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" sideOffset={10} className="w-56 rounded-2xl">
+                  {desktopOverflowNavItems.map((item) => {
+                    const Icon = item.icon;
+                    return (
+                      <DropdownMenuItem key={item.href} asChild>
+                        <Link
+                          href={getDashboardNavigationHref(item.href)}
+                          scroll={false}
+                          aria-current={isNavItemActive(item.href) ? 'page' : undefined}
+                        >
+                          <Icon className="mr-2 h-4 w-4" />
+                          <span>{item.label}</span>
+                        </Link>
+                      </DropdownMenuItem>
+                    );
+                  })}
+                </DropdownMenuContent>
+              </DropdownMenu>
+              );
+            })()}
           </nav>
 
           {/* Right: Search + Notifications + Theme + Avatar */}
-          <div className="dashboard-desktop-tools flex items-center gap-1 md:gap-4">
-            {/* Desktop: Search (inline) + Notifications + Theme */}
-            <div className="hidden md:flex items-center gap-1 md:gap-2 text-muted-foreground">
-              <HeaderSearch />
+          {/* La cabecera entera es `hidden lg:grid`: aquí dentro no hay móvil,
+              así que las variantes `md:` que había no hacían nada. */}
+          <div className="dashboard-desktop-tools flex items-center gap-4">
+            <div className="flex items-center gap-2 text-muted-foreground">
+              {/* El buscador en línea (256px) sólo cabe desde `2xl`; por debajo
+                  se pliega en un icono que abre el mismo SearchModal que usa
+                  la barra inferior. */}
+              <div className="hidden 2xl:block">
+                <HeaderSearch />
+              </div>
+              <button
+                type="button"
+                onClick={() => setSearchOpen(true)}
+                aria-label="Buscar"
+                className="flex h-10 w-10 items-center justify-center rounded-full border border-border/60 bg-card text-muted-foreground transition-colors hover:bg-accent hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 2xl:hidden"
+              >
+                <Search className="h-4 w-4" aria-hidden="true" />
+              </button>
               <NotificationsDropdown notificationCount={notificationCount} onCountChange={setNotificationCount} />
               <ThemeToggle />
             </div>
 
-            <div className="flex items-center gap-2 md:gap-3 pl-2 md:pl-6 border-l border-border/50">
-              <div className="dashboard-desktop-user-label text-right hidden md:block">
+            <div className="flex items-center gap-3 pl-6 border-l border-border/50">
+              <div className="dashboard-desktop-user-label text-right">
                 <p className="text-sm font-semibold text-foreground leading-tight">{user?.name || 'Usuario'}</p>
                 <p className="text-xs font-medium text-muted-foreground capitalize">
                   {getRoleLabel(user?.role)}
                 </p>
               </div>
               <DropdownMenu>
+                {/* `Avatar` pinta un <span> que no recibe foco: con él como
+                    disparador, Configuración, Perfil y Cerrar sesión eran
+                    inalcanzables con teclado. */}
                 <DropdownMenuTrigger asChild>
-                  <Avatar className="h-10 w-10 border border-border/20 shadow-sm cursor-pointer transition-transform hover:scale-105 active:scale-95">
-                    <AvatarImage src={user?.avatar_url} />
-                    <AvatarFallback className="bg-brand-gradient text-white font-black text-xs">
-                      {getInitials(user?.name || 'U')}
-                    </AvatarFallback>
-                  </Avatar>
+                  <button
+                    ref={desktopUserMenuRef}
+                    type="button"
+                    aria-label="Menú de usuario"
+                    className="rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  >
+                    <Avatar className="h-10 w-10 border border-border/20 shadow-sm cursor-pointer transition-transform hover:scale-105 active:scale-95 motion-reduce:transition-none motion-reduce:hover:scale-100 motion-reduce:active:scale-100">
+                      <AvatarImage src={user?.avatar_url} />
+                      <AvatarFallback className="bg-brand-gradient text-white font-black text-xs">
+                        {getInitials(user?.name || 'U')}
+                      </AvatarFallback>
+                    </Avatar>
+                  </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-56" align="end" forceMount>
                   <DropdownMenuLabel className="font-normal">
@@ -582,30 +615,6 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
                     </DropdownMenuItem>
                   )}
                   <DropdownMenuSeparator />
-                  {/* Mobile only options */}
-                  <DropdownMenuItem onClick={() => setSearchOpen(true)} className="md:hidden">
-                    <Search className="mr-2 h-4 w-4" />
-                    <span>Buscar</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setTheme(isDark ? 'light' : 'dark')} className="md:hidden">
-                    {!mounted ? (
-                      <>
-                        <Moon className="mr-2 h-4 w-4" />
-                        <span>Tema</span>
-                      </>
-                    ) : isDark ? (
-                      <>
-                        <Sun className="mr-2 h-4 w-4" />
-                        <span>Modo Claro</span>
-                      </>
-                    ) : (
-                      <>
-                        <Moon className="mr-2 h-4 w-4" />
-                        <span>Modo Oscuro</span>
-                      </>
-                    )}
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator className="md:hidden" />
                   <DropdownMenuItem onClick={() => setSettingsOpen(true)}>
                     <Settings className="mr-2 h-4 w-4" />
                     <span>Configuración</span>
@@ -664,7 +673,7 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
               triggerClassName="dashboard-mobile-header-action"
               badgeClassName="dashboard-mobile-header-badge"
             />
-            {userMenuDropdown("h-10 w-10", true)}
+            {userMenuDropdown("h-10 w-10")}
           </div>
         </header>
 
@@ -683,8 +692,27 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
           Se retira `scrollbar-hide`: no está definida en ninguna parte —ni
           como utilidad ni por plugin—, así que nunca ocultó nada. Era la
           razón de que la barra interna se viera al hacer scroll aquí.
+
+          `@container` implica contención de layout: `<main>` pasa a ser el
+          bloque contenedor de cualquier `position: fixed` que cuelgue de él y
+          crea un contexto de apilamiento. Hoy no afecta a nada —los modales,
+          cajones y paneles se portalean a <body>, y la barra inferior es
+          hermana de `<main>`—, pero un elemento fijo escrito dentro de una
+          página del dashboard quedaría anclado aquí y por debajo de la
+          cabecera. Si hace falta uno, que se portalee.
+
+          `@container`: las páginas de módulo usan variantes de contenedor
+          (`@xl:`, `@4xl:`…) y las tablas se apilan según el ancho del
+          contenedor (tables.css). Así responden igual aquí que dentro del
+          panel de media pantalla, que ya es contenedor.
+
+          Relleno inferior: la barra fija mide 72px + la zona segura; con
+          `pb-28` fijo el último elemento quedaba pegado a ella en los iPhone
+          con indicador de inicio. `scroll-pb` evita que el foco por teclado
+          acabe debajo de la barra. En escritorio el relleno lo fija
+          `.dashboard-main` en dashboard-overview.css.
         */}
-        <main className="dashboard-main flex-1 min-h-0 overflow-y-auto overscroll-y-contain lg:overflow-visible lg:overscroll-auto bg-transparent p-4 pb-28 lg:p-10">
+        <main className="dashboard-main @container flex-1 min-h-0 overflow-y-auto overscroll-y-contain lg:overflow-visible lg:overscroll-auto bg-transparent px-4 pt-4 pb-[calc(96px+env(safe-area-inset-bottom))] scroll-pb-[calc(88px+env(safe-area-inset-bottom))] md:px-6 md:pt-6 lg:p-10 lg:scroll-pb-0">
           {children}
         </main>
 
@@ -766,7 +794,11 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
             {moduleNotice}
           </div>
         )}
-        <UsersPanel open={usersPanelOpen} onClose={() => setUsersPanelOpen(false)} />
+        <UsersPanel
+          open={usersPanelOpen}
+          onClose={() => setUsersPanelOpen(false)}
+          getReturnFocusTarget={getUserMenuTrigger}
+        />
         <SearchModal open={searchOpen} onOpenChange={setSearchOpen} />
         <SettingsModal open={settingsOpen} onOpenChange={setSettingsOpen} />
         <SupportModal open={supportOpen} onOpenChange={setSupportOpen} requestType="balance_topup" />

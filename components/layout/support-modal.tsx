@@ -2,14 +2,17 @@
 
 import { 
   Dialog, 
-  DialogContent, 
-  DialogHeader, 
+  DialogContent,
+  DialogHeader,
+  DialogBody,
+  DialogFooter,
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
-import { MessageSquare, Send, Loader2, ChevronDown, ShieldCheck } from '@/components/ui/hugeicons';
+import { MessageSquare, Send, Loader2, ShieldCheck } from '@/components/ui/hugeicons';
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { InlineFieldSkeleton } from '@/components/skeletons/app-skeletons';
 import { useAppStore } from '@/lib/store';
@@ -31,7 +34,6 @@ export function SupportModal({ open, onOpenChange, requestType = 'general', defa
   const [sent, setSent] = useState(false);
   const [admins, setAdmins] = useState<User[]>([]);
   const [selectedAdmin, setSelectedAdmin] = useState<User | null>(null);
-  const [dropdownOpen, setDropdownOpen] = useState(false);
   const [loadingAdmins, setLoadingAdmins] = useState(false);
 
   const isClient = user?.role === 'cliente';
@@ -114,8 +116,8 @@ export function SupportModal({ open, onOpenChange, requestType = 'general', defa
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md p-0 overflow-hidden outline-none">
-        <DialogHeader className="p-6 border-b border-border/10">
+      <DialogContent size="md" className="outline-none">
+        <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-xl font-semibold text-foreground">
             <MessageSquare className="h-5 w-5 text-primary" /> {titleMap[requestType]}
           </DialogTitle>
@@ -124,7 +126,7 @@ export function SupportModal({ open, onOpenChange, requestType = 'general', defa
           </DialogDescription>
         </DialogHeader>
         
-        <div className="p-6 space-y-5">
+        <DialogBody className="space-y-5">
           {sent ? (
               <div className="text-center py-8">
               <div className="w-16 h-16 bg-green-100 dark:bg-green-900/20 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -139,7 +141,7 @@ export function SupportModal({ open, onOpenChange, requestType = 'general', defa
             <>
               {requiresAssignee ? (
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-foreground flex items-center gap-1.5">
+                  <label htmlFor="support-assignee" className="text-sm font-medium text-foreground flex items-center gap-1.5">
                     <ShieldCheck className="h-4 w-4 text-primary" />
                     {isClient ? 'Seleccionar gestor' : 'Seleccionar administrador'}
                   </label>
@@ -151,67 +153,39 @@ export function SupportModal({ open, onOpenChange, requestType = 'general', defa
                       {isClient ? 'No hay gestores disponibles' : 'No hay administradores disponibles'}
                     </div>
                   ) : (
-                    <div className="relative">
-                      <button
-                        type="button"
-                        onClick={() => setDropdownOpen(!dropdownOpen)}
-                        className="w-full flex items-center justify-between gap-3 p-3 rounded-xl border border-border/20 bg-card hover:bg-muted/50 transition-colors text-left"
-                      >
-                        {selectedAdmin ? (
-                          <div className="flex items-center gap-3">
-                            <Avatar className="h-8 w-8 border border-primary/20">
-                              <AvatarImage src={selectedAdmin.avatar_url} />
-                              <AvatarFallback className="bg-brand-gradient text-white text-xs font-bold">
-                                {getInitials(selectedAdmin.name)}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div>
-                              <p className="text-sm font-medium text-foreground">{selectedAdmin.name}</p>
-                              <p className="text-xs text-muted-foreground uppercase tracking-wider">
-                                {isClient ? 'Gestor' : 'Administrador'}
-                              </p>
-                            </div>
-                          </div>
-                        ) : (
-                          <span className="text-sm text-muted-foreground">
-                            {isClient ? 'Elige un gestor' : 'Elige un administrador'}
-                          </span>
-                        )}
-                        <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} />
-                      </button>
-
-                      {dropdownOpen && (
-                        <div className="absolute top-full left-0 right-0 mt-1 z-50 bg-card border border-border/20 rounded-xl shadow-xl overflow-hidden">
-                          {admins.map((admin) => (
-                            <button
-                              key={admin.id}
-                              type="button"
-                              onClick={() => {
-                                setSelectedAdmin(admin);
-                                setDropdownOpen(false);
-                              }}
-                              className={`w-full flex items-center gap-3 p-3 hover:bg-muted/60 transition-colors text-left ${
-                                selectedAdmin?.id === admin.id ? 'bg-primary/5' : ''
-                              }`}
-                            >
-                              <Avatar className="h-8 w-8 border border-primary/20">
+                    // Select de Radix y no un desplegable absoluto hecho a mano:
+                    // aquel quedaba recortado por el cuerpo desplazable del
+                    // modal y no se manejaba con teclado. Éste se porta al
+                    // <body>, por encima del modal (--z-popover).
+                    <Select
+                      value={selectedAdmin?.id ?? ''}
+                      onValueChange={(id) => setSelectedAdmin(admins.find((admin) => admin.id === id) ?? null)}
+                    >
+                      <SelectTrigger id="support-assignee" className="h-12 rounded-xl border-border/20 bg-card">
+                        <SelectValue placeholder={isClient ? 'Elige un gestor' : 'Elige un administrador'} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {admins.map((admin) => (
+                          <SelectItem key={admin.id} value={admin.id}>
+                            <span className="flex min-w-0 items-center gap-3">
+                              <Avatar className="h-7 w-7 shrink-0 border border-primary/20">
                                 <AvatarImage src={admin.avatar_url} />
                                 <AvatarFallback className="bg-brand-gradient text-white text-xs font-bold">
                                   {getInitials(admin.name)}
                                 </AvatarFallback>
                               </Avatar>
-                              <div>
-                                <p className="text-sm font-medium text-foreground">{admin.name}</p>
-                                <p className="text-xs text-muted-foreground">{admin.email}</p>
-                              </div>
-                              {selectedAdmin?.id === admin.id && (
-                                <ShieldCheck className="h-4 w-4 text-primary ml-auto" />
-                              )}
-                            </button>
-                          ))}
-                        </div>
-                      )}
-                    </div>
+                              {/* El correo distingue a dos personas con el
+                                  mismo nombre: sin él, una solicitud de recarga
+                                  podía acabar en el destinatario equivocado. */}
+                              <span className="flex min-w-0 flex-col">
+                                <span className="truncate text-sm font-medium text-foreground">{admin.name}</span>
+                                <span className="truncate text-xs text-muted-foreground">{admin.email}</span>
+                              </span>
+                            </span>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   )}
                 </div>
               ) : (
@@ -234,24 +208,28 @@ export function SupportModal({ open, onOpenChange, requestType = 'general', defa
                   onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setMessage(e.target.value)}
                 />
               </div>
-              
-              <Button 
-                onClick={handleSend}
-                disabled={!message.trim() || loading || (requiresAssignee && !selectedAdmin)}
-                className="w-full h-12 rounded-xl bg-brand-gradient text-white font-semibold shadow-lg shadow-pink-500/20 hover:opacity-90 transition-all"
-              >
-                {loading ? (
-                  <Loader2 className="h-5 w-5 animate-spin" />
-                ) : (
-                  <>
-                    <Send className="h-4 w-4 mr-2" /> 
-                    {requestType === 'balance_topup' ? 'Solicitar Recarga' : requestType === 'report_error' ? 'Reportar Error' : 'Enviar Mensaje'}
-                  </>
-                )}
-              </Button>
             </>
           )}
-        </div>
+        </DialogBody>
+
+        {!sent && (
+          <DialogFooter>
+            <Button 
+              onClick={handleSend}
+              disabled={!message.trim() || loading || (requiresAssignee && !selectedAdmin)}
+              className="w-full h-12 rounded-xl bg-brand-gradient text-white font-semibold shadow-lg shadow-pink-500/20 hover:opacity-90 transition-all"
+            >
+              {loading ? (
+                <Loader2 className="h-5 w-5 animate-spin" />
+              ) : (
+                <>
+                  <Send className="h-4 w-4 mr-2" /> 
+                  {requestType === 'balance_topup' ? 'Solicitar Recarga' : requestType === 'report_error' ? 'Reportar Error' : 'Enviar Mensaje'}
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        )}
       </DialogContent>
     </Dialog>
   );

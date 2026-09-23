@@ -72,7 +72,9 @@
 /* Legal footer */
 .login-legal-footer { position: relative; margin-top: 20px; display: grid; justify-items: center; gap: 7px; color: var(--muted-foreground); text-align: center; font-size: 12px; line-height: 1.5; }
 .login-legal-footer nav { display: flex; align-items: center; justify-content: center; gap: 8px; }
-.login-legal-footer a { font-size: 12px; font-weight: 700; transition: color .2s ease; }
+/* Acolchado vertical para que cada enlace ronde los 32px de alto (el texto
+   solo medía 18px y quedaba por debajo del objetivo táctil mínimo). */
+.login-legal-footer a { display: inline-flex; align-items: center; min-height: 32px; padding: 7px 4px; font-size: 12px; font-weight: 700; transition: color .2s ease; }
 .login-legal-footer a:hover { color: #f0267e; }
 
 /* Onboarding */

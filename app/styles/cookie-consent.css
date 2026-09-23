@@ -1,0 +1,70 @@
+/* =========================================================================
+   AVISO DE COOKIES (components/layout/cookie-consent-modal.tsx)
+   -------------------------------------------------------------------------
+   Restaurado de antes del commit 644d1ee. Sin este bloque el aviso no tenía
+   fondo: el componente sólo trae borde y sombra por utilidades, así que el
+   texto se leía encima del contenido de la página.
+
+   No es un modal, pero sí una ventana emergente, así que comparte superficie
+   con el resto: opaca y con los mismos tokens. La posición vertical y la
+   capa (z-index) las fija el componente; aquí no se tocan.
+   ========================================================================= */
+.cookie-consent-toast {
+  background-color: var(--surface);
+  background-image: linear-gradient(160deg, var(--surface) 0%, var(--surface-2) 100%);
+  color: var(--surface-fg);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+@media (max-width: 1023.98px) {
+  /* En la carcasa móvil se despega de los bordes y flota como tarjeta justo
+     encima de la barra inferior; el margen deja aire entre las dos piezas. */
+  .cookie-consent-toast {
+    left: max(10px, env(safe-area-inset-left));
+    right: max(10px, env(safe-area-inset-right));
+    margin-bottom: 8px;
+    border: 1px solid var(--surface-border);
+    border-radius: var(--app-card-radius);
+    padding: 16px;
+    box-shadow: var(--surface-shadow);
+  }
+
+  /* El aviso flota sobre el contenido: sin esta reserva el final de la
+     página queda inalcanzable mientras está abierto.
+
+     El alto lo publica el propio componente en `--consent-height` con un
+     ResizeObserver, porque cambia con el texto, con el ancho de la pantalla
+     y al abrir «Personalizar». A eso se le suma lo que el aviso se levanta
+     del borde: la barra inferior (72px), su zona segura y los 8px de aire.
+     La reserva de respaldo cubre el caso de que no haya ResizeObserver, y
+     también las dos pantallas que se desplazan a la vez: `<main>` cuando la
+     página se abre por su URL y el panel de módulo cuando se abre desde la
+     navegación. */
+  body:has(.cookie-consent-toast) :is(
+    .dashboard-public-page .dashboard-main,
+    .dashboard-module-panel-body
+  ) {
+    padding-bottom: calc(var(--consent-height, 210px) + 80px + env(safe-area-inset-bottom));
+    scroll-padding-bottom: calc(var(--consent-height, 210px) + 80px + env(safe-area-inset-bottom));
+  }
+}
+
+@media (max-width: 639.98px) {
+  /* Respaldo mayor: con los botones apilados el aviso crece a ~340px. */
+  body:has(.cookie-consent-toast) :is(
+    .dashboard-public-page .dashboard-main,
+    .dashboard-module-panel-body
+  ) {
+    padding-bottom: calc(var(--consent-height, 350px) + 80px + env(safe-area-inset-bottom));
+    scroll-padding-bottom: calc(var(--consent-height, 350px) + 80px + env(safe-area-inset-bottom));
+  }
+}
+
+@media (min-width: 1024px) {
+  /* En escritorio el aviso es una franja pegada al pie de la ventana: basta
+     su alto más un poco de aire. */
+  body:has(.cookie-consent-toast) .dashboard-public-page.main-container {
+    padding-bottom: calc(var(--consent-height, 120px) + 16px);
+  }
+}

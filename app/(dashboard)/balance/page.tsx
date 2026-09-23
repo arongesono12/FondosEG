@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogBody, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Skeleton } from '@/components/ui/skeleton';
 import { getAgentBalance, getAgentTransactions, getAgents, topUpAgentBalance } from '@/services/agent';
@@ -177,7 +177,7 @@ export default function BalancePage() {
     return (
       <div className="space-y-6">
         <Skeleton className="h-36 w-full rounded-4xl" />
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 @xl:grid-cols-2 @4xl:grid-cols-4">
           <Skeleton className="h-28" />
           <Skeleton className="h-28" />
           <Skeleton className="h-28" />
@@ -191,7 +191,9 @@ export default function BalancePage() {
   if (isAdmin) {
     return (
       <div className="space-y-8">
-        <section className="app-card p-6 md:p-8">
+        {/* Variantes de contenedor (`@xl:` ≈ `sm:`, `@4xl:` ≈ `lg:`): la página
+            también se pinta en el panel de media pantalla. */}
+        <section className="app-card p-6 @2xl:p-8">
           <Badge className="rounded-full border border-white/30 bg-white/70 px-3 py-1 text-xs font-bold uppercase tracking-[0.24em] text-slate-700 shadow-sm dark:border-white/10 dark:bg-white/10 dark:text-slate-200">
             Tesorería central
           </Badge>
@@ -201,7 +203,7 @@ export default function BalancePage() {
           </p>
         </section>
 
-        <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5">
+        <section className="grid gap-4 @xl:grid-cols-2 @4xl:grid-cols-3 @7xl:grid-cols-5">
           <SummaryCard label="Float de red" value={formatCurrency(totalNetworkFloat)} hint="Saldo agregado de gestores" icon={Landmark} tone="border-sky-500/20 bg-sky-500 shadow-sky-500/20" />
           <SummaryCard label="Efectivo en red" value={formatCurrency(totalNetworkCash)} hint="Caja total declarada" icon={Banknote} tone="border-emerald-500/20 bg-emerald-500 shadow-emerald-500/20" />
           <SummaryCard label="Gestores activos" value={String(agents.filter((agent) => agent.is_active).length)} hint="Con cuenta habilitada" icon={Wallet} tone="border-emerald-500/20 bg-emerald-500 shadow-emerald-500/20" />
@@ -288,32 +290,36 @@ export default function BalancePage() {
         </Card>
 
         <Dialog open={successOpen} onOpenChange={setSuccessOpen}>
-          <DialogContent mobile="centered" className="max-w-md">
-            <DialogHeader className="items-center text-center">
+          <DialogContent size="sm" aria-describedby={undefined}>
+            <DialogHeader align="center">
               <div className="flex h-20 w-20 items-center justify-center rounded-full bg-emerald-100">
                 <CheckCircle className="h-10 w-10 text-emerald-600" />
               </div>
               <DialogTitle className="text-2xl font-bold text-foreground">Recarga confirmada</DialogTitle>
             </DialogHeader>
-            <div className="rounded-3xl border border-emerald-500/20 bg-emerald-500/10 p-6 text-center">
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-700">Monto recargado</p>
-              <p className="mt-2 text-4xl font-bold text-foreground">{formatCurrency(successAmount)}</p>
-            </div>
-            <Button className="w-full rounded-2xl font-bold" onClick={() => setSuccessOpen(false)}>
-              Cerrar
-            </Button>
+            <DialogBody>
+              <div className="rounded-3xl border border-emerald-500/20 bg-emerald-500/10 p-6 text-center">
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-700">Monto recargado</p>
+                <p className="mt-2 text-[clamp(1.5rem,7vw,2.25rem)] font-bold tabular-nums text-foreground wrap-break-word">{formatCurrency(successAmount)}</p>
+              </div>
+            </DialogBody>
+            <DialogFooter>
+              <Button className="w-full rounded-2xl font-bold" onClick={() => setSuccessOpen(false)}>
+                Cerrar
+              </Button>
+            </DialogFooter>
           </DialogContent>
         </Dialog>
 
         <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
-          <DialogContent mobile="centered" className="max-w-md">
+          <DialogContent size="md">
             <DialogHeader>
               <DialogTitle className="text-xl font-bold text-foreground">Recargar saldo a gestor</DialogTitle>
               <DialogDescription className="text-sm font-semibold text-muted-foreground">
                 Introduce el importe a añadir al float de {selectedAgent?.name}.
               </DialogDescription>
             </DialogHeader>
-            <div className="space-y-5">
+            <DialogBody className="space-y-5">
               <div className="space-y-2">
                 <Label htmlFor="topup-amount" className="text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">
                   Monto a recargar
@@ -334,10 +340,10 @@ export default function BalancePage() {
               {selectedAgent && (
                 <div className="rounded-2xl border border-border/10 bg-background/70 p-4">
                   <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Saldo actual</p>
-                  <p className="mt-2 text-2xl font-bold tabular-nums text-foreground">{formatCurrency(selectedAgent.balance)}</p>
+                  <p className="mt-2 text-2xl font-bold tabular-nums text-foreground wrap-break-word">{formatCurrency(selectedAgent.balance)}</p>
                 </div>
               )}
-            </div>
+            </DialogBody>
             <DialogFooter>
               <Button variant="outline" className="rounded-xl font-bold" onClick={() => setConfirmOpen(false)}>
                 Cancelar
@@ -357,8 +363,8 @@ export default function BalancePage() {
         </Dialog>
 
         <Dialog open={finalConfirmOpen} onOpenChange={setFinalConfirmOpen}>
-          <DialogContent mobile="centered" className="max-w-md">
-            <DialogHeader className="text-center">
+          <DialogContent size="sm">
+            <DialogHeader align="center">
               <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900/30">
                 <AlertCircle className="h-8 w-8 text-amber-600 dark:text-amber-400" />
               </div>
@@ -367,21 +373,21 @@ export default function BalancePage() {
                 Esta acción impactará inmediatamente el saldo del gestor.
               </DialogDescription>
             </DialogHeader>
-            <div className="space-y-4">
+            <DialogBody className="space-y-4">
               <div className="rounded-2xl border border-border/10 bg-background/70 p-4 text-center">
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Gestor</p>
-                <p className="mt-2 text-lg font-bold text-foreground">{selectedAgent?.name}</p>
+                <p className="mt-2 text-lg font-bold text-foreground wrap-break-word">{selectedAgent?.name}</p>
               </div>
               <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 p-4 text-center">
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700 dark:text-emerald-300">Monto</p>
-                <p className="mt-2 text-3xl font-bold text-foreground">{formatCurrency(parseFloat(topUpAmount) || 0)}</p>
+                <p className="mt-2 text-[clamp(1.5rem,7vw,2.25rem)] font-bold tabular-nums text-foreground wrap-break-word">{formatCurrency(parseFloat(topUpAmount) || 0)}</p>
               </div>
               {errorMessage && (
                 <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm font-bold text-rose-600 dark:border-rose-900/30 dark:bg-rose-950/30">
                   {errorMessage}
                 </div>
               )}
-            </div>
+            </DialogBody>
             <DialogFooter>
               <Button
                 variant="outline"
@@ -435,7 +441,7 @@ export default function BalancePage() {
   if (isGestor) {
     return (
       <div className="space-y-8">
-        <section className="app-card p-6 md:p-8">
+        <section className="app-card p-6 @2xl:p-8">
           <Badge className="rounded-full border border-white/20 bg-white/70 px-3 py-1 text-xs font-bold uppercase tracking-[0.24em] text-slate-700 dark:border-white/10 dark:bg-white/10 dark:text-slate-200">
             Liquidez del gestor
           </Badge>
@@ -445,7 +451,7 @@ export default function BalancePage() {
           </p>
         </section>
 
-        <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <section className="grid gap-4 @xl:grid-cols-2 @4xl:grid-cols-4">
           <SummaryCard label="Saldo disponible" value={formatCurrency(currentAgentBalance)} hint="Float utilizable ahora mismo" icon={Wallet} tone="border-emerald-500/20 bg-emerald-500 shadow-emerald-500/20" />
           <SummaryCard label="Saldo en efectivo" value={formatCurrency(currentAgentCash)} hint="Caja física disponible" icon={Banknote} tone="border-amber-500/20 bg-amber-500 shadow-amber-500/20" />
           <SummaryCard label="Total recargado" value={formatCurrency(totalTopups)} hint="Recargas acumuladas en cuenta" icon={TrendingUp} tone="border-sky-500/20 bg-sky-500 shadow-sky-500/20" />
@@ -461,7 +467,7 @@ export default function BalancePage() {
           </CardHeader>
           <CardContent className="p-0">
             <div className="wallet-movements-scroll">
-              <Table className="wallet-movements-table">
+              <Table className="wallet-movements-table" wrapperClassName="is-stacked">
                 <TableHeader className="bg-muted/30">
                   <TableRow className="border-border/5 hover:bg-transparent">
                     <TableHead className="pl-8 py-4 text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">Operación</TableHead>
@@ -512,7 +518,7 @@ export default function BalancePage() {
 
   return (
     <div className="space-y-8">
-      <section className="app-card p-6 md:p-8">
+      <section className="app-card p-6 @2xl:p-8">
         <Badge className="rounded-full border border-white/20 bg-white/70 px-3 py-1 text-xs font-bold uppercase tracking-[0.24em] text-slate-700 dark:border-white/10 dark:bg-white/10 dark:text-slate-200">
           Billetera del cliente
         </Badge>
@@ -522,7 +528,7 @@ export default function BalancePage() {
         </p>
       </section>
 
-      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <section className="grid gap-4 @xl:grid-cols-2 @4xl:grid-cols-4">
         <SummaryCard label="Monedas activas" value={String(currencySnapshots.length)} hint="Balances abiertos en cuenta" icon={Banknote} tone="border-sky-500/20 bg-sky-500 shadow-sky-500/20" />
         <SummaryCard label="Saldo principal" value={primaryClientCurrency ? formatCurrency(primaryClientCurrency.available, primaryClientCurrency.currency) : '0 XAF'} hint="Disponible en tu moneda principal" icon={Wallet} tone="border-emerald-500/20 bg-emerald-500 shadow-emerald-500/20" />
         <SummaryCard label="Reservado" value={primaryClientCurrency ? formatCurrency(primaryClientCurrency.reserved, primaryClientCurrency.currency) : '0 XAF'} hint="Retenido por códigos de retiro u órdenes pendientes" icon={Clock3} tone="border-amber-500/20 bg-amber-500 shadow-amber-500/20" />
@@ -536,7 +542,7 @@ export default function BalancePage() {
             Saldos por moneda
           </CardTitle>
         </CardHeader>
-        <CardContent className="grid gap-4 p-6 md:grid-cols-2 xl:grid-cols-3">
+        <CardContent className="grid gap-4 p-6 @2xl:grid-cols-2 @6xl:grid-cols-3">
           {currencySnapshots.map((snapshot) => (
             <div key={snapshot.currency} className="rounded-[1.75rem] border border-border/10 bg-background/70 p-5">
               <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">{snapshot.currency}</p>
@@ -643,32 +649,36 @@ export default function BalancePage() {
       />
 
       <Dialog open={successOpen} onOpenChange={setSuccessOpen}>
-        <DialogContent mobile="centered" className="max-w-md">
-          <DialogHeader className="items-center text-center">
+        <DialogContent size="sm" aria-describedby={undefined}>
+          <DialogHeader align="center">
             <div className="flex h-20 w-20 items-center justify-center rounded-full bg-emerald-100">
               <CheckCircle className="h-10 w-10 text-emerald-600" />
             </div>
             <DialogTitle className="text-2xl font-bold text-foreground">Recarga confirmada</DialogTitle>
           </DialogHeader>
-          <div className="rounded-3xl border border-emerald-500/20 bg-emerald-500/10 p-6 text-center">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-700">Monto recargado</p>
-            <p className="mt-2 text-4xl font-bold text-foreground">{formatCurrency(successAmount)}</p>
-          </div>
-          <Button className="w-full rounded-2xl font-bold" onClick={() => setSuccessOpen(false)}>
-            Cerrar
-          </Button>
+          <DialogBody>
+            <div className="rounded-3xl border border-emerald-500/20 bg-emerald-500/10 p-6 text-center">
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-700">Monto recargado</p>
+              <p className="mt-2 text-[clamp(1.5rem,7vw,2.25rem)] font-bold tabular-nums text-foreground wrap-break-word">{formatCurrency(successAmount)}</p>
+            </div>
+          </DialogBody>
+          <DialogFooter>
+            <Button className="w-full rounded-2xl font-bold" onClick={() => setSuccessOpen(false)}>
+              Cerrar
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 
       <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
-        <DialogContent mobile="centered" className="max-w-md">
+        <DialogContent size="md">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold text-foreground">Recargar saldo a gestor</DialogTitle>
             <DialogDescription className="text-sm font-semibold text-muted-foreground">
               Introduce el importe a añadir al float de {selectedAgent?.name}.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-5">
+          <DialogBody className="space-y-5">
             <div className="space-y-2">
               <Label htmlFor="topup-amount" className="text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">
                 Monto a recargar
@@ -689,10 +699,10 @@ export default function BalancePage() {
             {selectedAgent && (
               <div className="rounded-2xl border border-border/10 bg-background/70 p-4">
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Saldo actual</p>
-                <p className="mt-2 text-2xl font-bold tabular-nums text-foreground">{formatCurrency(selectedAgent.balance)}</p>
+                <p className="mt-2 text-2xl font-bold tabular-nums text-foreground wrap-break-word">{formatCurrency(selectedAgent.balance)}</p>
               </div>
             )}
-          </div>
+          </DialogBody>
           <DialogFooter>
             <Button variant="outline" className="rounded-xl font-bold" onClick={() => setConfirmOpen(false)}>
               Cancelar
@@ -712,8 +722,8 @@ export default function BalancePage() {
       </Dialog>
 
       <Dialog open={finalConfirmOpen} onOpenChange={setFinalConfirmOpen}>
-        <DialogContent mobile="centered" className="max-w-md">
-          <DialogHeader className="text-center">
+        <DialogContent size="sm">
+          <DialogHeader align="center">
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900/30">
               <AlertCircle className="h-8 w-8 text-amber-600 dark:text-amber-400" />
             </div>
@@ -722,21 +732,21 @@ export default function BalancePage() {
               Esta acción impactará inmediatamente el saldo del gestor.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
+          <DialogBody className="space-y-4">
             <div className="rounded-2xl border border-border/10 bg-background/70 p-4 text-center">
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Gestor</p>
-              <p className="mt-2 text-lg font-bold text-foreground">{selectedAgent?.name}</p>
+              <p className="mt-2 text-lg font-bold text-foreground wrap-break-word">{selectedAgent?.name}</p>
             </div>
             <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 p-4 text-center">
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700 dark:text-emerald-300">Monto</p>
-              <p className="mt-2 text-3xl font-bold text-foreground">{formatCurrency(parseFloat(topUpAmount) || 0)}</p>
+              <p className="mt-2 text-[clamp(1.5rem,7vw,2.25rem)] font-bold tabular-nums text-foreground wrap-break-word">{formatCurrency(parseFloat(topUpAmount) || 0)}</p>
             </div>
             {errorMessage && (
               <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm font-bold text-rose-600 dark:border-rose-900/30 dark:bg-rose-950/30">
                 {errorMessage}
               </div>
             )}
-          </div>
+          </DialogBody>
           <DialogFooter>
             <Button
               variant="outline"

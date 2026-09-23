@@ -234,9 +234,9 @@ html.dark .dashboard-public-page.main-container {
   stroke-width: 1.8;
 }
 
+/* El tamaño de la cifra lo fija sólo la escala tipográfica, más abajo. */
 .dashboard-public-page .overview-metric-value {
   margin-top: 14px;
-  font-size: clamp(28px, 2.25vw, 34px);
   font-weight: 600;
   letter-spacing: -.9px;
 }
@@ -366,8 +366,9 @@ html.dark .dashboard-public-page.main-container {
 /* Half-screen module surface. It is portalled to <body>, so it carries the
    dashboard tokens itself instead of depending on DOM ancestry. */
 .dashboard-module-overlay {
-  z-index: 50;
-  background: rgb(2 6 23 / .62) !important;
+  z-index: var(--z-overlay);
+  /* El mismo velo que el resto de modales (tokens.css). */
+  background: var(--dialog-scrim) !important;
   -webkit-backdrop-filter: none !important;
   backdrop-filter: none !important;
 }
@@ -375,8 +376,12 @@ html.dark .dashboard-public-page.main-container {
 .dashboard-module-panel {
   position: fixed !important;
   inset: 0 0 0 auto !important;
-  z-index: 50;
+  z-index: var(--z-overlay);
+  /* El panel usa `mobile="none"`, así que la anatomía compartida de los
+    modales no le llega: la columna (cabecera fija + cuerpo que se desplaza)
+    se declara aquí y no depende de `modals.css`. */
   display: flex !important;
+  flex-direction: column !important;
   width: 50vw !important;
   max-width: none !important;
   height: 100vh !important;
@@ -409,6 +414,7 @@ html.dark .dashboard-public-page.main-container {
   position: sticky;
   top: 0;
   z-index: 4;
+  flex: none;
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -469,6 +475,8 @@ html.dark .dashboard-public-page.main-container {
   min-height: 0;
   overflow: auto;
   overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  scroll-padding-block: 16px;
   padding: 22px;
   scrollbar-gutter: stable;
 }
@@ -491,7 +499,7 @@ html.dark .dashboard-public-page.main-container {
   position: fixed;
   top: max(18px, env(safe-area-inset-top));
   right: max(18px, env(safe-area-inset-right));
-  z-index: 80;
+  z-index: var(--z-toast);
   max-width: min(360px, calc(100vw - 36px));
   padding: 13px 16px;
   border: 1px solid var(--dashboard-card-border);
@@ -503,22 +511,13 @@ html.dark .dashboard-public-page.main-container {
   font-weight: 600;
 }
 
-@media (min-width: 1024px) {
-  .dashboard-module-panel :is(
-    [class*="lg:grid-cols-3"],
-    [class*="lg:grid-cols-4"],
-    [class*="xl:grid-cols-3"],
-    [class*="xl:grid-cols-4"],
-    [class*="xl:grid-cols-5"],
-    [class*="xl:grid-cols-6"]
-  ) {
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-  }
-
-  .dashboard-module-panel table {
-    min-width: 680px;
-  }
-}
+/* Aquí vivía un `!important` que forzaba dos columnas en el panel para todo
+   `lg:grid-cols-*` / `xl:grid-cols-*`, y un `min-width: 680px` para toda
+   tabla del panel. Las páginas de módulo usan ahora variantes de contenedor
+   (`@4xl:`…) que ya responden al ancho del panel, y el ancho mínimo de tabla
+   vive en tables.css limitado a las tablas que NO se apilan: el de aquí
+   también alcanzaba a las apiladas y peleaba con ellas. Además el selector
+   `[class*="xl:grid-cols-3"]` casaba con `@4xl:grid-cols-3` por subcadena. */
 
 @media (max-width: 1023.98px) {
   .dashboard-public-page .overview-metric {
@@ -527,10 +526,6 @@ html.dark .dashboard-public-page.main-container {
 
   .dashboard-public-page .overview-metric h2 {
     font-size: 14px;
-  }
-
-  .dashboard-public-page .overview-metric-value {
-    font-size: clamp(24px, 4.2vw, 30px);
   }
 
   .dashboard-public-page .overview-metric-caption {
@@ -560,10 +555,6 @@ html.dark .dashboard-public-page.main-container {
 
   .dashboard-public-page .overview-metric h2 {
     font-size: 13px;
-  }
-
-  .dashboard-public-page .overview-metric-value {
-    font-size: clamp(22px, 6vw, 27px);
   }
 
   .dashboard-public-page .overview-wallets {
@@ -762,8 +753,13 @@ html.dark .dashboard-public-page.main-container {
   line-height: 1.35;
 }
 
+/* La cifra no puede partirse (`nowrap`) y la tarjeta recorta: a 26px fijos
+   un importe de 8 cifras se cortaba en las cuatro columnas de 1024–1200px
+   (~177px de hueco). Escala con la ventana entre 20 y 26px, y es la única
+   regla que fija este tamaño: las de dashboard-overview.css y los bloques
+   responsive de arriba ya no lo tocan. */
 :is(.dashboard-public-page .dashboard-main, .dashboard-module-panel) .overview-metric-value {
-  font-size: var(--dashboard-text-metric);
+  font-size: clamp(20px, 1.6vw + 6px, 26px);
   line-height: 1.2;
 }
 
@@ -850,15 +846,44 @@ html.dark .dashboard-public-page.main-container {
    pantalla —algo que entra por la derecha sobre el dashboard—, así que no
    tiene sentido que cada una llegue con su propio color.
 
-   Los cajones son `position: fixed` pero cuelgan del árbol del dashboard, de
-   ahí que hereden los tokens; el valor de respaldo cubre el caso de que se
-   monten fuera.
+   «Usuarios conectados» se porta a <body> (Dialog de Radix) y declara sus
+   propios tokens más abajo; el detalle de operación (sin uso hoy) cuelga del
+   árbol del dashboard y los hereda. El valor de respaldo cubre ambos casos.
    ========================================================================= */
 .dashboard-drawer {
   border-radius: 0;
   border-left: 1px solid var(--dashboard-card-border, var(--surface-border));
   background: var(--dashboard-panel-bg, var(--background));
   box-shadow: none;
+}
+
+/* El cajón de usuarios es ahora un Dialog de Radix portado a <body>: ya no
+   cuelga del árbol del dashboard, así que, como el panel de módulo, trae él
+   mismo los tokens y la tipografía de cuerpo que antes heredaba. */
+.dashboard-drawer {
+  --dashboard-card-border: color-mix(in srgb, var(--surface-border) 78%, transparent);
+  --dashboard-panel-bg: var(--background);
+  font-family: var(--font-fondoseg-secondary);
+}
+
+.dark .dashboard-drawer {
+  --dashboard-card-border: hsl(215 20% 40% / .34);
+  --dashboard-panel-bg: hsl(224 71% 4%);
+}
+
+/* Entra y sale por la derecha con las mismas curvas que el panel de módulo. */
+.dashboard-drawer[data-state="open"] {
+  animation: dashboard-module-in .24s cubic-bezier(.22, 1, .36, 1);
+}
+
+.dashboard-drawer[data-state="closed"] {
+  animation: dashboard-module-out .18s ease-in;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-drawer[data-state] {
+    animation: none;
+  }
 }
 
 /* =========================================================================

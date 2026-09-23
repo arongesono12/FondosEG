@@ -43,7 +43,7 @@
 }
 
 .footer-grid h4 { margin-bottom: 16px; color: inherit; font-size: 12px; font-weight: 700; line-height: 1.4; }
-.footer-grid p, .footer-grid a { margin-bottom: 9px; color: var(--land-soft); font-size: 11px; line-height: 1.55; }
+.footer-grid p, .footer-grid a { margin-bottom: 9px; color: var(--land-soft); font-size: 12px; line-height: 1.55; }
 .footer-grid > div:not(.footer-brand) > a { display:block;width:fit-content;transition:color .2s ease,transform .2s ease; }
 .footer-grid > div:not(.footer-brand) > a:hover { color: #f0267e; transform: translateX(3px); }
 .footer-brand > p { max-width: 245px; margin-top: 14px; }
@@ -53,14 +53,18 @@
 .socials a { width: 34px; height: 34px; margin: 0; display: grid; place-items: center; border: 1px solid var(--land-line); border-radius: 50%; color: var(--land-soft); background: rgba(255,255,255,.025); transition: border-color .2s ease, color .2s ease, background .2s ease, transform .2s ease; }
 .socials a:hover { border-color: #f0267e; color: #fff; background: linear-gradient(135deg,#f93291,#e60762); transform: translateY(-3px); }
 .socials svg { width: 15px; height: 15px; }
+/* Con puntero táctil, 44px: a 34px quedaban por debajo del objetivo mínimo. */
+@media (pointer: coarse) { .socials a { width: 44px; height: 44px; } }
 
 .footer-help p { display: flex; align-items: center; gap: 7px; white-space: nowrap; }
 .footer-help p svg { width: 13px; height: 13px; flex: none; color: #f0267e; }
-.copyright { max-width:1200px;margin:25px auto 0;padding-top:18px;border-top:1px solid var(--land-line);color:var(--land-soft);font-size:10px;text-align:center; }
+.copyright { max-width:1200px;margin:25px auto 0;padding-top:18px;border-top:1px solid var(--land-line);color:var(--land-soft);font-size:12px;text-align:center; }
 
 @media (max-width: 1100px) { .footer-grid { grid-template-columns: repeat(3, 1fr); } }
 @media (max-width: 700px) {
-  .landing-footer { margin-top: 30px; padding-inline: 24px; border-radius: 22px 22px 0 0; }
+  /* Sin `padding-inline`: el margen lateral de la rejilla y del copyright ya
+     lo da --landing-gutter (landing.css). */
+  .landing-footer { margin-top: 30px; border-radius: 22px 22px 0 0; }
   .footer-grid { grid-template-columns: 1fr 1fr; gap: 30px 22px; }
   .footer-brand { grid-column: 1 / -1; }
   .footer-brand > p { max-width: 360px; }

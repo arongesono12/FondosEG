@@ -3,8 +3,12 @@ import { Slot } from "@radix-ui/react-slot"
 import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
+// Con puntero táctil todo botón mide al menos 44px de alto (y 44×44 el de
+// icono): `size="sm"` se quedaba en 36px en las filas de las tablas. Se decide
+// por el puntero y no por el ancho, igual que los controles de modals.css,
+// para no inflar las tablas densas en un escritorio con ratón.
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-[var(--app-control-radius)] text-sm font-medium transition-[background-color,border-color,color,box-shadow] focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/20 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-[var(--app-control-radius)] text-sm font-medium transition-[background-color,border-color,color,box-shadow] focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/20 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 [@media(pointer:coarse)]:min-h-11",
   {
     variants: {
       variant: {
@@ -26,7 +30,7 @@ const buttonVariants = cva(
         sm: "h-9 px-3 text-xs",
         lg: "h-11 px-8",
         xl: "h-12 gap-3 px-7 font-semibold [&_svg]:size-[17px]",
-        icon: "size-10",
+        icon: "size-10 [@media(pointer:coarse)]:size-11",
       },
     },
     defaultVariants: {

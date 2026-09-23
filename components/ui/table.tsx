@@ -8,6 +8,11 @@ import { cn } from "@/lib/utils"
  * concéntricos y dejaba el aviso "Desliza para ver más" en el nodo equivocado.
  * Pasa `wrapperClassName="is-stacked"` cuando la tabla se convierte en tarjetas
  * y por tanto ya no se desplaza.
+ *
+ * Los roles ARIA van explícitos en cada pieza porque Safari (y VoiceOver)
+ * dejan de exponer la semántica de tabla en cuanto `display` deja de ser
+ * `table`, que es justo lo que hacen las tablas apiladas (app/styles/tables.css).
+ * Van antes de `...props` para que quien lo necesite pueda sobrescribirlos.
  */
 const Table = React.forwardRef<
   HTMLTableElement,
@@ -16,6 +21,7 @@ const Table = React.forwardRef<
   <div className={cn("table-scroll relative w-full overflow-x-auto", wrapperClassName)}>
     <table
       ref={ref}
+      role="table"
       className={cn("w-full caption-bottom text-sm", className)}
       {...props}
     />
@@ -27,7 +33,7 @@ const TableHeader = React.forwardRef<
   HTMLTableSectionElement,
   React.HTMLAttributes<HTMLTableSectionElement>
 >(({ className, ...props }, ref) => (
-  <thead ref={ref} className={cn("[&_tr]:border-b [&_tr]:border-slate-100/50", className)} {...props} />
+  <thead ref={ref} role="rowgroup" className={cn("[&_tr]:border-b [&_tr]:border-slate-100/50", className)} {...props} />
 ))
 TableHeader.displayName = "TableHeader"
 
@@ -37,6 +43,7 @@ const TableBody = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <tbody
     ref={ref}
+    role="rowgroup"
     className={cn("[&_tr:last-child]:border-0 [&_tr]:border-slate-100/50", className)}
     {...props}
   />
@@ -49,6 +56,7 @@ const TableFooter = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <tfoot
     ref={ref}
+    role="rowgroup"
     className={cn(
       "border-t border-slate-100/50 bg-muted/50 [&>tr]:last:border-b-0",
       className
@@ -64,6 +72,7 @@ const TableRow = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <tr
     ref={ref}
+    role="row"
     className={cn(
       "border-b border-slate-100/50 transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted",
       className
@@ -79,6 +88,7 @@ const TableHead = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <th
     ref={ref}
+    role="columnheader"
     className={cn(
       "h-10 px-2 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0",
       className
@@ -94,6 +104,7 @@ const TableCell = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <td
     ref={ref}
+    role="cell"
     className={cn("p-2 align-middle [&:has([role=checkbox])]:pr-0", className)}
     {...props}
   />

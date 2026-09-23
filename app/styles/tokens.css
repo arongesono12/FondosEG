@@ -152,6 +152,29 @@
   --dialog-surface: var(--surface);
   --dialog-surface-sunken: var(--surface-2);
   --dialog-separator: var(--surface-border);
+  /* Un solo velo para todo lo que se abre encima del dashboard (modales,
+     panel de módulo, cajón de usuarios). Sin desenfoque: el modal tapaba el
+     contexto sin aportar nada y en móviles modestos costaba fotogramas. */
+  --dialog-scrim: rgb(2 6 23 / .55);
+}
+
+/* --- Escala de capas (z-index) ---
+   La barra inferior móvil estaba en 60, por encima de todos los modales (50):
+   tapaba sus pies fijos y un toque sobre ella caía en el velo y cerraba el
+   modal. Orden, de abajo arriba: navegación fija (cabecera de escritorio y
+   barra inferior) < aviso de cookies < velo y modales < menús y listas
+   desplegables (que se abren DENTRO de un modal y tienen que quedar por
+   encima) < avisos efímeros.
+
+   La cabecera de escritorio estaba en 50, empatada con el velo: sólo quedaba
+   por debajo porque el portal del modal va después en el DOM. */
+:root {
+  --z-header: 40;
+  --z-bottom-nav: 40;
+  --z-consent: 45;
+  --z-overlay: 50;
+  --z-popover: 60;
+  --z-toast: 80;
 }
 
 .dark {

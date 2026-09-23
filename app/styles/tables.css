@@ -1,0 +1,211 @@
+/* =========================================================================
+   TABLAS — desplazamiento horizontal y tablas apiladas en tarjetas
+   -------------------------------------------------------------------------
+   Restaurado de antes del commit 644d1ee: al partir globals.css se perdió
+   este bloque entero, y desde entonces `.table-scroll`, `.is-stacked` y las
+   clases de las tablas de actividad y de movimientos no tenían CSS. En un
+   teléfono la tabla estiraba `<main>` y la página se desplazaba de lado.
+
+   Cambio respecto al original: el apilado ya no mira el VIEWPORT sino el
+   CONTENEDOR. Las páginas de módulo se pintan a pantalla completa y también
+   dentro del panel de media pantalla (50vw): a 1280px el panel deja ~580px
+   de contenido aunque el viewport sea de escritorio. `<main>` del dashboard
+   y `.dashboard-module-viewport` son contenedores `inline-size`, así que la
+   consulta responde al hueco real donde vive la tabla.
+
+   Umbral: 767.98px de contenedor. Un iPad en vertical deja 720px de
+   contenido y siete columnas no caben ahí sin desplazamiento lateral.
+   ========================================================================= */
+
+/* Nodo que se desplaza cuando la tabla no se apila (ver components/ui/table.tsx). */
+.table-scroll {
+  max-width: 100%;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+
+/* Una tabla que no se apila conserva un ancho legible y se desplaza dentro de
+   su envoltorio en vez de estrujar las columnas. Sustituye a la regla
+   `.dashboard-module-panel table { min-width: 680px }`, que también se
+   aplicaba a las tablas apiladas y peleaba con ellas. */
+:is(.dashboard-main, .dashboard-module-panel) .table-scroll:not(.is-stacked) > table {
+  min-width: 680px;
+}
+
+@media screen {
+  @container (max-width: 767.98px) {
+    /* El aviso sólo tiene sentido si el contenedor se desplaza de verdad: las
+       tablas apiladas (`.is-stacked`) no lo hacen. */
+    .table-scroll:not(.is-stacked)::after {
+      content: 'Desliza para ver más';
+      position: sticky;
+      left: 12px;
+      bottom: 8px;
+      display: inline-flex;
+      margin: 8px 0 10px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: var(--muted);
+      color: var(--muted-foreground);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .02em;
+    }
+
+    /* ---------- Tablas apiladas: cada fila es una tarjeta ---------- */
+
+    /* El acolchado es nuevo: historial y saldos montan la tabla en un
+       `CardContent` con `p-0`, y sin él las tarjetas de fila tocaban el borde
+       de la tarjeta madre. Como la regla no está en capa gana a los `p-6` de
+       gestores y administración, así que el margen queda igual en todas. */
+    :is(.activity-records-scroll, .wallet-movements-scroll) {
+      overflow: visible;
+      padding: 12px;
+      border: 0;
+      background: transparent;
+    }
+
+    .table-scroll.is-stacked,
+    :is(.activity-records-scroll, .wallet-movements-scroll) .table-scroll {
+      overflow: visible;
+    }
+
+    :is(.activity-records-table, .wallet-movements-table, .is-stacked > table),
+    :is(.activity-records-table, .wallet-movements-table, .is-stacked > table) :is(tbody, tr, td) {
+      display: block;
+      width: 100%;
+      min-width: 0;
+    }
+
+    :is(.activity-records-table, .wallet-movements-table, .is-stacked > table) {
+      border-collapse: separate;
+      border-spacing: 0;
+    }
+
+    /* Las etiquetas pasan a cada celda (`data-label`); los roles ARIA
+       explícitos del primitivo mantienen la tabla en el árbol accesible
+       aunque `display` deje de ser `table`. */
+    /* Oculta a la vista, no al árbol accesible: con `display: none` se
+       perdían los `role="columnheader"` justo en el modo en el que se
+       añadieron, y la etiqueta de cada celda sólo existía como contenido
+       generado por CSS, que no todos los lectores de pantalla anuncian. */
+    :is(.activity-records-table, .wallet-movements-table, .is-stacked > table) thead {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
+    }
+
+    :is(.activity-record-row, .wallet-movement-row, .is-stacked > table > tbody > tr) {
+      margin: 0 0 12px;
+      overflow: hidden;
+      border: 1px solid var(--dashboard-card-border, var(--app-card-border));
+      border-radius: 16px;
+      background: var(--dashboard-card-bg, var(--card));
+      box-shadow: none;
+    }
+
+    :is(.activity-record-row, .wallet-movement-row, .is-stacked > table > tbody > tr):last-child {
+      margin-bottom: 0;
+    }
+
+    :is(.activity-records-table, .wallet-movements-table, .is-stacked > table) td {
+      display: grid;
+      grid-template-columns: 112px minmax(0, 1fr);
+      align-items: start;
+      column-gap: 12px;
+      padding: 12px 14px;
+      border: 0;
+      text-align: left;
+      white-space: normal;
+    }
+
+    /* Etiquetas más cortas («Operación», «Monto»): columna más estrecha. */
+    .wallet-movements-table > tbody td {
+      grid-template-columns: 96px minmax(0, 1fr);
+    }
+
+    /* Una celda con dos párrafos (código + gestor, ciudad + país) dejaba el
+       segundo en la columna de la etiqueta. Todo el contenido va a la derecha
+       y la etiqueta se queda sola en la primera fila. */
+    :is(.activity-records-table, .wallet-movements-table, .is-stacked > table) td > * {
+      grid-column: 2;
+    }
+
+    :is(.activity-records-table, .wallet-movements-table, .is-stacked > table) td + td {
+      border-top: 1px solid color-mix(in srgb, var(--dashboard-card-border, var(--app-card-border)) 70%, transparent);
+    }
+
+    :is(.activity-records-table, .wallet-movements-table, .is-stacked > table) td::before {
+      content: attr(data-label);
+      grid-column: 1;
+      color: var(--muted-foreground);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .06em;
+      line-height: 1.35;
+      text-transform: uppercase;
+      overflow-wrap: anywhere;
+    }
+
+    /* Fila de estado vacío (`colSpan`, sin etiqueta). */
+    :is(.activity-records-table, .wallet-movements-table, .is-stacked > table) td:not([data-label]) {
+      display: block;
+      padding: 22px 14px;
+      text-align: center;
+    }
+
+    :is(.activity-records-table, .wallet-movements-table, .is-stacked > table) td:not([data-label])::before {
+      content: none;
+    }
+
+    :is(.activity-records-table, .wallet-movements-table, .is-stacked > table) td :is(p, span, div, a) {
+      min-width: 0;
+      max-width: 100%;
+      overflow-wrap: anywhere;
+      white-space: normal;
+    }
+
+    /* Celdas anchas (participantes, detalle y acciones): etiqueta arriba y
+       contenido a todo el ancho. Saldos usa «Acción» en singular. */
+    :is(.activity-records-table, .wallet-movements-table, .is-stacked > table) td:is(
+      [data-label="Participantes"],
+      [data-label="Detalle"],
+      [data-label="Acciones"],
+      [data-label="Acción"]
+    ) {
+      grid-template-columns: minmax(0, 1fr);
+      row-gap: 8px;
+    }
+
+    :is(.activity-records-table, .wallet-movements-table, .is-stacked > table) td:is(
+      [data-label="Participantes"],
+      [data-label="Detalle"],
+      [data-label="Acciones"],
+      [data-label="Acción"]
+    ) > * {
+      grid-column: 1;
+    }
+
+    .activity-records-table td:is([data-label="Detalle"], [data-label="Acciones"], [data-label="Acción"]) > div {
+      flex-wrap: wrap;
+    }
+
+    /* A todo el ancho sólo los botones con texto. Los de sólo icono (su
+       nombre vive en `aria-label`/`title`) se convertían en barras de ancho
+       completo con un icono de 16px en medio: se quedan como cuadrados de
+       44px, que es su tamaño táctil. */
+    .activity-records-table td:is([data-label="Detalle"], [data-label="Acciones"], [data-label="Acción"]) :is(button, a):not([aria-label]):not([title]) {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .activity-records-table td:is([data-label="Detalle"], [data-label="Acciones"], [data-label="Acción"]) :is(button, a):is([aria-label], [title]) {
+      min-width: 44px;
+      min-height: 44px;
+      justify-content: center;
+    }
+  }
+}

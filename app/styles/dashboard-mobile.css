@@ -15,8 +15,9 @@
 .dashboard-mobile-brand span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .dashboard-mobile-header-actions { display: inline-flex; flex: none; align-items: center; gap: 8px; }
 
+/* 44×44: con 38px de ancho quedaba por debajo del objetivo táctil. */
 .dashboard-mobile-header-action {
-  position: relative; display: inline-flex; width: 38px; height: 44px;
+  position: relative; display: inline-flex; width: 44px; height: 44px;
   align-items: center; justify-content: center; border: 0; border-radius: 0;
   background: transparent; color: var(--foreground); box-shadow: none;
   transition: transform .18s ease, color .18s ease;
@@ -26,10 +27,12 @@
 .dark .dashboard-mobile-header-action { background: transparent; box-shadow: none; }
 
 .dashboard-mobile-header-badge {
-  position: absolute; top: 4px; right: 2px; display: inline-flex; min-width: 18px; height: 18px;
+  /* 12px de mínimo para el contador (a 9px no se leía); la píldora crece a
+     20px para que quepa con su borde. */
+  position: absolute; top: 3px; right: 2px; display: inline-flex; min-width: 20px; height: 20px;
   align-items: center; justify-content: center; border: 2px solid var(--background);
   border-radius: 999px; background: #f43f5e; color: white; padding: 0 4px;
-  font-size: 9px; font-weight: 900; line-height: 1;
+  font-size: 12px; font-weight: 900; line-height: 1;
 }
 
 .dashboard-mobile-user-trigger {
@@ -51,7 +54,8 @@
 
 /* Bottom bar */
 .dashboard-mobile-bottom-bar {
-  position: fixed; left: 0; right: 0; bottom: 0; z-index: 60;
+  /* Por debajo del velo de los modales: ver la escala en tokens.css. */
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: var(--z-bottom-nav);
   border: 1px solid rgba(148, 163, 184, .24); border-right: 0; border-bottom: 0; border-left: 0;
   border-radius: 24px 24px 0 0;
   background: var(--surface);
@@ -86,10 +90,10 @@
 .dashboard-mobile-action:hover span, .dashboard-mobile-action.is-active span, .dashboard-mobile-profile:hover span { transform: translateY(-1px); }
 
 .dashboard-mobile-badge {
-  position: absolute; top: 6px; right: 12px; min-width: 17px; height: 17px;
+  position: absolute; top: 5px; right: 12px; min-width: 20px; height: 20px;
   display: grid; place-items: center; padding: 0 4px;
   border: 2px solid rgba(255, 255, 255, .85); border-radius: 999px;
-  background: #f43f5e; color: #fff; font-size: 9px; font-weight: 900; line-height: 1;
+  background: #f43f5e; color: #fff; font-size: 12px; font-weight: 900; line-height: 1;
 }
 .dark .dashboard-mobile-badge { border-color: rgba(3, 10, 24, .9); }
 

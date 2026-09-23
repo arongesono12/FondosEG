@@ -1,0 +1,51 @@
+/* =========================================================================
+   CAMPO DE TELÉFONO — selector de prefijo (components/ui/phone-input.tsx)
+   -------------------------------------------------------------------------
+   Restaurado de antes del commit 644d1ee. Sin estas reglas el menú de
+   prefijos no tenía fondo: la lista se pintaba transparente encima del
+   resto del formulario de alta y no se podía leer.
+
+   Adaptado a los tokens actuales en lugar de los hex fijos del original:
+   el disparador y el número llevan la misma caja que `Input` (borde
+   --input, fondo --background) y el menú la de los desplegables Radix
+   (--popover). Las variantes de `.auth-register-card` no se restauran:
+   esa clase ya no se usa en ningún componente.
+   ========================================================================= */
+.phone-country-trigger,
+.phone-number-input,
+.phone-country-search {
+  border-color: var(--input);
+  background-color: var(--background);
+  color: var(--foreground);
+}
+
+.phone-country-prefix { color: inherit; }
+.phone-country-chevron { color: var(--muted-foreground); }
+
+.phone-number-input::placeholder,
+.phone-country-search::placeholder { color: var(--muted-foreground); }
+
+.phone-country-menu {
+  border-color: var(--border);
+  background-color: var(--popover);
+  color: var(--popover-foreground);
+  box-shadow: 0 14px 36px rgba(15, 23, 42, .14);
+}
+
+.dark .phone-country-menu {
+  border-color: var(--app-card-border);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, .4);
+}
+
+.phone-country-search-wrap { border-color: var(--border); }
+
+.phone-country-option:hover,
+.phone-country-option:focus-visible {
+  background: color-mix(in srgb, var(--primary) 10%, transparent);
+  outline: none;
+}
+
+.phone-country-option--selected {
+  color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 12%, transparent);
+}

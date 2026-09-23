@@ -70,3 +70,348 @@
   .info-hero { min-height: auto; padding: 60px 10px 35px; grid-template-columns: 1fr; gap: 40px; }
   .info-copy h1 { font-size: 43px; }
 }
+
+/* =========================================================================
+   DOCUMENTOS LEGALES (/landing/terminos, /privacidad, /cookies…)
+   -------------------------------------------------------------------------
+   Restaurado de antes del commit 644d1ee: sin este bloque `.legal-page` no
+   tenía relleno, índice y documento se apilaban sin rejilla y el índice no
+   se quedaba fijo. La superficie de las tarjetas (fondo, borde, sombra) no
+   se repite aquí: la ponen marketing-cards.css y system-surfaces.css. Los
+   textos de 10–11px del original suben a 12px.
+   ========================================================================= */
+.legal-page {
+  min-height: 100vh;
+  padding: 22px;
+  color: var(--foreground);
+}
+
+.legal-hero {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 90px 20px 65px;
+  text-align: center;
+}
+
+.legal-hero > span {
+  display: inline-flex;
+  padding: 8px 14px;
+  border: 1px solid color-mix(in srgb, var(--primary) 28%, transparent);
+  border-radius: 999px;
+  color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 7%, transparent);
+  font-size: 12px;
+  font-weight: 750;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+
+.legal-hero h1 {
+  margin: 24px auto 18px;
+  font-size: clamp(36px, 5.2vw, 68px);
+  line-height: 1.04;
+  letter-spacing: -.045em;
+  font-weight: 700;
+  overflow-wrap: break-word;
+}
+
+.legal-hero > p {
+  max-width: 760px;
+  margin: 0 auto;
+  color: var(--muted-foreground);
+  font-size: 16px;
+  line-height: 1.75;
+}
+
+.legal-hero small {
+  display: block;
+  margin-top: 20px;
+  color: var(--muted-foreground);
+  font-size: 12px;
+  font-weight: 650;
+}
+
+/* Índice fijo a la izquierda y documento a la derecha. */
+.legal-layout {
+  max-width: 1120px;
+  margin: 0 auto 60px;
+  display: grid;
+  grid-template-columns: 240px minmax(0, 1fr);
+  gap: 28px;
+  align-items: start;
+}
+
+/* `.legal-page` delante para ganar a `position: relative` de la regla
+   común de tarjetas (marketing-cards.css), que se importa después. En el
+   original pasaba lo mismo y el índice nunca llegó a quedarse fijo. */
+.legal-page .legal-layout > aside {
+  position: sticky;
+  top: 22px;
+  max-height: calc(100vh - 44px);
+  max-height: calc(100dvh - 44px);
+  padding: 20px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.legal-layout > aside > p {
+  margin-bottom: 8px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+/* 44px de alto por enlace: el índice era una lista de objetivos de 25px. */
+.legal-layout > aside a {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 6px 0;
+  color: var(--muted-foreground);
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.legal-layout > aside a:hover { color: var(--primary); }
+
+.legal-layout > aside a:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+.legal-document {
+  min-width: 0;
+  padding: 46px;
+}
+
+.legal-notice {
+  margin-bottom: 42px;
+  padding: 18px;
+  display: flex;
+  gap: 13px;
+}
+
+.legal-notice svg { width: 21px; flex: none; color: var(--chart-2); }
+.legal-notice p { color: var(--muted-foreground); font-size: 12px; line-height: 1.65; }
+
+/* Cada sección va envuelta en un <FadeIn>, así que no es hija directa del
+   documento: el original apuntaba a `.legal-document > section` y sólo
+   alcanzaba a las referencias. */
+.legal-document section[id],
+.legal-sources {
+  padding: 8px 0 35px;
+  scroll-margin-top: 22px;
+}
+
+.legal-document > div:not(.legal-notice) + div > section[id],
+.legal-sources {
+  padding-top: 34px;
+  border-top: 1px solid var(--app-card-border);
+}
+
+.legal-document h2 {
+  margin-bottom: 16px;
+  font-size: 22px;
+  line-height: 1.25;
+  letter-spacing: -.02em;
+  font-weight: 700;
+}
+
+.legal-document section > p,
+.legal-document li {
+  color: var(--muted-foreground);
+  font-size: 14px;
+  line-height: 1.82;
+}
+
+.legal-document section > p + p { margin-top: 13px; }
+.legal-document ul { margin-top: 10px; display: grid; gap: 9px; }
+.legal-document li { position: relative; padding-left: 21px; }
+.legal-document li::before { content: ''; position: absolute; left: 2px; top: .72em; width: 7px; height: 7px; border-radius: 50%; background: linear-gradient(135deg, var(--chart-2), var(--primary)); }
+
+.legal-sources > div { margin-top: 18px; display: grid; gap: 9px; }
+.legal-sources a { min-height: 44px; padding: 13px 15px; display: flex; align-items: center; justify-content: space-between; gap: 12px; color: var(--foreground); font-size: 13px; }
+.legal-sources a:hover { color: var(--primary); }
+.legal-sources a svg { width: 15px; flex: none; }
+
+.legal-document > footer {
+  margin-top: 12px;
+  padding: 22px;
+  border-radius: 16px;
+  text-align: center;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--chart-2) 10%, transparent), color-mix(in srgb, var(--primary) 10%, transparent));
+}
+
+.legal-document > footer p { font-size: 13px; }
+.legal-document > footer a { display: inline-flex; min-height: 32px; align-items: center; margin-top: 6px; color: var(--primary); font-size: 14px; font-weight: 800; }
+
+/* Por debajo de 850px no caben índice y documento: el índice se oculta,
+   como en el original, y el documento pasa a una columna. */
+@media (max-width: 850px) {
+  .legal-page { padding: 12px; }
+  .legal-hero { padding: 65px 10px 42px; }
+  .legal-layout { grid-template-columns: minmax(0, 1fr); }
+  .legal-page .legal-layout > aside { position: static; max-height: none; display: none; }
+  .legal-document { padding: 28px 22px; }
+}
+
+@media (max-width: 480px) {
+  .legal-document { padding: 22px 16px; }
+}
+
+/* =========================================================================
+   PÁGINAS DE INFORMACIÓN DETALLADAS (/landing/funciones, /seguridad…)
+   -------------------------------------------------------------------------
+   Restaurado de antes del commit 644d1ee: las capacidades se apilaban sin
+   rejilla y el bloque final perdía su maquetación. La superficie la ponen
+   `<Card asChild>` y system-surfaces.css; aquí sólo va la geometría.
+   ========================================================================= */
+.detailed-info-hero {
+  min-height: 560px;
+  padding-bottom: 45px;
+}
+
+.info-capabilities {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 25px 20px 70px;
+}
+
+.info-section-heading {
+  max-width: 690px;
+  margin: 0 auto 30px;
+  text-align: center;
+}
+
+.info-section-heading > p {
+  color: var(--primary);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .18em;
+}
+
+.info-section-heading h2 {
+  margin: 9px 0 10px;
+  font-size: clamp(28px, 3vw, 38px);
+  line-height: 1.12;
+  letter-spacing: -.035em;
+  font-weight: 700;
+}
+
+.info-section-heading span {
+  color: var(--muted-foreground);
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+.info-capability-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+/* El <StaggerItem> que envuelve cada tarjeta es la celda de la rejilla: la
+   tarjeta lo llena para que las filas queden alineadas. */
+.info-capability-grid > * { min-width: 0; }
+.info-capability-grid > * > .info-capability-card { height: 100%; }
+
+.info-capability-card {
+  position: relative;
+  min-height: 360px;
+  padding: 26px;
+  overflow: hidden;
+}
+
+.info-card-number {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--chart-2) 28%, transparent);
+  border-radius: 12px;
+  color: var(--chart-2);
+  background: color-mix(in srgb, var(--chart-2) 6%, transparent);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.info-capability-card h3 {
+  margin: 22px 0 10px;
+  font-size: 20px;
+  line-height: 1.22;
+  letter-spacing: -.02em;
+  font-weight: 700;
+}
+
+.info-capability-card > p {
+  min-height: 65px;
+  color: var(--muted-foreground);
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+.info-capability-card ul {
+  margin-top: 18px;
+  padding-top: 16px;
+  display: grid;
+  gap: 10px;
+  border-top: 1px solid var(--app-card-border);
+}
+
+.info-capability-card li {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  color: var(--muted-foreground);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.info-capability-card li svg {
+  width: 15px;
+  height: 15px;
+  flex: none;
+  color: var(--state-success);
+}
+
+.info-final-cta {
+  max-width: 1120px;
+  margin: 18px auto 55px;
+  padding: 26px 30px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 25px;
+}
+
+.info-final-cta p {
+  margin-bottom: 5px;
+  color: var(--primary);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .15em;
+  text-transform: uppercase;
+}
+
+.info-final-cta h2 {
+  font-size: 20px;
+  line-height: 1.25;
+  font-weight: 700;
+}
+
+@media (max-width: 900px) {
+  .info-capability-grid { grid-template-columns: minmax(0, 1fr); }
+  .info-capability-card { min-height: auto; }
+  .info-capability-card > p { min-height: auto; }
+}
+
+@media (max-width: 620px) {
+  .detailed-info-hero { min-height: auto; }
+  .info-capabilities { padding-inline: 10px; }
+  .info-capability-card { padding: 22px; }
+  .info-final-cta { margin-inline: 10px; padding: 24px; align-items: flex-start; flex-direction: column; }
+  /* El texto del botón («Explorar funciones…») no cabe en una línea a 320px. */
+  .info-final-cta .btn-primary { width: 100%; white-space: normal; text-align: center; }
+}

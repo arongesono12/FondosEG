@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { Fragment, useState, useEffect, useId, useRef } from 'react';
 import { useAppStore } from '@/lib/store';
 import { createTransfer } from '@/modules/transfers/http/client';
 import { formatCurrency } from '@/lib/utils';
@@ -10,6 +10,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogBody,
+  DialogFooter,
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
@@ -143,6 +144,21 @@ export function AgentTransferModal({ open, onOpenChange, onSuccess }: AgentTrans
     notes: '',
   });
 
+  // El botón de envío está en el pie, fuera del <form>: lo enlaza `form={formId}`.
+  const formId = useId();
+  // Al cambiar de paso el contenido se sustituye entero; el foco se lleva al
+  // título del paso nuevo para que el lector de pantalla lo anuncie y el
+  // teclado no se quede en un botón que ya no existe.
+  const formHeadingRef = useRef<HTMLHeadingElement>(null);
+  const confirmHeadingRef = useRef<HTMLHeadingElement>(null);
+  const previousShowConfirmRef = useRef(showConfirm);
+
+  useEffect(() => {
+    if (previousShowConfirmRef.current === showConfirm) return;
+    previousShowConfirmRef.current = showConfirm;
+    (showConfirm ? confirmHeadingRef : formHeadingRef).current?.focus();
+  }, [showConfirm]);
+
   const allCities = [...CITIES_CAMEROON, ...CITIES_EQUATORIAL_GUINEA].sort();
   const parsedAmount = parseFloat(formData.amount);
   const transferAmount = Number.isFinite(parsedAmount) ? parsedAmount : 0;
@@ -191,6 +207,10 @@ export function AgentTransferModal({ open, onOpenChange, onSuccess }: AgentTrans
       return;
     }
 
+    // El consentimiento se da sobre los datos que se van a revisar ahora: si
+    // el gestor volvió al formulario y cambió importe o destinatario, no puede
+    // llegar a la confirmación con la casilla ya marcada.
+    setComplianceConsent(false);
     setShowConfirm(true);
   };
 
@@ -266,359 +286,405 @@ export function AgentTransferModal({ open, onOpenChange, onSuccess }: AgentTrans
     if (!loading) {
       setError('');
       setShowConfirm(false);
+      setComplianceConsent(false);
       onOpenChange(false);
     }
   };
 
+  const formDisabled =
+    loading ||
+    !formData.amount ||
+    parseFloat(formData.amount) > balance ||
+    !formData.receiver_name ||
+    !formData.receiver_phone ||
+    !formData.destination_city ||
+    !formData.sender_document_number ||
+    !formData.receiver_document_number;
+
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="agent-transfer-dialog max-w-lg p-0 overflow-hidden outline-none max-h-[90vh] flex flex-col">
-        <DialogHeader className="agent-transfer-header p-6 border-b border-border/10 shrink-0">
-          <DialogTitle className="flex items-center gap-2 text-xl font-bold text-foreground">
-            <Send className="h-5 w-5 text-primary" /> Nueva Transferencia
-          </DialogTitle>
-          <DialogDescription className="text-sm text-muted-foreground">
-            Complete los datos del destinatario para realizar el envío de dinero
-          </DialogDescription>
-        </DialogHeader>
-        
-        <DialogBody className="agent-transfer-body flex-1 overflow-y-auto p-6 space-y-4">
-          {sent ? (
-            <div className="text-center py-8">
-              <div className="w-16 h-16 bg-green-100 dark:bg-green-900/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                <CheckCircle2 className="h-8 w-8 text-green-600" />
-              </div>
-              <p className="text-lg font-bold text-foreground">
-                {settledToWallet ? 'Dinero entregado' : 'Transferencia registrada'}
-              </p>
-              <p className="text-sm text-muted-foreground">
-                {settledToWallet
-                  ? 'El beneficiario tiene cuenta: el importe ya está en su billetera y él decide cuándo retirarlo'
-                  : 'El dinero queda disponible para retiro en otro gestor'}
-              </p>
-            </div>
-          ) : (
-            <>
-              {/* Saldo disponible */}
-              <div className="p-4 rounded-2xl bg-primary/5 border border-primary/10 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <Wallet className="h-5 w-5 text-primary" />
-                  <div>
-                    <p className="text-xs font-semibold text-muted-foreground uppercase">Saldo disponible</p>
-                    <p className="text-lg font-bold text-foreground">{formatCurrency(balance)}</p>
+      <DialogContent size="lg" className="outline-none">
+        {/* Dos pasos con la misma anatomía que cualquier otro modal: se
+            sustituyen cabecera, cuerpo y pie. Antes la confirmación era una
+            capa apilada DENTRO del modal cuyo CSS se perdió al partir
+            globals.css: quedaba debajo del formulario y la casilla y el botón
+            de confirmar podían quedar recortados en cualquier breakpoint.
+            Cada paso lleva su `key`: sin ella React reutilizaba el mismo
+            `<DialogBody>` entre pasos y la confirmación se abría con el scroll
+            del formulario, con los datos del destinatario fuera de la vista
+            mientras la casilla y «Confirmar» seguían fijos en el pie. */}
+        {!showConfirm ? (
+          <Fragment key="form">
+            <DialogHeader>
+              <DialogTitle
+                ref={formHeadingRef}
+                tabIndex={-1}
+                className="flex items-center gap-2 text-xl font-bold text-foreground focus:outline-none"
+              >
+                <Send className="h-5 w-5 text-primary" /> Nueva Transferencia
+              </DialogTitle>
+              <DialogDescription className="text-sm text-muted-foreground">
+                Complete los datos del destinatario para realizar el envío de dinero
+              </DialogDescription>
+            </DialogHeader>
+
+            <DialogBody className="space-y-4">
+              {sent ? (
+                <div role="status" className="text-center py-8">
+                  <div className="w-16 h-16 bg-green-100 dark:bg-green-900/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <CheckCircle2 className="h-8 w-8 text-green-600" />
                   </div>
+                  <p className="text-lg font-bold text-foreground">
+                    {settledToWallet ? 'Dinero entregado' : 'Transferencia registrada'}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    {settledToWallet
+                      ? 'El beneficiario tiene cuenta: el importe ya está en su billetera y él decide cuándo retirarlo'
+                      : 'El dinero queda disponible para retiro en otro gestor'}
+                  </p>
                 </div>
-              </div>
-
-              {error && (
-                <div className="flex items-center gap-2 p-3 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 text-sm font-semibold">
-                  <AlertCircle className="h-4 w-4 shrink-0" />
-                  {error}
-                </div>
-              )}
-
-              <form onSubmit={handleSubmit} className="agent-transfer-form space-y-4">
-                {/* Datos del remitente (solo lectura) */}
-                <div className="space-y-3">
-                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-wide">Datos del Remitente</p>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="col-span-2">
-                      <Label htmlFor="sender_name" className="text-xs font-semibold text-muted-foreground">Nombre</Label>
-                      <Input
-                        id="sender_name"
-                        name="sender_name"
-                        value={formData.sender_name}
-                        onChange={handleChange}
-                        className="h-10 rounded-xl mt-1"
-                        required
-                      />
-                    </div>
-                    <div className="col-span-2">
-                      <Label htmlFor="sender_phone" className="text-xs font-semibold text-muted-foreground">Teléfono</Label>
-                      <Input
-                        id="sender_phone"
-                        name="sender_phone"
-                        value={formData.sender_phone}
-                        onChange={handleChange}
-                        className="h-10 rounded-xl mt-1"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="sender_document_type" className="text-xs font-semibold text-muted-foreground">Tipo de Documento</Label>
-                      <select
-                        id="sender_document_type"
-                        name="sender_document_type"
-                        value={formData.sender_document_type}
-                        onChange={handleChange}
-                        className="w-full h-10 mt-1 px-3 rounded-xl border border-input bg-background text-sm focus:ring-2 focus:ring-primary/20"
-                        required
-                      >
-                        {DOCUMENT_TYPES.map((doc) => (
-                          <option key={doc.value} value={doc.value}>{doc.label}</option>
-                        ))}
-                      </select>
-                    </div>
-                    <div>
-                      <Label htmlFor="sender_document_number" className="text-xs font-semibold text-muted-foreground">N° Documento</Label>
-                      <Input
-                        id="sender_document_number"
-                        name="sender_document_number"
-                        value={formData.sender_document_number}
-                        onChange={handleChange}
-                        placeholder="Número de documento"
-                        className="h-10 rounded-xl mt-1"
-                        required
-                      />
+              ) : (
+                <>
+                  {/* Saldo disponible */}
+                  <div className="p-4 rounded-2xl bg-primary/5 border border-primary/10 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <Wallet className="h-5 w-5 text-primary" />
+                      <div>
+                        <p className="text-xs font-semibold text-muted-foreground uppercase">Saldo disponible</p>
+                        <p className="text-lg font-bold text-foreground">{formatCurrency(balance)}</p>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                {/* Datos del destinatario */}
-                <div className="space-y-3">
-                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-wide">Datos del Destinatario</p>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="col-span-2">
-                      <Label htmlFor="receiver_name" className="text-xs font-semibold text-muted-foreground">Nombre completo</Label>
-                      <div className="relative mt-1">
-                        <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <Input
-                          id="receiver_name"
-                          name="receiver_name"
-                          value={formData.receiver_name}
-                          onChange={handleChange}
-                          placeholder="Nombre del destinatario"
-                          className="h-10 pl-10 rounded-xl"
-                          required
-                        />
-                      </div>
+                  {error && (
+                    <div role="alert" className="flex items-center gap-2 p-3 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 text-sm font-semibold">
+                      <AlertCircle className="h-4 w-4 shrink-0" />
+                      {error}
                     </div>
-                    <div className="col-span-2">
-                      <Label htmlFor="receiver_phone" className="text-xs font-semibold text-muted-foreground">Teléfono</Label>
-                      <div className="relative mt-1">
-                        <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <Input
-                          id="receiver_phone"
-                          name="receiver_phone"
-                          value={formData.receiver_phone}
-                          onChange={handleChange}
-                          placeholder="+237 XXXXXXXX"
-                          className="h-10 pl-10 rounded-xl"
-                          required
-                        />
-                      </div>
-                    </div>
-                    <div>
-                      <Label htmlFor="receiver_document_type" className="text-xs font-semibold text-muted-foreground">Tipo de Documento</Label>
-                      <select
-                        id="receiver_document_type"
-                        name="receiver_document_type"
-                        value={formData.receiver_document_type}
-                        onChange={handleChange}
-                        className="w-full h-10 mt-1 px-3 rounded-xl border border-input bg-background text-sm focus:ring-2 focus:ring-primary/20"
-                        required
-                      >
-                        {DOCUMENT_TYPES.map((doc) => (
-                          <option key={doc.value} value={doc.value}>{doc.label}</option>
-                        ))}
-                      </select>
-                    </div>
-                    <div>
-                      <Label htmlFor="receiver_document_number" className="text-xs font-semibold text-muted-foreground">N° Documento</Label>
-                      <Input
-                        id="receiver_document_number"
-                        name="receiver_document_number"
-                        value={formData.receiver_document_number}
-                        onChange={handleChange}
-                        placeholder="Número de documento"
-                        className="h-10 rounded-xl mt-1"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="destination_city" className="text-xs font-semibold text-muted-foreground">Ciudad</Label>
-                      <div className="relative mt-1">
-                        <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <select
-                          id="destination_city"
-                          name="destination_city"
-                          value={formData.destination_city}
-                          onChange={handleChange}
-                          className="w-full h-10 pl-10 pr-3 rounded-xl border border-input bg-background text-sm focus:ring-2 focus:ring-primary/20"
-                          required
-                        >
-                          <option value="">Seleccionar ciudad</option>
-                          {allCities.map((city: string) => (
-                            <option key={city} value={city}>{city}</option>
-                          ))}
-                        </select>
-                      </div>
-                    </div>
-                    <div className="flex items-center mt-2">
-                      <button
-                        type="button"
-                        onClick={() => setCustomCity(!customCity)}
-                        className="text-xs text-primary hover:underline font-medium"
-                      >
-                        {customCity ? 'Seleccionar de lista' : 'Escribir ciudad manualmente'}
-                      </button>
-                    </div>
-                    {customCity && (
-                      <div className="mt-2">
-                        <Input
-                          id="destination_city_custom"
-                          name="destination_city"
-                          value={formData.destination_city}
-                          onChange={handleChange}
-                          placeholder="Escriba la ciudad..."
-                          className="h-10 rounded-xl"
-                        />
-                      </div>
-                    )}
-                    <div>
-                      <Label htmlFor="destination_country" className="text-xs font-semibold text-muted-foreground">País</Label>
-                      {!customCountry ? (
-                        <>
+                  )}
+
+                  {/* El botón de envío vive en el pie (`form={formId}`): Intro
+                      en un campo y la validación `required` siguen funcionando. */}
+                  <form id={formId} onSubmit={handleSubmit} className="space-y-4">
+                    {/* Datos del remitente (solo lectura) */}
+                    <div className="space-y-3">
+                      <p className="text-xs font-bold text-muted-foreground uppercase tracking-wide">Datos del Remitente</p>
+                      <div className="grid grid-cols-1 gap-3 @sm:grid-cols-2">
+                        <div className="@sm:col-span-2">
+                          <Label htmlFor="sender_name" className="text-xs font-semibold text-muted-foreground">Nombre</Label>
+                          <Input
+                            id="sender_name"
+                            name="sender_name"
+                            value={formData.sender_name}
+                            onChange={handleChange}
+                            className="h-10 rounded-xl mt-1"
+                            required
+                          />
+                        </div>
+                        <div className="@sm:col-span-2">
+                          <Label htmlFor="sender_phone" className="text-xs font-semibold text-muted-foreground">Teléfono</Label>
+                          <Input
+                            id="sender_phone"
+                            name="sender_phone"
+                            value={formData.sender_phone}
+                            onChange={handleChange}
+                            className="h-10 rounded-xl mt-1"
+                            required
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="sender_document_type" className="text-xs font-semibold text-muted-foreground">Tipo de Documento</Label>
                           <select
-                            id="destination_country"
-                            name="destination_country"
-                            value={formData.destination_country}
+                            id="sender_document_type"
+                            name="sender_document_type"
+                            value={formData.sender_document_type}
                             onChange={handleChange}
                             className="w-full h-10 mt-1 px-3 rounded-xl border border-input bg-background text-sm focus:ring-2 focus:ring-primary/20"
                             required
                           >
-                            <option value="">Seleccionar país</option>
-                            {Array.from(new Set(COUNTRIES)).map((country: string) => (
-                              <option key={country} value={country}>{country}</option>
+                            {DOCUMENT_TYPES.map((doc) => (
+                              <option key={doc.value} value={doc.value}>{doc.label}</option>
                             ))}
                           </select>
-                          <div className="flex items-center mt-2">
-                            <button
-                              type="button"
-                              onClick={() => setCustomCountry(true)}
-                              className="text-xs text-primary hover:underline font-medium"
-                            >
-                              Escribir país manualmente
-                            </button>
-                          </div>
-                        </>
-                      ) : (
+                        </div>
                         <div>
+                          <Label htmlFor="sender_document_number" className="text-xs font-semibold text-muted-foreground">N° Documento</Label>
                           <Input
-                            id="destination_country_custom"
-                            name="destination_country"
-                            value={formData.destination_country}
+                            id="sender_document_number"
+                            name="sender_document_number"
+                            value={formData.sender_document_number}
                             onChange={handleChange}
-                            placeholder="Escriba el país..."
+                            placeholder="Número de documento"
                             className="h-10 rounded-xl mt-1"
+                            required
                           />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Datos del destinatario */}
+                    <div className="space-y-3">
+                      <p className="text-xs font-bold text-muted-foreground uppercase tracking-wide">Datos del Destinatario</p>
+                      <div className="grid grid-cols-1 gap-3 @sm:grid-cols-2">
+                        <div className="@sm:col-span-2">
+                          <Label htmlFor="receiver_name" className="text-xs font-semibold text-muted-foreground">Nombre completo</Label>
+                          <div className="relative mt-1">
+                            <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <Input
+                              id="receiver_name"
+                              name="receiver_name"
+                              value={formData.receiver_name}
+                              onChange={handleChange}
+                              placeholder="Nombre del destinatario"
+                              className="h-10 pl-10 rounded-xl"
+                              required
+                            />
+                          </div>
+                        </div>
+                        <div className="@sm:col-span-2">
+                          <Label htmlFor="receiver_phone" className="text-xs font-semibold text-muted-foreground">Teléfono</Label>
+                          <div className="relative mt-1">
+                            <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <Input
+                              id="receiver_phone"
+                              name="receiver_phone"
+                              value={formData.receiver_phone}
+                              onChange={handleChange}
+                              placeholder="+237 XXXXXXXX"
+                              className="h-10 pl-10 rounded-xl"
+                              required
+                            />
+                          </div>
+                        </div>
+                        <div>
+                          <Label htmlFor="receiver_document_type" className="text-xs font-semibold text-muted-foreground">Tipo de Documento</Label>
+                          <select
+                            id="receiver_document_type"
+                            name="receiver_document_type"
+                            value={formData.receiver_document_type}
+                            onChange={handleChange}
+                            className="w-full h-10 mt-1 px-3 rounded-xl border border-input bg-background text-sm focus:ring-2 focus:ring-primary/20"
+                            required
+                          >
+                            {DOCUMENT_TYPES.map((doc) => (
+                              <option key={doc.value} value={doc.value}>{doc.label}</option>
+                            ))}
+                          </select>
+                        </div>
+                        <div>
+                          <Label htmlFor="receiver_document_number" className="text-xs font-semibold text-muted-foreground">N° Documento</Label>
+                          <Input
+                            id="receiver_document_number"
+                            name="receiver_document_number"
+                            value={formData.receiver_document_number}
+                            onChange={handleChange}
+                            placeholder="Número de documento"
+                            className="h-10 rounded-xl mt-1"
+                            required
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="destination_city" className="text-xs font-semibold text-muted-foreground">Ciudad</Label>
+                          <div className="relative mt-1">
+                            <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <select
+                              id="destination_city"
+                              name="destination_city"
+                              value={formData.destination_city}
+                              onChange={handleChange}
+                              className="w-full h-10 pl-10 pr-3 rounded-xl border border-input bg-background text-sm focus:ring-2 focus:ring-primary/20"
+                              required
+                            >
+                              <option value="">Seleccionar ciudad</option>
+                              {allCities.map((city: string) => (
+                                <option key={city} value={city}>{city}</option>
+                              ))}
+                            </select>
+                          </div>
+                        </div>
+                        {/* Los conmutadores "escribir a mano" se leen como
+                            enlaces de texto: 44px de alto táctil sin cambiar
+                            su aspecto. */}
+                        <div className="flex items-center mt-2">
                           <button
                             type="button"
-                            onClick={() => setCustomCountry(false)}
-                            className="text-xs text-primary hover:underline font-medium mt-1"
+                            onClick={() => setCustomCity(!customCity)}
+                            className="inline-flex min-h-11 items-center text-xs text-primary hover:underline font-medium"
                           >
-                            Seleccionar de lista
+                            {customCity ? 'Seleccionar de lista' : 'Escribir ciudad manualmente'}
                           </button>
+                        </div>
+                        {customCity && (
+                          <div className="mt-2">
+                            <Input
+                              id="destination_city_custom"
+                              name="destination_city"
+                              value={formData.destination_city}
+                              onChange={handleChange}
+                              placeholder="Escriba la ciudad..."
+                              className="h-10 rounded-xl"
+                            />
+                          </div>
+                        )}
+                        <div>
+                          <Label htmlFor="destination_country" className="text-xs font-semibold text-muted-foreground">País</Label>
+                          {!customCountry ? (
+                            <>
+                              <select
+                                id="destination_country"
+                                name="destination_country"
+                                value={formData.destination_country}
+                                onChange={handleChange}
+                                className="w-full h-10 mt-1 px-3 rounded-xl border border-input bg-background text-sm focus:ring-2 focus:ring-primary/20"
+                                required
+                              >
+                                <option value="">Seleccionar país</option>
+                                {Array.from(new Set(COUNTRIES)).map((country: string) => (
+                                  <option key={country} value={country}>{country}</option>
+                                ))}
+                              </select>
+                              <div className="flex items-center mt-2">
+                                <button
+                                  type="button"
+                                  onClick={() => setCustomCountry(true)}
+                                  className="inline-flex min-h-11 items-center text-xs text-primary hover:underline font-medium"
+                                >
+                                  Escribir país manualmente
+                                </button>
+                              </div>
+                            </>
+                          ) : (
+                            <div>
+                              <Input
+                                id="destination_country_custom"
+                                name="destination_country"
+                                value={formData.destination_country}
+                                onChange={handleChange}
+                                placeholder="Escriba el país..."
+                                className="h-10 rounded-xl mt-1"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => setCustomCountry(false)}
+                                className="inline-flex min-h-11 items-center text-xs text-primary hover:underline font-medium mt-1"
+                              >
+                                Seleccionar de lista
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Monto */}
+                    <div className="space-y-3">
+                      <p className="text-xs font-bold text-muted-foreground uppercase tracking-wide">Monto a Enviar</p>
+                      <div>
+                        <Label htmlFor="amount" className="text-xs font-semibold text-muted-foreground">Monto (XAF)</Label>
+                        <Input
+                          id="amount"
+                          name="amount"
+                          type="number"
+                          inputMode="decimal"
+                          onWheel={(e) => e.currentTarget.blur()}
+                          min="100"
+                          step="100"
+                          value={formData.amount}
+                          onChange={handleChange}
+                          placeholder="0"
+                          className="h-12 text-lg font-bold rounded-xl mt-1"
+                          required
+                        />
+                        {formData.amount && parseFloat(formData.amount) > balance && (
+                          <p className="text-xs text-red-500 mt-1 font-semibold">Monto excede el saldo disponible</p>
+                        )}
+                      </div>
+                      {transferAmount > 0 && (
+                        <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 p-4">
+                          <div className="flex items-center justify-between gap-3">
+                            <div className="min-w-0">
+                              <p className="text-xs font-bold uppercase tracking-wide text-emerald-700 dark:text-emerald-300">
+                                Comisión estimada
+                              </p>
+                              <p className="mt-1 text-lg font-bold text-foreground wrap-break-word">
+                                {formatCurrency(estimatedCommission)}
+                              </p>
+                            </div>
+                            <div className="shrink-0 text-right">
+                              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                                Monto del envío
+                              </p>
+                              <p className="mt-1 text-sm font-bold text-foreground">
+                                {formatCurrency(transferAmount)}
+                              </p>
+                            </div>
+                          </div>
+                          <p className="mt-2 text-xs font-medium text-muted-foreground">
+                            Esta es la comisión que se generará para el gestor al registrar este envío.
+                          </p>
                         </div>
                       )}
                     </div>
-                  </div>
-                </div>
 
-                {/* Monto */}
-                <div className="space-y-3">
-                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-wide">Monto a Enviar</p>
-                  <div>
-                    <Label htmlFor="amount" className="text-xs font-semibold text-muted-foreground">Monto (XAF)</Label>
-                    <Input
-                      id="amount"
-                      name="amount"
-                      type="number"
-                  inputMode="decimal"
-                  onWheel={(e) => e.currentTarget.blur()}
-                      min="100"
-                      step="100"
-                      value={formData.amount}
-                      onChange={handleChange}
-                      placeholder="0"
-                      className="h-12 text-lg font-bold rounded-xl mt-1"
-                      required
-                    />
-                    {formData.amount && parseFloat(formData.amount) > balance && (
-                      <p className="text-xs text-red-500 mt-1 font-semibold">Monto excede el saldo disponible</p>
-                    )}
-                  </div>
-                  {transferAmount > 0 && (
-                    <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 p-4">
-                      <div className="flex items-center justify-between gap-3">
-                        <div>
-                          <p className="text-xs font-bold uppercase tracking-wide text-emerald-700 dark:text-emerald-300">
-                            Comisión estimada
-                          </p>
-                          <p className="mt-1 text-lg font-bold text-foreground">
-                            {formatCurrency(estimatedCommission)}
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                            Monto del envío
-                          </p>
-                          <p className="mt-1 text-sm font-bold text-foreground">
-                            {formatCurrency(transferAmount)}
-                          </p>
-                        </div>
-                      </div>
-                      <p className="mt-2 text-xs font-medium text-muted-foreground">
-                        Esta es la comisión que se generará para el gestor al registrar este envío.
-                      </p>
+                    {/* Notas */}
+                    <div>
+                      <Label htmlFor="notes" className="text-xs font-semibold text-muted-foreground">Notas (opcional)</Label>
+                      <Textarea
+                        id="notes"
+                        name="notes"
+                        value={formData.notes}
+                        onChange={handleChange}
+                        placeholder="Mensaje opcional para el destinatario..."
+                        className="rounded-xl mt-1 resize-none"
+                        rows={2}
+                      />
                     </div>
-                  )}
-                </div>
+                  </form>
+                </>
+              )}
+            </DialogBody>
 
-                {/* Notas */}
-                <div>
-                   <Label htmlFor="notes" className="text-xs font-semibold text-muted-foreground">Notas (opcional)</Label>
-                  <Textarea
-                    id="notes"
-                    name="notes"
-                    value={formData.notes}
-                    onChange={handleChange}
-                    placeholder="Mensaje opcional para el destinatario..."
-                    className="rounded-xl mt-1 resize-none"
-                    rows={2}
-                  />
-                </div>
-
-                <Button 
-                  type="submit"
-                  disabled={loading || !formData.amount || parseFloat(formData.amount) > balance || !formData.receiver_name || !formData.receiver_phone || !formData.destination_city || !formData.sender_document_number || !formData.receiver_document_number}
-                   className="w-full h-12 rounded-xl bg-brand-gradient text-white font-bold shadow-lg shadow-pink-500/20 hover:opacity-90 transition-all"
+            {!sent && (
+              <DialogFooter>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleClose}
+                  disabled={loading}
+                  className="h-12 rounded-xl font-bold"
                 >
-                  <>
-                    <Send className="h-4 w-4 mr-2" />
-                    Continuar
-                  </>
+                  Cancelar
                 </Button>
-              </form>
-            </>
-          )}
-        </DialogBody>
-
-        {/* Modal de Confirmación */}
-        {showConfirm && (
-          <div className="dialog-layer agent-transfer-confirm-dialog max-w-md p-0 overflow-hidden outline-none">
-            <DialogHeader className="agent-transfer-confirm-header p-6 border-b border-border/10 shrink-0">
-              <DialogTitle className="flex items-center gap-2 text-xl font-bold text-foreground">
+                <Button
+                  type="submit"
+                  form={formId}
+                  disabled={formDisabled}
+                  className="h-12 rounded-xl bg-brand-gradient text-white font-bold shadow-lg shadow-pink-500/20 hover:opacity-90 transition-all"
+                >
+                  <Send className="h-4 w-4 mr-2" />
+                  Continuar
+                </Button>
+              </DialogFooter>
+            )}
+          </Fragment>
+        ) : (
+          <Fragment key="confirm">
+            <DialogHeader>
+              <DialogTitle
+                ref={confirmHeadingRef}
+                tabIndex={-1}
+                className="flex items-center gap-2 text-xl font-bold text-foreground focus:outline-none"
+              >
                 <CheckCircle2 className="h-5 w-5 text-green-500" /> Confirmar Transferencia
               </DialogTitle>
               <DialogDescription className="text-sm text-muted-foreground">
                 Verifique los datos antes de confirmar el envío
               </DialogDescription>
             </DialogHeader>
-            
-            <div className="agent-transfer-confirm-body p-6 space-y-4">
+
+            <DialogBody className="space-y-4">
               <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800">
-                 <p className="text-xs font-semibold text-amber-600 dark:text-amber-400 uppercase tracking-wide mb-2">
+                <p className="text-xs font-semibold text-amber-600 dark:text-amber-400 uppercase tracking-wide mb-2">
                   ⚠️ Revise los datos antes de confirmar
                 </p>
                 <p className="text-sm text-amber-600 dark:text-amber-400">
@@ -626,57 +692,59 @@ export function AgentTransferModal({ open, onOpenChange, onSuccess }: AgentTrans
                 </p>
               </div>
 
+              {/* Filas etiqueta/valor: la etiqueta no encoge y el valor parte
+                  palabra si hace falta, alineado a la derecha. */}
               <div className="space-y-3">
-                <div className="flex justify-between items-center py-2 border-b border-border/10">
-                  <span className="text-xs font-semibold text-muted-foreground">Remitente</span>
-                  <span className="text-sm font-bold text-foreground">{formData.sender_name}</span>
+                <div className="flex justify-between items-center gap-3 py-2 border-b border-border/10">
+                  <span className="shrink-0 text-xs font-semibold text-muted-foreground">Remitente</span>
+                  <span className="min-w-0 text-right text-sm font-bold text-foreground wrap-break-word">{formData.sender_name}</span>
                 </div>
-                <div className="flex justify-between items-center py-2 border-b border-border/10">
-                  <span className="text-xs font-semibold text-muted-foreground">Teléfono Remitente</span>
-                  <span className="text-sm font-bold text-foreground">{formData.sender_phone}</span>
+                <div className="flex justify-between items-center gap-3 py-2 border-b border-border/10">
+                  <span className="shrink-0 text-xs font-semibold text-muted-foreground">Teléfono Remitente</span>
+                  <span className="min-w-0 text-right text-sm font-bold text-foreground wrap-break-word">{formData.sender_phone}</span>
                 </div>
-                <div className="flex justify-between items-center py-2 border-b border-border/10">
-                  <span className="text-xs font-semibold text-muted-foreground">Documento Remitente</span>
-                  <span className="text-sm font-bold text-foreground text-right">
+                <div className="flex justify-between items-center gap-3 py-2 border-b border-border/10">
+                  <span className="shrink-0 text-xs font-semibold text-muted-foreground">Documento Remitente</span>
+                  <span className="min-w-0 text-right text-sm font-bold text-foreground wrap-break-word">
                     {formData.sender_document_type.toUpperCase()} · {formData.sender_document_number}
                   </span>
                 </div>
-                <div className="flex justify-between items-center py-2 border-b border-border/10">
-                  <span className="text-xs font-semibold text-muted-foreground">Destinatario</span>
-                  <span className="text-sm font-bold text-foreground">{formData.receiver_name}</span>
+                <div className="flex justify-between items-center gap-3 py-2 border-b border-border/10">
+                  <span className="shrink-0 text-xs font-semibold text-muted-foreground">Destinatario</span>
+                  <span className="min-w-0 text-right text-sm font-bold text-foreground wrap-break-word">{formData.receiver_name}</span>
                 </div>
-                <div className="flex justify-between items-center py-2 border-b border-border/10">
-                  <span className="text-xs font-semibold text-muted-foreground">Teléfono Destinatario</span>
-                  <span className="text-sm font-bold text-foreground">{formData.receiver_phone}</span>
+                <div className="flex justify-between items-center gap-3 py-2 border-b border-border/10">
+                  <span className="shrink-0 text-xs font-semibold text-muted-foreground">Teléfono Destinatario</span>
+                  <span className="min-w-0 text-right text-sm font-bold text-foreground wrap-break-word">{formData.receiver_phone}</span>
                 </div>
-                <div className="flex justify-between items-center py-2 border-b border-border/10">
-                  <span className="text-xs font-semibold text-muted-foreground">Documento Destinatario</span>
-                  <span className="text-sm font-bold text-foreground text-right">
+                <div className="flex justify-between items-center gap-3 py-2 border-b border-border/10">
+                  <span className="shrink-0 text-xs font-semibold text-muted-foreground">Documento Destinatario</span>
+                  <span className="min-w-0 text-right text-sm font-bold text-foreground wrap-break-word">
                     {formData.receiver_document_type.toUpperCase()} · {formData.receiver_document_number}
                   </span>
                 </div>
-                <div className="flex justify-between items-center py-2 border-b border-border/10">
-                  <span className="text-xs font-semibold text-muted-foreground">Ciudad</span>
-                  <span className="text-sm font-bold text-foreground">{formData.destination_city}</span>
+                <div className="flex justify-between items-center gap-3 py-2 border-b border-border/10">
+                  <span className="shrink-0 text-xs font-semibold text-muted-foreground">Ciudad</span>
+                  <span className="min-w-0 text-right text-sm font-bold text-foreground wrap-break-word">{formData.destination_city}</span>
                 </div>
-                <div className="flex justify-between items-center py-2 border-b border-border/10">
-                  <span className="text-xs font-semibold text-muted-foreground">País</span>
-                  <span className="text-sm font-bold text-foreground">{formData.destination_country}</span>
+                <div className="flex justify-between items-center gap-3 py-2 border-b border-border/10">
+                  <span className="shrink-0 text-xs font-semibold text-muted-foreground">País</span>
+                  <span className="min-w-0 text-right text-sm font-bold text-foreground wrap-break-word">{formData.destination_country}</span>
                 </div>
-                <div className="flex justify-between items-center py-2 border-b border-border/10">
-                  <span className="text-xs font-semibold text-muted-foreground">Monto</span>
-                  <span className="text-lg font-semibold text-green-600">{formData.amount ? formatCurrency(parseFloat(formData.amount)) : ''}</span>
+                <div className="flex justify-between items-center gap-3 py-2 border-b border-border/10">
+                  <span className="shrink-0 text-xs font-semibold text-muted-foreground">Monto</span>
+                  <span className="min-w-0 text-right text-lg font-semibold text-green-600 wrap-break-word">{formData.amount ? formatCurrency(parseFloat(formData.amount)) : ''}</span>
                 </div>
-                <div className="flex justify-between items-center py-2 border-b border-border/10">
-                  <span className="text-xs font-semibold text-muted-foreground">Comisión generada</span>
-                  <span className="text-base font-bold text-emerald-600">
+                <div className="flex justify-between items-center gap-3 py-2 border-b border-border/10">
+                  <span className="shrink-0 text-xs font-semibold text-muted-foreground">Comisión generada</span>
+                  <span className="min-w-0 text-right text-base font-bold text-emerald-600 wrap-break-word">
                     {formatCurrency(estimatedCommission)}
                   </span>
                 </div>
                 {formData.notes && (
-                  <div className="flex justify-between items-center py-2">
-                    <span className="text-xs font-semibold text-muted-foreground">Notas</span>
-                    <span className="text-sm font-semibold text-foreground text-right max-w-[200px]">{formData.notes}</span>
+                  <div className="flex justify-between items-center gap-3 py-2">
+                    <span className="shrink-0 text-xs font-semibold text-muted-foreground">Notas</span>
+                    <span className="min-w-0 text-right text-sm font-semibold text-foreground wrap-break-word">{formData.notes}</span>
                   </div>
                 )}
               </div>
@@ -694,14 +762,15 @@ export function AgentTransferModal({ open, onOpenChange, onSuccess }: AgentTrans
                   <p>La operación quedará identificada por una referencia y podrá reclamarse desde Cumplimiento.</p>
                 </div>
               </div>
-            </div>
+            </DialogBody>
 
             {/* La casilla de consentimiento y los botones viven FUERA del cuerpo
                 desplazable. Son lo único que permite completar la operación —el
                 botón de confirmar está deshabilitado hasta marcarla—, así que no
                 pueden quedar por debajo del pliegue de un panel que se desplaza
-                por dentro y que no anuncia que haya más contenido. */}
-            <div className="agent-transfer-confirm-footer flex flex-col gap-3 px-6 pt-4 pb-6 border-t border-border/10">
+                por dentro y que no anuncia que haya más contenido. En columna
+                en todos los anchos: la casilla encima de los botones. */}
+            <DialogFooter className="flex-col">
               <label className="flex cursor-pointer items-start gap-3 text-xs font-semibold text-foreground">
                 <input
                   type="checkbox"
@@ -715,8 +784,8 @@ export function AgentTransferModal({ open, onOpenChange, onSuccess }: AgentTrans
                 </span>
               </label>
 
-              <div className="agent-transfer-confirm-actions flex gap-3">
-                <Button 
+              <div className="flex gap-3">
+                <Button
                   variant="outline"
                   onClick={() => setShowConfirm(false)}
                   disabled={loading}
@@ -725,10 +794,10 @@ export function AgentTransferModal({ open, onOpenChange, onSuccess }: AgentTrans
                   <ArrowLeft className="h-4 w-4 mr-2" />
                   Volver
                 </Button>
-                <Button 
+                <Button
                   onClick={handleConfirmTransfer}
                   disabled={loading || !complianceConsent}
-                    className="flex-1 h-12 rounded-xl bg-brand-gradient text-white font-bold shadow-lg shadow-pink-500/20 hover:opacity-90 transition-all"
+                  className="flex-1 h-12 rounded-xl bg-brand-gradient text-white font-bold shadow-lg shadow-pink-500/20 hover:opacity-90 transition-all"
                 >
                   {loading ? (
                     <>
@@ -743,8 +812,8 @@ export function AgentTransferModal({ open, onOpenChange, onSuccess }: AgentTrans
                   )}
                 </Button>
               </div>
-            </div>
-          </div>
+            </DialogFooter>
+          </Fragment>
         )}
       </DialogContent>
     </Dialog>

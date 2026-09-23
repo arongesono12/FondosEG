@@ -63,8 +63,10 @@
   height: 0;
 }
 
-.documentation-hero {
-  min-height: 753px;
+/* La cabecera fija mide 68px: sin este margen, saltar a un ancla o tabular
+   dejaba el título o el foco tapados debajo de ella (WCAG 2.2 SC 2.4.11). */
+html:has(.documentation-page) {
+  scroll-padding-top: 80px;
 }
 
 .documentation-hero-grid-pattern {
@@ -79,10 +81,6 @@
     radial-gradient(circle at 69% 13%, rgba(236, 72, 153, .23), transparent 35%),
     radial-gradient(circle at 87% 51%, rgba(168, 85, 247, .13), transparent 30%),
     linear-gradient(270deg, rgba(88, 28, 135, .08), transparent 72%);
-}
-
-.documentation-hero-grid {
-  min-height: 704px;
 }
 
 .documentation-hero-copy {
@@ -103,6 +101,16 @@
 }
 
 @media (min-width: 1024px) {
+  /* Alturas de la composición de escritorio. Fuera de este bloque dejaban
+     753px de héroe en una tableta, casi toda la pantalla vacía. */
+  .documentation-hero {
+    min-height: 753px;
+  }
+
+  .documentation-hero-grid {
+    min-height: 704px;
+  }
+
   .documentation-sidebar {
     overflow-y: auto;
   }
@@ -201,9 +209,28 @@
     position: fixed;
     inset: 68px 0 auto 0;
     z-index: 45;
+    /* `dvh` con reserva en `vh`: en iOS 100vh incluye la barra del
+       navegador y el final del menú quedaba fuera de la pantalla. */
     max-height: calc(100vh - 68px);
+    max-height: calc(100dvh - 68px);
     overflow-y: auto;
+    overscroll-behavior: contain;
     border-bottom: 1px solid rgba(255, 255, 255, .1);
+  }
+
+  /* Velo bajo el menú móvil: cierra al tocar fuera. Misma capa que la barra
+     lateral pero antes en el DOM, así que queda justo por debajo de ella. */
+  .documentation-backdrop {
+    position: fixed;
+    inset: 68px 0 0 0;
+    z-index: 45;
+    background: rgb(2 6 23 / .6);
+  }
+}
+
+@media (min-width: 1024px) {
+  .documentation-backdrop {
+    display: none;
   }
 }
 

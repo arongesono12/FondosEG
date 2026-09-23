@@ -64,8 +64,9 @@ export default async function AuthLayout({
         desplace el campo enfocado al abrirse el teclado virtual.
       */}
       <div className="flex w-full flex-1 flex-col items-center justify-start sm:justify-center">
-        {/* Móvil: ancho completo. Escritorio: tarjeta de ancho acotado. */}
-        <div className="w-full md:max-w-md relative z-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
+        {/* Móvil: ancho completo. Desde `sm` la tarjeta ya se acota: con `md:`
+            una tableta vertical (640–767px) la estiraba a todo el ancho. */}
+        <div className="w-full sm:max-w-md relative z-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
           {children}
         </div>
       </div>

@@ -103,13 +103,13 @@ export default function DashboardPage() {
     return (
       <div className="space-y-6">
         <Skeleton className="h-40 w-full rounded-4xl" />
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 @xl:grid-cols-2 @4xl:grid-cols-4">
           <Skeleton className="h-28" />
           <Skeleton className="h-28" />
           <Skeleton className="h-28" />
           <Skeleton className="h-28" />
         </div>
-        <div className="grid gap-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
+        <div className="grid gap-6 @4xl:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
           <Skeleton className="h-80" />
           <Skeleton className="h-80" />
         </div>
@@ -126,7 +126,7 @@ export default function DashboardPage() {
           El color lo pone `.dashboard-tray`, que reescribe los tokens para
           todo el subárbol. */}
       <section className="dashboard-tray" aria-label="Indicadores financieros y salud operativa">
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+      <div className="grid gap-4 @xl:grid-cols-2 @4xl:grid-cols-3 @6xl:grid-cols-5">
         {additionalMetrics.map((metric) => {
           const MetricIcon = metric.icon;
 
@@ -146,7 +146,7 @@ export default function DashboardPage() {
         })}
       </div>
       {!isClient && (
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
+      <div className="grid grid-cols-1 gap-6 @4xl:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
         <Card className="min-w-0 overflow-hidden">
           <CardHeader className="border-b border-border/5 pb-5">
             <CardTitle className="flex items-center gap-2 text-xl font-bold text-foreground"><ShieldCheck className="h-5 w-5 text-primary" /> Salud operativa</CardTitle>
@@ -186,7 +186,7 @@ export default function DashboardPage() {
                 </ChartContainer>
               </div>
             </div>
-            <div className="grid gap-3 sm:grid-cols-2">
+            <div className="grid gap-3 @xl:grid-cols-2">
               <div className="rounded-3xl border border-border/10 bg-background/70 p-4"><p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">{isAdmin ? 'Gestores activos' : isGestor ? 'Clientes atendidos' : 'Confirmadas'}</p><p className="mt-2 text-2xl font-bold tabular-nums text-foreground">{isAdmin ? stats?.activeAgents ?? 0 : isGestor ? stats?.totalClients ?? 0 : stats?.completedTransfers ?? 0}</p></div>
               <div className="rounded-3xl border border-border/10 bg-background/70 p-4"><p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">{isClient ? 'Saldo retenido' : 'Bajo umbral'}</p><p className="mt-2 text-2xl font-bold tabular-nums text-foreground">{isClient ? fmt(reservedBalance) : stats?.agentsBelowThreshold ?? 0}</p></div>
               <div className="rounded-3xl border border-border/10 bg-background/70 p-4"><p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">{isClient ? 'Pendientes' : 'Disponibles para pago'}</p><p className="mt-2 text-2xl font-bold tabular-nums text-foreground">{isClient ? stats?.pendingTransfers ?? 0 : stats?.pickupReadyTransfers ?? 0}</p></div>

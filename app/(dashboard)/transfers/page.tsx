@@ -7,13 +7,14 @@ import type { DashboardStats, DailyTransferStats, Transfer } from '@/types';
 import { formatCurrency, convertCurrency, formatDateShort, formatDayOfMonth, getInitials, getStatusText, getStatusColor } from '@/lib/utils';
 import { HttpError } from '@/services/http';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
+  Dialog,
+  DialogBody,
+  DialogContent,
+  DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
 import { 
@@ -41,6 +42,32 @@ import { isAdminRole } from '@/lib/roles';
 const weeklyVolumeConfig = {
   amount: { label: 'Volumen', color: 'var(--chart-1)' },
 } satisfies ChartConfig;
+
+/**
+ * Tarjeta de acción: la tarjeta entera es el botón. Antes era un `div` con
+ * `onClick` —inalcanzable con teclado— y llevaba `p-6` encima del `p-6` de
+ * cabecera y contenido, así que el texto quedaba a 48px del borde. El
+ * «Iniciar →» de dentro pasa a ser un `span`: un botón dentro de otro no es
+ * HTML válido y el objetivo ya es la tarjeta completa.
+ */
+function ActionCard({ onSelect, label, children }: { onSelect: () => void; label: string; children: React.ReactNode }) {
+  return (
+    <Card asChild className="transfer-action-card cursor-pointer">
+      <button
+        type="button"
+        onClick={onSelect}
+        // Sin nombre propio, el de la tarjeta sería todo su texto seguido
+        // («Nueva Transferencia Enviar dinero A clientes… Iniciar»).
+        aria-label={label}
+        className="w-full text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+      >
+        {children}
+      </button>
+    </Card>
+  );
+}
+
+const actionHintClasses = 'transfer-mobile-action mt-2 inline-flex items-center gap-2 whitespace-nowrap text-xs font-bold [&_svg]:size-4';
 
 export default function TransfersPage() {
   const { user, preferredCurrency } = useAppStore();
@@ -117,7 +144,7 @@ export default function TransfersPage() {
   if (loading) {
     return (
       <div className="space-y-6">
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 @2xl:grid-cols-2 @4xl:grid-cols-4">
           <Skeleton className="h-28" />
           <Skeleton className="h-28" />
           <Skeleton className="h-28" />
@@ -135,7 +162,10 @@ export default function TransfersPage() {
   return (
     <div className="transfers-mobile-page space-y-6 animate-in fade-in duration-500">
       {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      {/* Variantes de contenedor (`@2xl:`), no de viewport: la página también
+          se pinta dentro del panel de media pantalla, donde a 1024px de
+          viewport sólo quedan ~470px de ancho. */}
+      <div className="flex flex-col @2xl:flex-row justify-between items-start @2xl:items-center gap-4">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold text-foreground">Envíos</h1>
           <p className="text-muted-foreground font-medium text-sm">Panel de control de transferencias</p>
@@ -143,10 +173,10 @@ export default function TransfersPage() {
       </div>
 
       {/* Stats Grid */}
-      <div className={`grid grid-cols-1 ${user?.role === 'gestor' ? 'sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5' : user?.role === 'cliente' ? 'sm:grid-cols-2' : 'md:grid-cols-2 lg:grid-cols-4'} gap-4`}>
+      <div className={`grid grid-cols-1 ${user?.role === 'gestor' ? '@xl:grid-cols-2 @6xl:grid-cols-3 @7xl:grid-cols-5' : user?.role === 'cliente' ? '@xl:grid-cols-2' : '@2xl:grid-cols-2 @4xl:grid-cols-4'} gap-4`}>
         {/* Card: Nueva Transferencia (Solo gestores) */}
         {user?.role === 'gestor' && (
-          <Card className="transfer-action-card cursor-pointer p-6" onClick={() => setAgentTransferOpen(true)}>
+          <ActionCard label="Nueva transferencia" onSelect={() => setAgentTransferOpen(true)}>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-bold flex items-center gap-2">
                 <Send className="h-4 w-4" /> Nueva Transferencia
@@ -154,17 +184,18 @@ export default function TransfersPage() {
             </CardHeader>
             <CardContent>
               <p className="text-xl font-bold tabular-nums sm:text-2xl">Enviar dinero</p>
-              <p className="text-xs text-white/70 mt-1">A clientes y beneficiarios</p>
-              <Button variant="ghost" className="transfer-mobile-action text-xs font-bold text-white mt-2 p-0 h-auto">
+              {/* `text-white` sobre la tarjeta clara no se veía en tema claro. */}
+              <p className="text-xs text-muted-foreground mt-1">A clientes y beneficiarios</p>
+              <span className={`${actionHintClasses} text-primary`}>
                 Iniciar <ArrowUpRight className="h-3 w-3 ml-1" />
-              </Button>
+              </span>
             </CardContent>
-          </Card>
+          </ActionCard>
         )}
 
         {/* Card: Transferir a Cliente (Solo clientes) */}
         {user?.role === 'cliente' && (
-          <Card className="transfer-action-card cursor-pointer p-6" onClick={() => setWalletTransferOpen(true)}>
+          <ActionCard label="Transferir a cliente" onSelect={() => setWalletTransferOpen(true)}>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-bold text-green-600 dark:text-green-400 flex items-center gap-2">
                 <Wallet className="h-4 w-4" /> Transferir a Cliente
@@ -173,11 +204,11 @@ export default function TransfersPage() {
             <CardContent>
               <p className="text-2xl font-bold text-green-600 dark:text-green-400">Sin comisión</p>
               <p className="text-xs text-green-500 mt-1">Envía dinero a otro cliente</p>
-              <Button variant="ghost" className="transfer-mobile-action text-xs font-bold text-green-600 mt-2 p-0 h-auto">
+              <span className={`${actionHintClasses} text-green-600`}>
                 Iniciar <ArrowUpRight className="h-3 w-3 ml-1" />
-              </Button>
+              </span>
             </CardContent>
-          </Card>
+          </ActionCard>
         )}
 
         {/* Sin tarjeta de "Confirmar Recepción": desde 20260826 el envío entre
@@ -187,7 +218,7 @@ export default function TransfersPage() {
 
         {/* Card: Retirar Efectivo (Solo clientes) */}
         {user?.role === 'cliente' && (
-          <Card className="transfer-action-card cursor-pointer p-6" onClick={() => setWithdrawalOpen(true)}>
+          <ActionCard label="Retirar efectivo" onSelect={() => setWithdrawalOpen(true)}>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-bold text-amber-600 dark:text-amber-400 flex items-center gap-2">
                 <HandCoins className="h-4 w-4" /> Retirar Efectivo
@@ -196,16 +227,16 @@ export default function TransfersPage() {
             <CardContent>
               <p className="text-2xl font-bold text-amber-600 dark:text-amber-400">Tu código</p>
               <p className="text-xs text-amber-500 mt-1">Genera tu código y cóbralo en un gestor</p>
-              <Button variant="ghost" className="transfer-mobile-action text-xs font-bold text-amber-600 mt-2 p-0 h-auto">
+              <span className={`${actionHintClasses} text-amber-600`}>
                 Generar <ArrowUpRight className="h-3 w-3 ml-1" />
-              </Button>
+              </span>
             </CardContent>
-          </Card>
+          </ActionCard>
         )}
 
         {/* Card: Pagar Transferencia (Solo gestores) */}
         {user?.role === 'gestor' && (
-          <Card className="transfer-action-card cursor-pointer p-6" onClick={() => setAgentPayoutOpen(true)}>
+          <ActionCard label="Pagar transferencia" onSelect={() => setAgentPayoutOpen(true)}>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-2">
                 <QrCode className="h-4 w-4" /> Pagar transferencia
@@ -214,15 +245,15 @@ export default function TransfersPage() {
             <CardContent>
               <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">Código de retiro</p>
               <p className="text-xs text-emerald-500 mt-1">Valida la transferencia y registra el pago</p>
-              <Button variant="ghost" className="transfer-mobile-action text-xs font-bold text-emerald-600 mt-2 p-0 h-auto">
+              <span className={`${actionHintClasses} text-emerald-600`}>
                 Ver disponibles <ArrowUpRight className="h-3 w-3 ml-1" />
-              </Button>
+              </span>
             </CardContent>
-          </Card>
+          </ActionCard>
         )}
         {/* Card: Payout Revolut (gestores y administración) */}
         {user?.role !== 'cliente' && (
-          <Card className="transfer-action-card cursor-pointer p-6" onClick={() => setRevolutPayoutOpen(true)}>
+          <ActionCard label="Payout Revolut" onSelect={() => setRevolutPayoutOpen(true)}>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-bold text-sky-700 dark:text-sky-300 flex items-center gap-2">
                 <Landmark className="h-4 w-4" /> Payout Revolut
@@ -231,15 +262,15 @@ export default function TransfersPage() {
             <CardContent>
               <p className="text-2xl font-bold text-sky-700 dark:text-sky-300">Link externo</p>
               <p className="text-xs text-sky-600 dark:text-sky-400 mt-1">Alternativa cuando no hay gestor</p>
-              <Button variant="ghost" className="transfer-mobile-action text-xs font-bold text-sky-700 dark:text-sky-300 mt-2 p-0 h-auto">
+              <span className={`${actionHintClasses} text-sky-700 dark:text-sky-300`}>
                 Generar <ArrowUpRight className="h-3 w-3 ml-1" />
-              </Button>
+              </span>
             </CardContent>
-          </Card>
+          </ActionCard>
         )}
         {/* Card 1: Flujo del Día */}
         {user?.role !== 'cliente' && (
-        <Card className="transfer-action-card cursor-pointer p-6" onClick={() => setShowDailyModal(true)}>
+        <ActionCard label="Flujo del día" onSelect={() => setShowDailyModal(true)}>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-bold text-muted-foreground flex items-center gap-2">
               <TrendingUp className="h-4 w-4" /> Flujo del Día
@@ -248,17 +279,17 @@ export default function TransfersPage() {
           <CardContent>
             <p className="text-xl font-bold tabular-nums sm:text-2xl">{formatBalance(stats?.todayTransfers || 0)}</p>
             <p className="text-xs text-muted-foreground mt-1">transacciones hoy</p>
-            <Button variant="ghost" className="transfer-mobile-action text-xs font-bold text-primary mt-2 p-0 h-auto">
+            <span className={`${actionHintClasses} text-primary`}>
               Ver todo <ArrowUpRight className="h-3 w-3 ml-1" />
-            </Button>
+            </span>
           </CardContent>
-        </Card>
+        </ActionCard>
 
         )}
 
         {/* Card 2: Envíos de Gestores */}
         {user?.role !== 'cliente' && (
-        <Card className="transfer-action-card cursor-pointer p-6" onClick={() => setShowAgentsModal(true)}>
+        <ActionCard label="Envíos de gestores" onSelect={() => setShowAgentsModal(true)}>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-bold text-muted-foreground flex items-center gap-2">
               <Users className="h-4 w-4" /> Envíos de Gestores
@@ -267,16 +298,16 @@ export default function TransfersPage() {
           <CardContent>
             <p className="text-xl font-bold tabular-nums sm:text-2xl">{recentTransfers.length}</p>
             <p className="text-xs text-muted-foreground mt-1">transferencias totales</p>
-            <Button variant="ghost" className="transfer-mobile-action text-xs font-bold text-primary mt-2 p-0 h-auto">
+            <span className={`${actionHintClasses} text-primary`}>
               Ver todo <ArrowUpRight className="h-3 w-3 ml-1" />
-            </Button>
+            </span>
           </CardContent>
-        </Card>
+        </ActionCard>
         )}
 
         {/* Card 3: Volumen Semanal */}
         {user?.role !== 'cliente' && (
-        <Card className="transfer-action-card cursor-pointer p-6" onClick={() => setShowWeeklyModal(true)}>
+        <ActionCard label="Volumen semanal" onSelect={() => setShowWeeklyModal(true)}>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-bold text-muted-foreground flex items-center gap-2">
               <BarChart3 className="h-4 w-4" /> Volumen Semanal
@@ -285,15 +316,15 @@ export default function TransfersPage() {
           <CardContent>
             <p className="text-xl font-bold tabular-nums sm:text-2xl">{formatBalance(totalWeekly)}</p>
             <p className="text-xs text-muted-foreground mt-1">últimos 7 días</p>
-            <Button variant="ghost" className="transfer-mobile-action text-xs font-bold text-primary mt-2 p-0 h-auto">
+            <span className={`${actionHintClasses} text-primary`}>
               Ver todo <ArrowUpRight className="h-3 w-3 ml-1" />
-            </Button>
+            </span>
           </CardContent>
-        </Card>
+        </ActionCard>
         )}
 
         {/* Card 4: Soporte */}
-        <Card className="transfer-action-card cursor-pointer p-6" onClick={() => setSupportOpen(true)}>
+        <ActionCard label="Soporte" onSelect={() => setSupportOpen(true)}>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-bold text-muted-foreground flex items-center gap-2">
               <MessageSquare className="h-4 w-4" /> Soporte
@@ -302,11 +333,11 @@ export default function TransfersPage() {
           <CardContent>
             <p className="text-xl font-bold tabular-nums sm:text-2xl">24/7</p>
             <p className="text-xs text-muted-foreground mt-1">asistencia disponible</p>
-            <Button variant="ghost" className="transfer-mobile-action text-xs font-bold text-primary mt-2 p-0 h-auto">
+            <span className={`${actionHintClasses} text-primary`}>
               Contactar <ArrowUpRight className="h-3 w-3 ml-1" />
-            </Button>
+            </span>
           </CardContent>
-        </Card>
+        </ActionCard>
       </div>
 
       {/* Recent Transfers Table */}
@@ -314,90 +345,94 @@ export default function TransfersPage() {
         <CardHeader>
           <CardTitle className="text-lg font-bold">Últimas Transferencias</CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="activity-records-scroll table-scroll is-stacked">
-            <table className="activity-records-table w-full">
-              <thead>
-                <tr className="border-b border-border/10">
-                  <th className="text-left py-3 px-4 text-xs font-bold text-muted-foreground uppercase">Código</th>
-                  <th className="text-left py-3 px-4 text-xs font-bold text-muted-foreground uppercase">Remitente</th>
-                  <th className="text-left py-3 px-4 text-xs font-bold text-muted-foreground uppercase">Destinatario</th>
-                  <th className="text-left py-3 px-4 text-xs font-bold text-muted-foreground uppercase">Monto</th>
-                  <th className="text-left py-3 px-4 text-xs font-bold text-muted-foreground uppercase">Estado</th>
-                  <th className="text-left py-3 px-4 text-xs font-bold text-muted-foreground uppercase">Fecha</th>
-                </tr>
-              </thead>
-              <tbody>
-                {recentTransfers.slice(0, 10).map((transfer) => (
-                  <tr key={transfer.id} className="activity-record-row border-b border-border/5 hover:bg-muted/30">
-                    <td data-label="Código" className="py-3 px-4 text-sm font-bold">{transfer.transfer_code || 'N/A'}</td>
-                    <td data-label="Remitente" className="py-3 px-4 text-sm">{transfer.sender_name || 'N/A'}</td>
-                    <td data-label="Destinatario" className="py-3 px-4 text-sm">{transfer.receiver_name || 'N/A'}</td>
-                    <td data-label="Monto" className="py-3 px-4 text-sm font-bold tabular-nums">{formatBalance(transfer.amount)}</td>
-                    <td data-label="Estado" className="py-3 px-4">
-                      <Badge className={getStatusColor(transfer.status)}>
-                        {getStatusText(transfer.status)}
-                      </Badge>
-                    </td>
-                    <td data-label="Fecha" className="py-3 px-4 text-xs text-muted-foreground">
-                      {formatDateShort(transfer.created_at)}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+        {/* Con el primitivo `Table` la tabla tiene un envoltorio que se
+            desplaza y roles ARIA explícitos; la `<table>` suelta de antes no
+            tenía desbordamiento propio y en un teléfono arrastraba la página
+            entera hacia un lado. En contenedores estrechos se apila en
+            tarjetas (app/styles/tables.css). */}
+        <CardContent className="activity-records-scroll">
+          <Table className="activity-records-table" wrapperClassName="is-stacked">
+            <TableHeader>
+              <TableRow className="border-b border-border/10 hover:bg-transparent">
+                <TableHead className="text-left py-3 px-4 text-xs font-bold text-muted-foreground uppercase">Código</TableHead>
+                <TableHead className="text-left py-3 px-4 text-xs font-bold text-muted-foreground uppercase">Remitente</TableHead>
+                <TableHead className="text-left py-3 px-4 text-xs font-bold text-muted-foreground uppercase">Destinatario</TableHead>
+                <TableHead className="text-left py-3 px-4 text-xs font-bold text-muted-foreground uppercase">Monto</TableHead>
+                <TableHead className="text-left py-3 px-4 text-xs font-bold text-muted-foreground uppercase">Estado</TableHead>
+                <TableHead className="text-left py-3 px-4 text-xs font-bold text-muted-foreground uppercase">Fecha</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {recentTransfers.slice(0, 10).map((transfer) => (
+                <TableRow key={transfer.id} className="activity-record-row border-b border-border/5 hover:bg-muted/30">
+                  <TableCell data-label="Código" className="py-3 px-4 text-sm font-bold">{transfer.transfer_code || 'N/A'}</TableCell>
+                  <TableCell data-label="Remitente" className="py-3 px-4 text-sm">{transfer.sender_name || 'N/A'}</TableCell>
+                  <TableCell data-label="Destinatario" className="py-3 px-4 text-sm">{transfer.receiver_name || 'N/A'}</TableCell>
+                  <TableCell data-label="Monto" className="py-3 px-4 text-sm font-bold tabular-nums">{formatBalance(transfer.amount)}</TableCell>
+                  <TableCell data-label="Estado" className="py-3 px-4">
+                    <Badge className={getStatusColor(transfer.status)}>
+                      {getStatusText(transfer.status)}
+                    </Badge>
+                  </TableCell>
+                  <TableCell data-label="Fecha" className="py-3 px-4 text-xs text-muted-foreground">
+                    {formatDateShort(transfer.created_at)}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         </CardContent>
       </Card>
 
       {/* Modal: Flujo del Día */}
       <Dialog open={showDailyModal} onOpenChange={setShowDailyModal}>
-        <DialogContent className="max-w-2xl lg:max-h-[80dvh] lg:overflow-y-auto">
+        <DialogContent size="xl" aria-describedby={undefined}>
           <DialogHeader>
             <DialogTitle className="text-xl font-bold flex items-center gap-2">
               <TrendingUp className="h-5 w-5" /> Flujo del Día
             </DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
-              <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-2xl">
+          <DialogBody>
+            {/* Tres columnas cuando el cuerpo del modal (no la ventana) mide 32rem. */}
+            <div className="grid grid-cols-1 gap-3 @lg:grid-cols-3 @lg:gap-4">
+              <div className="min-w-0 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-2xl">
                 <p className="text-xs font-bold text-muted-foreground uppercase">Transacciones Hoy</p>
-                <p className="text-xl font-bold tabular-nums sm:text-2xl">{stats?.todayTransfers || 0}</p>
+                <p className="text-xl font-bold tabular-nums wrap-break-word @lg:text-2xl">{stats?.todayTransfers || 0}</p>
               </div>
-              <div className="p-4 bg-purple-50 dark:bg-purple-900/20 rounded-2xl">
+              <div className="min-w-0 p-4 bg-purple-50 dark:bg-purple-900/20 rounded-2xl">
                 <p className="text-xs font-bold text-muted-foreground uppercase">Monto Enviado</p>
-                <p className="text-xl font-bold tabular-nums sm:text-2xl">{formatBalance(stats?.totalSent || 0)}</p>
+                <p className="text-xl font-bold tabular-nums wrap-break-word @lg:text-2xl">{formatBalance(stats?.totalSent || 0)}</p>
               </div>
-              <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-2xl">
+              <div className="min-w-0 p-4 bg-green-50 dark:bg-green-900/20 rounded-2xl">
                 <p className="text-xs font-bold text-muted-foreground uppercase">Comisión Hoy</p>
-                <p className="text-xl font-bold tabular-nums sm:text-2xl">{formatBalance(stats?.todayCommission || 0)}</p>
+                <p className="text-xl font-bold tabular-nums wrap-break-word @lg:text-2xl">{formatBalance(stats?.todayCommission || 0)}</p>
               </div>
             </div>
-          </div>
+          </DialogBody>
         </DialogContent>
       </Dialog>
 
       {/* Modal: Envíos de Gestores */}
       <Dialog open={showAgentsModal} onOpenChange={setShowAgentsModal}>
-        <DialogContent className="max-w-2xl lg:max-h-[80dvh] lg:overflow-y-auto">
+        <DialogContent size="xl" aria-describedby={undefined}>
           <DialogHeader>
             <DialogTitle className="text-xl font-bold flex items-center gap-2">
               <Users className="h-5 w-5" /> Envíos de Gestores
             </DialogTitle>
           </DialogHeader>
-          <div className="space-y-3">
+          <DialogBody className="space-y-3">
             {recentTransfers.map((transfer) => (
-              <div key={transfer.id} className="flex items-center justify-between p-3 bg-muted/30 rounded-xl">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-brand-gradient flex items-center justify-center text-white font-bold text-xs">
+              <div key={transfer.id} className="flex items-center justify-between gap-3 p-3 bg-muted/30 rounded-xl">
+                <div className="flex min-w-0 items-center gap-3">
+                  <div className="w-10 h-10 shrink-0 rounded-full bg-brand-gradient flex items-center justify-center text-white font-bold text-xs">
                     {getInitials(transfer.receiver_name || 'U')}
                   </div>
-                  <div>
-                    <p className="text-sm font-bold">{transfer.receiver_name || 'N/A'}</p>
-                    <p className="text-xs text-muted-foreground">{transfer.destination_city || 'N/A'}</p>
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-bold">{transfer.receiver_name || 'N/A'}</p>
+                    <p className="truncate text-xs text-muted-foreground">{transfer.destination_city || 'N/A'}</p>
                   </div>
                 </div>
-                <div className="text-right">
+                <div className="shrink-0 text-right">
                   <p className="text-sm font-bold">{formatBalance(transfer.amount)}</p>
                   <Badge className={getStatusColor(transfer.status)}>
                     {getStatusText(transfer.status)}
@@ -405,63 +440,65 @@ export default function TransfersPage() {
                 </div>
               </div>
             ))}
-          </div>
+          </DialogBody>
         </DialogContent>
       </Dialog>
 
       {/* Modal: Volumen Semanal */}
       <Dialog open={showWeeklyModal} onOpenChange={setShowWeeklyModal}>
-        <DialogContent className="max-w-2xl lg:max-h-[80dvh] lg:overflow-y-auto">
+        <DialogContent size="xl" aria-describedby={undefined}>
           <DialogHeader>
             <DialogTitle className="text-xl font-bold flex items-center gap-2">
               <BarChart3 className="h-5 w-5" /> Volumen Semanal
             </DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
-              <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-2xl">
+          <DialogBody className="space-y-4">
+            <div className="grid grid-cols-1 gap-3 @lg:grid-cols-3 @lg:gap-4">
+              <div className="min-w-0 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-2xl">
                 <p className="text-xs font-bold text-muted-foreground uppercase">Esta Semana</p>
-                <p className="text-xl font-bold tabular-nums sm:text-2xl">{formatBalance(totalWeekly)}</p>
+                <p className="text-xl font-bold tabular-nums wrap-break-word @lg:text-2xl">{formatBalance(totalWeekly)}</p>
               </div>
-              <div className="p-4 bg-purple-50 dark:bg-purple-900/20 rounded-2xl">
+              <div className="min-w-0 p-4 bg-purple-50 dark:bg-purple-900/20 rounded-2xl">
                 <p className="text-xs font-bold text-muted-foreground uppercase">Este Mes</p>
-                <p className="text-xl font-bold tabular-nums sm:text-2xl">{formatBalance(totalMonthly)}</p>
+                <p className="text-xl font-bold tabular-nums wrap-break-word @lg:text-2xl">{formatBalance(totalMonthly)}</p>
               </div>
-              <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-2xl">
+              <div className="min-w-0 p-4 bg-green-50 dark:bg-green-900/20 rounded-2xl">
                 <p className="text-xs font-bold text-muted-foreground uppercase">Promedio Diario</p>
-                <p className="text-xl font-bold tabular-nums sm:text-2xl">{formatBalance(avgDaily)}</p>
+                <p className="text-xl font-bold tabular-nums wrap-break-word @lg:text-2xl">{formatBalance(avgDaily)}</p>
               </div>
             </div>
-            
-            {/* Bar Chart */}
-            <div className="-mx-2 overflow-x-auto overscroll-x-contain px-2">
-              <ChartContainer config={weeklyVolumeConfig} className="aspect-auto h-72 w-full min-w-[380px]">
-                <BarChart
-                  accessibilityLayer
-                  data={dailyStats.slice(-14).map((day) => ({
-                    name: formatDayOfMonth(day.date),
-                    amount: Math.round(convertCurrency(day.total_amount, 'XAF', displayCurrency)),
-                  }))}
-                  layout="vertical"
-                  margin={{ left: 0, right: 8 }}
-                >
-                  <XAxis type="number" dataKey="amount" hide />
-                  <YAxis
-                    dataKey="name"
-                    type="category"
-                    tickLine={false}
-                    tickMargin={8}
-                    axisLine={false}
-                    width={34}
-                    tick={{ fontSize: 10, fill: 'currentColor', fontWeight: 700 }}
-                    className="text-muted-foreground"
-                  />
-                  <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel indicator="dot" />} />
-                  <Bar dataKey="amount" fill="var(--color-amount)" radius={4} />
-                </BarChart>
-              </ChartContainer>
-            </div>
-          </div>
+
+            {/* Gráfico a todo el ancho del cuerpo, sin ancho mínimo: el
+                `min-w-[380px]` con su envoltorio desplazable metía un scroll
+                horizontal dentro del modal. Las barras son horizontales, así
+                que se leen bien a cualquier ancho. Alto fijo (h-72): el cuerpo
+                se desplaza en vez de aplastar el gráfico. */}
+            <ChartContainer config={weeklyVolumeConfig} className="aspect-auto h-72 w-full">
+              <BarChart
+                accessibilityLayer
+                data={dailyStats.slice(-14).map((day) => ({
+                  name: formatDayOfMonth(day.date),
+                  amount: Math.round(convertCurrency(day.total_amount, 'XAF', displayCurrency)),
+                }))}
+                layout="vertical"
+                margin={{ left: 0, right: 8 }}
+              >
+                <XAxis type="number" dataKey="amount" hide />
+                <YAxis
+                  dataKey="name"
+                  type="category"
+                  tickLine={false}
+                  tickMargin={8}
+                  axisLine={false}
+                  width={34}
+                  tick={{ fontSize: 10, fill: 'currentColor', fontWeight: 700 }}
+                  className="text-muted-foreground"
+                />
+                <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel indicator="dot" />} />
+                <Bar dataKey="amount" fill="var(--color-amount)" radius={4} />
+              </BarChart>
+            </ChartContainer>
+          </DialogBody>
         </DialogContent>
       </Dialog>
 

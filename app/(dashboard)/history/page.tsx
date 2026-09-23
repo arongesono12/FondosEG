@@ -5,7 +5,7 @@ import { useAppStore } from '@/lib/store';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogBody, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -211,7 +211,7 @@ export default function HistoryPage() {
     return (
       <div className="space-y-6">
         <Skeleton className="h-32 w-full rounded-4xl" />
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-4 @2xl:grid-cols-3">
           <Skeleton className="h-24" />
           <Skeleton className="h-24" />
           <Skeleton className="h-24" />
@@ -223,8 +223,11 @@ export default function HistoryPage() {
 
   return (
     <div className="space-y-8">
-      <section className="app-card p-6 md:p-8">
-        <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+      {/* Variantes de contenedor (`@4xl:` ≈ `lg:`): la página también se pinta
+          en el panel de media pantalla, donde las de viewport se disparaban
+          con ~470px de ancho útil. */}
+      <section className="app-card p-6 @2xl:p-8">
+        <div className="flex flex-col gap-5 @4xl:flex-row @4xl:items-end @4xl:justify-between">
           <div>
             <Badge className="rounded-full border border-white/20 bg-white/70 px-3 py-1 text-xs font-black uppercase tracking-[0.24em] text-slate-700 dark:border-white/10 dark:bg-white/10 dark:text-slate-200">
               Historial de operaciones
@@ -237,14 +240,14 @@ export default function HistoryPage() {
             </p>
           </div>
 
-          <Button onClick={exportToCsv} className="w-full shrink-0 rounded-2xl bg-brand-gradient px-6 font-black text-white shadow-xl shadow-pink-500/20 lg:w-auto">
+          <Button onClick={exportToCsv} className="w-full shrink-0 rounded-2xl bg-brand-gradient px-6 font-black text-white shadow-xl shadow-pink-500/20 @4xl:w-auto">
             <Download className="mr-2 h-4 w-4" />
             Exportar CSV
           </Button>
         </div>
       </section>
 
-      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <section className="grid gap-4 @xl:grid-cols-2 @4xl:grid-cols-4">
         <MetricTile label="Completadas" value={String(completedTransfers.length)} hint="Operaciones cerradas" icon={History} tone="border-emerald-500/20 bg-emerald-500 shadow-emerald-500/20" />
         <MetricTile label="Pendientes" value={String(createdTransfers.length)} hint="En seguimiento o pago" icon={Wallet} tone="border-amber-500/20 bg-amber-500 shadow-amber-500/20" />
         <MetricTile label="Canceladas" value={String(cancelledTransfers.length)} hint="Requieren auditoría si crecen" icon={XCircle} tone="border-rose-500/20 bg-rose-500 shadow-rose-500/20" />
@@ -253,14 +256,14 @@ export default function HistoryPage() {
 
       <Card className="overflow-hidden">
         <CardHeader className="border-b border-border/5 pb-5">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex flex-col gap-4 @4xl:flex-row @4xl:items-center @4xl:justify-between">
             <CardTitle className="flex items-center gap-2 text-xl font-black text-foreground">
               <History className="h-5 w-5 text-primary" />
               Registro operativo
             </CardTitle>
 
-            <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
-              <div className="relative w-full min-w-0 lg:min-w-[280px]">
+            <div className="flex flex-col gap-3 @4xl:flex-row @4xl:items-center">
+              <div className="relative w-full min-w-0 @4xl:min-w-[280px]">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   value={searchTerm}
@@ -294,7 +297,7 @@ export default function HistoryPage() {
 
         <CardContent className="p-0">
           <div className="activity-records-scroll">
-            <Table className="activity-records-table">
+            <Table className="activity-records-table" wrapperClassName="is-stacked">
               <TableHeader className="bg-muted/30">
                 <TableRow className="border-border/5 hover:bg-transparent">
                   <TableHead className="pl-8 py-4 text-xs font-black uppercase tracking-[0.18em] text-muted-foreground">Código</TableHead>
@@ -376,7 +379,7 @@ export default function HistoryPage() {
       </Card>
 
       <Dialog open={!!editingTransfer} onOpenChange={(open) => !open && setEditingTransfer(null)}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent size="xl">
           <DialogHeader>
             <DialogTitle>Corregir envío de gestor</DialogTitle>
             <DialogDescription>
@@ -384,81 +387,85 @@ export default function HistoryPage() {
             </DialogDescription>
           </DialogHeader>
 
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="correction_sender_name">Remitente</Label>
-              <Input
-                id="correction_sender_name"
-                value={correctionForm.sender_name}
-                onChange={(event) => setCorrectionForm((current) => ({ ...current, sender_name: event.target.value }))}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="correction_sender_phone">Teléfono remitente</Label>
-              <Input
-                id="correction_sender_phone"
-                value={correctionForm.sender_phone}
-                onChange={(event) => setCorrectionForm((current) => ({ ...current, sender_phone: event.target.value }))}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="correction_receiver_name">Destinatario</Label>
-              <Input
-                id="correction_receiver_name"
-                value={correctionForm.receiver_name}
-                onChange={(event) => setCorrectionForm((current) => ({ ...current, receiver_name: event.target.value }))}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="correction_receiver_phone">Teléfono destinatario</Label>
-              <Input
-                id="correction_receiver_phone"
-                value={correctionForm.receiver_phone}
-                onChange={(event) => setCorrectionForm((current) => ({ ...current, receiver_phone: event.target.value }))}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="correction_destination_city">Ciudad destino</Label>
-              <Input
-                id="correction_destination_city"
-                value={correctionForm.destination_city}
-                onChange={(event) => setCorrectionForm((current) => ({ ...current, destination_city: event.target.value }))}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="correction_destination_country">País destino</Label>
-              <Input
-                id="correction_destination_country"
-                value={correctionForm.destination_country}
-                onChange={(event) => setCorrectionForm((current) => ({ ...current, destination_country: event.target.value }))}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="correction_amount">Monto</Label>
-              <Input
-                id="correction_amount"
-                type="number"
+          <DialogBody className="space-y-4">
+            {/* `@md:` mira el ancho del cuerpo del modal, no el de la ventana:
+                con `md:` una tableta partía en dos columnas un cuerpo estrecho. */}
+            <div className="grid gap-4 @md:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="correction_sender_name">Remitente</Label>
+                <Input
+                  id="correction_sender_name"
+                  value={correctionForm.sender_name}
+                  onChange={(event) => setCorrectionForm((current) => ({ ...current, sender_name: event.target.value }))}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="correction_sender_phone">Teléfono remitente</Label>
+                <Input
+                  id="correction_sender_phone"
+                  value={correctionForm.sender_phone}
+                  onChange={(event) => setCorrectionForm((current) => ({ ...current, sender_phone: event.target.value }))}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="correction_receiver_name">Destinatario</Label>
+                <Input
+                  id="correction_receiver_name"
+                  value={correctionForm.receiver_name}
+                  onChange={(event) => setCorrectionForm((current) => ({ ...current, receiver_name: event.target.value }))}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="correction_receiver_phone">Teléfono destinatario</Label>
+                <Input
+                  id="correction_receiver_phone"
+                  value={correctionForm.receiver_phone}
+                  onChange={(event) => setCorrectionForm((current) => ({ ...current, receiver_phone: event.target.value }))}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="correction_destination_city">Ciudad destino</Label>
+                <Input
+                  id="correction_destination_city"
+                  value={correctionForm.destination_city}
+                  onChange={(event) => setCorrectionForm((current) => ({ ...current, destination_city: event.target.value }))}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="correction_destination_country">País destino</Label>
+                <Input
+                  id="correction_destination_country"
+                  value={correctionForm.destination_country}
+                  onChange={(event) => setCorrectionForm((current) => ({ ...current, destination_country: event.target.value }))}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="correction_amount">Monto</Label>
+                <Input
+                  id="correction_amount"
+                  type="number"
                   inputMode="decimal"
                   onWheel={(e) => e.currentTarget.blur()}
-                min="1"
-                step="0.01"
-                value={correctionForm.amount}
-                onChange={(event) => setCorrectionForm((current) => ({ ...current, amount: event.target.value }))}
-              />
+                  min="1"
+                  step="0.01"
+                  value={correctionForm.amount}
+                  onChange={(event) => setCorrectionForm((current) => ({ ...current, amount: event.target.value }))}
+                />
+              </div>
+              <div className="space-y-2 @md:col-span-2">
+                <Label htmlFor="correction_notes">Notas</Label>
+                <Input
+                  id="correction_notes"
+                  value={correctionForm.notes}
+                  onChange={(event) => setCorrectionForm((current) => ({ ...current, notes: event.target.value }))}
+                />
+              </div>
             </div>
-            <div className="space-y-2 md:col-span-2">
-              <Label htmlFor="correction_notes">Notas</Label>
-              <Input
-                id="correction_notes"
-                value={correctionForm.notes}
-                onChange={(event) => setCorrectionForm((current) => ({ ...current, notes: event.target.value }))}
-              />
-            </div>
-          </div>
 
-          {correctionError && (
-            <p className="text-sm font-semibold text-rose-500">{correctionError}</p>
-          )}
+            {correctionError && (
+              <p className="text-sm font-semibold text-rose-500">{correctionError}</p>
+            )}
+          </DialogBody>
 
           <DialogFooter>
             <Button type="button" variant="outline" className="rounded-xl font-black" onClick={() => setEditingTransfer(null)}>
