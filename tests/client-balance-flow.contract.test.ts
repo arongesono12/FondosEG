@@ -82,15 +82,18 @@ test('los envíos ya acreditados dejan de estar disponibles para retiro en venta
 });
 
 test('el dashboard del cliente incluye los envíos de gestor recibidos en actividad y métricas', async () => {
-  const [recentTransfers, stats] = await Promise.all([
+  const [recentTransfers, stats, aggregates] = await Promise.all([
     load('app/api/dashboard/recent-transfers/route.ts'),
     load('app/api/dashboard/stats/route.ts'),
+    load('supabase/migrations/20260925_dashboard_sql_aggregates.sql'),
   ]);
 
   assert.match(recentTransfers, /sender_id\.eq\.\$\{profile\.id\},receiver_user_id\.eq\.\$\{profile\.id\}/);
-  assert.match(stats, /\.eq\('receiver_user_id', profile\.id\)/);
-  assert.match(stats, /normalizedReceivedAgentTransfers/);
-  assert.match(stats, /const clientTransfers = \[\.\.\.normalizedWalletTransfers, \.\.\.normalizedReceivedAgentTransfers\]/);
+  // Las métricas se agregan en SQL: movimientos de billetera + envíos de gestor recibidos.
+  assert.match(stats, /rpc\('dashboard_client_stats', \{ p_client_id: profile\.id/);
+  const clientStats = aggregates.slice(aggregates.indexOf('FUNCTION public.dashboard_client_stats'));
+  assert.match(clientStats, /WHERE w\.sender_id = p_client_id OR w\.receiver_id = p_client_id\s+UNION ALL/);
+  assert.match(clientStats, /WHERE t\.receiver_user_id = p_client_id/);
 });
 
 test('el aviso al beneficiario con cuenta no le manda a ventanilla con el código del envío', async () => {

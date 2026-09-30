@@ -1,14 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { AuthzError, requireProfile, requireRole } from '@/lib/server/authz';
-import { createAgentTransferOperation } from '@/modules/transfers/application';
+import { createAgentTransferWithConsent } from '@/modules/transfers/application';
 import type { Transfer, TransferFormData } from '@/types';
 import { generateTransferCode } from '@/lib/utils';
-import { queueTransferNotifications, processNotificationOutbox } from '@/lib/server/notification-outbox';
-import { emitWebhookEvent } from '@/lib/server/webhook-outbox';
+import { queueTransferNotifications } from '@/lib/server/notification-outbox';
+import { queueWebhookEvent } from '@/lib/server/webhook-outbox';
+import { scheduleOutboxProcessing } from '@/lib/server/outbox-worker';
 import { isAdminRole } from '@/lib/roles';
 import { PAYMENT_REGULATION } from '@/lib/compliance';
-import { assertComplianceInfrastructure, recordPaymentConsent } from '@/lib/server/compliance-events';
+import { assertComplianceInfrastructure } from '@/lib/server/compliance-events';
 import { findRegisteredClientByPhone } from '@/lib/server/client-recipient';
 
 export async function GET(request: NextRequest) {
@@ -126,7 +127,9 @@ export async function POST(request: NextRequest) {
     const adminClient = createAdminClient();
     const registeredReceiver = await findRegisteredClientByPhone(adminClient, body.receiver_phone);
     const transferCode = generateTransferCode();
-    const { transfer } = await createAgentTransferOperation({
+    // El envío y la evidencia de consentimiento se escriben en una sola
+    // transacción: si el consentimiento no se guarda, el envío no existe.
+    const { transfer } = await createAgentTransferWithConsent({
       agentId: profile.id,
       actorUserId: profile.id,
       transferCode,
@@ -144,24 +147,21 @@ export async function POST(request: NextRequest) {
       currency: body.currency,
       notes: body.notes,
       receiverUserId: registeredReceiver?.id ?? null,
-    });
-
-    const typedTransfer = (transfer as unknown) as Transfer;
-
-    await recordPaymentConsent({
-      actorUserId: profile.id,
-      transferId: typedTransfer.id,
-      transferType: 'agent_transfer',
-      amount: typedTransfer.amount,
-      currency: typedTransfer.currency,
-      feeAmount: typedTransfer.commission_amount ?? 0,
-      beneficiaryName: typedTransfer.receiver_name,
+    }, {
+      regulationCode: PAYMENT_REGULATION.code,
+      disclosureVersion: PAYMENT_REGULATION.disclosureVersion,
       channel: 'dashboard',
       ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? null,
       userAgent: request.headers.get('user-agent'),
     });
 
-    // Enqueue notifications using the unified system.
+    const typedTransfer = (transfer as unknown) as Transfer;
+
+    // SMS y webhooks sólo se REGISTRAN aquí (inserciones en notification_outbox
+    // y webhook_deliveries). La entrega a Twilio y a los endpoints externos la
+    // hace lib/server/outbox-worker.ts después de responder, con reintentos y
+    // plazo máximo: la confirmación del envío no espera a ningún proveedor.
+    let queuedOutbox = false;
     try {
       await queueTransferNotifications({
         transferId: typedTransfer.id,
@@ -176,17 +176,13 @@ export async function POST(request: NextRequest) {
         receiverUserId: typedTransfer.receiver_user_id ?? registeredReceiver?.id ?? null,
         settledToWallet: Boolean(typedTransfer.receiver_user_id && typedTransfer.wallet_credited_at),
       });
-
-      // Background process the outbox immediately.
-      // In Next.js App Router, we just await it to ensure it finishes or use a background pattern.
-      // For simplicity and immediate fix, we'll await it here since it's just 2 messages.
-      await processNotificationOutbox(5);
+      queuedOutbox = true;
     } catch (notifErr) {
-      console.error('Notification queuing/processing failed but transfer is created:', notifErr);
+      console.error('Notification queuing failed but transfer is created:', notifErr);
     }
 
     try {
-      await emitWebhookEvent(
+      const queued = await queueWebhookEvent(
         {
           eventType: 'transfer.created',
           payload: {
@@ -203,12 +199,15 @@ export async function POST(request: NextRequest) {
             destination_country: typedTransfer.destination_country ?? null,
             source: 'dashboard',
           },
-        },
-        10
+        }
       );
+      if (queued > 0) queuedOutbox = true;
     } catch (webhookErr) {
-      console.error('Webhook dispatch failed but transfer is created:', webhookErr);
+      console.error('Webhook queuing failed but transfer is created:', webhookErr);
     }
+
+    // Entrega tras responder; lo que no salga aquí lo recoge /api/outbox/process.
+    if (queuedOutbox) scheduleOutboxProcessing();
 
     return NextResponse.json({ success: true, transfer: typedTransfer });
   } catch (err) {

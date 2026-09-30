@@ -116,8 +116,7 @@ export async function POST(_request: NextRequest, context: { params: Promise<{ i
             payout_expires_at: payout.expiry_date ?? null,
             source: 'dashboard',
           },
-        },
-        10
+        }
       );
     } catch (webhookErr) {
       console.error('Webhook dispatch failed after Revolut payout link creation:', webhookErr);

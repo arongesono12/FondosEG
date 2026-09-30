@@ -97,8 +97,7 @@ export async function POST(request: NextRequest) {
             paid_out_by: paidTransfer.paid_out_by ?? profile.id,
             source: 'dashboard',
           },
-        },
-        10
+        }
       );
     } catch (webhookErr) {
       console.error('Webhook dispatch failed after transfer payout:', webhookErr);

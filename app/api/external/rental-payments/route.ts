@@ -345,8 +345,7 @@ export async function POST(request: NextRequest) {
             checkout_url: finalPayment.provider_checkout_url ?? null,
             source: 'external_api',
           },
-        },
-        10
+        }
       );
     } catch (webhookError) {
       console.error('Webhook dispatch failed after rental payment creation:', webhookError);

@@ -22,8 +22,11 @@ export const metadata: Metadata = {
   description: "Plataforma profesional para gestionar envíos de dinero entre personas a través de gestores",
   manifest: "/logo%20F/manifest.json?v=lfondoseg",
   icons: {
+    // Derivados reducidos del logotipo (LFondosEG.png pesa 541 KB y el
+    // navegador lo descargaba entero como favicon).
     icon: [
-      { url: "/logo%20fondosEG/LFondosEG.png?v=lfondoseg", type: "image/png" },
+      { url: "/logo%20fondosEG/LFondosEG-64.png?v=lfondoseg", type: "image/png", sizes: "64x64" },
+      { url: "/logo%20fondosEG/LFondosEG-192.png?v=lfondoseg", type: "image/png", sizes: "192x192" },
       { url: "/logo%20F/favicon.ico?v=lfondoseg", type: "image/x-icon" },
     ],
     apple: "/logo%20F/apple-icon.png?v=lfondoseg",

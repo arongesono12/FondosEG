@@ -33,13 +33,10 @@ import {
   ShieldCheck,
   MoreHorizontal,
 } from '@/components/ui/hugeicons';
-import { UsersPanel } from './users-panel';
-import { SearchModal } from './search-modal';
+import dynamic from 'next/dynamic';
 import { HeaderSearch } from './header-search';
 import { NotificationsDropdown } from './notifications-dropdown';
-import { SettingsModal } from './settings-modal';
-import { SupportModal } from './support-modal';
-import { CookieConsentModal, type CookieConsentPreferences } from './cookie-consent-modal';
+import type { CookieConsentPreferences } from './cookie-consent-modal';
 import { getUnreadNotificationCount, getClientUnreadNotificationCount, getAdminUnreadNotificationCount } from '@/modules/notifications/http/client';
 import { getAgentBalance } from '@/services/agent';
 import { HttpError } from '@/services/http';
@@ -51,6 +48,79 @@ import {
   getDashboardNavigationHref,
   parseDashboardModule,
 } from '@/components/dashboard/dashboard-modules';
+
+// Modales secundarios del shell: su código no viaja con la carga inicial. Se
+// descargan la primera vez que se abren (ver `useHasOpened`).
+const UsersPanel = dynamic(() => import('./users-panel').then((m) => m.UsersPanel), { ssr: false });
+const SearchModal = dynamic(() => import('./search-modal').then((m) => m.SearchModal), { ssr: false });
+const SettingsModal = dynamic(() => import('./settings-modal').then((m) => m.SettingsModal), { ssr: false });
+const SupportModal = dynamic(() => import('./support-modal').then((m) => m.SupportModal), { ssr: false });
+const CookieConsentModal = dynamic(() => import('./cookie-consent-modal').then((m) => m.CookieConsentModal), { ssr: false });
+
+/**
+ * true desde la primera vez que `open` vale true. Montar el modal sólo a partir
+ * de ahí evita descargar su código antes de tiempo; mantenerlo montado después
+ * conserva la animación de cierre y el estado interno.
+ */
+function useHasOpened(open: boolean): boolean {
+  const [hasOpened, setHasOpened] = useState(open);
+  if (open && !hasOpened) setHasOpened(true);
+  return hasOpened;
+}
+
+// Intervalo de sondeo del shell cuando la pestaña está visible.
+const SHELL_POLL_INTERVAL_MS = 30_000;
+
+/**
+ * Ejecuta `task` al montar y cada `intervalMs` mientras la pestaña está
+ * visible. Con la pestaña oculta no hace peticiones; al volver, refresca en el
+ * acto. Nunca solapa dos ejecuciones. `key` a null lo desactiva; cambiarlo
+ * (otro usuario u otro rol) reinicia el ciclo con una carga inmediata.
+ */
+function useVisiblePolling(task: () => Promise<void>, intervalMs: number, key: string | null) {
+  const taskRef = useRef(task);
+  taskRef.current = task;
+
+  useEffect(() => {
+    if (key === null) return;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    let running = false;
+    let disposed = false;
+
+    const run = async () => {
+      if (running || disposed || document.visibilityState !== 'visible') return;
+      running = true;
+      try {
+        await taskRef.current();
+      } finally {
+        running = false;
+      }
+    };
+    const schedule = () => {
+      clearTimeout(timer);
+      if (disposed || document.visibilityState !== 'visible') return;
+      timer = setTimeout(async () => {
+        await run();
+        schedule();
+      }, intervalMs);
+    };
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        void run().then(schedule);
+      } else {
+        clearTimeout(timer);
+      }
+    };
+
+    void run().then(schedule);
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    return () => {
+      disposed = true;
+      clearTimeout(timer);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+    };
+  }, [intervalMs, key]);
+}
 
 const COOKIE_CONSENT_STORAGE_KEY_PREFIX = 'fondoseg_cookie_consent_v2';
 const COOKIE_CONSENT_GLOBAL_STORAGE_KEY = `${COOKIE_CONSENT_STORAGE_KEY_PREFIX}:site`;
@@ -165,6 +235,11 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
   const [notificationCount, setNotificationCount] = useState(0);
   const [lowBalance, setLowBalance] = useState(false);
   const [usersPanelOpen, setUsersPanelOpen] = useState(false);
+  const usersPanelMounted = useHasOpened(usersPanelOpen);
+  const searchMounted = useHasOpened(searchOpen);
+  const settingsMounted = useHasOpened(settingsOpen);
+  const supportMounted = useHasOpened(supportOpen);
+  const cookieConsentMounted = useHasOpened(cookieConsentOpen);
   const [moduleNotice, setModuleNotice] = useState<string | null>(null);
 
   // «Usuarios conectados» se abre desde una opción del menú de usuario, que
@@ -264,7 +339,7 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
     window.scrollTo({ top: 0 });
   }, [pathname]);
 
-  useEffect(() => {
+  useVisiblePolling(
     async function loadNotificationCount() {
       if (!user?.id) return;
       try {
@@ -284,18 +359,18 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
           console.warn('Error loading notification count:', error);
         }
       }
-    }
-    loadNotificationCount();
-    const interval = setInterval(loadNotificationCount, 30000);
-    return () => clearInterval(interval);
-  }, [user?.id, user?.role]);
+    },
+    SHELL_POLL_INTERVAL_MS,
+    user?.id ? `${user.id}:${user.role}` : null,
+  );
 
   useEffect(() => {
+    if (user?.role !== 'gestor') setLowBalance(false);
+  }, [user?.role]);
+
+  useVisiblePolling(
     async function checkLowBalance() {
-      if (!user?.id || user.role !== 'gestor') {
-        setLowBalance(false);
-        return;
-      }
+      if (!user?.id || user.role !== 'gestor') return;
       try {
         const balanceData = await getAgentBalance(user.id);
         const balance = balanceData?.balance || 0;
@@ -306,11 +381,10 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
           console.warn('Error checking balance:', error);
         }
       }
-    }
-    checkLowBalance();
-    const interval = setInterval(checkLowBalance, 30000);
-    return () => clearInterval(interval);
-  }, [user?.id, user?.role]);
+    },
+    SHELL_POLL_INTERVAL_MS,
+    user?.id && user.role === 'gestor' ? user.id : null,
+  );
 
   const handleSignOut = async () => {
     // Se limpia el estado local antes de que Clerk navegue, para que el shell
@@ -784,15 +858,17 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
             {moduleNotice}
           </div>
         )}
-        <UsersPanel
-          open={usersPanelOpen}
-          onClose={() => setUsersPanelOpen(false)}
-          getReturnFocusTarget={getUserMenuTrigger}
-        />
-        <SearchModal open={searchOpen} onOpenChange={setSearchOpen} />
-        <SettingsModal open={settingsOpen} onOpenChange={setSettingsOpen} />
-        <SupportModal open={supportOpen} onOpenChange={setSupportOpen} requestType="balance_topup" />
-        <CookieConsentModal
+        {usersPanelMounted && (
+          <UsersPanel
+            open={usersPanelOpen}
+            onClose={() => setUsersPanelOpen(false)}
+            getReturnFocusTarget={getUserMenuTrigger}
+          />
+        )}
+        {searchMounted && <SearchModal open={searchOpen} onOpenChange={setSearchOpen} />}
+        {settingsMounted && <SettingsModal open={settingsOpen} onOpenChange={setSettingsOpen} />}
+        {supportMounted && <SupportModal open={supportOpen} onOpenChange={setSupportOpen} requestType="balance_topup" />}
+        {cookieConsentMounted && <CookieConsentModal
           open={cookieConsentOpen}
           initialPreferences={cookiePreferences}
           onAcceptAll={() =>
@@ -808,7 +884,7 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
             })
           }
           onSaveConfiguration={(preferences) => persistCookieConsent('configured', preferences)}
-        />
+        />}
       </div>
     </div>
   );

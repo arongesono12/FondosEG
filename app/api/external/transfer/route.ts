@@ -237,8 +237,7 @@ export async function POST(request: NextRequest) {
             destination_country: destination_country ?? null,
             source: 'external_api',
           },
-        },
-        10
+        }
       );
     } catch (webhookError) {
       console.error('Webhook dispatch failed after external transfer creation:', webhookError);

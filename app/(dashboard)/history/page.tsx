@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useAppStore } from '@/lib/store';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -10,14 +10,18 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Skeleton } from '@/components/ui/skeleton';
-import { correctTransfer, getAllTransfers, getTransfers } from '@/modules/transfers/http/client';
+import { correctTransfer, getTransferHistory, type TransferHistoryStatus } from '@/modules/transfers/http/client';
+import { isTransferCompleted, isTransferPending, normalizeTransferStatus } from '@/lib/financial';
 import { formatCurrency, formatDate, getStatusColor, getStatusText } from '@/lib/utils';
 import type { Transfer } from '@/types';
-import { Download, History, PencilLine, Search, TrendingUp, Wallet, XCircle } from '@/components/ui/hugeicons';
+import { AlertTriangle, Download, History, PencilLine, Search, TrendingUp, Wallet, XCircle } from '@/components/ui/hugeicons';
 import { isAdminRole } from '@/lib/roles';
 import Link from 'next/link';
 
-type StatusFilter = 'all' | 'completed' | 'created' | 'available_for_pickup' | 'cancelled';
+type StatusFilter = TransferHistoryStatus;
+
+const PAGE_SIZE = 50;
+const SEARCH_DEBOUNCE_MS = 300;
 
 function MetricTile({
   label,
@@ -53,9 +57,17 @@ function MetricTile({
 export default function HistoryPage() {
   const { user } = useAppStore();
   const [transfers, setTransfers] = useState<Transfer[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [listStatus, setListStatus] = useState<'loading' | 'ready' | 'error'>('loading');
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [loadMoreError, setLoadMoreError] = useState(false);
+  const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  const [fromDate, setFromDate] = useState('');
+  const [toDate, setToDate] = useState('');
+  const requestId = useRef(0);
   const [editingTransfer, setEditingTransfer] = useState<Transfer | null>(null);
   const [correctionError, setCorrectionError] = useState('');
   const [correcting, setCorrecting] = useState(false);
@@ -71,40 +83,62 @@ export default function HistoryPage() {
   });
 
   useEffect(() => {
-    async function loadTransfers() {
-      try {
-        const data = isAdminRole(user?.role) ? await getAllTransfers(150) : await getTransfers(150);
-        setTransfers(data);
-      } catch (error) {
+    const timer = setTimeout(() => setDebouncedSearch(searchTerm.trim()), SEARCH_DEBOUNCE_MS);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  // Búsqueda, estado y fechas se resuelven en el servidor sobre todo el
+  // historial; aquí sólo se pide la primera página y, a demanda, las siguientes.
+  const loadFirstPage = useCallback(() => {
+    const id = ++requestId.current;
+    setListStatus('loading');
+    setLoadMoreError(false);
+    getTransferHistory({ q: debouncedSearch, status: statusFilter, from: fromDate, to: toDate, limit: PAGE_SIZE })
+      .then((page) => {
+        if (id !== requestId.current) return;
+        setTransfers(page.items);
+        setNextCursor(page.nextCursor);
+        setListStatus('ready');
+        setHasLoadedOnce(true);
+      })
+      .catch((error: unknown) => {
+        if (id !== requestId.current) return;
         console.error('Error loading transfers:', error);
-      } finally {
-        setLoading(false);
-      }
-    }
+        setListStatus('error');
+      });
+  }, [debouncedSearch, statusFilter, fromDate, toDate]);
 
-    if (user) {
-      loadTransfers();
-    }
-  }, [user]);
+  useEffect(() => {
+    if (user) loadFirstPage();
+  }, [user, loadFirstPage]);
 
-  const normalizedSearch = searchTerm.toLowerCase().trim();
-  const filteredTransfers = transfers.filter((transfer) => {
-    const matchesSearch =
-      !normalizedSearch ||
-      transfer.transfer_code.toLowerCase().includes(normalizedSearch) ||
-      transfer.sender_name.toLowerCase().includes(normalizedSearch) ||
-      transfer.sender_phone.includes(normalizedSearch) ||
-      transfer.receiver_name.toLowerCase().includes(normalizedSearch) ||
-      transfer.receiver_phone.includes(normalizedSearch) ||
-      transfer.destination_city.toLowerCase().includes(normalizedSearch);
+  const loadMore = () => {
+    if (!nextCursor || loadingMore) return;
+    const id = requestId.current;
+    setLoadingMore(true);
+    setLoadMoreError(false);
+    getTransferHistory({ q: debouncedSearch, status: statusFilter, from: fromDate, to: toDate, cursor: nextCursor, limit: PAGE_SIZE })
+      .then((page) => {
+        // Si los filtros cambiaron mientras tanto, esta página ya no aplica.
+        if (id !== requestId.current) return;
+        setTransfers((current) => [...current, ...page.items.filter((item) => !current.some((existing) => existing.id === item.id))]);
+        setNextCursor(page.nextCursor);
+      })
+      .catch((error: unknown) => {
+        if (id !== requestId.current) return;
+        console.error('Error loading more transfers:', error);
+        setLoadMoreError(true);
+      })
+      .finally(() => setLoadingMore(false));
+  };
 
-    const matchesStatus = statusFilter === 'all' ? true : transfer.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  });
+  const filteredTransfers = transfers;
+  const hasFilters = Boolean(debouncedSearch || statusFilter !== 'all' || fromDate || toDate);
+  const scopeHint = `Sobre ${transfers.length} operaciones cargadas${nextCursor ? ' (hay más)' : ''}`;
 
-  const completedTransfers = transfers.filter((transfer) => transfer.status === 'completed');
-  const createdTransfers = transfers.filter((transfer) => transfer.status === 'created' || transfer.status === 'available_for_pickup');
-  const cancelledTransfers = transfers.filter((transfer) => transfer.status === 'cancelled');
+  const completedTransfers = transfers.filter((transfer) => isTransferCompleted(transfer.status));
+  const createdTransfers = transfers.filter((transfer) => isTransferPending(transfer.status));
+  const cancelledTransfers = transfers.filter((transfer) => normalizeTransferStatus(transfer.status) === 'cancelled');
   const totalVolume = completedTransfers.reduce((sum, transfer) => sum + transfer.amount, 0);
   const averageTicket = completedTransfers.length ? totalVolume / completedTransfers.length : 0;
   const showAdminActions = isAdminRole(user?.role);
@@ -207,7 +241,7 @@ export default function HistoryPage() {
     URL.revokeObjectURL(url);
   };
 
-  if (loading) {
+  if (!user || (!hasLoadedOnce && listStatus === 'loading')) {
     return (
       <div className="space-y-6">
         <Skeleton className="h-32 w-full rounded-4xl" />
@@ -242,16 +276,17 @@ export default function HistoryPage() {
 
           <Button onClick={exportToCsv} className="w-full shrink-0 rounded-2xl bg-brand-gradient px-6 font-black text-white shadow-xl shadow-pink-500/20 @4xl:w-auto">
             <Download className="mr-2 h-4 w-4" />
-            Exportar CSV
+            Exportar CSV ({transfers.length})
           </Button>
         </div>
       </section>
 
       <section className="grid gap-4 @xl:grid-cols-2 @4xl:grid-cols-4">
-        <MetricTile label="Completadas" value={String(completedTransfers.length)} hint="Operaciones cerradas" icon={History} tone="border-emerald-500/20 bg-emerald-500 shadow-emerald-500/20" />
-        <MetricTile label="Pendientes" value={String(createdTransfers.length)} hint="En seguimiento o pago" icon={Wallet} tone="border-amber-500/20 bg-amber-500 shadow-amber-500/20" />
-        <MetricTile label="Canceladas" value={String(cancelledTransfers.length)} hint="Requieren auditoría si crecen" icon={XCircle} tone="border-rose-500/20 bg-rose-500 shadow-rose-500/20" />
-        <MetricTile label="Ticket medio" value={formatCurrency(averageTicket)} hint={formatCurrency(totalVolume) + ' de volumen confirmado'} icon={TrendingUp} tone="border-sky-500/20 bg-sky-500 shadow-sky-500/20" />
+        {/* Estos totales describen sólo lo cargado en pantalla, no todo el historial. */}
+        <MetricTile label="Completadas" value={listStatus === 'error' ? '—' : String(completedTransfers.length)} hint={scopeHint} icon={History} tone="border-emerald-500/20 bg-emerald-500 shadow-emerald-500/20" />
+        <MetricTile label="Pendientes" value={listStatus === 'error' ? '—' : String(createdTransfers.length)} hint={scopeHint} icon={Wallet} tone="border-amber-500/20 bg-amber-500 shadow-amber-500/20" />
+        <MetricTile label="Canceladas" value={listStatus === 'error' ? '—' : String(cancelledTransfers.length)} hint={scopeHint} icon={XCircle} tone="border-rose-500/20 bg-rose-500 shadow-rose-500/20" />
+        <MetricTile label="Ticket medio" value={listStatus === 'error' ? '—' : formatCurrency(averageTicket)} hint={`${formatCurrency(totalVolume)} confirmados · ${transfers.length} cargadas`} icon={TrendingUp} tone="border-sky-500/20 bg-sky-500 shadow-sky-500/20" />
       </section>
 
       <Card className="overflow-hidden">
@@ -291,6 +326,16 @@ export default function HistoryPage() {
                   </Button>
                 ))}
               </div>
+              <div className="flex gap-2">
+                <Label className="flex flex-col gap-1 text-xs font-semibold text-muted-foreground">
+                  Desde
+                  <Input type="date" value={fromDate} max={toDate || undefined} onChange={(event) => setFromDate(event.target.value)} className="h-11 rounded-2xl border-border/20 bg-background/70" />
+                </Label>
+                <Label className="flex flex-col gap-1 text-xs font-semibold text-muted-foreground">
+                  Hasta
+                  <Input type="date" value={toDate} min={fromDate || undefined} onChange={(event) => setToDate(event.target.value)} className="h-11 rounded-2xl border-border/20 bg-background/70" />
+                </Label>
+              </div>
             </div>
           </div>
         </CardHeader>
@@ -310,10 +355,24 @@ export default function HistoryPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredTransfers.length === 0 ? (
+                {listStatus === 'error' ? (
                   <TableRow>
                     <TableCell colSpan={7} className="py-20 text-center text-sm font-bold text-muted-foreground">
-                      No hay operaciones que coincidan con los filtros actuales.
+                      <div role="alert" className="flex flex-col items-center gap-3">
+                        <AlertTriangle className="h-5 w-5 text-rose-500" />
+                        No se pudo cargar el historial.
+                        <Button type="button" variant="outline" className="rounded-xl font-black" onClick={loadFirstPage}>Reintentar</Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ) : filteredTransfers.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="py-20 text-center text-sm font-bold text-muted-foreground">
+                      {listStatus === 'loading'
+                        ? 'Buscando operaciones…'
+                        : hasFilters
+                          ? 'No hay operaciones que coincidan con los filtros en todo el historial.'
+                          : 'Todavía no hay operaciones.'}
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -375,6 +434,20 @@ export default function HistoryPage() {
               </TableBody>
             </Table>
           </div>
+          {listStatus !== 'error' && transfers.length > 0 && (
+            <div className="flex flex-col items-center gap-3 border-t border-border/5 p-5 text-xs font-semibold text-muted-foreground @2xl:flex-row @2xl:justify-between" aria-live="polite">
+              <span>
+                {transfers.length} operaciones mostradas{nextCursor ? ' · hay más en el historial' : ' · fin del historial'}
+                {listStatus === 'loading' && ' · actualizando…'}
+              </span>
+              {loadMoreError && <span role="alert" className="text-rose-600 dark:text-rose-300">No se pudieron cargar más operaciones.</span>}
+              {nextCursor && (
+                <Button type="button" variant="outline" className="rounded-xl font-black" onClick={loadMore} disabled={loadingMore || listStatus === 'loading'}>
+                  {loadingMore ? 'Cargando…' : loadMoreError ? 'Reintentar' : 'Cargar más'}
+                </Button>
+              )}
+            </div>
+          )}
         </CardContent>
       </Card>
 

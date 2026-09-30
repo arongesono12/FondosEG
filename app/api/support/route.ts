@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { AuthzError, requireProfile, requireRole } from '@/lib/server/authz';
 
-import { queueNotification, processNotificationOutbox } from '@/lib/server/notification-outbox';
+import { queueNotification } from '@/lib/server/notification-outbox';
+import { scheduleOutboxProcessing } from '@/lib/server/outbox-worker';
 import { sendSupportRequestEmail } from '@/lib/email-service';
 import { createComplaintReference, PAYMENT_COMPLAINT_TARGET_DAYS } from '@/lib/compliance';
 
@@ -132,7 +133,7 @@ export async function POST(request: NextRequest) {
             message: adminMessage,
             priority: 'high',
           });
-          await processNotificationOutbox(5);
+          scheduleOutboxProcessing();
         } catch (notifErr) {
           console.error('Failed to queue/process support SMS:', notifErr);
         }

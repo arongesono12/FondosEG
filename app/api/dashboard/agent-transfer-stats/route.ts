@@ -4,46 +4,34 @@ import { requireProfile, requireRole } from '@/lib/server/authz';
 import { handleRouteError } from '@/lib/server/route-error';
 import type { AgentTransferStats } from '@/types';
 
+type AgentRow = {
+  agent_id: string;
+  agent_name: string | null;
+  transfer_count: number | string | null;
+  total_sent: number | string | null;
+  last_transfer: string;
+};
+
 export async function GET() {
   try {
     const profile = await requireProfile();
     requireRole(profile, 'admin');
 
-    const adminClient = createAdminClient();
-
-    const { data, error } = await adminClient
-      .from('transfers')
-      .select('agent_id, amount, created_at, users!transfers_agent_id_fkey(name)')
-      .in('status', ['completed', 'paid_out']);
-
+    // Agrupado y ordenado en PostgreSQL:
+    // supabase/migrations/20260925_dashboard_sql_aggregates.sql.
+    const { data, error } = await createAdminClient().rpc('dashboard_agent_transfer_stats', {});
     if (error) throw error;
 
-    const agentMap = new Map<string, AgentTransferStats>();
-    interface TInfo { agent_id: string; amount: number; created_at: string; users?: { name: string } }
-    (data as unknown as TInfo[] || []).forEach((transfer) => {
-      const existing = agentMap.get(transfer.agent_id);
-      const agentName = transfer?.users?.name || 'Unknown';
-      if (existing) {
-        existing.transfer_count += 1;
-        existing.total_sent += Number(transfer.amount);
-        if (new Date(transfer.created_at) > new Date(existing.last_transfer)) {
-          existing.last_transfer = transfer.created_at;
-        }
-      } else {
-        agentMap.set(transfer.agent_id, {
-          agent_id: transfer.agent_id,
-          agent_name: agentName,
-          transfer_count: 1,
-          total_sent: Number(transfer.amount),
-          last_transfer: transfer.created_at,
-        });
-      }
-    });
+    const result: AgentTransferStats[] = ((data ?? []) as AgentRow[]).map((row) => ({
+      agent_id: row.agent_id,
+      agent_name: row.agent_name || 'Unknown',
+      transfer_count: Number(row.transfer_count ?? 0),
+      total_sent: Number(row.total_sent ?? 0),
+      last_transfer: row.last_transfer,
+    }));
 
-    const result = Array.from(agentMap.values()).sort((a, b) => b.total_sent - a.total_sent);
     return NextResponse.json(result);
   } catch (err) {
     return handleRouteError(err, 'GET /api/dashboard/agent-transfer-stats');
   }
 }
-

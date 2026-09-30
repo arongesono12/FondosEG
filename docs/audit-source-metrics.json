@@ -1,0 +1,2380 @@
+{
+  "method": "Tracked source files; nonblank physical lines including comments; excludes generated SDK dist, dependencies, assets, JSON, documentation and skill code. SSR presentation files count as frontend by responsibility, not execution location.",
+  "commit": "4670453",
+  "totals": {
+    "Frontend": {
+      "files": 134,
+      "lines": 20756,
+      "bytes": 1041796
+    },
+    "Backend TS": {
+      "files": 105,
+      "lines": 11706,
+      "bytes": 471156
+    },
+    "Tooling": {
+      "files": 11,
+      "lines": 683,
+      "bytes": 26526
+    },
+    "Shared": {
+      "files": 13,
+      "lines": 1568,
+      "bytes": 54102
+    },
+    "SDK": {
+      "files": 6,
+      "lines": 496,
+      "bytes": 16261
+    },
+    "Backend SQL/Edge": {
+      "files": 41,
+      "lines": 7383,
+      "bytes": 266371
+    },
+    "Tests": {
+      "files": 10,
+      "lines": 1014,
+      "bytes": 52672
+    }
+  },
+  "pages": {
+    "total": 31,
+    "client": 14,
+    "dashboard": 14,
+    "dashboardClient": 13
+  },
+  "apiRoutes": 70,
+  "css": {
+    "files": 21,
+    "lines": 3729
+  },
+  "largest": [
+    {
+      "file": "app/(dashboard)/developers/page.tsx",
+      "group": "Frontend",
+      "lines": 866,
+      "bytes": 44958,
+      "client": true
+    },
+    {
+      "file": "app/(dashboard)/staff/page.tsx",
+      "group": "Frontend",
+      "lines": 825,
+      "bytes": 38955,
+      "client": true
+    },
+    {
+      "file": "app/styles/dashboard-system.css",
+      "group": "Frontend",
+      "lines": 794,
+      "bytes": 28348,
+      "client": false
+    },
+    {
+      "file": "components/agent-transfer-modal.tsx",
+      "group": "Frontend",
+      "lines": 782,
+      "bytes": 38591,
+      "client": true
+    },
+    {
+      "file": "app/(dashboard)/balance/page.tsx",
+      "group": "Frontend",
+      "lines": 758,
+      "bytes": 42447,
+      "client": true
+    },
+    {
+      "file": "components/layout/dashboard-layout-wrapper.tsx",
+      "group": "Frontend",
+      "lines": 754,
+      "bytes": 36547,
+      "client": true
+    },
+    {
+      "file": "app/(dashboard)/stats/page.tsx",
+      "group": "Frontend",
+      "lines": 647,
+      "bytes": 36021,
+      "client": true
+    },
+    {
+      "file": "components/documentation/api-documentation.tsx",
+      "group": "Frontend",
+      "lines": 623,
+      "bytes": 38517,
+      "client": true
+    },
+    {
+      "file": "components/layout/dashboard-detail-modals.tsx",
+      "group": "Frontend",
+      "lines": 588,
+      "bytes": 27491,
+      "client": true
+    },
+    {
+      "file": "app/(dashboard)/agents/page.tsx",
+      "group": "Frontend",
+      "lines": 517,
+      "bytes": 23102,
+      "client": true
+    },
+    {
+      "file": "app/(dashboard)/transfers/page.tsx",
+      "group": "Frontend",
+      "lines": 511,
+      "bytes": 26360,
+      "client": true
+    },
+    {
+      "file": "app/(dashboard)/profile/page.tsx",
+      "group": "Frontend",
+      "lines": 504,
+      "bytes": 23158,
+      "client": true
+    }
+  ],
+  "rows": [
+    {
+      "file": "app/(auth)/layout.tsx",
+      "group": "Frontend",
+      "lines": 68,
+      "bytes": 3103,
+      "client": false
+    },
+    {
+      "file": "app/(auth)/loading.tsx",
+      "group": "Frontend",
+      "lines": 4,
+      "bytes": 143,
+      "client": false
+    },
+    {
+      "file": "app/(auth)/login/[[...rest]]/page.tsx",
+      "group": "Frontend",
+      "lines": 14,
+      "bytes": 372,
+      "client": false
+    },
+    {
+      "file": "app/(auth)/register/[[...rest]]/page.tsx",
+      "group": "Frontend",
+      "lines": 14,
+      "bytes": 375,
+      "client": false
+    },
+    {
+      "file": "app/(dashboard)/agents/page.tsx",
+      "group": "Frontend",
+      "lines": 517,
+      "bytes": 23102,
+      "client": true
+    },
+    {
+      "file": "app/(dashboard)/balance/error.tsx",
+      "group": "Frontend",
+      "lines": 28,
+      "bytes": 991,
+      "client": true
+    },
+    {
+      "file": "app/(dashboard)/balance/page.tsx",
+      "group": "Frontend",
+      "lines": 758,
+      "bytes": 42447,
+      "client": true
+    },
+    {
+      "file": "app/(dashboard)/compliance/page.tsx",
+      "group": "Frontend",
+      "lines": 225,
+      "bytes": 10316,
+      "client": true
+    },
+    {
+      "file": "app/(dashboard)/cookies/page.tsx",
+      "group": "Frontend",
+      "lines": 46,
+      "bytes": 3262,
+      "client": true
+    },
+    {
+      "file": "app/(dashboard)/dashboard/error.tsx",
+      "group": "Frontend",
+      "lines": 28,
+      "bytes": 1003,
+      "client": true
+    },
+    {
+      "file": "app/(dashboard)/dashboard/page.tsx",
+      "group": "Frontend",
+      "lines": 215,
+      "bytes": 14612,
+      "client": true
+    },
+    {
+      "file": "app/(dashboard)/developers/layout.tsx",
+      "group": "Frontend",
+      "lines": 5,
+      "bytes": 229,
+      "client": false
+    },
+    {
+      "file": "app/(dashboard)/developers/page.tsx",
+      "group": "Frontend",
+      "lines": 866,
+      "bytes": 44958,
+      "client": true
+    },
+    {
+      "file": "app/(dashboard)/error.tsx",
+      "group": "Frontend",
+      "lines": 51,
+      "bytes": 1887,
+      "client": true
+    },
+    {
+      "file": "app/(dashboard)/history/error.tsx",
+      "group": "Frontend",
+      "lines": 28,
+      "bytes": 1007,
+      "client": true
+    },
+    {
+      "file": "app/(dashboard)/history/page.tsx",
+      "group": "Frontend",
+      "lines": 449,
+      "bytes": 23329,
+      "client": true
+    },
+    {
+      "file": "app/(dashboard)/layout.tsx",
+      "group": "Frontend",
+      "lines": 122,
+      "bytes": 5217,
+      "client": false
+    },
+    {
+      "file": "app/(dashboard)/loading.tsx",
+      "group": "Frontend",
+      "lines": 4,
+      "bytes": 153,
+      "client": false
+    },
+    {
+      "file": "app/(dashboard)/not-found.tsx",
+      "group": "Frontend",
+      "lines": 14,
+      "bytes": 472,
+      "client": false
+    },
+    {
+      "file": "app/(dashboard)/policies/page.tsx",
+      "group": "Frontend",
+      "lines": 58,
+      "bytes": 4715,
+      "client": true
+    },
+    {
+      "file": "app/(dashboard)/privacy/page.tsx",
+      "group": "Frontend",
+      "lines": 58,
+      "bytes": 4908,
+      "client": true
+    },
+    {
+      "file": "app/(dashboard)/profile/page.tsx",
+      "group": "Frontend",
+      "lines": 504,
+      "bytes": 23158,
+      "client": true
+    },
+    {
+      "file": "app/(dashboard)/receipts/[id]/page.tsx",
+      "group": "Frontend",
+      "lines": 264,
+      "bytes": 13571,
+      "client": false
+    },
+    {
+      "file": "app/(dashboard)/staff/page.tsx",
+      "group": "Frontend",
+      "lines": 825,
+      "bytes": 38955,
+      "client": true
+    },
+    {
+      "file": "app/(dashboard)/stats/page.tsx",
+      "group": "Frontend",
+      "lines": 647,
+      "bytes": 36021,
+      "client": true
+    },
+    {
+      "file": "app/(dashboard)/transfers/error.tsx",
+      "group": "Frontend",
+      "lines": 28,
+      "bytes": 1028,
+      "client": true
+    },
+    {
+      "file": "app/(dashboard)/transfers/page.tsx",
+      "group": "Frontend",
+      "lines": 511,
+      "bytes": 26360,
+      "client": true
+    },
+    {
+      "file": "app/(developer)/developer-console/layout.tsx",
+      "group": "Frontend",
+      "lines": 98,
+      "bytes": 5761,
+      "client": false
+    },
+    {
+      "file": "app/(developer)/developer-console/page.tsx",
+      "group": "Frontend",
+      "lines": 1,
+      "bytes": 62,
+      "client": false
+    },
+    {
+      "file": "app/actions/onboarding.ts",
+      "group": "Backend TS",
+      "lines": 92,
+      "bytes": 3826,
+      "client": false
+    },
+    {
+      "file": "app/actions/profile.ts",
+      "group": "Backend TS",
+      "lines": 120,
+      "bytes": 5289,
+      "client": false
+    },
+    {
+      "file": "app/api/admins/route.ts",
+      "group": "Backend TS",
+      "lines": 26,
+      "bytes": 983,
+      "client": false
+    },
+    {
+      "file": "app/api/agent-balance/route.ts",
+      "group": "Backend TS",
+      "lines": 19,
+      "bytes": 937,
+      "client": false
+    },
+    {
+      "file": "app/api/agent-transactions/route.ts",
+      "group": "Backend TS",
+      "lines": 28,
+      "bytes": 1278,
+      "client": false
+    },
+    {
+      "file": "app/api/agents/[id]/reset/route.ts",
+      "group": "Backend TS",
+      "lines": 63,
+      "bytes": 2762,
+      "client": false
+    },
+    {
+      "file": "app/api/agents/[id]/status/route.ts",
+      "group": "Backend TS",
+      "lines": 36,
+      "bytes": 1563,
+      "client": false
+    },
+    {
+      "file": "app/api/agents/[id]/topup/route.ts",
+      "group": "Backend TS",
+      "lines": 70,
+      "bytes": 2805,
+      "client": false
+    },
+    {
+      "file": "app/api/agents/route.ts",
+      "group": "Backend TS",
+      "lines": 131,
+      "bytes": 5084,
+      "client": false
+    },
+    {
+      "file": "app/api/all-transfers/route.ts",
+      "group": "Backend TS",
+      "lines": 27,
+      "bytes": 1175,
+      "client": false
+    },
+    {
+      "file": "app/api/api-keys/[id]/rotate/route.ts",
+      "group": "Backend TS",
+      "lines": 70,
+      "bytes": 2464,
+      "client": false
+    },
+    {
+      "file": "app/api/api-keys/route.ts",
+      "group": "Backend TS",
+      "lines": 224,
+      "bytes": 8196,
+      "client": false
+    },
+    {
+      "file": "app/api/api-keys/usage/route.ts",
+      "group": "Backend TS",
+      "lines": 54,
+      "bytes": 2374,
+      "client": false
+    },
+    {
+      "file": "app/api/balance/route.ts",
+      "group": "Backend TS",
+      "lines": 48,
+      "bytes": 2046,
+      "client": false
+    },
+    {
+      "file": "app/api/dashboard/agent-transfer-stats/route.ts",
+      "group": "Backend TS",
+      "lines": 42,
+      "bytes": 1839,
+      "client": false
+    },
+    {
+      "file": "app/api/dashboard/agents-commission/route.ts",
+      "group": "Backend TS",
+      "lines": 87,
+      "bytes": 4215,
+      "client": false
+    },
+    {
+      "file": "app/api/dashboard/daily-transfer-stats/route.ts",
+      "group": "Backend TS",
+      "lines": 62,
+      "bytes": 2590,
+      "client": false
+    },
+    {
+      "file": "app/api/dashboard/recent-transfers/route.ts",
+      "group": "Backend TS",
+      "lines": 92,
+      "bytes": 3741,
+      "client": false
+    },
+    {
+      "file": "app/api/dashboard/reconciliation/route.ts",
+      "group": "Backend TS",
+      "lines": 71,
+      "bytes": 2695,
+      "client": false
+    },
+    {
+      "file": "app/api/dashboard/stats/route.ts",
+      "group": "Backend TS",
+      "lines": 288,
+      "bytes": 13799,
+      "client": false
+    },
+    {
+      "file": "app/api/docs/openapi.json/route.ts",
+      "group": "Backend TS",
+      "lines": 815,
+      "bytes": 33397,
+      "client": false
+    },
+    {
+      "file": "app/api/external/balance/route.ts",
+      "group": "Backend TS",
+      "lines": 104,
+      "bytes": 4008,
+      "client": false
+    },
+    {
+      "file": "app/api/external/history/route.ts",
+      "group": "Backend TS",
+      "lines": 142,
+      "bytes": 5958,
+      "client": false
+    },
+    {
+      "file": "app/api/external/properties/route.ts",
+      "group": "Backend TS",
+      "lines": 138,
+      "bytes": 5628,
+      "client": false
+    },
+    {
+      "file": "app/api/external/rental-payments/route.ts",
+      "group": "Backend TS",
+      "lines": 360,
+      "bytes": 16109,
+      "client": false
+    },
+    {
+      "file": "app/api/external/rentals/route.ts",
+      "group": "Backend TS",
+      "lines": 114,
+      "bytes": 4697,
+      "client": false
+    },
+    {
+      "file": "app/api/external/transfer/route.ts",
+      "group": "Backend TS",
+      "lines": 257,
+      "bytes": 10699,
+      "client": false
+    },
+    {
+      "file": "app/api/external/wallet-transfer/route.ts",
+      "group": "Backend TS",
+      "lines": 216,
+      "bytes": 8805,
+      "client": false
+    },
+    {
+      "file": "app/api/gestors-for-client/route.ts",
+      "group": "Backend TS",
+      "lines": 37,
+      "bytes": 1500,
+      "client": false
+    },
+    {
+      "file": "app/api/marketing/stats/route.ts",
+      "group": "Backend TS",
+      "lines": 115,
+      "bytes": 4389,
+      "client": false
+    },
+    {
+      "file": "app/api/marketing/track/route.ts",
+      "group": "Backend TS",
+      "lines": 73,
+      "bytes": 3101,
+      "client": false
+    },
+    {
+      "file": "app/api/me/notifications/read-all/route.ts",
+      "group": "Backend TS",
+      "lines": 56,
+      "bytes": 2546,
+      "client": false
+    },
+    {
+      "file": "app/api/me/notifications/read/route.ts",
+      "group": "Backend TS",
+      "lines": 46,
+      "bytes": 2389,
+      "client": false
+    },
+    {
+      "file": "app/api/me/notifications/route.ts",
+      "group": "Backend TS",
+      "lines": 116,
+      "bytes": 4625,
+      "client": false
+    },
+    {
+      "file": "app/api/me/notifications/unread-count/route.ts",
+      "group": "Backend TS",
+      "lines": 77,
+      "bytes": 2937,
+      "client": false
+    },
+    {
+      "file": "app/api/notifications/route.ts",
+      "group": "Backend TS",
+      "lines": 79,
+      "bytes": 2811,
+      "client": false
+    },
+    {
+      "file": "app/api/profile/avatar/route.ts",
+      "group": "Backend TS",
+      "lines": 15,
+      "bytes": 566,
+      "client": false
+    },
+    {
+      "file": "app/api/profile/password/route.ts",
+      "group": "Backend TS",
+      "lines": 15,
+      "bytes": 577,
+      "client": false
+    },
+    {
+      "file": "app/api/profile/update/route.ts",
+      "group": "Backend TS",
+      "lines": 15,
+      "bytes": 566,
+      "client": false
+    },
+    {
+      "file": "app/api/sms/route.ts",
+      "group": "Backend TS",
+      "lines": 63,
+      "bytes": 2864,
+      "client": false
+    },
+    {
+      "file": "app/api/staff/[id]/route.ts",
+      "group": "Backend TS",
+      "lines": 51,
+      "bytes": 2155,
+      "client": false
+    },
+    {
+      "file": "app/api/staff/activity/route.ts",
+      "group": "Backend TS",
+      "lines": 45,
+      "bytes": 1750,
+      "client": false
+    },
+    {
+      "file": "app/api/staff/route.ts",
+      "group": "Backend TS",
+      "lines": 104,
+      "bytes": 4213,
+      "client": false
+    },
+    {
+      "file": "app/api/staff/users/[id]/route.ts",
+      "group": "Backend TS",
+      "lines": 267,
+      "bytes": 9882,
+      "client": false
+    },
+    {
+      "file": "app/api/staff/users/route.ts",
+      "group": "Backend TS",
+      "lines": 183,
+      "bytes": 6972,
+      "client": false
+    },
+    {
+      "file": "app/api/support/email-sync/route.ts",
+      "group": "Backend TS",
+      "lines": 30,
+      "bytes": 1153,
+      "client": false
+    },
+    {
+      "file": "app/api/support/route.ts",
+      "group": "Backend TS",
+      "lines": 170,
+      "bytes": 7512,
+      "client": false
+    },
+    {
+      "file": "app/api/transfers/[id]/correct/route.ts",
+      "group": "Backend TS",
+      "lines": 83,
+      "bytes": 4202,
+      "client": false
+    },
+    {
+      "file": "app/api/transfers/[id]/revolut-payout/route.ts",
+      "group": "Backend TS",
+      "lines": 125,
+      "bytes": 4947,
+      "client": false
+    },
+    {
+      "file": "app/api/transfers/lookup/route.ts",
+      "group": "Backend TS",
+      "lines": 46,
+      "bytes": 2037,
+      "client": false
+    },
+    {
+      "file": "app/api/transfers/payout/route.ts",
+      "group": "Backend TS",
+      "lines": 103,
+      "bytes": 4933,
+      "client": false
+    },
+    {
+      "file": "app/api/transfers/route.ts",
+      "group": "Backend TS",
+      "lines": 206,
+      "bytes": 8933,
+      "client": false
+    },
+    {
+      "file": "app/api/transfers/search/route.ts",
+      "group": "Backend TS",
+      "lines": 114,
+      "bytes": 5095,
+      "client": false
+    },
+    {
+      "file": "app/api/users-presence/route.ts",
+      "group": "Backend TS",
+      "lines": 105,
+      "bytes": 4478,
+      "client": false
+    },
+    {
+      "file": "app/api/v1/external/balance/route.ts",
+      "group": "Backend TS",
+      "lines": 1,
+      "bytes": 56,
+      "client": false
+    },
+    {
+      "file": "app/api/v1/external/history/route.ts",
+      "group": "Backend TS",
+      "lines": 1,
+      "bytes": 56,
+      "client": false
+    },
+    {
+      "file": "app/api/v1/external/properties/route.ts",
+      "group": "Backend TS",
+      "lines": 1,
+      "bytes": 59,
+      "client": false
+    },
+    {
+      "file": "app/api/v1/external/rental-payments/route.ts",
+      "group": "Backend TS",
+      "lines": 1,
+      "bytes": 70,
+      "client": false
+    },
+    {
+      "file": "app/api/v1/external/rentals/route.ts",
+      "group": "Backend TS",
+      "lines": 1,
+      "bytes": 56,
+      "client": false
+    },
+    {
+      "file": "app/api/v1/external/transfer/route.ts",
+      "group": "Backend TS",
+      "lines": 1,
+      "bytes": 58,
+      "client": false
+    },
+    {
+      "file": "app/api/v1/external/wallet-transfer/route.ts",
+      "group": "Backend TS",
+      "lines": 1,
+      "bytes": 65,
+      "client": false
+    },
+    {
+      "file": "app/api/wallet-transfer/route.ts",
+      "group": "Backend TS",
+      "lines": 53,
+      "bytes": 2362,
+      "client": false
+    },
+    {
+      "file": "app/api/webhooks/[id]/rotate/route.ts",
+      "group": "Backend TS",
+      "lines": 53,
+      "bytes": 1929,
+      "client": false
+    },
+    {
+      "file": "app/api/webhooks/[id]/route.ts",
+      "group": "Backend TS",
+      "lines": 102,
+      "bytes": 3655,
+      "client": false
+    },
+    {
+      "file": "app/api/webhooks/clerk/route.ts",
+      "group": "Backend TS",
+      "lines": 76,
+      "bytes": 2903,
+      "client": false
+    },
+    {
+      "file": "app/api/webhooks/payments-provider/route.ts",
+      "group": "Backend TS",
+      "lines": 144,
+      "bytes": 5908,
+      "client": false
+    },
+    {
+      "file": "app/api/webhooks/process/route.ts",
+      "group": "Backend TS",
+      "lines": 25,
+      "bytes": 1042,
+      "client": false
+    },
+    {
+      "file": "app/api/webhooks/route.ts",
+      "group": "Backend TS",
+      "lines": 94,
+      "bytes": 3495,
+      "client": false
+    },
+    {
+      "file": "app/api/weekly-transfers/route.ts",
+      "group": "Backend TS",
+      "lines": 49,
+      "bytes": 1954,
+      "client": false
+    },
+    {
+      "file": "app/api/withdrawals/lookup/route.ts",
+      "group": "Backend TS",
+      "lines": 25,
+      "bytes": 1101,
+      "client": false
+    },
+    {
+      "file": "app/api/withdrawals/payout/route.ts",
+      "group": "Backend TS",
+      "lines": 41,
+      "bytes": 1847,
+      "client": false
+    },
+    {
+      "file": "app/api/withdrawals/route.ts",
+      "group": "Backend TS",
+      "lines": 57,
+      "bytes": 2299,
+      "client": false
+    },
+    {
+      "file": "app/connection/page.tsx",
+      "group": "Frontend",
+      "lines": 4,
+      "bytes": 199,
+      "client": false
+    },
+    {
+      "file": "app/developers-portal/layout.tsx",
+      "group": "Frontend",
+      "lines": 36,
+      "bytes": 1419,
+      "client": false
+    },
+    {
+      "file": "app/developers-portal/loading.tsx",
+      "group": "Frontend",
+      "lines": 4,
+      "bytes": 159,
+      "client": false
+    },
+    {
+      "file": "app/developers-portal/login/[[...rest]]/page.tsx",
+      "group": "Frontend",
+      "lines": 12,
+      "bytes": 331,
+      "client": false
+    },
+    {
+      "file": "app/developers-portal/page.tsx",
+      "group": "Frontend",
+      "lines": 99,
+      "bytes": 5068,
+      "client": false
+    },
+    {
+      "file": "app/developers-portal/register/[[...rest]]/page.tsx",
+      "group": "Frontend",
+      "lines": 12,
+      "bytes": 334,
+      "client": false
+    },
+    {
+      "file": "app/documentation/page.tsx",
+      "group": "Frontend",
+      "lines": 9,
+      "bytes": 429,
+      "client": false
+    },
+    {
+      "file": "app/error.tsx",
+      "group": "Frontend",
+      "lines": 29,
+      "bytes": 1333,
+      "client": true
+    },
+    {
+      "file": "app/forbidden/page.tsx",
+      "group": "Frontend",
+      "lines": 14,
+      "bytes": 478,
+      "client": false
+    },
+    {
+      "file": "app/force-signout/page.tsx",
+      "group": "Frontend",
+      "lines": 28,
+      "bytes": 1099,
+      "client": true
+    },
+    {
+      "file": "app/globals.css",
+      "group": "Frontend",
+      "lines": 223,
+      "bytes": 12293,
+      "client": false
+    },
+    {
+      "file": "app/landing/[slug]/page.tsx",
+      "group": "Frontend",
+      "lines": 97,
+      "bytes": 7168,
+      "client": false
+    },
+    {
+      "file": "app/landing/aliados/page.tsx",
+      "group": "Frontend",
+      "lines": 14,
+      "bytes": 589,
+      "client": false
+    },
+    {
+      "file": "app/landing/developers/page.tsx",
+      "group": "Frontend",
+      "lines": 14,
+      "bytes": 651,
+      "client": false
+    },
+    {
+      "file": "app/landing/gestores/page.tsx",
+      "group": "Frontend",
+      "lines": 14,
+      "bytes": 640,
+      "client": false
+    },
+    {
+      "file": "app/landing/loading.tsx",
+      "group": "Frontend",
+      "lines": 4,
+      "bytes": 153,
+      "client": false
+    },
+    {
+      "file": "app/layout.tsx",
+      "group": "Frontend",
+      "lines": 75,
+      "bytes": 2913,
+      "client": false
+    },
+    {
+      "file": "app/loading.tsx",
+      "group": "Frontend",
+      "lines": 8,
+      "bytes": 246,
+      "client": false
+    },
+    {
+      "file": "app/not-found.tsx",
+      "group": "Frontend",
+      "lines": 14,
+      "bytes": 467,
+      "client": false
+    },
+    {
+      "file": "app/onboarding/layout.tsx",
+      "group": "Frontend",
+      "lines": 32,
+      "bytes": 1433,
+      "client": false
+    },
+    {
+      "file": "app/onboarding/page.tsx",
+      "group": "Frontend",
+      "lines": 18,
+      "bytes": 813,
+      "client": false
+    },
+    {
+      "file": "app/page.tsx",
+      "group": "Frontend",
+      "lines": 14,
+      "bytes": 554,
+      "client": false
+    },
+    {
+      "file": "app/styles/auth.css",
+      "group": "Frontend",
+      "lines": 102,
+      "bytes": 10254,
+      "client": false
+    },
+    {
+      "file": "app/styles/base.css",
+      "group": "Frontend",
+      "lines": 152,
+      "bytes": 3663,
+      "client": false
+    },
+    {
+      "file": "app/styles/cookie-consent.css",
+      "group": "Frontend",
+      "lines": 64,
+      "bytes": 3242,
+      "client": false
+    },
+    {
+      "file": "app/styles/dashboard-mobile.css",
+      "group": "Frontend",
+      "lines": 94,
+      "bytes": 5845,
+      "client": false
+    },
+    {
+      "file": "app/styles/dashboard-overview.css",
+      "group": "Frontend",
+      "lines": 306,
+      "bytes": 26501,
+      "client": false
+    },
+    {
+      "file": "app/styles/dashboard-responsive.css",
+      "group": "Frontend",
+      "lines": 206,
+      "bytes": 8906,
+      "client": false
+    },
+    {
+      "file": "app/styles/dashboard-system.css",
+      "group": "Frontend",
+      "lines": 794,
+      "bytes": 28348,
+      "client": false
+    },
+    {
+      "file": "app/styles/documentation.css",
+      "group": "Frontend",
+      "lines": 200,
+      "bytes": 5489,
+      "client": false
+    },
+    {
+      "file": "app/styles/footer.css",
+      "group": "Frontend",
+      "lines": 64,
+      "bytes": 3749,
+      "client": false
+    },
+    {
+      "file": "app/styles/glass.css",
+      "group": "Frontend",
+      "lines": 25,
+      "bytes": 710,
+      "client": false
+    },
+    {
+      "file": "app/styles/info-pages.css",
+      "group": "Frontend",
+      "lines": 364,
+      "bytes": 13141,
+      "client": false
+    },
+    {
+      "file": "app/styles/landing.css",
+      "group": "Frontend",
+      "lines": 115,
+      "bytes": 12124,
+      "client": false
+    },
+    {
+      "file": "app/styles/marketing-cards.css",
+      "group": "Frontend",
+      "lines": 108,
+      "bytes": 8481,
+      "client": false
+    },
+    {
+      "file": "app/styles/modals.css",
+      "group": "Frontend",
+      "lines": 248,
+      "bytes": 15255,
+      "client": false
+    },
+    {
+      "file": "app/styles/phone-input.css",
+      "group": "Frontend",
+      "lines": 43,
+      "bytes": 1912,
+      "client": false
+    },
+    {
+      "file": "app/styles/print.css",
+      "group": "Frontend",
+      "lines": 52,
+      "bytes": 4025,
+      "client": false
+    },
+    {
+      "file": "app/styles/system-surfaces.css",
+      "group": "Frontend",
+      "lines": 81,
+      "bytes": 2813,
+      "client": false
+    },
+    {
+      "file": "app/styles/tables.css",
+      "group": "Frontend",
+      "lines": 185,
+      "bytes": 8392,
+      "client": false
+    },
+    {
+      "file": "app/styles/theme-switch.css",
+      "group": "Frontend",
+      "lines": 73,
+      "bytes": 2625,
+      "client": false
+    },
+    {
+      "file": "app/styles/tokens.css",
+      "group": "Frontend",
+      "lines": 230,
+      "bytes": 9905,
+      "client": false
+    },
+    {
+      "file": "app/unauthorized/page.tsx",
+      "group": "Frontend",
+      "lines": 14,
+      "bytes": 439,
+      "client": false
+    },
+    {
+      "file": "components/agent-payout-modal.tsx",
+      "group": "Frontend",
+      "lines": 278,
+      "bytes": 12636,
+      "client": true
+    },
+    {
+      "file": "components/agent-transfer-modal.tsx",
+      "group": "Frontend",
+      "lines": 782,
+      "bytes": 38591,
+      "client": true
+    },
+    {
+      "file": "components/auth/auth-legal-footer.tsx",
+      "group": "Frontend",
+      "lines": 14,
+      "bytes": 536,
+      "client": false
+    },
+    {
+      "file": "components/auth/onboarding-flow.tsx",
+      "group": "Frontend",
+      "lines": 282,
+      "bytes": 12014,
+      "client": true
+    },
+    {
+      "file": "components/client-withdrawal-modal.tsx",
+      "group": "Frontend",
+      "lines": 395,
+      "bytes": 16611,
+      "client": true
+    },
+    {
+      "file": "components/compliance/print-receipt-button.tsx",
+      "group": "Frontend",
+      "lines": 12,
+      "bytes": 453,
+      "client": true
+    },
+    {
+      "file": "components/dashboard/dashboard-card.tsx",
+      "group": "Frontend",
+      "lines": 57,
+      "bytes": 2038,
+      "client": true
+    },
+    {
+      "file": "components/dashboard/dashboard-module-panel.tsx",
+      "group": "Frontend",
+      "lines": 86,
+      "bytes": 3002,
+      "client": true
+    },
+    {
+      "file": "components/dashboard/dashboard-modules.ts",
+      "group": "Frontend",
+      "lines": 77,
+      "bytes": 2277,
+      "client": false
+    },
+    {
+      "file": "components/dashboard/dashboard-overview.tsx",
+      "group": "Frontend",
+      "lines": 177,
+      "bytes": 16711,
+      "client": true
+    },
+    {
+      "file": "components/documentation/api-documentation.tsx",
+      "group": "Frontend",
+      "lines": 623,
+      "bytes": 38517,
+      "client": true
+    },
+    {
+      "file": "components/layout/cookie-consent-modal.tsx",
+      "group": "Frontend",
+      "lines": 161,
+      "bytes": 8283,
+      "client": true
+    },
+    {
+      "file": "components/layout/dashboard-detail-modals.tsx",
+      "group": "Frontend",
+      "lines": 588,
+      "bytes": 27491,
+      "client": true
+    },
+    {
+      "file": "components/layout/dashboard-layout-wrapper.tsx",
+      "group": "Frontend",
+      "lines": 754,
+      "bytes": 36547,
+      "client": true
+    },
+    {
+      "file": "components/layout/dashboard-logo.tsx",
+      "group": "Frontend",
+      "lines": 68,
+      "bytes": 1996,
+      "client": false
+    },
+    {
+      "file": "components/layout/error-screen.tsx",
+      "group": "Frontend",
+      "lines": 51,
+      "bytes": 2108,
+      "client": false
+    },
+    {
+      "file": "components/layout/header-search.tsx",
+      "group": "Frontend",
+      "lines": 143,
+      "bytes": 6943,
+      "client": true
+    },
+    {
+      "file": "components/layout/notifications-dropdown.tsx",
+      "group": "Frontend",
+      "lines": 376,
+      "bytes": 20763,
+      "client": true
+    },
+    {
+      "file": "components/layout/pending-approval-screen.tsx",
+      "group": "Frontend",
+      "lines": 39,
+      "bytes": 1676,
+      "client": false
+    },
+    {
+      "file": "components/layout/search-modal.tsx",
+      "group": "Frontend",
+      "lines": 153,
+      "bytes": 7791,
+      "client": true
+    },
+    {
+      "file": "components/layout/service-unavailable-screen.tsx",
+      "group": "Frontend",
+      "lines": 44,
+      "bytes": 1947,
+      "client": false
+    },
+    {
+      "file": "components/layout/settings-modal.tsx",
+      "group": "Frontend",
+      "lines": 166,
+      "bytes": 7659,
+      "client": true
+    },
+    {
+      "file": "components/layout/support-modal.tsx",
+      "group": "Frontend",
+      "lines": 219,
+      "bytes": 10424,
+      "client": true
+    },
+    {
+      "file": "components/layout/users-panel.tsx",
+      "group": "Frontend",
+      "lines": 256,
+      "bytes": 12363,
+      "client": true
+    },
+    {
+      "file": "components/marketing/landing-page.tsx",
+      "group": "Frontend",
+      "lines": 187,
+      "bytes": 20861,
+      "client": true
+    },
+    {
+      "file": "components/marketing/motion-elements.tsx",
+      "group": "Frontend",
+      "lines": 88,
+      "bytes": 3588,
+      "client": true
+    },
+    {
+      "file": "components/providers/app-provider.tsx",
+      "group": "Frontend",
+      "lines": 23,
+      "bytes": 822,
+      "client": true
+    },
+    {
+      "file": "components/revolut-payout-modal.tsx",
+      "group": "Frontend",
+      "lines": 189,
+      "bytes": 8375,
+      "client": true
+    },
+    {
+      "file": "components/skeletons/app-skeletons.tsx",
+      "group": "Frontend",
+      "lines": 159,
+      "bytes": 5962,
+      "client": false
+    },
+    {
+      "file": "components/theme-provider.tsx",
+      "group": "Frontend",
+      "lines": 163,
+      "bytes": 5778,
+      "client": true
+    },
+    {
+      "file": "components/theme-toggle.tsx",
+      "group": "Frontend",
+      "lines": 55,
+      "bytes": 1797,
+      "client": true
+    },
+    {
+      "file": "components/ui/avatar.tsx",
+      "group": "Frontend",
+      "lines": 43,
+      "bytes": 1451,
+      "client": false
+    },
+    {
+      "file": "components/ui/badge.tsx",
+      "group": "Frontend",
+      "lines": 28,
+      "bytes": 923,
+      "client": false
+    },
+    {
+      "file": "components/ui/button.tsx",
+      "group": "Frontend",
+      "lines": 59,
+      "bytes": 2649,
+      "client": false
+    },
+    {
+      "file": "components/ui/card.tsx",
+      "group": "Frontend",
+      "lines": 90,
+      "bytes": 3155,
+      "client": false
+    },
+    {
+      "file": "components/ui/chart.tsx",
+      "group": "Frontend",
+      "lines": 337,
+      "bytes": 10927,
+      "client": true
+    },
+    {
+      "file": "components/ui/dialog.tsx",
+      "group": "Frontend",
+      "lines": 262,
+      "bytes": 11237,
+      "client": false
+    },
+    {
+      "file": "components/ui/dropdown-menu.tsx",
+      "group": "Frontend",
+      "lines": 182,
+      "bytes": 7323,
+      "client": true
+    },
+    {
+      "file": "components/ui/hugeicons.tsx",
+      "group": "Frontend",
+      "lines": 262,
+      "bytes": 10406,
+      "client": true
+    },
+    {
+      "file": "components/ui/input.tsx",
+      "group": "Frontend",
+      "lines": 23,
+      "bytes": 1112,
+      "client": false
+    },
+    {
+      "file": "components/ui/label.tsx",
+      "group": "Frontend",
+      "lines": 20,
+      "bytes": 732,
+      "client": false
+    },
+    {
+      "file": "components/ui/phone-input.tsx",
+      "group": "Frontend",
+      "lines": 101,
+      "bytes": 4861,
+      "client": true
+    },
+    {
+      "file": "components/ui/qr-generator.tsx",
+      "group": "Frontend",
+      "lines": 105,
+      "bytes": 3308,
+      "client": true
+    },
+    {
+      "file": "components/ui/select.tsx",
+      "group": "Frontend",
+      "lines": 86,
+      "bytes": 3980,
+      "client": false
+    },
+    {
+      "file": "components/ui/skeleton.tsx",
+      "group": "Frontend",
+      "lines": 11,
+      "bytes": 232,
+      "client": false
+    },
+    {
+      "file": "components/ui/table.tsx",
+      "group": "Frontend",
+      "lines": 126,
+      "bytes": 3961,
+      "client": false
+    },
+    {
+      "file": "components/ui/textarea.tsx",
+      "group": "Frontend",
+      "lines": 20,
+      "bytes": 992,
+      "client": false
+    },
+    {
+      "file": "components/wallet-transfer-modal.tsx",
+      "group": "Frontend",
+      "lines": 305,
+      "bytes": 13558,
+      "client": true
+    },
+    {
+      "file": "eslint.config.mjs",
+      "group": "Tooling",
+      "lines": 18,
+      "bytes": 560,
+      "client": false
+    },
+    {
+      "file": "lib/api-auth.ts",
+      "group": "Backend TS",
+      "lines": 139,
+      "bytes": 4755,
+      "client": false
+    },
+    {
+      "file": "lib/canvas-utils.ts",
+      "group": "Frontend",
+      "lines": 82,
+      "bytes": 2763,
+      "client": false
+    },
+    {
+      "file": "lib/clerk-appearance.ts",
+      "group": "Frontend",
+      "lines": 56,
+      "bytes": 2222,
+      "client": false
+    },
+    {
+      "file": "lib/clerk-errors.ts",
+      "group": "Shared",
+      "lines": 62,
+      "bytes": 2925,
+      "client": false
+    },
+    {
+      "file": "lib/compliance.ts",
+      "group": "Shared",
+      "lines": 13,
+      "bytes": 607,
+      "client": false
+    },
+    {
+      "file": "lib/countries.ts",
+      "group": "Shared",
+      "lines": 308,
+      "bytes": 9954,
+      "client": false
+    },
+    {
+      "file": "lib/design-tokens.ts",
+      "group": "Frontend",
+      "lines": 143,
+      "bytes": 4544,
+      "client": false
+    },
+    {
+      "file": "lib/email-service.ts",
+      "group": "Backend TS",
+      "lines": 348,
+      "bytes": 16864,
+      "client": false
+    },
+    {
+      "file": "lib/email-validation.ts",
+      "group": "Shared",
+      "lines": 73,
+      "bytes": 1981,
+      "client": false
+    },
+    {
+      "file": "lib/financial.ts",
+      "group": "Shared",
+      "lines": 160,
+      "bytes": 6737,
+      "client": false
+    },
+    {
+      "file": "lib/legal-content.ts",
+      "group": "Frontend",
+      "lines": 358,
+      "bytes": 28623,
+      "client": false
+    },
+    {
+      "file": "lib/marketing-content.ts",
+      "group": "Frontend",
+      "lines": 228,
+      "bytes": 23575,
+      "client": false
+    },
+    {
+      "file": "lib/network-errors.ts",
+      "group": "Shared",
+      "lines": 43,
+      "bytes": 1592,
+      "client": false
+    },
+    {
+      "file": "lib/roles.ts",
+      "group": "Shared",
+      "lines": 23,
+      "bytes": 750,
+      "client": false
+    },
+    {
+      "file": "lib/security/request-policy.ts",
+      "group": "Backend TS",
+      "lines": 19,
+      "bytes": 625,
+      "client": false
+    },
+    {
+      "file": "lib/server/api-environments.ts",
+      "group": "Backend TS",
+      "lines": 8,
+      "bytes": 441,
+      "client": false
+    },
+    {
+      "file": "lib/server/api-idempotency.ts",
+      "group": "Backend TS",
+      "lines": 91,
+      "bytes": 2907,
+      "client": false
+    },
+    {
+      "file": "lib/server/api-security.ts",
+      "group": "Backend TS",
+      "lines": 43,
+      "bytes": 1819,
+      "client": false
+    },
+    {
+      "file": "lib/server/authz.ts",
+      "group": "Backend TS",
+      "lines": 278,
+      "bytes": 11077,
+      "client": false
+    },
+    {
+      "file": "lib/server/clerk-identity.ts",
+      "group": "Backend TS",
+      "lines": 421,
+      "bytes": 17105,
+      "client": false
+    },
+    {
+      "file": "lib/server/client-recipient.ts",
+      "group": "Backend TS",
+      "lines": 71,
+      "bytes": 3120,
+      "client": false
+    },
+    {
+      "file": "lib/server/compliance-events.ts",
+      "group": "Backend TS",
+      "lines": 45,
+      "bytes": 1650,
+      "client": false
+    },
+    {
+      "file": "lib/server/financial-operations.ts",
+      "group": "Backend TS",
+      "lines": 446,
+      "bytes": 15918,
+      "client": false
+    },
+    {
+      "file": "lib/server/notification-outbox.ts",
+      "group": "Backend TS",
+      "lines": 253,
+      "bytes": 8592,
+      "client": false
+    },
+    {
+      "file": "lib/server/payments-provider.ts",
+      "group": "Backend TS",
+      "lines": 200,
+      "bytes": 6697,
+      "client": false
+    },
+    {
+      "file": "lib/server/property-operations.ts",
+      "group": "Backend TS",
+      "lines": 61,
+      "bytes": 2388,
+      "client": false
+    },
+    {
+      "file": "lib/server/public-api-sandbox.ts",
+      "group": "Backend TS",
+      "lines": 111,
+      "bytes": 2735,
+      "client": false
+    },
+    {
+      "file": "lib/server/public-api.ts",
+      "group": "Backend TS",
+      "lines": 220,
+      "bytes": 6442,
+      "client": false
+    },
+    {
+      "file": "lib/server/public-endpoint-security.ts",
+      "group": "Backend TS",
+      "lines": 56,
+      "bytes": 2488,
+      "client": false
+    },
+    {
+      "file": "lib/server/revolut.ts",
+      "group": "Backend TS",
+      "lines": 185,
+      "bytes": 6117,
+      "client": false
+    },
+    {
+      "file": "lib/server/route-error.ts",
+      "group": "Backend TS",
+      "lines": 29,
+      "bytes": 1046,
+      "client": false
+    },
+    {
+      "file": "lib/server/support-email-sync.ts",
+      "group": "Backend TS",
+      "lines": 172,
+      "bytes": 6647,
+      "client": false
+    },
+    {
+      "file": "lib/server/user-provisioning.ts",
+      "group": "Backend TS",
+      "lines": 135,
+      "bytes": 5241,
+      "client": false
+    },
+    {
+      "file": "lib/server/webhook-outbox.ts",
+      "group": "Backend TS",
+      "lines": 233,
+      "bytes": 7461,
+      "client": false
+    },
+    {
+      "file": "lib/server/webhook-security.ts",
+      "group": "Backend TS",
+      "lines": 57,
+      "bytes": 2380,
+      "client": false
+    },
+    {
+      "file": "lib/store.ts",
+      "group": "Frontend",
+      "lines": 53,
+      "bytes": 1725,
+      "client": false
+    },
+    {
+      "file": "lib/supabase/admin.ts",
+      "group": "Backend TS",
+      "lines": 13,
+      "bytes": 491,
+      "client": false
+    },
+    {
+      "file": "lib/supabase/auth-errors.ts",
+      "group": "Shared",
+      "lines": 119,
+      "bytes": 4720,
+      "client": false
+    },
+    {
+      "file": "lib/tariffs.ts",
+      "group": "Shared",
+      "lines": 7,
+      "bytes": 180,
+      "client": false
+    },
+    {
+      "file": "lib/transfer-notification-messages.ts",
+      "group": "Shared",
+      "lines": 76,
+      "bytes": 3419,
+      "client": false
+    },
+    {
+      "file": "lib/utils.ts",
+      "group": "Shared",
+      "lines": 170,
+      "bytes": 4934,
+      "client": false
+    },
+    {
+      "file": "list-users.ts",
+      "group": "Tooling",
+      "lines": 16,
+      "bytes": 716,
+      "client": false
+    },
+    {
+      "file": "modules/notifications/http/client.ts",
+      "group": "Frontend",
+      "lines": 38,
+      "bytes": 2100,
+      "client": false
+    },
+    {
+      "file": "modules/public-api/application/idempotency.ts",
+      "group": "Backend TS",
+      "lines": 6,
+      "bytes": 191,
+      "client": false
+    },
+    {
+      "file": "modules/transfers/application/index.ts",
+      "group": "Backend TS",
+      "lines": 18,
+      "bytes": 644,
+      "client": false
+    },
+    {
+      "file": "modules/transfers/http/client.ts",
+      "group": "Frontend",
+      "lines": 30,
+      "bytes": 1479,
+      "client": false
+    },
+    {
+      "file": "next.config.ts",
+      "group": "Tooling",
+      "lines": 118,
+      "bytes": 5165,
+      "client": false
+    },
+    {
+      "file": "postcss.config.mjs",
+      "group": "Tooling",
+      "lines": 6,
+      "bytes": 103,
+      "client": false
+    },
+    {
+      "file": "proxy.ts",
+      "group": "Backend TS",
+      "lines": 38,
+      "bytes": 1806,
+      "client": false
+    },
+    {
+      "file": "scripts/build-next.cjs",
+      "group": "Tooling",
+      "lines": 50,
+      "bytes": 1507,
+      "client": false
+    },
+    {
+      "file": "scripts/dev-next.cjs",
+      "group": "Tooling",
+      "lines": 54,
+      "bytes": 1750,
+      "client": false
+    },
+    {
+      "file": "scripts/fix-missing-profiles.ts",
+      "group": "Tooling",
+      "lines": 61,
+      "bytes": 2282,
+      "client": false
+    },
+    {
+      "file": "scripts/generate-revolut-jwks.js",
+      "group": "Tooling",
+      "lines": 65,
+      "bytes": 2085,
+      "client": false
+    },
+    {
+      "file": "scripts/import-users-to-clerk.mjs",
+      "group": "Tooling",
+      "lines": 261,
+      "bytes": 11280,
+      "client": false
+    },
+    {
+      "file": "sdk/typescript/fondoseg-sdk/src/client.ts",
+      "group": "SDK",
+      "lines": 181,
+      "bytes": 6948,
+      "client": false
+    },
+    {
+      "file": "sdk/typescript/fondoseg-sdk/src/errors.ts",
+      "group": "SDK",
+      "lines": 53,
+      "bytes": 1570,
+      "client": false
+    },
+    {
+      "file": "sdk/typescript/fondoseg-sdk/src/index.ts",
+      "group": "SDK",
+      "lines": 10,
+      "bytes": 356,
+      "client": false
+    },
+    {
+      "file": "sdk/typescript/fondoseg-sdk/src/types.ts",
+      "group": "SDK",
+      "lines": 170,
+      "bytes": 4241,
+      "client": false
+    },
+    {
+      "file": "sdk/typescript/fondoseg-sdk/src/utils.ts",
+      "group": "SDK",
+      "lines": 22,
+      "bytes": 926,
+      "client": false
+    },
+    {
+      "file": "sdk/typescript/fondoseg-sdk/src/webhooks.ts",
+      "group": "SDK",
+      "lines": 60,
+      "bytes": 2220,
+      "client": false
+    },
+    {
+      "file": "send_sms.js",
+      "group": "Tooling",
+      "lines": 21,
+      "bytes": 783,
+      "client": false
+    },
+    {
+      "file": "services/agent.ts",
+      "group": "Frontend",
+      "lines": 50,
+      "bytes": 2309,
+      "client": false
+    },
+    {
+      "file": "services/api-keys.ts",
+      "group": "Frontend",
+      "lines": 33,
+      "bytes": 1244,
+      "client": false
+    },
+    {
+      "file": "services/client.ts",
+      "group": "Backend TS",
+      "lines": 164,
+      "bytes": 5803,
+      "client": false
+    },
+    {
+      "file": "services/dashboard.ts",
+      "group": "Frontend",
+      "lines": 27,
+      "bytes": 1325,
+      "client": false
+    },
+    {
+      "file": "services/http.ts",
+      "group": "Frontend",
+      "lines": 79,
+      "bytes": 2997,
+      "client": false
+    },
+    {
+      "file": "services/sms.ts",
+      "group": "Backend TS",
+      "lines": 83,
+      "bytes": 3460,
+      "client": false
+    },
+    {
+      "file": "services/staff.ts",
+      "group": "Frontend",
+      "lines": 85,
+      "bytes": 2684,
+      "client": false
+    },
+    {
+      "file": "services/transfer.ts",
+      "group": "Frontend",
+      "lines": 25,
+      "bytes": 734,
+      "client": false
+    },
+    {
+      "file": "services/wallet-transfer.ts",
+      "group": "Backend TS",
+      "lines": 560,
+      "bytes": 25643,
+      "client": false
+    },
+    {
+      "file": "services/withdrawal.ts",
+      "group": "Backend TS",
+      "lines": 319,
+      "bytes": 12969,
+      "client": false
+    },
+    {
+      "file": "shared/auth/index.ts",
+      "group": "Backend TS",
+      "lines": 17,
+      "bytes": 402,
+      "client": false
+    },
+    {
+      "file": "shared/database/admin.ts",
+      "group": "Backend TS",
+      "lines": 6,
+      "bytes": 222,
+      "client": false
+    },
+    {
+      "file": "supabase/create_admin.sql",
+      "group": "Backend SQL/Edge",
+      "lines": 64,
+      "bytes": 2197,
+      "client": false
+    },
+    {
+      "file": "supabase/functions/_shared/fondoseg-client.ts",
+      "group": "Backend SQL/Edge",
+      "lines": 57,
+      "bytes": 1694,
+      "client": false
+    },
+    {
+      "file": "supabase/functions/fondoseg-balance/index.ts",
+      "group": "Backend SQL/Edge",
+      "lines": 28,
+      "bytes": 728,
+      "client": false
+    },
+    {
+      "file": "supabase/functions/fondoseg-health/index.ts",
+      "group": "Backend SQL/Edge",
+      "lines": 48,
+      "bytes": 1812,
+      "client": false
+    },
+    {
+      "file": "supabase/functions/fondoseg-history/index.ts",
+      "group": "Backend SQL/Edge",
+      "lines": 34,
+      "bytes": 984,
+      "client": false
+    },
+    {
+      "file": "supabase/functions/fondoseg-proxy/index.ts",
+      "group": "Backend SQL/Edge",
+      "lines": 111,
+      "bytes": 3468,
+      "client": false
+    },
+    {
+      "file": "supabase/functions/fondoseg-transfer/index.ts",
+      "group": "Backend SQL/Edge",
+      "lines": 30,
+      "bytes": 796,
+      "client": false
+    },
+    {
+      "file": "supabase/functions/fondoseg-wallet-transfer/index.ts",
+      "group": "Backend SQL/Edge",
+      "lines": 30,
+      "bytes": 810,
+      "client": false
+    },
+    {
+      "file": "supabase/migrations/20240313_add_notification_read_status.sql",
+      "group": "Backend SQL/Edge",
+      "lines": 59,
+      "bytes": 2153,
+      "client": false
+    },
+    {
+      "file": "supabase/migrations/20240320_add_user_id_to_notifications.sql",
+      "group": "Backend SQL/Edge",
+      "lines": 51,
+      "bytes": 2431,
+      "client": false
+    },
+    {
+      "file": "supabase/migrations/20240325_create_api_keys_table.sql",
+      "group": "Backend SQL/Edge",
+      "lines": 57,
+      "bytes": 2094,
+      "client": false
+    },
+    {
+      "file": "supabase/migrations/20240326_create_wallet_transfers.sql",
+      "group": "Backend SQL/Edge",
+      "lines": 49,
+      "bytes": 2441,
+      "client": false
+    },
+    {
+      "file": "supabase/migrations/20240327_create_email_verification.sql",
+      "group": "Backend SQL/Edge",
+      "lines": 46,
+      "bytes": 1891,
+      "client": false
+    },
+    {
+      "file": "supabase/migrations/20260402_financial_foundation.sql",
+      "group": "Backend SQL/Edge",
+      "lines": 888,
+      "bytes": 28274,
+      "client": false
+    },
+    {
+      "file": "supabase/migrations/20260404_add_agent_cash_balance.sql",
+      "group": "Backend SQL/Edge",
+      "lines": 3,
+      "bytes": 183,
+      "client": false
+    },
+    {
+      "file": "supabase/migrations/20260404_agent_cash_flow.sql",
+      "group": "Backend SQL/Edge",
+      "lines": 310,
+      "bytes": 7817,
+      "client": false
+    },
+    {
+      "file": "supabase/migrations/20260404_registered_client_transfer_wallet.sql",
+      "group": "Backend SQL/Edge",
+      "lines": 424,
+      "bytes": 12143,
+      "client": false
+    },
+    {
+      "file": "supabase/migrations/20260405_superadmin_and_transfer_corrections.sql",
+      "group": "Backend SQL/Edge",
+      "lines": 401,
+      "bytes": 14159,
+      "client": false
+    },
+    {
+      "file": "supabase/migrations/20260423_create_api_request_logs.sql",
+      "group": "Backend SQL/Edge",
+      "lines": 30,
+      "bytes": 1136,
+      "client": false
+    },
+    {
+      "file": "supabase/migrations/20260423_create_webhooks.sql",
+      "group": "Backend SQL/Edge",
+      "lines": 61,
+      "bytes": 2662,
+      "client": false
+    },
+    {
+      "file": "supabase/migrations/20260423_wallet_transfer_direct_and_secret_rotation.sql",
+      "group": "Backend SQL/Edge",
+      "lines": 197,
+      "bytes": 5096,
+      "client": false
+    },
+    {
+      "file": "supabase/migrations/20260425_support_email_inbox.sql",
+      "group": "Backend SQL/Edge",
+      "lines": 16,
+      "bytes": 834,
+      "client": false
+    },
+    {
+      "file": "supabase/migrations/20260507_add_revolut_payout_links.sql",
+      "group": "Backend SQL/Edge",
+      "lines": 30,
+      "bytes": 1416,
+      "client": false
+    },
+    {
+      "file": "supabase/migrations/20260601_api_key_environments.sql",
+      "group": "Backend SQL/Edge",
+      "lines": 28,
+      "bytes": 936,
+      "client": false
+    },
+    {
+      "file": "supabase/migrations/20260614_property_rental_payments.sql",
+      "group": "Backend SQL/Edge",
+      "lines": 365,
+      "bytes": 13171,
+      "client": false
+    },
+    {
+      "file": "supabase/migrations/20260620_cemac_payment_compliance.sql",
+      "group": "Backend SQL/Edge",
+      "lines": 36,
+      "bytes": 1636,
+      "client": false
+    },
+    {
+      "file": "supabase/migrations/20260715_backfill_agent_transfer_commissions.sql",
+      "group": "Backend SQL/Edge",
+      "lines": 39,
+      "bytes": 2227,
+      "client": false
+    },
+    {
+      "file": "supabase/migrations/20260717_security_concurrency_hardening.sql",
+      "group": "Backend SQL/Edge",
+      "lines": 159,
+      "bytes": 5838,
+      "client": false
+    },
+    {
+      "file": "supabase/migrations/20260718_separate_product_access.sql",
+      "group": "Backend SQL/Edge",
+      "lines": 71,
+      "bytes": 3614,
+      "client": false
+    },
+    {
+      "file": "supabase/migrations/20260821_clerk_identity_migration.sql",
+      "group": "Backend SQL/Edge",
+      "lines": 100,
+      "bytes": 6236,
+      "client": false
+    },
+    {
+      "file": "supabase/migrations/20260822_wallet_transfers_schema_convergence.sql",
+      "group": "Backend SQL/Edge",
+      "lines": 74,
+      "bytes": 3712,
+      "client": false
+    },
+    {
+      "file": "supabase/migrations/20260823_client_wallet_self_custody.sql",
+      "group": "Backend SQL/Edge",
+      "lines": 1300,
+      "bytes": 43619,
+      "client": false
+    },
+    {
+      "file": "supabase/migrations/20260824_wallet_transfers_fk_repoint_to_public_users.sql",
+      "group": "Backend SQL/Edge",
+      "lines": 237,
+      "bytes": 10823,
+      "client": false
+    },
+    {
+      "file": "supabase/migrations/20260825_wallet_transfer_expiry_and_receiver_eligibility.sql",
+      "group": "Backend SQL/Edge",
+      "lines": 665,
+      "bytes": 23229,
+      "client": false
+    },
+    {
+      "file": "supabase/migrations/20260826_wallet_transfer_instant_settlement.sql",
+      "group": "Backend SQL/Edge",
+      "lines": 291,
+      "bytes": 13794,
+      "client": false
+    },
+    {
+      "file": "supabase/migrations/20260827_wallet_transfers_verification_code_nullable.sql",
+      "group": "Backend SQL/Edge",
+      "lines": 85,
+      "bytes": 3856,
+      "client": false
+    },
+    {
+      "file": "supabase/migrations/20260916_avatar_and_clerk_sync.sql",
+      "group": "Backend SQL/Edge",
+      "lines": 36,
+      "bytes": 1980,
+      "client": false
+    },
+    {
+      "file": "supabase/migrations/add_email_verification.sql",
+      "group": "Backend SQL/Edge",
+      "lines": 56,
+      "bytes": 2405,
+      "client": false
+    },
+    {
+      "file": "supabase/provision_payments_integration.sql",
+      "group": "Backend SQL/Edge",
+      "lines": 78,
+      "bytes": 2957,
+      "client": false
+    },
+    {
+      "file": "supabase/reset_transactional_data.sql",
+      "group": "Backend SQL/Edge",
+      "lines": 292,
+      "bytes": 12365,
+      "client": false
+    },
+    {
+      "file": "supabase/schema.sql",
+      "group": "Backend SQL/Edge",
+      "lines": 447,
+      "bytes": 16754,
+      "client": false
+    },
+    {
+      "file": "tailwind.config.ts",
+      "group": "Tooling",
+      "lines": 13,
+      "bytes": 295,
+      "client": false
+    },
+    {
+      "file": "tests/api/external-api.contract.test.ts",
+      "group": "Tests",
+      "lines": 183,
+      "bytes": 9158,
+      "client": false
+    },
+    {
+      "file": "tests/auth/clerk-session-resolution.test.ts",
+      "group": "Tests",
+      "lines": 16,
+      "bytes": 1049,
+      "client": false
+    },
+    {
+      "file": "tests/client-balance-flow.contract.test.ts",
+      "group": "Tests",
+      "lines": 88,
+      "bytes": 5067,
+      "client": false
+    },
+    {
+      "file": "tests/dashboard/module-navigation.test.ts",
+      "group": "Tests",
+      "lines": 29,
+      "bytes": 1542,
+      "client": false
+    },
+    {
+      "file": "tests/financial/financial-operations.contract.test.ts",
+      "group": "Tests",
+      "lines": 128,
+      "bytes": 6671,
+      "client": false
+    },
+    {
+      "file": "tests/onboarding/redirect-regressions.test.ts",
+      "group": "Tests",
+      "lines": 64,
+      "bytes": 2815,
+      "client": false
+    },
+    {
+      "file": "tests/security/request-policy.test.ts",
+      "group": "Tests",
+      "lines": 34,
+      "bytes": 1307,
+      "client": false
+    },
+    {
+      "file": "tests/security/security-regressions.test.ts",
+      "group": "Tests",
+      "lines": 97,
+      "bytes": 5516,
+      "client": false
+    },
+    {
+      "file": "tests/wallet/client-withdrawal.contract.test.ts",
+      "group": "Tests",
+      "lines": 96,
+      "bytes": 5417,
+      "client": false
+    },
+    {
+      "file": "tests/wallet/transfer-regressions.test.ts",
+      "group": "Tests",
+      "lines": 279,
+      "bytes": 14130,
+      "client": false
+    },
+    {
+      "file": "types/hugeicons.d.ts",
+      "group": "Shared",
+      "lines": 118,
+      "bytes": 6057,
+      "client": false
+    },
+    {
+      "file": "types/index.ts",
+      "group": "Shared",
+      "lines": 396,
+      "bytes": 10246,
+      "client": false
+    }
+  ]
+}

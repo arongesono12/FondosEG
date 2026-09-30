@@ -161,6 +161,59 @@ export async function createAgentTransferOperation(payload: AgentTransferPayload
   }>(data);
 }
 
+export interface PaymentConsentEvidence {
+  regulationCode: string;
+  disclosureVersion: string;
+  channel: string;
+  ipAddress?: string | null;
+  userAgent?: string | null;
+}
+
+/**
+ * Crea el envío de gestor y registra la evidencia de consentimiento en la MISMA
+ * transacción (`create_agent_transfer_with_consent_operation`). Si la evidencia no se
+ * puede guardar, el envío tampoco existe: nunca queda un movimiento de saldo
+ * sin su consentimiento ni un error devuelto con el dinero ya movido.
+ */
+export async function createAgentTransferWithConsent(payload: AgentTransferPayload, consent: PaymentConsentEvidence) {
+  const adminClient = createAdminClient();
+
+  const { data, error } = await adminClient.rpc('create_agent_transfer_with_consent_operation', {
+    p_agent_id: payload.agentId,
+    p_actor_user_id: payload.actorUserId,
+    p_transfer_code: payload.transferCode,
+    p_sender_name: payload.senderName,
+    p_sender_phone: payload.senderPhone,
+    p_sender_document_type: payload.senderDocumentType ?? null,
+    p_sender_document_number: payload.senderDocumentNumber ?? null,
+    p_receiver_name: payload.receiverName,
+    p_receiver_phone: payload.receiverPhone,
+    p_receiver_document_type: payload.receiverDocumentType ?? null,
+    p_receiver_document_number: payload.receiverDocumentNumber ?? null,
+    p_destination_city: payload.destinationCity,
+    p_destination_country: payload.destinationCountry ?? null,
+    p_amount: payload.amount,
+    p_currency: payload.currency,
+    p_notes: payload.notes ?? null,
+    p_receiver_user_id: payload.receiverUserId ?? null,
+    p_regulation_code: consent.regulationCode,
+    p_disclosure_version: consent.disclosureVersion,
+    p_consent_channel: consent.channel,
+    p_ip_address: consent.ipAddress ?? null,
+    p_user_agent: consent.userAgent ?? null,
+  });
+
+  if (error) {
+    throw new RpcError(error);
+  }
+
+  return extractRpcData<{
+    transfer: Record<string, unknown>;
+    previous_balance: number;
+    new_balance: number;
+  }>(data);
+}
+
 export async function markAgentTransferPaidOut(transferId: string, actorUserId: string) {
   const adminClient = createAdminClient();
   const { data, error } = await adminClient.rpc('pay_out_agent_transfer_operation', {

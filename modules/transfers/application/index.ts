@@ -10,6 +10,7 @@ export {
   confirmWalletTransferOperation,
   correctAgentTransferOperation,
   createAgentTransferOperation,
+  createAgentTransferWithConsent,
   createWalletTransferDirectOperation,
   createWalletTransferHold,
   markAgentTransferPaidOut,

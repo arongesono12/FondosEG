@@ -119,8 +119,7 @@ export async function POST(request: NextRequest) {
             provider_payment_id: updated.provider_payment_id ?? null,
             source: 'payments_provider',
           },
-        },
-        10
+        }
         );
       } catch (webhookError) {
         console.error('Fan-out webhook failed after provider event:', webhookError);

@@ -195,8 +195,7 @@ export async function POST(request: NextRequest) {
             confirmed_at: (transfer as { confirmed_at?: string }).confirmed_at ?? null,
             source: 'external_api',
           },
-        },
-        10
+        }
       );
     } catch (webhookError) {
       console.error('Webhook dispatch failed after external wallet transfer:', webhookError);

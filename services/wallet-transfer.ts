@@ -391,8 +391,7 @@ export async function createWalletTransfer(
           confirmed_at: transfer.confirmed_at ?? null,
           source: 'dashboard_wallet',
         },
-      },
-      10
+      }
     );
   } catch (webhookErr) {
     console.error('Failed to dispatch wallet settlement webhook:', webhookErr);
@@ -498,8 +497,7 @@ export async function confirmWalletTransfer(
           confirmed_at: confirmedTransfer.confirmed_at ?? null,
           source: 'wallet_confirmation',
         },
-      },
-      10
+      }
     );
   } catch (webhookErr) {
     console.error('Failed to dispatch wallet confirmation webhook:', webhookErr);

@@ -1,6 +1,7 @@
 import { randomUUID } from 'crypto';
 import { decryptWebhookSecret, signWebhookPayload } from '@/lib/server/webhook-security';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { scheduleOutboxProcessing } from '@/lib/server/outbox-worker';
 
 export type FondosEGWebhookEvent =
   | 'transfer.created'
@@ -80,31 +81,48 @@ export async function queueWebhookEvent(input: QueueWebhookEventInput): Promise<
   return subscriptions.length;
 }
 
+/**
+ * Registra el evento en `webhook_deliveries` y programa su entrega después de
+ * responder. La fila en la base de datos es lo que garantiza la entrega: si el
+ * proceso termina antes, el worker `/api/outbox/process` la recoge.
+ *
+ * Antes este método entregaba los webhooks dentro de la petición, de modo que
+ * un endpoint de cliente lento retrasaba la confirmación de la operación.
+ */
 export async function emitWebhookEvent(
-  input: QueueWebhookEventInput,
-  processLimit: number = 20
-): Promise<{
-  queued: number;
-  delivery: {
-    processed: number;
-    sent: number;
-    failed: number;
-    retried: number;
-  };
-}> {
+  input: QueueWebhookEventInput
+): Promise<{ queued: number }> {
   const queued = await queueWebhookEvent(input);
-
-  if (!queued) {
-    return {
-      queued: 0,
-      delivery: { processed: 0, sent: 0, failed: 0, retried: 0 },
-    };
-  }
-
-  const delivery = await processWebhookDeliveries(Math.max(processLimit, queued));
-  return { queued, delivery };
+  if (queued) scheduleOutboxProcessing();
+  return { queued };
 }
 
+/** Plazo máximo de respuesta de un endpoint de webhook. */
+const WEBHOOK_TIMEOUT_MS = 10_000;
+
+type ClaimedDelivery = {
+  id: string;
+  subscription_id: string;
+  event_id: string;
+  event_type: string;
+  request_body: unknown;
+  attempt_count: number;
+  max_attempts: number;
+};
+
+type SubscriptionTarget = {
+  id: string;
+  target_url: string;
+  status: string;
+  signing_secret_encrypted: string;
+};
+
+/**
+ * Entrega los webhooks pendientes. Los trabajos se reclaman de forma atómica
+ * (`claim_webhook_deliveries`, FOR UPDATE SKIP LOCKED): dos workers no
+ * entregan la misma fila. `attempt_count` ya viene incrementado por la
+ * reclamación.
+ */
 export async function processWebhookDeliveries(limit: number = 20): Promise<{
   processed: number;
   sent: number;
@@ -112,50 +130,43 @@ export async function processWebhookDeliveries(limit: number = 20): Promise<{
   retried: number;
 }> {
   const adminClient = createAdminClient();
-  const nowIso = new Date().toISOString();
 
-  const { data: jobs, error } = await adminClient
-    .from('webhook_deliveries')
-    .select(`
-      id,
-      subscription_id,
-      event_id,
-      event_type,
-      request_body,
-      attempt_count,
-      max_attempts,
-      subscription:webhook_subscriptions(
-        id,
-        target_url,
-        status,
-        signing_secret_encrypted
-      )
-    `)
-    .in('status', ['pending', 'retrying'])
-    .lte('next_attempt_at', nowIso)
-    .order('created_at', { ascending: true })
-    .limit(limit);
-
+  const { data, error } = await adminClient.rpc('claim_webhook_deliveries', { p_limit: limit });
   if (error) {
     throw new Error(error.message);
   }
 
-  if (!jobs?.length) {
+  const jobs = (data ?? []) as ClaimedDelivery[];
+  if (!jobs.length) {
     return { processed: 0, sent: 0, failed: 0, retried: 0 };
   }
+
+  const subscriptionIds = [...new Set(jobs.map((job) => job.subscription_id))];
+  const { data: subscriptionRows, error: subscriptionsError } = await adminClient
+    .from('webhook_subscriptions')
+    .select('id, target_url, status, signing_secret_encrypted')
+    .in('id', subscriptionIds);
+  if (subscriptionsError) {
+    // Se liberan los leases para que otro intento los retome sin esperar.
+    await adminClient.from('webhook_deliveries').update({ locked_until: null }).in('id', jobs.map((job) => job.id));
+    throw new Error(subscriptionsError.message);
+  }
+  const subscriptions = new Map(((subscriptionRows ?? []) as SubscriptionTarget[]).map((row) => [row.id, row]));
 
   let sent = 0;
   let failed = 0;
   let retried = 0;
 
   for (const job of jobs) {
-    const subscription = Array.isArray(job.subscription) ? job.subscription[0] : job.subscription;
+    const nowIso = new Date().toISOString();
+    const subscription = subscriptions.get(job.subscription_id);
 
     if (!subscription || subscription.status !== 'active') {
       await adminClient
         .from('webhook_deliveries')
         .update({
           status: 'failed',
+          locked_until: null,
           error_message: 'Subscription not active',
           processed_at: nowIso,
         })
@@ -181,6 +192,7 @@ export async function processWebhookDeliveries(limit: number = 20): Promise<{
           'X-FondosEG-Webhook-Signature': `v1=${signature}`,
         },
         body: requestBody,
+        signal: AbortSignal.timeout(WEBHOOK_TIMEOUT_MS),
       });
 
       const responseBody = await response.text().catch(() => '');
@@ -190,7 +202,7 @@ export async function processWebhookDeliveries(limit: number = 20): Promise<{
           .from('webhook_deliveries')
           .update({
             status: 'sent',
-            attempt_count: Number(job.attempt_count || 0) + 1,
+            locked_until: null,
             response_status: response.status,
             response_body: responseBody.slice(0, 2000),
             processed_at: nowIso,
@@ -213,9 +225,14 @@ export async function processWebhookDeliveries(limit: number = 20): Promise<{
         responseBody: responseBody.slice(0, 2000),
       });
     } catch (error) {
-      const attemptCount = Number(job.attempt_count || 0) + 1;
+      const attemptCount = Number(job.attempt_count || 1);
       const maxAttempts = Number(job.max_attempts || 5);
-      const message = error instanceof Error ? error.message : 'Webhook delivery failed';
+      const message =
+        error instanceof Error && error.name === 'TimeoutError'
+          ? `Webhook destination did not respond within ${WEBHOOK_TIMEOUT_MS} ms`
+          : error instanceof Error
+            ? error.message
+            : 'Webhook delivery failed';
       const responseStatus = error instanceof WebhookDispatchError ? error.responseStatus : null;
       const responseBody = error instanceof WebhookDispatchError ? error.responseBody : null;
 
@@ -224,7 +241,7 @@ export async function processWebhookDeliveries(limit: number = 20): Promise<{
           .from('webhook_deliveries')
           .update({
             status: 'failed',
-            attempt_count: attemptCount,
+            locked_until: null,
             processed_at: nowIso,
             error_message: message,
             response_status: responseStatus,
@@ -238,7 +255,7 @@ export async function processWebhookDeliveries(limit: number = 20): Promise<{
           .from('webhook_deliveries')
           .update({
             status: 'retrying',
-            attempt_count: attemptCount,
+            locked_until: null,
             processed_at: nowIso,
             next_attempt_at: nextAttemptAt,
             error_message: message,

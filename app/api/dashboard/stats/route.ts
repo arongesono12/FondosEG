@@ -3,54 +3,64 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { requireProfile } from '@/lib/server/authz';
 import { handleRouteError } from '@/lib/server/route-error';
 import {
-  calculateCommission,
   estimateFloatUtilization,
   estimateLiquidityCoverageDays,
   estimateProjectedTopups24h,
   getAvailableClientBalance,
-  isTransferCompleted,
-  isTransferPending,
-  mapWalletTransferStatus,
-  normalizeTransferStatus,
 } from '@/lib/financial';
 import type { DashboardStats } from '@/types';
 import { isAdminRole } from '@/lib/roles';
 
-type TransferRow = {
-  agent_id?: string | null;
-  amount: number | string | null;
-  commission_amount?: number | string | null;
-  created_at: string;
-  status: string | null;
+/** Umbral operativo de float por gestor (XAF). */
+const LOW_BALANCE_THRESHOLD = 25000;
+
+type Numeric = number | string | null | undefined;
+
+type PeriodTotals = {
+  completed_count: Numeric;
+  completed_amount: Numeric;
+  pending_count: Numeric;
+  cancelled_count: Numeric;
+  today_count: Numeric;
+  today_completed_amount: Numeric;
+  week_completed_amount: Numeric;
+  thirty_days_completed_amount: Numeric;
 };
 
-type BalanceRow = {
+type OperatorTotals = PeriodTotals & {
+  pending_amount: Numeric;
+  pickup_ready_count: Numeric;
+  pickup_ready_amount: Numeric;
+  commissionable_count: Numeric;
+  commission_total: Numeric;
+  commission_today: Numeric;
+  commission_month: Numeric;
+  commission_year: Numeric;
+  balances_by_currency: Record<string, Numeric> | null;
+  agents_below_threshold: Numeric;
+  total_clients: Numeric;
+  active_agents: Numeric;
+};
+
+type ClientBalanceRow = {
   balance: number | string | null;
+  reserved_balance?: number | string | null;
   currency: string | null;
 };
 
-function sumAmounts(rows: Array<{ amount: number | string | null }>): number {
-  return rows.reduce((sum, row) => sum + Number(row.amount ?? 0), 0);
+/** PostgREST serializa NUMERIC como número o como cadena según su tamaño. */
+function num(value: Numeric): number {
+  const parsed = Number(value ?? 0);
+  return Number.isFinite(parsed) ? parsed : 0;
 }
 
-function groupBalancesByCurrency(rows: BalanceRow[]): Record<string, number> {
-  return rows.reduce<Record<string, number>>((acc, row) => {
-    const currency = row.currency || 'XAF';
-    acc[currency] = (acc[currency] ?? 0) + Number(row.balance ?? 0);
-    return acc;
-  }, {});
+function toNumberRecord(values: Record<string, Numeric> | null | undefined): Record<string, number> {
+  return Object.fromEntries(Object.entries(values ?? {}).map(([key, value]) => [key, num(value)]));
 }
 
-function isSameOrAfter(dateIso: string, threshold: Date): boolean {
-  return new Date(dateIso) >= threshold;
-}
-
-function getCommissionAmount(transfer: TransferRow): number {
-  const stored = Number(transfer.commission_amount ?? NaN);
-  if (Number.isFinite(stored) && stored > 0) {
-    return stored;
-  }
-  return calculateCommission(Number(transfer.amount ?? 0));
+function settlementRate(completed: number, pending: number, cancelled: number): number {
+  const total = completed + pending + cancelled;
+  return total > 0 ? Math.round((completed / total) * 100) : 0;
 }
 
 export async function GET() {
@@ -77,147 +87,67 @@ export async function GET() {
     yearStart.setMonth(0, 1);
     yearStart.setHours(0, 0, 0, 0);
 
+    // Los agregados se calculan en PostgreSQL (supabase/migrations/
+    // 20260925_dashboard_sql_aggregates.sql): descargar las filas y sumarlas
+    // aquí truncaba los totales al límite de filas de PostgREST.
+    const periods = {
+      p_today: today.toISOString(),
+      p_week_start: sevenDaysAgo.toISOString(),
+      p_thirty_days_start: thirtyDaysAgo.toISOString(),
+    };
+
     if (isAdminRole(profile.role) || profile.role === 'gestor') {
       const isAdmin = isAdminRole(profile.role);
 
-      const balancesQuery = adminClient
-        .from('agent_balances')
-        .select('balance, currency, agent_id');
+      const { data, error } = await adminClient.rpc('dashboard_operator_stats', {
+        p_agent_id: isAdmin ? null : profile.id,
+        ...periods,
+        p_month_start: monthStart.toISOString(),
+        p_year_start: yearStart.toISOString(),
+        p_low_balance_threshold: LOW_BALANCE_THRESHOLD,
+      });
+      if (error) throw error;
 
-      const transfersQuery = adminClient
-        .from('transfers')
-        .select('agent_id, amount, commission_amount, created_at, status');
-
-      const clientsQuery = isAdmin
-        ? adminClient.from('users').select('id').eq('role', 'cliente')
-        : adminClient.from('transfers').select('sender_phone').eq('agent_id', profile.id);
-
-      const activeAgentsQuery = isAdmin
-        ? adminClient.from('users').select('id').eq('role', 'gestor').eq('is_active', true)
-        : null;
-
-      const scopedBalancesQuery = isAdmin ? balancesQuery : balancesQuery.eq('agent_id', profile.id);
-      const scopedTransfersQuery = isAdmin ? transfersQuery : transfersQuery.eq('agent_id', profile.id);
-
-      const [
-        { data: balances, error: balancesError },
-        { data: transfers, error: transfersError },
-        { data: clients, error: clientsError },
-        activeAgentsResult,
-      ] = await Promise.all([
-        scopedBalancesQuery,
-        scopedTransfersQuery,
-        clientsQuery,
-        activeAgentsQuery,
-      ]);
-
-      if (balancesError) throw balancesError;
-      if (transfersError) throw transfersError;
-      if (clientsError) throw clientsError;
-      if (activeAgentsResult?.error) throw activeAgentsResult.error;
-
-      const safeBalances = (balances ?? []) as Array<BalanceRow & { agent_id?: string | null }>;
-      const safeTransfers = (transfers ?? []) as TransferRow[];
-      const safeClients = clients ?? [];
-
-      const balancesByCurrency = groupBalancesByCurrency(safeBalances);
+      const totals = (data ?? {}) as OperatorTotals;
+      const balancesByCurrency = toNumberRecord(totals.balances_by_currency);
       const availableBalance = Object.values(balancesByCurrency).reduce((sum, amount) => sum + amount, 0);
 
-      const completedTransfersRows = safeTransfers.filter((transfer) => isTransferCompleted(transfer.status));
-      const pendingTransferRows = safeTransfers.filter((transfer) => isTransferPending(transfer.status));
-      const cancelledTransferRows = safeTransfers.filter(
-        (transfer) => normalizeTransferStatus(transfer.status) === 'cancelled'
-      );
-      const commissionableRows = safeTransfers.filter(
-        (transfer) => normalizeTransferStatus(transfer.status) !== 'cancelled'
-      );
-      const pickupReadyRows = safeTransfers.filter(
-        (transfer) => normalizeTransferStatus(transfer.status) === 'available_for_pickup'
-      );
-
-      const todayTransfersRows = safeTransfers.filter((transfer) => isSameOrAfter(transfer.created_at, today));
-      const todayCompletedRows = completedTransfersRows.filter((transfer) => isSameOrAfter(transfer.created_at, today));
-      const todayCommissionableRows = commissionableRows.filter((transfer) => isSameOrAfter(transfer.created_at, today));
-      const monthCommissionableRows = commissionableRows.filter((transfer) => isSameOrAfter(transfer.created_at, monthStart));
-      const yearCommissionableRows = commissionableRows.filter((transfer) => isSameOrAfter(transfer.created_at, yearStart));
-      const recent7dCompletedRows = completedTransfersRows.filter((transfer) => isSameOrAfter(transfer.created_at, sevenDaysAgo));
-      const recent30dCompletedRows = completedTransfersRows.filter((transfer) =>
-        isSameOrAfter(transfer.created_at, thirtyDaysAgo)
-      );
-
-      const totalSent = sumAmounts(completedTransfersRows);
-      const todayVolume = sumAmounts(todayCompletedRows);
-      const weeklyVolume = sumAmounts(recent7dCompletedRows);
-      const monthlyVolume = sumAmounts(recent30dCompletedRows);
-      const pendingExposure = sumAmounts(pendingTransferRows);
-      const pickupReadyAmount = sumAmounts(pickupReadyRows);
-
-      const totalCommission = commissionableRows.reduce(
-        (sum, transfer) => sum + getCommissionAmount(transfer),
-        0
-      );
-      const todayCommission = todayCommissionableRows.reduce(
-        (sum, transfer) => sum + getCommissionAmount(transfer),
-        0
-      );
-      const monthlyCommission = monthCommissionableRows.reduce(
-        (sum, transfer) => sum + getCommissionAmount(transfer),
-        0
-      );
-      const yearlyCommission = yearCommissionableRows.reduce(
-        (sum, transfer) => sum + getCommissionAmount(transfer),
-        0
-      );
-
-      const completedTransfers = completedTransfersRows.length;
-      const pendingTransfers = pendingTransferRows.length;
-      const cancelledTransfers = cancelledTransferRows.length;
-      const totalLifecycleTransfers = completedTransfers + pendingTransfers + cancelledTransfers;
-      const averageTicket = completedTransfers > 0 ? totalSent / completedTransfers : 0;
-      const commissionableTransfers = commissionableRows.length;
-      const commissionPerTransfer = commissionableTransfers > 0 ? totalCommission / commissionableTransfers : 0;
+      const totalSent = num(totals.completed_amount);
+      const monthlyVolume = num(totals.thirty_days_completed_amount);
+      const pendingExposure = num(totals.pending_amount);
+      const totalCommission = num(totals.commission_total);
+      const completedTransfers = num(totals.completed_count);
+      const pendingTransfers = num(totals.pending_count);
+      const cancelledTransfers = num(totals.cancelled_count);
+      const commissionableTransfers = num(totals.commissionable_count);
       const averageDailyOutflow = monthlyVolume > 0 ? monthlyVolume / 30 : 0;
-      const settlementRate = totalLifecycleTransfers > 0
-        ? Math.round((completedTransfers / totalLifecycleTransfers) * 100)
-        : 0;
-
-      const activeAgents = isAdmin
-        ? activeAgentsResult?.data?.length || 0
-        : completedTransfersRows.length > 0
-          ? 1
-          : 0;
-
-      const agentsBelowThreshold = safeBalances.filter((balance) => Number(balance.balance ?? 0) < 25000).length;
-      const totalClients = isAdmin
-        ? safeClients.length
-        : new Set((safeClients as Array<{ sender_phone?: string | null }>).map((client) => client.sender_phone)).size;
 
       const stats: DashboardStats = {
         totalBalance: availableBalance + pendingExposure,
         availableBalance,
         reservedBalance: pendingExposure,
         pendingExposure,
-        todayTransfers: todayTransfersRows.length,
+        todayTransfers: num(totals.today_count),
         totalSent,
-        totalClients,
+        totalClients: num(totals.total_clients),
         balancesByCurrency,
         totalCommission,
-        todayCommission,
-        monthlyCommission,
-        yearlyCommission,
-        commissionPerTransfer,
-        averageTicket,
-        todayVolume,
-        weeklyVolume,
+        todayCommission: num(totals.commission_today),
+        monthlyCommission: num(totals.commission_month),
+        yearlyCommission: num(totals.commission_year),
+        commissionPerTransfer: commissionableTransfers > 0 ? totalCommission / commissionableTransfers : 0,
+        averageTicket: completedTransfers > 0 ? totalSent / completedTransfers : 0,
+        todayVolume: num(totals.today_completed_amount),
+        weeklyVolume: num(totals.week_completed_amount),
         monthlyVolume,
-        settlementRate,
-        activeAgents,
-        agentsBelowThreshold,
+        settlementRate: settlementRate(completedTransfers, pendingTransfers, cancelledTransfers),
+        activeAgents: isAdmin ? num(totals.active_agents) : completedTransfers > 0 ? 1 : 0,
+        agentsBelowThreshold: num(totals.agents_below_threshold),
         projectedTopups24h: estimateProjectedTopups24h(averageDailyOutflow, availableBalance),
         liquidityCoverageDays: estimateLiquidityCoverageDays(availableBalance, averageDailyOutflow),
         floatUtilization: estimateFloatUtilization(pendingExposure, availableBalance),
-        pickupReadyTransfers: pickupReadyRows.length,
-        pickupReadyAmount,
+        pickupReadyTransfers: num(totals.pickup_ready_count),
+        pickupReadyAmount: num(totals.pickup_ready_amount),
         completedTransfers,
         pendingTransfers,
         cancelledTransfers,
@@ -228,26 +158,17 @@ export async function GET() {
 
     const [
       { data: balances, error: balancesError },
-      { data: walletTransfers, error: walletError },
-      { data: receivedAgentTransfers, error: receivedAgentTransfersError },
+      { data, error: totalsError },
     ] = await Promise.all([
       adminClient.from('client_balances').select('balance, reserved_balance, currency').eq('client_id', profile.id),
-      adminClient
-        .from('wallet_transfers')
-        .select('status, amount, created_at')
-        .or(`sender_id.eq.${profile.id},receiver_id.eq.${profile.id}`),
-      adminClient
-        .from('transfers')
-        .select('status, amount, created_at')
-        .eq('receiver_user_id', profile.id),
+      adminClient.rpc('dashboard_client_stats', { p_client_id: profile.id, ...periods }),
     ]);
 
     if (balancesError) throw balancesError;
-    if (walletError) throw walletError;
-    if (receivedAgentTransfersError) throw receivedAgentTransfersError;
+    if (totalsError) throw totalsError;
 
-    const safeBalances = (balances ?? []) as Array<BalanceRow & { reserved_balance?: number | string | null }>;
-    const safeTransfers = (walletTransfers ?? []) as TransferRow[];
+    const safeBalances = (balances ?? []) as ClientBalanceRow[];
+    const totals = (data ?? {}) as PeriodTotals;
 
     const balancesByCurrency = safeBalances.reduce<Record<string, number>>((acc, row) => {
       const currency = row.currency || 'XAF';
@@ -261,44 +182,17 @@ export async function GET() {
     );
     const reservedBalance = safeBalances.reduce((sum, row) => sum + Number(row.reserved_balance ?? 0), 0);
 
-    const normalizedWalletTransfers = safeTransfers.map((transfer) => ({
-      ...transfer,
-      status: mapWalletTransferStatus(transfer.status),
-    }));
-    const normalizedReceivedAgentTransfers = ((receivedAgentTransfers ?? []) as TransferRow[]).map((transfer) => ({
-      ...transfer,
-      status: normalizeTransferStatus(transfer.status),
-    }));
-    const clientTransfers = [...normalizedWalletTransfers, ...normalizedReceivedAgentTransfers];
-
-    const completedTransfersRows = clientTransfers.filter((transfer) => isTransferCompleted(transfer.status));
-    const pendingTransferRows = clientTransfers.filter((transfer) => isTransferPending(transfer.status));
-    const cancelledTransferRows = clientTransfers.filter(
-      (transfer) => normalizeTransferStatus(transfer.status) === 'cancelled'
-    );
-    const todayTransfersRows = clientTransfers.filter((transfer) => isSameOrAfter(transfer.created_at, today));
-    const todayCompletedRows = completedTransfersRows.filter((transfer) => isSameOrAfter(transfer.created_at, today));
-    const recent7dCompletedRows = completedTransfersRows.filter((transfer) => isSameOrAfter(transfer.created_at, sevenDaysAgo));
-    const recent30dCompletedRows = completedTransfersRows.filter((transfer) =>
-      isSameOrAfter(transfer.created_at, thirtyDaysAgo)
-    );
-
-    const totalSent = sumAmounts(completedTransfersRows);
-    const todayVolume = sumAmounts(todayCompletedRows);
-    const weeklyVolume = sumAmounts(recent7dCompletedRows);
-    const monthlyVolume = sumAmounts(recent30dCompletedRows);
-    const completedTransfers = completedTransfersRows.length;
-    const pendingTransfers = pendingTransferRows.length;
-    const cancelledTransfers = cancelledTransferRows.length;
-    const averageTicket = completedTransfers > 0 ? totalSent / completedTransfers : 0;
-    const totalLifecycleTransfers = completedTransfers + pendingTransfers + cancelledTransfers;
+    const totalSent = num(totals.completed_amount);
+    const completedTransfers = num(totals.completed_count);
+    const pendingTransfers = num(totals.pending_count);
+    const cancelledTransfers = num(totals.cancelled_count);
 
     const stats: DashboardStats = {
       totalBalance: availableBalance + reservedBalance,
       availableBalance,
       reservedBalance,
       pendingExposure: reservedBalance,
-      todayTransfers: todayTransfersRows.length,
+      todayTransfers: num(totals.today_count),
       totalSent,
       totalClients: 0,
       balancesByCurrency,
@@ -307,13 +201,11 @@ export async function GET() {
       monthlyCommission: 0,
       yearlyCommission: 0,
       commissionPerTransfer: 0,
-      averageTicket,
-      todayVolume,
-      weeklyVolume,
-      monthlyVolume,
-      settlementRate: totalLifecycleTransfers > 0
-        ? Math.round((completedTransfers / totalLifecycleTransfers) * 100)
-        : 0,
+      averageTicket: completedTransfers > 0 ? totalSent / completedTransfers : 0,
+      todayVolume: num(totals.today_completed_amount),
+      weeklyVolume: num(totals.week_completed_amount),
+      monthlyVolume: num(totals.thirty_days_completed_amount),
+      settlementRate: settlementRate(completedTransfers, pendingTransfers, cancelledTransfers),
       floatUtilization: estimateFloatUtilization(reservedBalance, availableBalance),
       pickupReadyTransfers: 0,
       pickupReadyAmount: 0,

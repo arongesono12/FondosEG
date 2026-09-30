@@ -145,7 +145,7 @@ export function LandingPage() {
       <FadeIn><div className="hero-buttons"><Link className="btn-primary" href="/register">Comenzar gratis <ArrowRight /></Link><button type="button" className="demo-button" onClick={() => setDemoOpen(true)}>Ver demo <Play /></button></div></FadeIn>
       <FadeIn><div className="hero-checks"><span><Check /> Sin tarjeta</span><span><Check /> Sin instalación</span><span><Check /> Listo en minutos</span></div></FadeIn>
     </div>
-    <FadeInRight><div className="hero-visual"><div className="orbit orbit-a"/><div className="orbit orbit-b"/><Image src="/mockup.png" alt="Panel de FondosEG en ordenador, tableta y móvil" width={2048} height={1228} priority /></div></FadeInRight>
+    <FadeInRight><div className="hero-visual"><div className="orbit orbit-a"/><div className="orbit orbit-b"/><Image src="/mockup.png" alt="Panel de FondosEG en ordenador, tableta y móvil" width={2048} height={1228} sizes="(max-width: 560px) calc(100vw + 88px), (max-width: 900px) calc(100vw + 160px), 50vw" priority /></div></FadeInRight>
   </section>
 
   <StaggerContainerFast><section className="stats-grid">
@@ -176,7 +176,7 @@ export function LandingPage() {
       </DialogHeader>
       <DialogBody className="space-y-4">
         <div className="demo-player aspect-video w-full overflow-hidden rounded-2xl border border-border/40 bg-black">
-          {!videoUnavailable ? <video className="size-full object-cover" controls playsInline preload="metadata" poster="/mockup.png" onError={() => setVideoUnavailable(true)}>
+          {!videoUnavailable ? <video className="size-full object-cover" controls playsInline preload="metadata" poster="/images/mockup-poster.webp" onError={() => setVideoUnavailable(true)}>
             <source src="/fondoseg-demo.mp4" type="video/mp4" />
           </video> : <div className="demo-preview relative grid size-full place-items-center">
             <Image src="/mockup.png" alt="Vista previa del dashboard de FondosEG" width={2048} height={1228} sizes="(max-width:640px) 100vw, 720px" className="absolute inset-0 size-full object-cover opacity-35" />
