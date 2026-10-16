@@ -1,5 +1,6 @@
 import { createAdminClient } from '@/lib/supabase/admin';
 import { hashRequestPayload } from '@/lib/server/api-security';
+import { isDefinitiveDatabaseRejection } from '@/lib/server/db-errors';
 import { randomUUID } from 'crypto';
 
 export interface IdempotencyState {
@@ -76,6 +77,35 @@ export async function readIdempotencyState(
   }
 
   return { key: idempotencyKey, requestHash, lockToken };
+}
+
+/**
+ * Libera la clave cuando la operación financiera fue rechazada por Postgres
+ * (transacción revertida, sin movimiento de dinero). Sin esto, un rechazo
+ * como "Saldo insuficiente" dejaba la clave en `processing` para siempre y
+ * cada reintento del integrador recibía 409.
+ *
+ * Ante un error ambiguo (red, timeout) NO libera nada: el dinero pudo moverse.
+ */
+export async function releaseIdempotencyKeyAfterRejection(
+  apiKeyId: string,
+  state: IdempotencyState | null,
+  error: unknown
+): Promise<void> {
+  if (!state?.lockToken || !isDefinitiveDatabaseRejection(error)) {
+    return;
+  }
+
+  const adminClient = createAdminClient();
+  const { error: releaseError } = await adminClient.rpc('release_api_idempotency_key', {
+    p_api_key_id: apiKeyId,
+    p_idempotency_key: state.key,
+    p_lock_token: state.lockToken,
+  });
+
+  if (releaseError) {
+    console.error('No se pudo liberar la clave de idempotencia:', releaseError);
+  }
 }
 
 export async function persistIdempotencyResponse(

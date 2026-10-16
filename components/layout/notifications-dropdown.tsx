@@ -220,7 +220,7 @@ export function NotificationsDropdown({ notificationCount, onCountChange, trigge
                     requestAnimationFrame(() => handleOpenNotification(notif));
                   }}
                   className={cn(
-                    "block p-3 rounded-xl border font-normal transition-all cursor-pointer focus:text-foreground",
+                    "block p-3 rounded-xl border font-normal transition-colors duration-150 cursor-pointer focus:text-foreground",
                     notif.is_read
                       ? "bg-muted/20 border-border/5 hover:bg-muted/30 focus:bg-muted/40"
                       : "bg-primary/5 border-primary/10 hover:bg-primary/10 focus:bg-primary/15"

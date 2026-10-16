@@ -9,15 +9,20 @@
   box-shadow: var(--marketing-card-shadow); backdrop-filter: none; -webkit-backdrop-filter: none;
 }
 
-.stat-card, .feature-card, .role-card, .trust-card, .testimonial,
-.info-panel, .info-note, .legal-sources a {
-  transition: transform .25s ease, border-color .25s ease, box-shadow .25s ease;
+.role-card, .legal-sources a {
+  transition: transform .18s ease-out, border-color .18s ease-out, box-shadow .18s ease-out;
 }
 
-.stat-card:hover, .feature-card:hover, .role-card:hover, .trust-card:hover, .testimonial:hover,
-.info-panel:hover, .info-note:hover, .legal-sources a:hover {
-  z-index: 2; border-color: color-mix(in srgb, var(--primary) 38%, var(--app-card-border));
-  box-shadow: var(--marketing-card-shadow-hover); transform: translateY(-2px);
+@media (hover: hover) and (pointer: fine) {
+  .role-card:hover, .legal-sources a:hover {
+    z-index: 2; border-color: color-mix(in srgb, var(--primary) 38%, var(--app-card-border));
+    box-shadow: var(--marketing-card-shadow-hover); transform: translateY(-2px);
+  }
+  .feature-card > a:hover svg { transform: translateX(3px); }
+}
+
+.role-card:focus-visible, .legal-sources a:focus-visible {
+  outline: 2px solid var(--ring); outline-offset: 3px;
 }
 
 .stat-card::before, .feature-card::before, .role-card::before, .trust-card::before,
@@ -39,7 +44,6 @@
 .feature-card > a.green { color: var(--chart-3); }
 .feature-card > a.purple { color: var(--chart-5); }
 .feature-card > a svg { width: 15px; height: 15px; transition: transform .2s ease; }
-.feature-card > a:hover svg { transform: translateX(3px); }
 
 .trust-card { display: flex; width: 100%; height: 100%; min-height: 150px; gap: 14px; padding: 20px; }
 .trust-card > div { display: grid; width: 42px; height: 42px; flex: none; place-items: center; border-radius: 13px; background:var(--accent); color:var(--primary); }
@@ -61,9 +65,6 @@
 .testimonial footer div { display: grid; gap: 2px; }
 .testimonial footer strong { font-size: 12px; }
 .testimonial footer small { color: var(--muted-foreground); font-size: 12px; }
-.dots { display: flex; justify-content: center; gap: 6px; margin-top: 22px; }
-.dots i { width: 6px; height: 6px; border-radius: 999px; background: var(--app-card-border); }
-.dots i:first-child { width: 20px; background: var(--primary); }
 
 /* Role accent stripes */
 .role-1 { border-color:rgba(236,22,116,.55);background:linear-gradient(100deg,color-mix(in srgb,#ec1674 12%,var(--surface)),var(--surface) 72%);box-shadow:inset 2px 0 0 #ec1674; }

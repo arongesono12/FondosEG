@@ -18,6 +18,8 @@ html:has(.landing-root){scroll-padding-top:112px}
 .dark .landing-root{color-scheme:dark}
 .landing-root::before{content:"";position:absolute;inset:0;z-index:0;background:linear-gradient(color-mix(in srgb,var(--primary) 5%,transparent) 1px,transparent 1px),linear-gradient(90deg,color-mix(in srgb,var(--primary) 4%,transparent) 1px,transparent 1px);background-size:72px 72px;mask-image:linear-gradient(to bottom,transparent 0,#000 12%,#000 78%,transparent 100%);pointer-events:none}
 .landing-root>*{position:relative;z-index:1}
+.landing-skip-link{position:absolute;z-index:100;top:10px;left:10px;padding:10px 14px;border-radius:var(--app-control-radius);background:var(--surface);color:var(--foreground);transform:translateY(-150%)}
+.landing-skip-link:focus{transform:none;outline:2px solid var(--ring);outline-offset:2px}
 /* El logotipo es el mismo componente en toda la aplicación, así que aquí no
    se repinta: esta regla le daba a la landing un rótulo con el texto en el
    color de la página y sólo la «G» en rosa, mientras en el dashboard salía
@@ -110,12 +112,11 @@ html:has(.landing-root){scroll-padding-top:112px}
 .dark .cta-section{background:linear-gradient(115deg,#0a1d52 0%,#070d22 46%,#310726 100%);box-shadow:inset 0 1px 0 rgba(255,255,255,.05)}
 .cta-section h2{font-size:30px;font-weight:650}
 .cta-section>div>p{margin-top:9px;color:var(--land-soft);font-size:13px;line-height:1.7}
-.cta-section form>div{display:grid;grid-template-columns:1fr auto;gap:10px}
-.cta-section input{min-width:0;height:48px;padding:0 16px;border:1px solid var(--app-card-border);border-radius:12px;background:var(--surface-2);color:var(--foreground);outline:none}
-.cta-section input:focus{border-color:var(--ring);box-shadow:0 0 0 3px color-mix(in srgb,var(--ring) 15%,transparent)}
-.cta-section form>p{display:flex;flex-wrap:wrap;gap:16px;margin-top:12px;color:var(--land-soft);font-size:12px}
-.cta-section form>p span{display:flex;align-items:center;gap:5px}
-.cta-section form>p svg{width:13px;color:#10b981}
+.cta-actions{display:flex;flex-direction:column;align-items:flex-start;gap:14px}
+.cta-section>.cta-actions>p{display:flex;flex-wrap:wrap;gap:10px 16px;margin-top:0;color:var(--land-soft);font-size:12px}
+.cta-actions>p span{display:flex;align-items:center;gap:5px}
+.cta-actions>p svg{width:13px;color:#10b981}
+@media(max-width:560px){.cta-actions{align-items:stretch}.cta-actions>p{flex-direction:column;gap:6px}}
 
 /* El menú se pliega por debajo de 1024px (antes a 900px, y entre 901 y
    ~1110px los enlaces y los dos botones no cabían en la barra). */

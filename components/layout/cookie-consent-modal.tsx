@@ -81,13 +81,8 @@ export function CookieConsentModal({
           'Usamos cookies esenciales para mantener FondosEG seguro y, con tu permiso, cookies de preferencias para recordar cómo usas la plataforma.',
       };
 
-  // Con movimiento reducido los botones no se elevan al pasar el ratón.
-  // Tailwind v4 mueve con la propiedad `translate`, no con `transform`, así
-  // que el reinicio es `translate-none` (un `transform-none` no lo anularía).
-  const motionSafe = 'motion-reduce:transition-none motion-reduce:hover:translate-none';
-
   const secondaryButton =
-    `cookie-consent-secondary flex min-h-11 items-center justify-center gap-2 rounded-xl border border-border/60 bg-background/70 px-3 text-sm font-semibold text-foreground transition-all hover:-translate-y-0.5 hover:bg-muted/60 active:translate-y-0 ${motionSafe}`;
+    'cookie-consent-secondary flex min-h-11 items-center justify-center gap-2 rounded-xl border border-border/60 bg-background/70 px-3 text-sm font-semibold text-foreground transition-colors duration-150 hover:bg-muted/60 motion-reduce:transition-none';
 
   return (
     <div
@@ -124,7 +119,7 @@ export function CookieConsentModal({
             <button
               type="button"
               onClick={onAcceptAll}
-              className={`cookie-consent-primary flex min-h-11 items-center justify-center gap-2 rounded-xl bg-brand-gradient px-3 text-sm font-semibold text-white shadow-lg shadow-pink-500/20 transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-pink-500/25 active:translate-y-0 ${motionSafe}`}
+              className="cookie-consent-primary flex min-h-11 items-center justify-center gap-2 rounded-xl bg-brand-gradient px-3 text-sm font-semibold text-white shadow-lg shadow-pink-500/20 transition-opacity duration-150 hover:opacity-90 active:opacity-80 motion-reduce:transition-none"
             >
               <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
               Aceptar todas
@@ -144,7 +139,7 @@ export function CookieConsentModal({
               type="button"
               aria-pressed={preferences.preferences}
               onClick={() => setPreferences((current) => ({ ...current, preferences: !current.preferences }))}
-              className={`flex min-h-11 items-center justify-center gap-2 rounded-xl border px-3 text-center text-sm font-semibold transition-all ${
+              className={`flex min-h-11 items-center justify-center gap-2 rounded-xl border px-3 text-center text-sm font-semibold transition-colors duration-150 motion-reduce:transition-none ${
                 preferences.preferences
                   ? 'border-pink-500/60 bg-pink-50 text-pink-800 shadow-sm shadow-pink-500/10 dark:bg-pink-500/10 dark:text-pink-100'
                   : 'border-border/60 bg-background/70 text-foreground hover:bg-muted/60'
@@ -163,7 +158,7 @@ export function CookieConsentModal({
             <button
               type="button"
               onClick={() => onSaveConfiguration(preferences)}
-              className={`cookie-consent-primary flex min-h-11 items-center justify-center gap-2 rounded-xl bg-brand-gradient px-4 text-sm font-semibold text-white shadow-lg shadow-pink-500/20 transition-all hover:-translate-y-0.5 hover:shadow-xl active:translate-y-0 ${motionSafe}`}
+              className="cookie-consent-primary flex min-h-11 items-center justify-center gap-2 rounded-xl bg-brand-gradient px-4 text-sm font-semibold text-white shadow-lg shadow-pink-500/20 transition-opacity duration-150 hover:opacity-90 active:opacity-80 motion-reduce:transition-none"
             >
               <Save className="h-4 w-4" aria-hidden="true" /> Guardar preferencias
             </button>

@@ -9,7 +9,7 @@ export default function DevelopersPortalLayout({
 }) {
   return (
     <div
-      className="auth-public-page relative flex min-h-dvh flex-col overflow-y-auto overscroll-y-contain p-4 transition-colors duration-500"
+      className="auth-public-page relative flex min-h-dvh flex-col overflow-y-auto overscroll-y-contain p-4 transition-colors duration-150"
       style={{
         paddingTop: 'max(1rem, env(safe-area-inset-top))',
         paddingBottom: 'max(1rem, env(safe-area-inset-bottom))',
@@ -30,7 +30,7 @@ export default function DevelopersPortalLayout({
       </header>
 
       <div className="flex w-full flex-1 flex-col items-center justify-start">
-        <div className="w-full relative z-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div className="w-full relative z-10">
           {children}
         </div>
       </div>

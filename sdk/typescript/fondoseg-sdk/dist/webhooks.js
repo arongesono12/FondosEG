@@ -1,4 +1,6 @@
 import { createHmac, timingSafeEqual } from 'crypto';
+/** HMAC-SHA256 en hexadecimal: exactamente 64 caracteres [0-9a-f]. */
+const HEX_SHA256_SIGNATURE = /^[0-9a-f]{64}$/i;
 function stripSignaturePrefix(signature) {
     return signature.replace(/^v1=/, '');
 }
@@ -21,8 +23,11 @@ export function verifyFondosEGWebhookSignature(input) {
         timestamp: input.timestamp,
         rawBody: input.rawBody,
     });
-    const received = stripSignaturePrefix(input.signature);
-    if (expected.length !== received.length)
+    const received = stripSignaturePrefix(input.signature.trim());
+    // Una firma mal formada es una firma inválida, no un error: sin esta
+    // comprobación, Buffer.from(..., 'hex') truncaba los caracteres no
+    // hexadecimales y timingSafeEqual lanzaba RangeError por longitudes distintas.
+    if (!HEX_SHA256_SIGNATURE.test(received))
         return false;
     return timingSafeEqual(Buffer.from(expected, 'hex'), Buffer.from(received, 'hex'));
 }

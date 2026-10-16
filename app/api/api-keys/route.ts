@@ -3,6 +3,12 @@ import { AuthzError, requireAuthUser, requireDeveloperAccess } from '@/lib/serve
 import { normalizeApiEnvironment } from '@/lib/server/api-environments';
 import { generateApiKey, generateApiSecret, getApiSecretPreview, hashApiSecret } from '@/lib/server/api-security';
 import { isTransientNetworkError } from '@/lib/network-errors';
+import {
+  attachOwnerLabels,
+  buildOwnedOrIssuedFilter,
+  CredentialOwnerError,
+  resolveCredentialOwner,
+} from '@/lib/server/credential-ownership';
 import { createAdminClient } from '@/lib/supabase/admin';
 import type { ApiPermission, UserRole } from '@/types';
 
@@ -21,6 +27,8 @@ const apiKeySelect = [
   'last_used_at',
   'expires_at',
   'created_at',
+  'user_id',
+  'issued_by_user_id',
 ].join(',');
 
 const permissionKeys: ApiPermission[] = ['balance', 'transfer', 'history', 'properties', 'payments'];
@@ -79,6 +87,7 @@ function publicApiKeyRecord(row: Record<string, unknown>) {
     last_used_at: row.last_used_at,
     expires_at: row.expires_at,
     created_at: row.created_at,
+    owner_label: row.owner_label ?? null,
   };
 }
 
@@ -92,7 +101,8 @@ export async function GET() {
       adminClient
         .from('api_keys')
         .select(apiKeySelect)
-        .eq('user_id', user.id)
+        // Las propias y las que este administrador emitió para un cliente.
+        .or(buildOwnedOrIssuedFilter(user.id))
         .eq('is_active', true)
         .order('created_at', { ascending: false })
     );
@@ -101,7 +111,8 @@ export async function GET() {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    return NextResponse.json(apiKeys || []);
+    const labelled = await attachOwnerLabels((apiKeys || []) as unknown as Array<Record<string, unknown>>);
+    return NextResponse.json(labelled.map(publicApiKeyRecord));
 
   } catch (error) {
     console.error('API Keys GET Error:', error);
@@ -152,6 +163,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Con `owner_phone`, un administrador emite la credencial para la
+    // billetera cliente que cobra (p. ej. la de CasasEG): solo así la key
+    // opera ese saldo y las solicitudes de cobro se le abonan a ella.
+    const owner = await resolveCredentialOwner({
+      actorUserId: user.id,
+      actorAccessRole: access.access_role,
+      ownerPhone: body?.owner_phone,
+      requestedRole,
+    });
+
     const keyData = generateApiKey(environment);
     const secretData = generateApiSecret();
     const secretHash = hashApiSecret(secretData);
@@ -167,7 +188,8 @@ export async function POST(request: NextRequest) {
           api_secret_hash: secretHash,
           api_secret_preview: getApiSecretPreview(secretData),
           environment,
-          user_id: user.id,
+          user_id: owner.ownerUserId,
+          issued_by_user_id: owner.issuedByUserId,
           role_access: requestedRole,
           permissions: normalizePermissions(permissions, requestedRole),
         })
@@ -179,16 +201,21 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: insertError.message }, { status: 500 });
     }
 
+    const [labelled] = await attachOwnerLabels([apiKey as unknown as Record<string, unknown>]);
+
     return NextResponse.json({
       success: true,
       apiKey: {
-        ...publicApiKeyRecord(apiKey as unknown as Record<string, unknown>),
+        ...publicApiKeyRecord(labelled),
         api_key: keyData,
         api_secret: secretData,
       },
     });
 
   } catch (error) {
+    if (error instanceof CredentialOwnerError) {
+      return NextResponse.json({ error: error.message }, { status: error.status });
+    }
     console.error('API Keys POST Error:', error);
     if (isTransientNetworkError(error)) {
       return NextResponse.json(
@@ -228,7 +255,7 @@ export async function DELETE(request: NextRequest) {
         .from('api_keys')
         .update({ is_active: false, updated_at: new Date().toISOString() })
         .eq('id', keyId)
-        .eq('user_id', user.id)
+        .or(buildOwnedOrIssuedFilter(user.id))
     );
 
     if (error) {

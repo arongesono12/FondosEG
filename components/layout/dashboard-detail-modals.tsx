@@ -211,7 +211,7 @@ export function FlujoDiaModal({ open, onClose, stats, preferredCurrency }: Flujo
                 </div>
               </div>
               <div className="h-1.5 w-full bg-black/10 dark:bg-white/10 rounded-full overflow-hidden">
-                <div className={cn('h-full rounded-full transition-all duration-700', barMap[c.color])} style={{ width: `${c.pct}%` }} />
+                <div className={cn('h-full rounded-full', barMap[c.color])} style={{ width: `${c.pct}%` }} />
               </div>
             </div>
           );
@@ -370,7 +370,7 @@ export function VolumenSemanalModal({ open, onClose, preferredCurrency }: Volume
                     <div className="w-full relative flex flex-col justify-end h-28">
                       <div className="absolute inset-x-0 bottom-0 bg-muted/30 rounded-xl h-full" />
                       <div
-                        className={cn('w-full rounded-xl transition-all duration-700 relative', i % 2 === 0 ? 'bg-rose-500/80' : 'bg-blue-500/80')}
+                        className={cn('w-full rounded-xl relative', i % 2 === 0 ? 'bg-rose-500/80' : 'bg-blue-500/80')}
                         style={{ height: `${Math.max(pct, 4)}%` }}
                         title={fmt(d.total_amount)}
                       />
@@ -506,7 +506,7 @@ export function SoporteModal({
               <button
                 key={a.label}
                 onClick={a.action}
-                className={cn('flex items-center gap-3 p-3.5 rounded-2xl border text-left hover:opacity-80 transition-all', a.bg)}
+                className={cn('flex items-center gap-3 p-3.5 rounded-2xl border text-left hover:opacity-80 transition-opacity duration-150', a.bg)}
               >
                 <Icon className={cn('h-4 w-4 shrink-0', a.color)} />
                 <span className="text-sm font-bold text-foreground">{a.label}</span>
@@ -520,7 +520,7 @@ export function SoporteModal({
       {/* CTA */}
       <Button
         onClick={onContactAdmin}
-        className="w-full h-12 rounded-xl bg-brand-gradient text-white font-black shadow-lg shadow-pink-500/20 hover:opacity-90 transition-all"
+        className="w-full h-12 rounded-xl bg-brand-gradient text-white font-black shadow-lg shadow-pink-500/20 hover:opacity-90 transition-opacity duration-150"
       >
         <MessageSquare className="h-4 w-4 mr-2" /> Abrir Ticket de Soporte
       </Button>

@@ -45,19 +45,22 @@
 .footer-grid h4 { margin-bottom: 16px; color: inherit; font-size: 12px; font-weight: 700; line-height: 1.4; }
 .footer-grid p, .footer-grid a { margin-bottom: 9px; color: var(--land-soft); font-size: 12px; line-height: 1.55; }
 .footer-grid > div:not(.footer-brand) > a { display:block;width:fit-content;transition:color .2s ease,transform .2s ease; }
-.footer-grid > div:not(.footer-brand) > a:hover { color: #f0267e; transform: translateX(3px); }
 .footer-brand > p { max-width: 245px; margin-top: 14px; }
 
 /* Social links */
 .socials { display:flex; gap: 10px; margin-top: 18px; }
 .socials a { width: 34px; height: 34px; margin: 0; display: grid; place-items: center; border: 1px solid var(--land-line); border-radius: 50%; color: var(--land-soft); background: rgba(255,255,255,.025); transition: border-color .2s ease, color .2s ease, background .2s ease, transform .2s ease; }
-.socials a:hover { border-color: #f0267e; color: #fff; background: linear-gradient(135deg,#f93291,#e60762); transform: translateY(-3px); }
 .socials svg { width: 15px; height: 15px; }
 /* Con puntero táctil, 44px: a 34px quedaban por debajo del objetivo mínimo. */
 @media (pointer: coarse) { .socials a { width: 44px; height: 44px; } }
 
-.footer-help p { display: flex; align-items: center; gap: 7px; white-space: nowrap; }
-.footer-help p svg { width: 13px; height: 13px; flex: none; color: #f0267e; }
+.footer-help :is(p, a) { display: flex; align-items: center; gap: 7px; white-space: nowrap; }
+.footer-help :is(p, a) svg { width: 13px; height: 13px; flex: none; color: #f0267e; }
+.footer-help a:focus-visible, .footer-grid > div:not(.footer-brand) > a:focus-visible, .socials a:focus-visible { outline: 2px solid var(--ring); outline-offset: 3px; }
+@media (hover: hover) and (pointer: fine) {
+  .footer-grid > div:not(.footer-brand) > a:hover { color: #f0267e; transform: translateX(3px); }
+  .socials a:hover { border-color: #f0267e; color: #fff; background: linear-gradient(135deg,#f93291,#e60762); transform: translateY(-3px); }
+}
 .copyright { max-width:1200px;margin:25px auto 0;padding-top:18px;border-top:1px solid var(--land-line);color:var(--land-soft);font-size:12px;text-align:center; }
 
 @media (max-width: 1100px) { .footer-grid { grid-template-columns: repeat(3, 1fr); } }

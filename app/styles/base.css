@@ -45,52 +45,8 @@ samp,
   font-family: var(--font-fondoseg-mono) !important;
 }
 
-/* Theme transition — optimized for performance */
-*, *::before, *::after {
-  transition-property: background-color, border-color, color, fill, stroke;
-  transition-duration: 0.3s;
-  transition-timing-function: ease;
-}
-
-@media (max-width: 1023.98px) {
-  *, *::before, *::after {
-    transition-duration: 0.15s;
-  }
-}
-
-/* Disable transitions for animations that should be instant */
-[data-state="open"],
-[data-state="closed"],
-.animate-in,
-.animate-out,
-[aria-expanded="true"],
-[aria-expanded="false"],
-dialog,
-dialog *,
-.sr-only,
-.pointer-events-none {
-  transition: none !important;
-}
-
-/* Smooth theme transitions for specific elements */
-.bg-card,
-.bg-background,
-.bg-muted,
-.bg-primary\/5,
-.bg-primary\/10,
-.bg-green-50,
-.bg-red-50,
-.bg-amber-50,
-.bg-blue-50,
-.bg-purple-50,
-.text-foreground,
-.text-muted-foreground,
-.border,
-.border-border,
-.border-border\/5,
-.border-border\/10,
-.border-border\/20 {
-  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+@media (prefers-reduced-motion: reduce) {
+  html, body { transition: none; }
 }
 
 /* =========================================================================

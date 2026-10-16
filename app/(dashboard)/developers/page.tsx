@@ -17,6 +17,7 @@ import {
   Trash2,
   Wallet,
 } from '@/components/ui/hugeicons';
+import { WebhookSubscriptionsPanel } from '@/components/developers/webhook-subscriptions-panel';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -35,7 +36,7 @@ const permissionLabels: Record<ApiPermission, { label: string; icon: ElementType
   transfer: { label: 'Transferencias', icon: Send, detail: 'Creación de movimientos externos.' },
   history: { label: 'Historial', icon: History, detail: 'Consulta de operaciones y estados.' },
   properties: { label: 'Propiedades', icon: BookOpen, detail: 'Lectura de propiedades y alquileres.' },
-  payments: { label: 'Pagos de alquiler', icon: Wallet, detail: 'Inicio y consulta de pagos de alquiler.' },
+  payments: { label: 'Cobros', icon: Wallet, detail: 'Solicitudes de cobro a clientes FondosEG y pagos de alquiler.' },
 };
 
 const endpointDocs = [
@@ -150,13 +151,6 @@ const errorDocs = [
   { status: '403', code: 'permission_denied', detail: 'La credencial no tiene rol o permiso para ese endpoint.' },
   { status: '409', code: 'idempotency_conflict', detail: 'La misma idempotency-key se uso con otro payload.' },
   { status: '429', code: 'rate_limit_exceeded', detail: 'La credencial supero su limite temporal de requests.' },
-] as const;
-
-const webhookEvents = [
-  { event: 'transfer.created', detail: 'Una transferencia fue registrada.' },
-  { event: 'transfer.completed', detail: 'La transferencia se completo correctamente.' },
-  { event: 'transfer.cancelled', detail: 'La transferencia fue cancelada.' },
-  { event: 'rental_payment.updated', detail: 'Cambio de estado en un pago de alquiler.' },
 ] as const;
 
 const productionChecklist = [
@@ -516,15 +510,41 @@ const event = parseFondosEGWebhookBody(rawBody);`;
                 <Label htmlFor="role_access">Rol de acceso</Label>
                 <select
                   id="role_access"
-                  value={form.role_access}
+                  value={form.owner_phone?.trim() ? 'cliente' : form.role_access}
+                  disabled={Boolean(form.owner_phone?.trim())}
                   onChange={(event) => setForm((current) => ({ ...current, role_access: event.target.value as UserRole }))}
-                  className="h-11 rounded-2xl border border-input bg-background px-3 text-sm font-medium shadow-sm outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  className="h-11 rounded-2xl border border-input bg-background px-3 text-sm font-medium shadow-sm outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-60"
                 >
                   {roleOptions.map((role) => (
                     <option key={role} value={role}>{role}</option>
                   ))}
                 </select>
               </div>
+
+              {isAdminRole(user?.role) && (
+                <div className="grid gap-2">
+                  <Label htmlFor="owner_phone">Billetera titular (opcional)</Label>
+                  <Input
+                    id="owner_phone"
+                    type="tel"
+                    value={form.owner_phone ?? ''}
+                    onChange={(event) => {
+                      const ownerPhone = event.target.value;
+                      setForm((current) => ({
+                        ...current,
+                        owner_phone: ownerPhone,
+                        // A una billetera cliente solo se le emite rol cliente.
+                        role_access: ownerPhone.trim() ? 'cliente' : current.role_access,
+                      }));
+                    }}
+                    placeholder="Teléfono de la cuenta cliente, p. ej. la de CasasEG"
+                    className="h-11 rounded-2xl"
+                  />
+                  <p className="text-xs font-medium text-muted-foreground">
+                    Déjalo vacío para una credencial tuya. Con un teléfono, la credencial opera el saldo de esa billetera cliente y recibe sus cobros.
+                  </p>
+                </div>
+              )}
 
               <div className="space-y-3">
                 <Label>Permisos</Label>
@@ -602,6 +622,9 @@ const event = parseFondosEGWebhookBody(rawBody);`;
                           {environmentLabels[key.environment || 'test'].label}
                         </Badge>
                       </div>
+                      {key.owner_label && (
+                        <p className="mt-1 text-xs font-semibold text-foreground">Titular: {key.owner_label}</p>
+                      )}
                       <p className="mt-1 break-all font-mono text-xs text-muted-foreground">{key.api_key}</p>
                       <p className="mt-2 text-xs font-medium text-muted-foreground">{permissionSummary(key) || 'Sin permisos activos'}</p>
                     </div>
@@ -879,14 +902,7 @@ const event = parseFondosEGWebhookBody(rawBody);`;
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4 p-6">
-            <div className="grid gap-3">
-              {webhookEvents.map((webhookEvent) => (
-                <div key={webhookEvent.event} className="rounded-3xl border border-border/10 bg-background/70 p-4">
-                  <p className="font-mono text-xs font-bold text-primary">{webhookEvent.event}</p>
-                  <p className="mt-1 text-xs font-medium leading-5 text-muted-foreground">{webhookEvent.detail}</p>
-                </div>
-              ))}
-            </div>
+            <WebhookSubscriptionsPanel canIssueForClient={isAdminRole(user?.role)} />
 
             <div className="rounded-3xl border border-border/10 bg-slate-950 p-4 text-slate-100">
               <div className="mb-3 flex items-center justify-between gap-3">

@@ -160,7 +160,7 @@ export default function TransfersPage() {
   const avgDaily = dailyStats.length > 0 ? totalMonthly / dailyStats.length : 0;
 
   return (
-    <div className="transfers-mobile-page space-y-6 animate-in fade-in duration-500">
+    <div className="transfers-mobile-page space-y-6">
       {/* Header */}
       {/* Variantes de contenedor (`@2xl:`), no de viewport: la página también
           se pinta dentro del panel de media pantalla, donde a 1024px de

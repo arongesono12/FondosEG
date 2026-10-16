@@ -1,5 +1,9 @@
 import { randomUUID } from 'crypto';
-import { decryptWebhookSecret, signWebhookPayload } from '@/lib/server/webhook-security';
+import {
+  decryptWebhookSecret,
+  isWebhookEncryptionConfigured,
+  signWebhookPayload,
+} from '@/lib/server/webhook-security';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { scheduleOutboxProcessing } from '@/lib/server/outbox-worker';
 
@@ -13,11 +17,20 @@ export type FondosEGWebhookEvent =
   | 'rental_payment.paid'
   | 'rental_payment.failed'
   | 'rental_payment.refunded'
-  | 'rental_payment.cancelled';
+  | 'rental_payment.cancelled'
+  | 'payment_request.paid'
+  | 'payment_request.cancelled'
+  | 'payment_request.payment_failed';
 
 interface QueueWebhookEventInput {
   eventType: FondosEGWebhookEvent;
   payload: Record<string, unknown>;
+  /**
+   * Restringe la entrega a las suscripciones de este usuario. Obligatorio
+   * para eventos con datos de un comercio concreto: sin él, cualquier
+   * suscriptor del tipo de evento recibiría los cobros de otro comercio.
+   */
+  ownerUserId?: string;
 }
 
 interface WebhookDispatchErrorDetails {
@@ -39,11 +52,17 @@ class WebhookDispatchError extends Error {
 
 export async function queueWebhookEvent(input: QueueWebhookEventInput): Promise<number> {
   const adminClient = createAdminClient();
-  const { data: subscriptions, error } = await adminClient
+  let subscriptionsQuery = adminClient
     .from('webhook_subscriptions')
     .select('id')
     .eq('status', 'active')
     .contains('event_types', [input.eventType]);
+
+  if (input.ownerUserId) {
+    subscriptionsQuery = subscriptionsQuery.eq('user_id', input.ownerUserId);
+  }
+
+  const { data: subscriptions, error } = await subscriptionsQuery;
 
   if (error) {
     throw new Error(error.message);
@@ -129,6 +148,14 @@ export async function processWebhookDeliveries(limit: number = 20): Promise<{
   failed: number;
   retried: number;
 }> {
+  // Sin la clave, cada intento fallaría al descifrar el secreto y quemaría sus
+  // reintentos hasta marcar la entrega como `failed`: el evento se perdería.
+  // Se dejan en cola hasta que el despliegue se corrija.
+  if (!isWebhookEncryptionConfigured()) {
+    console.error('Webhooks en pausa: WEBHOOK_ENCRYPTION_KEY ausente o inválida. Las entregas siguen en cola.');
+    return { processed: 0, sent: 0, failed: 0, retried: 0 };
+  }
+
   const adminClient = createAdminClient();
 
   const { data, error } = await adminClient.rpc('claim_webhook_deliveries', { p_limit: limit });

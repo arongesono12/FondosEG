@@ -210,12 +210,17 @@ html.dark .dashboard-public-page.main-container {
 
 /* Dashboard overview: the screenshot's four equal, opaque financial cards. */
 .dashboard-public-page .overview-metric {
-  height: 242px;
+  min-height: 242px;
   padding: 22px 22px 0;
   border-color: var(--dashboard-card-border) !important;
   border-radius: var(--dashboard-card-radius) !important;
   background: var(--dashboard-card-bg) !important;
   box-shadow: none !important;
+}
+
+.dashboard-public-page .overview-metric-desk,
+.dashboard-public-page .overview-balance {
+  padding-bottom: 118px;
 }
 
 .dashboard-public-page .overview-metric-label {
@@ -753,11 +758,9 @@ html.dark .dashboard-public-page.main-container {
   line-height: 1.35;
 }
 
-/* La cifra no puede partirse (`nowrap`) y la tarjeta recorta: a 26px fijos
-   un importe de 8 cifras se cortaba en las cuatro columnas de 1024–1200px
-   (~177px de hueco). Escala con la ventana entre 20 y 26px, y es la única
-   regla que fija este tamaño: las de dashboard-overview.css y los bloques
-   responsive de arriba ya no lo tocan. */
+/* La cifra escala con la ventana entre 20 y 26px. Si un importe supera el
+   ancho disponible, la tarjeta crece para mostrarlo completo; esta regla es
+   la única que fija el tamaño y las reglas responsive no lo pisan. */
 :is(.dashboard-public-page .dashboard-main, .dashboard-module-panel) .overview-metric-value {
   font-size: clamp(20px, 1.6vw + 6px, 26px);
   line-height: 1.2;

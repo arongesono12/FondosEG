@@ -3,11 +3,37 @@ import { createCipheriv, createDecipheriv, createHmac, randomBytes } from 'crypt
 const WEBHOOK_SECRET_PREFIX = 'whsec_';
 const WEBHOOK_ALGORITHM = 'aes-256-gcm';
 
+/**
+ * Falta o es inválida `WEBHOOK_ENCRYPTION_KEY`. Es un fallo de despliegue, no
+ * del usuario: las rutas lo traducen a un 503 con un mensaje claro en vez de
+ * un "Error interno del servidor" que no dice qué arreglar.
+ */
+export class WebhookEncryptionConfigError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'WebhookEncryptionConfigError';
+  }
+}
+
+export const WEBHOOK_ENCRYPTION_NOT_CONFIGURED_MESSAGE =
+  'Los webhooks no están configurados en este servidor: falta WEBHOOK_ENCRYPTION_KEY ' +
+  '(32 bytes aleatorios, p. ej. `openssl rand -hex 32`). Avisa al administrador de la plataforma.';
+
+/** Comprueba la clave sin lanzar; para validar al arrancar y antes de cifrar. */
+export function isWebhookEncryptionConfigured(): boolean {
+  try {
+    readEncryptionKey();
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 function readEncryptionKey(): Buffer {
   const raw = process.env.WEBHOOK_ENCRYPTION_KEY;
 
-  if (!raw) {
-    throw new Error('WEBHOOK_ENCRYPTION_KEY is required to manage webhook secrets');
+  if (!raw?.trim()) {
+    throw new WebhookEncryptionConfigError('WEBHOOK_ENCRYPTION_KEY is required to manage webhook secrets');
   }
 
   const trimmed = raw.trim();
@@ -25,7 +51,7 @@ function readEncryptionKey(): Buffer {
   const asUtf8 = Buffer.from(trimmed, 'utf8');
   if (asUtf8.length === 32) return asUtf8;
 
-  throw new Error('WEBHOOK_ENCRYPTION_KEY must resolve to exactly 32 bytes');
+  throw new WebhookEncryptionConfigError('WEBHOOK_ENCRYPTION_KEY must resolve to exactly 32 bytes');
 }
 
 export function generateWebhookSigningSecret(): string {

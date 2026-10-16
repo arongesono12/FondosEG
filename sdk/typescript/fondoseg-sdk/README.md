@@ -100,3 +100,19 @@ if (!valid) {
 const event = parseFondosEGWebhookBody(rawBody);
 console.log(event.event, event.data);
 ```
+
+`verifyFondosEGWebhookSignature` returns `false` (it never throws) for missing,
+malformed or tampered signatures and for timestamps outside the 5-minute window.
+
+### Payment request events
+
+`payment_request.paid` and `payment_request.cancelled` carry
+`PaymentRequestWebhookData`. Match `data.reference` (your `orderId`) and check
+`amount`/`currency` against your order before marking it paid:
+
+```ts
+if (headers.event === 'payment_request.paid') {
+  const paid = parseFondosEGWebhookBody<'payment_request.paid'>(rawBody);
+  await markOrderPaid(paid.data.reference, paid.data.amount, paid.data.currency);
+}
+```

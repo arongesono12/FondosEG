@@ -166,15 +166,38 @@ export interface WalletTransferConfirmedWebhookData {
   source?: string;
 }
 
+export type PaymentRequestStatus = 'pending' | 'paid' | 'cancelled' | 'expired';
+
+/** Datos de `payment_request.paid` y `payment_request.cancelled`. */
+export interface PaymentRequestWebhookData {
+  payment_request_id: string;
+  /** Igual a `payment_request_id`; es el valor que devolvió la creación. */
+  provider_reference: string;
+  /** Tu referencia (`orderId` / `external_reference`) para conciliar el pedido. */
+  reference: string;
+  payment_reference: string | null;
+  amount: number;
+  currency: string;
+  status: PaymentRequestStatus;
+  wallet_transfer_id: string | null;
+  metadata: Record<string, unknown>;
+  paid_at: string | null;
+  cancelled_at: string | null;
+}
+
 export type FondosEGWebhookEvent =
   | 'transfer.created'
   | 'transfer.paid_out'
-  | 'wallet_transfer.confirmed';
+  | 'wallet_transfer.confirmed'
+  | 'payment_request.paid'
+  | 'payment_request.cancelled';
 
 export interface FondosEGWebhookEnvelopeMap {
   'transfer.created': TransferCreatedWebhookData;
   'transfer.paid_out': TransferPaidOutWebhookData;
   'wallet_transfer.confirmed': WalletTransferConfirmedWebhookData;
+  'payment_request.paid': PaymentRequestWebhookData;
+  'payment_request.cancelled': PaymentRequestWebhookData;
 }
 
 export interface FondosEGWebhookEnvelope<TEvent extends FondosEGWebhookEvent = FondosEGWebhookEvent> {

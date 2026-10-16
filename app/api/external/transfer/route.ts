@@ -5,7 +5,11 @@ import { generateTransferCode } from '@/lib/utils';
 import { createAgentTransferOperation } from '@/modules/transfers/application';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { findRegisteredClientByPhone } from '@/lib/server/client-recipient';
-import { persistIdempotencyResponse, readIdempotencyState } from '@/modules/public-api/application/idempotency';
+import {
+  persistIdempotencyResponse,
+  readIdempotencyState,
+  releaseIdempotencyKeyAfterRejection,
+} from '@/modules/public-api/application/idempotency';
 import { createSandboxAgentTransfer } from '@/lib/server/public-api-sandbox';
 import { emitWebhookEvent } from '@/lib/server/webhook-outbox';
 import {
@@ -177,25 +181,32 @@ export async function POST(request: NextRequest) {
       receiver_phone
     );
 
-    const { transfer } = await createAgentTransferOperation({
-      agentId: user_id,
-      actorUserId: user_id,
-      transferCode,
-      senderName: sender_name,
-      senderPhone: sender_phone,
-      senderDocumentType: sender_document_type,
-      senderDocumentNumber: sender_document_number,
-      receiverName: receiver_name,
-      receiverPhone: receiver_phone,
-      receiverDocumentType: receiver_document_type,
-      receiverDocumentNumber: receiver_document_number,
-      destinationCity: destination_city,
-      destinationCountry: destination_country,
-      amount: Number(amount),
-      currency,
-      notes,
-      receiverUserId: registeredReceiver?.id ?? null,
-    });
+    let operationResult: Awaited<ReturnType<typeof createAgentTransferOperation>>;
+    try {
+      operationResult = await createAgentTransferOperation({
+        agentId: user_id,
+        actorUserId: user_id,
+        transferCode,
+        senderName: sender_name,
+        senderPhone: sender_phone,
+        senderDocumentType: sender_document_type,
+        senderDocumentNumber: sender_document_number,
+        receiverName: receiver_name,
+        receiverPhone: receiver_phone,
+        receiverDocumentType: receiver_document_type,
+        receiverDocumentNumber: receiver_document_number,
+        destinationCity: destination_city,
+        destinationCountry: destination_country,
+        amount: Number(amount),
+        currency,
+        notes,
+        receiverUserId: registeredReceiver?.id ?? null,
+      });
+    } catch (operationError) {
+      await releaseIdempotencyKeyAfterRejection(auth.apiKey!.id, idempotencyState, operationError);
+      throw operationError;
+    }
+    const { transfer } = operationResult;
 
     // El estado lo decide la operación, no esta ruta: un envío a un beneficiario
     // con cuenta nace `completed` porque se liquida contra su billetera, y

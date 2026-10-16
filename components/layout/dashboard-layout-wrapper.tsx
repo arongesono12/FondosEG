@@ -449,7 +449,7 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
           ref={mobileUserMenuRef}
           type="button"
           aria-label="Menú de usuario"
-          className="dashboard-mobile-user-trigger cursor-pointer transition-transform hover:scale-[1.02] active:scale-[0.98] motion-reduce:transition-none motion-reduce:hover:scale-100 motion-reduce:active:scale-100"
+          className="dashboard-mobile-user-trigger cursor-pointer rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
         >
           <Avatar className={cn("border border-border/20 shadow-sm", avatarClassName || "h-10 w-10")}>
             <AvatarImage src={user?.avatar_url} />
@@ -528,7 +528,7 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
         {/* Top Header Navigation - grid 3 columnas: logo | nav centrado | tools */}
         <header className={cn(
           // Capa propia por debajo del velo de los modales (ver tokens.css).
-          "dashboard-desktop-header hidden lg:grid h-20 items-center px-10 border-b border-border/10 shrink-0 transition-all duration-300 z-(--z-header)",
+          "dashboard-desktop-header hidden lg:grid h-20 items-center px-10 border-b border-border/10 shrink-0 z-(--z-header)",
           "bg-linear-to-b from-white to-slate-50 dark:from-slate-900 dark:to-slate-950",
           "lg:rounded-t-[2.5rem]",
           scrolled && "h-16 shadow-lg shadow-black/5"
@@ -561,7 +561,7 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
                   onClick={item.href === '/dashboard' ? scrollMainToTop : undefined}
                   aria-current={isActive ? 'page' : undefined}
                   className={cn(
-                    "px-5 py-2 rounded-full text-sm font-bold transition-all duration-300",
+                    "px-5 py-2 rounded-full text-sm font-bold transition-[background-color,color,box-shadow] duration-150 ease-out motion-reduce:transition-none",
                     // Entre 1024 y 1279px estos enlaces se ocultan y pasan a «Más».
                     index >= DESKTOP_INLINE_NAV_ITEMS && "is-overflow",
                     isActive
@@ -654,7 +654,7 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
                     aria-label="Menú de usuario"
                     className="rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                   >
-                    <Avatar className="h-10 w-10 border border-border/20 shadow-sm cursor-pointer transition-transform hover:scale-105 active:scale-95 motion-reduce:transition-none motion-reduce:hover:scale-100 motion-reduce:active:scale-100">
+                    <Avatar className="h-10 w-10 border border-border/20 shadow-sm cursor-pointer">
                       <AvatarImage src={user?.avatar_url} />
                       <AvatarFallback className="bg-brand-gradient text-white font-black text-xs">
                         {getInitials(user?.name || 'U')}

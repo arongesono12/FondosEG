@@ -19,13 +19,15 @@
 .overview-title-group p { margin-top: 6px; font-size: 14px; color: var(--muted-foreground); }
 .overview-icon-button { display: inline-flex; align-items: center; justify-content: center; width: 38px; height: 38px; flex: none; border-radius: var(--app-control-radius); background: var(--surface); color: var(--foreground); box-shadow: 0 4px 16px var(--glass-border); }
 .overview-icon-button:hover { background: var(--accent); }
-.overview-primary-action { display: inline-flex; align-items: center; justify-content: center; gap: 9px; min-height: 42px; padding: 0 19px; border-radius: var(--app-control-radius); background: var(--dashboard-brand); color: #fff; font-size: 14px; font-weight: 500; box-shadow: 0 5px 14px color-mix(in srgb, var(--primary) 20%, transparent); }
+.overview-primary-action { display: inline-flex; align-items: center; justify-content: center; gap: 9px; min-height: 42px; padding: 0 19px; border-radius: var(--app-control-radius); background: var(--dashboard-brand); color: #fff; font-size: 14px; font-weight: 500; box-shadow: 0 5px 14px color-mix(in srgb, var(--primary) 20%, transparent); transition: transform 160ms cubic-bezier(.23, 1, .32, 1); }
 .overview-primary-action:hover { filter: brightness(.96); }
+.overview-primary-action:active:not(:focus-visible) { transform: scale(.97); }
 .overview-metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
-.overview-metric { min-width: 0; height: 242px; padding: 20px 20px 0; border: 1px solid var(--glass-border); border-radius: 18px; background: linear-gradient(140deg, var(--surface), var(--background)); position: relative; overflow: hidden; }
+.overview-metric { min-width: 0; min-height: 242px; padding: 20px 20px 0; border: 1px solid var(--glass-border); border-radius: 18px; background: linear-gradient(140deg, var(--surface), var(--background)); position: relative; overflow: hidden; }
+.overview-metric-desk, .overview-balance { padding-bottom: 118px; }
 .overview-metric-label { display: flex; justify-content: space-between; align-items: center; gap: 7px; min-height: 25px; }
 .overview-metric h2 { font-size: 13px; font-weight: 500; line-height: 1.4; }
-.overview-metric-value { margin-top: 13px; white-space: nowrap; font-family: var(--font-fondoseg-primary); font-size: clamp(18px, 1.85vw, 27px); font-weight: 600; line-height: 1.25; letter-spacing: -.7px; font-variant-numeric: tabular-nums; }
+.overview-metric-value { margin-top: 13px; overflow-wrap: anywhere; font-family: var(--font-fondoseg-primary); font-size: clamp(18px, 1.85vw, 27px); font-weight: 600; line-height: 1.25; letter-spacing: -.7px; font-variant-numeric: tabular-nums; }
 .overview-metric-value small { font-family: var(--font-fondoseg-secondary); font-size: 17px; font-weight: 400; }
 .overview-metric-caption { display: flex; align-items: center; flex-wrap: wrap; column-gap: 4px; margin-top: 8px; font-size: 12px; color: var(--muted-foreground); }
 .overview-metric-caption svg { width: 12px; height: 12px; }
@@ -36,6 +38,8 @@
 .overview-desk img { object-fit: cover; object-position: center 68%; }
 .dark .overview-desk { opacity: .75; mix-blend-mode: luminosity; }
 .overview-mini-chart { height: 119px; width: calc(100% + 8px); margin: 9px -4px 0; }
+.overview-weekly-link { display: inline-flex; align-items: center; gap: 8px; max-width: 100%; margin-top: 36px; min-height: 44px; padding: 8px 12px; border: 1px solid var(--surface-border); border-radius: var(--app-control-radius); color: var(--primary); font-weight: 600; line-height: 1.35; }
+.overview-weekly-link:hover { background: var(--accent); }
 .overview-chart-legend { position: absolute; bottom: 7px; left: 20px; font-size: 11px; color: var(--muted-foreground); }
 .overview-chart-empty { margin-top: 21px; display: flex; flex-direction: column; align-items: center; gap: 10px; color: var(--muted-foreground); font-size: 11px; text-align: center; }
 .overview-chart-placeholder { display: flex; justify-content: space-around; width: 100%; height: 45px; align-items: flex-end; border-bottom: 1px solid var(--surface-border); }
@@ -43,13 +47,16 @@
 .overview-rate { margin-top: 45px; height: 7px; border-radius: 8px; background: var(--accent); }
 .overview-rate > span { display: block; height: 7px; border-radius: inherit; background: var(--dashboard-brand); }
 .overview-rate p { padding-top: 10px; font-size: 12px; color: var(--muted-foreground); }
+.overview-commission-context { margin-top: 44px; padding-top: 14px; border-top: 1px solid var(--surface-border); color: var(--muted-foreground); font-size: 12px; line-height: 1.5; }
 .overview-balance .overview-metric-label .overview-icon-button { width: 29px; height: 29px; border-radius: var(--app-control-radius); }
 .overview-wallets { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; position: absolute; bottom: 0; left: 18px; right: 18px; align-items: end; }
 .overview-wallet { display: flex; flex-direction: column; align-items: center; gap: 9px; height: 96px; padding: 16px 3px 9px; border-radius: 12px 12px 0 0; background: var(--muted); font-size: 11px; text-align: center; }
 .overview-wallet strong { font-size: 12px; font-weight: 500; }
 .overview-wallet span { font-family: var(--font-fondoseg-primary); font-size: 11px; }
 .overview-wallet.is-featured { height: 108px; color: #fff; background: var(--dashboard-brand); box-shadow: 0 0 24px color-mix(in srgb, var(--primary) 17%, transparent); }
-.overview-wallet:hover { transform: translateY(-3px); }
+@media (hover: hover) and (pointer: fine) {
+  .overview-wallet:hover { filter: brightness(1.05); }
+}
 /* =========================================================================
    BARRA DE FILTROS
    -------------------------------------------------------------------------
@@ -114,7 +121,8 @@
 .overview-operation-tabs button.is-active { background: var(--dashboard-brand); color: #fff; box-shadow: 0 3px 12px color-mix(in srgb, var(--primary) 22%, transparent); }
 .overview-operation-tabs button.is-active > span { display: grid; place-items: center; min-width: 17px; height: 17px; padding-inline: 3px; border-radius: 50%; background: #fff; color: var(--primary); }
 .overview-operation-tabs button:not(.is-active):hover { background: var(--accent); }
-.overview-history-link { display: flex; align-items: center; justify-content: center; gap: 6px; width: 45px; height: 35px; border: 1px solid #ffffff16; border-radius: var(--app-control-radius); }
+.overview-history-link { display: flex; align-items: center; justify-content: center; gap: 6px; min-height: 40px; padding: 0 12px; border: 1px solid #ffffff45; border-radius: var(--app-control-radius); font-size: 12px; white-space: nowrap; }
+.overview-history-link:hover { background: #ffffff16; }
 .overview-history-link svg:last-child { width: 12px; height: 12px; }
 .overview-operations-body { display: grid; grid-template-columns: minmax(0, 34%) minmax(0, 1fr); gap: 16px; }
 .overview-transfer-list { display: flex; flex-direction: column; gap: 4px; max-height: 310px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #ffffff35 transparent; padding-right: 1px; }
@@ -125,11 +133,16 @@
 .overview-transfer-identity { min-width: 0; }
 .overview-transfer-identity strong { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; font-weight: 500; }
 .overview-transfer-identity small { display: block; font-family: var(--font-fondoseg-secondary); font-size: 12px; margin-top: 4px; color: #cbd5e1; }
-.overview-transfer-state { padding: 5px 7px; background: #ffffff05; border-radius: 16px; font-size: 10px; color: #cbd5e1; }
+.overview-transfer-state { padding: 5px 7px; border-radius: 16px; font-size: 10px; border: 1px solid transparent; }
+.overview-transfer-state[data-status="created"] { color: #fde68a; border-color: #fbbf2459; background: #f59e0b24; }
+.overview-transfer-state[data-status="available_for_pickup"] { color: #bae6fd; border-color: #38bdf859; background: #0ea5e924; }
+.overview-transfer-state[data-status="paid_out"], .overview-transfer-state[data-status="completed"] { color: #bbf7d0; border-color: #4ade8059; background: #22c55e24; }
+.overview-transfer-state[data-status="cancelled"] { color: #fecdd3; border-color: #fb718559; background: #f43f5e24; }
 .overview-transfer.is-selected .overview-transfer-state { background: #fff; color: var(--dashboard-ink); }
 .overview-transfer.is-selected small { color: #fff; }
 .overview-transfer-amount { font-family: var(--font-fondoseg-primary); font-size: 13px; font-weight: 500; white-space: nowrap; }
 .overview-transfer-detail { display: flex; flex-direction: column; min-width: 0; min-height: 300px; padding: 24px 24px 18px; border-radius: 25px; background: linear-gradient(125deg, color-mix(in srgb, #ec4899 68%, #0f172a), color-mix(in srgb, #f43f5e 66%, #0f172a)); color: #fff; }
+.overview-transfer-detail-mobile { display: none; }
 .overview-detail-heading { display: grid; grid-template-columns: 1.2fr 1fr 1fr; gap: 18px; }
 .overview-detail-label { display: block; font-size: 11px; margin-bottom: 13px; color: #ffffffcb; }
 .overview-detail-heading strong { display: block; font-size: 13px; font-weight: 500; overflow-wrap: anywhere; }
@@ -155,6 +168,7 @@
 .overview-empty { display: flex; flex: 1; flex-direction: column; align-items: center; justify-content: center; gap: 14px; min-height: 190px; padding: 25px; text-align: center; font-size: 13px; color: #cbd5e1; }
 .overview-empty > svg { width: 27px; height: 27px; }
 .overview-empty button { text-decoration: underline; text-underline-offset: 4px; }
+.overview-empty > a { text-decoration: underline; text-underline-offset: 4px; }
 .overview-empty-detail { color: #fff; }
 .overview-empty-detail h3 { font-size: 20px; font-weight: 500; }
 .overview-empty-detail p { max-width: 310px; font-size: 13px; line-height: 1.8; color: #ffffffd9; }
@@ -220,10 +234,9 @@
   .overview-heading { padding-block: 4px; }
   .overview-title-group > .overview-icon-button { display: none; }
   .overview-title-group p { max-width: 320px; font-size: 12px; }
-  /* Cuatro columnas aguantaban hasta 700px y la cifra, que no puede partirse,
-     se recortaba. Dos columnas por debajo de 1024px y una en teléfonos
-     estrechos (más abajo). Altura, relleno y tamaño de la cifra los fija
-     dashboard-system.css: los que había aquí nunca llegaban a aplicarse. */
+  /* Dos columnas por debajo de 1024px y una en teléfonos estrechos evitan
+     comprimir importes largos. Las tarjetas pueden crecer si el valor ocupa
+     dos líneas; dashboard-system.css fija su altura mínima y la tipografía. */
   .overview-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
   .overview-metric-caption { font-size: 11px; }
   .overview-metric h2 { font-size: 12px; }
@@ -261,6 +274,8 @@
   /* Sin tope de altura: dentro de un `<main>` que ya se desplaza, una lista
      con su propio scroll atrapaba el gesto y escondía operaciones. */
   .overview-transfer-list { max-height: none; overflow-y: visible; }
+  .overview-transfer-detail-desktop { display: none; }
+  .overview-transfer-detail-mobile { display: flex; margin: 4px 0 10px; }
   .overview-transfer { min-height: 56px; grid-template-columns: 32px minmax(0, 1fr) auto auto; }
   .overview-transfer-state { display: block; }
   .overview-transfer-identity strong { font-size: 12px; }
@@ -289,6 +304,7 @@
   .overview-detail-tiles { gap: 6px; }
   .overview-detail-tiles > div { padding-inline: 9px; }
   .overview-detail-tiles strong { font-size: 13px; }
+  .overview-history-link { padding-inline: 9px; }
 }
 /* Objetivo táctil de 44px sin cambiar el dibujo: los botones de icono del
    overview miden 28–38px (34px el de saldo, en dashboard-system.css). Un

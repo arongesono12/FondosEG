@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { AuthzError, requireAuthUser, requireDeveloperAccess } from '@/lib/server/authz';
+import { buildOwnedOrIssuedFilter } from '@/lib/server/credential-ownership';
 import { createAdminClient } from '@/lib/supabase/admin';
 import {
   encryptWebhookSecret,
   generateWebhookSigningSecret,
   getWebhookSecretPreview,
+  isWebhookEncryptionConfigured,
+  WEBHOOK_ENCRYPTION_NOT_CONFIGURED_MESSAGE,
 } from '@/lib/server/webhook-security';
 
 export async function POST(
@@ -15,6 +18,12 @@ export async function POST(
     const user = await requireAuthUser();
     await requireDeveloperAccess();
     const { id } = await context.params;
+
+    if (!isWebhookEncryptionConfigured()) {
+      console.error('POST /api/webhooks/[id]/rotate: WEBHOOK_ENCRYPTION_KEY ausente o inválida');
+      return NextResponse.json({ error: WEBHOOK_ENCRYPTION_NOT_CONFIGURED_MESSAGE }, { status: 503 });
+    }
+
     const adminClient = createAdminClient();
     const secret = generateWebhookSigningSecret();
 
@@ -26,7 +35,7 @@ export async function POST(
         updated_at: new Date().toISOString(),
       })
       .eq('id', id)
-      .eq('user_id', user.id)
+      .or(buildOwnedOrIssuedFilter(user.id))
       .select(
         'id,name,description,target_url,event_types,signing_secret_preview,status,last_delivery_at,created_at,updated_at'
       )
