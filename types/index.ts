@@ -384,6 +384,8 @@ export interface ApiKeyRecord {
   last_used_at?: string;
   expires_at?: string;
   created_at: string;
+  /** "Nombre · teléfono" de la billetera titular si la emitió un administrador para ella. */
+  owner_label?: string | null;
 }
 
 export interface CreateApiKeyData {
@@ -392,6 +394,8 @@ export interface CreateApiKeyData {
   environment: ApiEnvironment;
   role_access: UserRole;
   permissions: Record<ApiPermission, boolean>;
+  /** Solo administradores: teléfono de la billetera cliente titular. */
+  owner_phone?: string;
 }
 
 export interface CreatedApiKeyResponse {

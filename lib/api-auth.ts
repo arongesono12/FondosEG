@@ -30,7 +30,11 @@ export interface APIKeyAuthResult {
 export async function authenticateAPIKey(request: NextRequest): Promise<APIKeyAuthResult> {
   const adminClient = createAdminClient();
 
-  const apiKey = request.headers.get('x-api-key');
+  // `Authorization: Bearer <api_key>` es la alternativa para integradores
+  // cuyo cliente HTTP genérico no permite cabeceras propias (p. ej. CasasEG).
+  // El secreto sigue siendo obligatorio en `x-api-secret`.
+  const bearerMatch = request.headers.get('authorization')?.match(/^Bearer\s+(\S+)$/i);
+  const apiKey = request.headers.get('x-api-key') || bearerMatch?.[1] || null;
   const apiSecret = request.headers.get('x-api-secret');
 
   if (!apiKey || !apiSecret) {

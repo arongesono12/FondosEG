@@ -9,11 +9,13 @@ import { cn, convertCurrency, formatCurrency, formatDateShort } from '@/lib/util
 import { HttpError } from '@/services/http';
 import { isAdminRole } from '@/lib/roles';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { SupportModal } from '@/components/layout/support-modal';
 import {
   AlertTriangle,
   BarChart3,
+  ChevronDown,
   Gauge,
   Landmark,
   Send,
@@ -47,6 +49,8 @@ export default function DashboardPage() {
   const [recentTransfers, setRecentTransfers] = useState<Transfer[]>([]);
   const [agentStats, setAgentStats] = useState<AgentTransferStats[]>([]);
   const [loading, setLoading] = useState(true);
+  const [reloadKey, setReloadKey] = useState(0);
+  const [failedSections, setFailedSections] = useState<string[]>([]);
   const [supportModalOpen, setSupportModalOpen] = useState(false);
   const [supportRequestType, setSupportRequestType] = useState<SupportRequestType>('general');
 
@@ -56,28 +60,44 @@ export default function DashboardPage() {
   const isClient = user?.role === 'cliente';
 
   useEffect(() => {
+    let active = true;
     async function loadData() {
-      try {
-        const [statsData, transfersData, dailyData, agentsData] = await Promise.all([
+      setLoading(true);
+      setFailedSections([]);
+      const [statsResult, transfersResult, dailyResult, agentsResult] = await Promise.allSettled([
           getDashboardStats(),
           getRecentTransfers(8),
           isClient ? Promise.resolve([]) : getDailyTransferStats(14),
           isAdmin ? getAgentTransferStats() : Promise.resolve([]),
-        ]);
-        setStats(statsData);
-        setRecentTransfers(transfersData);
-        setDailyStats(dailyData);
-        setAgentStats(agentsData);
-      } catch (error) {
+      ]);
+      if (!active) return;
+
+      const failures: string[] = [];
+      function recordFailure(section: string, error: unknown) {
+        failures.push(section);
         if (!(error instanceof HttpError && error.status === 401)) {
-          console.error('Error loading dashboard data:', error);
+          console.error(`Error loading dashboard ${section}:`, error);
         }
-      } finally {
-        setLoading(false);
       }
+
+      if (statsResult.status === 'fulfilled') setStats(statsResult.value);
+      else recordFailure('resumen financiero', statsResult.reason);
+
+      if (transfersResult.status === 'fulfilled') setRecentTransfers(transfersResult.value);
+      else { setRecentTransfers([]); recordFailure('operaciones recientes', transfersResult.reason); }
+
+      if (dailyResult.status === 'fulfilled') setDailyStats(dailyResult.value);
+      else { setDailyStats([]); recordFailure('evolución diaria', dailyResult.reason); }
+
+      if (agentsResult.status === 'fulfilled') setAgentStats(agentsResult.value);
+      else { setAgentStats([]); recordFailure('actividad de gestores', agentsResult.reason); }
+
+      setFailedSections(failures);
+      setLoading(false);
     }
     if (user) loadData();
-  }, [user, isAdmin, isClient]);
+    return () => { active = false; };
+  }, [user, isAdmin, isClient, reloadKey]);
 
   const fmt = (amount: number) => formatCurrency(convertCurrency(amount, 'XAF', currency), currency);
   const reservedBalance = stats?.reservedBalance ?? stats?.pendingExposure ?? 0;
@@ -117,16 +137,38 @@ export default function DashboardPage() {
     );
   }
 
+  if (!stats) {
+    return (
+      <div className="rounded-3xl border border-amber-500/30 bg-amber-500/10 p-6" role="alert">
+        <h1 className="text-xl font-bold text-foreground">No se pudo cargar el resumen financiero</h1>
+        <p className="mt-2 text-sm text-muted-foreground">No podemos mostrar saldos fiables en este momento. Inténtalo de nuevo.</p>
+        <Button className="mt-4" onClick={() => setReloadKey((key) => key + 1)}>Reintentar</Button>
+      </div>
+    );
+  }
+
   return (
     <div className="dashboard-content">
+      {failedSections.length > 0 && (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4" role="alert">
+          <p className="text-sm text-foreground">No se pudieron actualizar: {failedSections.join(', ')}. {failedSections.includes('resumen financiero') ? 'Se muestra la última lectura disponible del resumen.' : 'Algunos datos pueden estar incompletos.'}</p>
+          <Button variant="outline" size="sm" onClick={() => setReloadKey((key) => key + 1)}>Reintentar</Button>
+        </div>
+      )}
       <DashboardOverview stats={stats} dailyStats={dailyStats} transfers={recentTransfers} currency={currency} isClient={isClient} primaryAction={primaryAction}
+        transfersUnavailable={failedSections.includes('operaciones recientes')} dailyStatsUnavailable={failedSections.includes('evolución diaria')}
         onSupport={() => { setSupportRequestType(isGestor ? 'balance_topup' : 'general'); setSupportModalOpen(true); }} />
       {/* Bandeja única: los KPIs, «Salud operativa» y «Top gestores» comparten
           una sola superficie oscura en vez de flotar sueltos sobre la página.
           El color lo pone `.dashboard-tray`, que reescribe los tokens para
           todo el subárbol. */}
       <section className="dashboard-tray" aria-label="Indicadores financieros y salud operativa">
-      <div className="grid gap-4 @xl:grid-cols-2 @4xl:grid-cols-3 @6xl:grid-cols-5">
+      <details className="group rounded-2xl border border-border/15 bg-background/30 p-4">
+        <summary className="flex cursor-pointer list-none items-center justify-between gap-3 rounded-lg text-sm font-semibold text-foreground focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary [&::-webkit-details-marker]:hidden">
+          Indicadores complementarios
+          <ChevronDown className="h-4 w-4 transition-transform duration-150 ease-out group-open:rotate-180 motion-reduce:transition-none" aria-hidden="true" />
+        </summary>
+      <div className="mt-4 grid gap-4 @xl:grid-cols-2 @4xl:grid-cols-3 @6xl:grid-cols-5">
         {additionalMetrics.map((metric) => {
           const MetricIcon = metric.icon;
 
@@ -135,7 +177,7 @@ export default function DashboardPage() {
               <CardContent className="flex items-center justify-between gap-4 p-5">
                 <div className="min-w-0">
                   <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">{metric.label}</p>
-                  <p className="mt-2 truncate text-2xl font-bold tabular-nums text-foreground">{metric.value}</p>
+                  <p className="mt-2 text-xl font-bold leading-tight tabular-nums text-foreground [overflow-wrap:anywhere]" title={metric.value}>{metric.value}</p>
                 </div>
                 <div className={cn('flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border text-white shadow-lg', metric.tone)}>
                   <MetricIcon className="h-5 w-5" />
@@ -145,6 +187,7 @@ export default function DashboardPage() {
           );
         })}
       </div>
+      </details>
       {!isClient && (
       <div className="grid grid-cols-1 gap-6 @4xl:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
         <Card className="min-w-0 overflow-hidden">
@@ -207,7 +250,7 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent className="space-y-4 p-6">
               {agentStats.length === 0 ? (
-                <p className="rounded-3xl border border-dashed border-border/20 p-5 text-sm font-medium text-muted-foreground">Todavía no hay actividad de gestores para mostrar.</p>
+                <p className="rounded-3xl border border-dashed border-border/20 p-5 text-sm font-medium text-muted-foreground">{failedSections.includes('actividad de gestores') ? 'No se pudo cargar la actividad de gestores.' : 'Todavía no hay actividad de gestores para mostrar.'}</p>
               ) : agentStats.slice(0, 5).map((agent, index) => (
                 <div key={agent.agent_id} className="flex items-center justify-between rounded-3xl border border-border/10 bg-background/70 p-4">
                   <div className="flex items-center gap-3">

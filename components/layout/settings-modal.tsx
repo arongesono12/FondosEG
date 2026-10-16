@@ -9,7 +9,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
-import { Settings, DollarSign, Palette, Bell } from '@/components/ui/hugeicons';
+import { Settings, DollarSign, Palette } from '@/components/ui/hugeicons';
 import { useAppStore } from '@/lib/store';
 import { useState, useEffect } from 'react';
 import { useTheme } from '@/components/theme-provider';
@@ -31,7 +31,6 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
   const { resolvedTheme, setTheme } = useTheme();
   const [localCurrency, setLocalCurrency] = useState(preferredCurrency);
   const [localTheme, setLocalTheme] = useState<'light' | 'dark'>((resolvedTheme as 'light' | 'dark') || 'dark');
-  const [notifications, setNotifications] = useState(true);
 
   useEffect(() => {
     setLocalCurrency(preferredCurrency);
@@ -72,7 +71,7 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
                   type="button"
                   aria-pressed={localCurrency === curr.code}
                   onClick={() => setLocalCurrency(curr.code)}
-                  className={`p-3 rounded-xl border-2 transition-all text-left ${
+                  className={`p-3 rounded-xl border-2 transition-colors duration-150 text-left ${
                     localCurrency === curr.code
                       ? 'border-pink-500 bg-pink-50 dark:bg-pink-500/20'
                       : 'border-border/20 hover:border-pink-300 dark:hover:border-pink-700'
@@ -101,7 +100,7 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
                 type="button"
                 aria-pressed={localTheme === 'light'}
                 onClick={() => setLocalTheme('light')}
-                className={`flex-1 p-3 rounded-xl border-2 transition-all ${
+                className={`flex-1 p-3 rounded-xl border-2 transition-colors duration-150 ${
                   localTheme === 'light'
                     ? 'border-pink-500 bg-pink-50 dark:bg-pink-500/20'
                     : 'border-border/20 hover:border-pink-300 dark:hover:border-pink-700'
@@ -116,7 +115,7 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
                 type="button"
                 aria-pressed={localTheme === 'dark'}
                 onClick={() => setLocalTheme('dark')}
-                className={`flex-1 p-3 rounded-xl border-2 transition-all ${
+                className={`flex-1 p-3 rounded-xl border-2 transition-colors duration-150 ${
                   localTheme === 'dark'
                     ? 'border-pink-500 bg-pink-50 dark:bg-pink-500/20'
                     : 'border-border/20 hover:border-pink-300 dark:hover:border-pink-700'
@@ -130,29 +129,6 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
             </div>
           </div>
 
-          {/* Notificaciones */}
-          <div className="space-y-3">
-            <label className="flex items-center gap-2 text-sm font-medium text-foreground">
-              <Bell className="h-4 w-4 text-primary" />
-              Notificaciones
-            </label>
-            <button
-              type="button"
-              role="switch"
-              aria-checked={notifications}
-              onClick={() => setNotifications(!notifications)}
-              className={`w-full p-3 rounded-xl border-2 transition-all flex items-center justify-between ${
-                notifications
-                  ? 'border-pink-500 bg-pink-50 dark:bg-pink-500/20'
-                  : 'border-border/20'
-              }`}
-            >
-              <span className="text-sm font-medium">Recibir notificaciones</span>
-              <div aria-hidden="true" className={`w-12 h-6 shrink-0 rounded-full transition-all motion-reduce:transition-none ${notifications ? 'bg-pink-500' : 'bg-gray-300 dark:bg-gray-600'}`}>
-                <div className={`w-5 h-5 rounded-full bg-white shadow transition-transform motion-reduce:transition-none ${notifications ? 'translate-x-6' : 'translate-x-0.5'} mt-0.5`} />
-              </div>
-            </button>
-          </div>
         </DialogBody>
 
         <DialogFooter className="bg-muted/20">
@@ -166,7 +142,7 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
           <button
             type="button"
             onClick={handleSave}
-            className="py-3 px-4 rounded-xl bg-brand-gradient text-white font-bold text-sm shadow-lg shadow-pink-500/20 hover:scale-[1.02] active:scale-95 transition-all motion-reduce:transition-none motion-reduce:hover:scale-100 motion-reduce:active:scale-100"
+            className="py-3 px-4 rounded-xl bg-brand-gradient text-white font-bold text-sm shadow-lg shadow-pink-500/20 active:scale-[0.97] transition-transform duration-150 motion-reduce:transition-none motion-reduce:active:scale-100"
           >
             Guardar cambios
           </button>

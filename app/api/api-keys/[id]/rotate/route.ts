@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { AuthzError, requireAuthUser, requireDeveloperAccess } from '@/lib/server/authz';
 import { normalizeApiEnvironment } from '@/lib/server/api-environments';
 import { generateApiSecret, getApiSecretPreview, hashApiSecret } from '@/lib/server/api-security';
+import { buildOwnedOrIssuedFilter } from '@/lib/server/credential-ownership';
 import { createAdminClient } from '@/lib/supabase/admin';
 
 const apiKeySelect = [
@@ -31,13 +32,29 @@ export async function POST(
     const { id } = await params;
     const adminClient = createAdminClient();
 
+    // La puede rotar su titular o el administrador que la emitió. La RPC
+    // comprueba el titular, así que se le pasa el `user_id` real de la key.
+    const { data: ownedKey, error: ownedKeyError } = await adminClient
+      .from('api_keys')
+      .select('id, user_id')
+      .eq('id', id)
+      .or(buildOwnedOrIssuedFilter(user.id))
+      .maybeSingle();
+
+    if (ownedKeyError) {
+      return NextResponse.json({ error: ownedKeyError.message }, { status: 500 });
+    }
+    if (!ownedKey) {
+      return NextResponse.json({ error: 'API key no encontrada' }, { status: 404 });
+    }
+
     const secret = generateApiSecret();
     const secretHash = hashApiSecret(secret);
     const secretPreview = getApiSecretPreview(secret);
 
     const { data: rotated, error } = await adminClient.rpc('rotate_api_secret_operation', {
       p_api_key_id: id,
-      p_user_id: user.id,
+      p_user_id: ownedKey.user_id,
       p_api_secret_hash: secretHash,
       p_api_secret_preview: secretPreview,
     });
@@ -54,7 +71,7 @@ export async function POST(
       .from('api_keys')
       .select(apiKeySelect)
       .eq('id', id)
-      .eq('user_id', user.id)
+      .eq('user_id', ownedKey.user_id)
       .single();
 
     if (keyError || !apiKey) {

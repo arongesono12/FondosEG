@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { AuthzError, requireAuthUser, requireDeveloperAccess } from '@/lib/server/authz';
+import { buildOwnedOrIssuedFilter } from '@/lib/server/credential-ownership';
 import { createAdminClient } from '@/lib/supabase/admin';
 
 export async function GET(request: NextRequest) {
@@ -14,7 +15,7 @@ export async function GET(request: NextRequest) {
     const { data: apiKeys, error: apiKeysError } = await adminClient
       .from('api_keys')
       .select('id, app_name')
-      .eq('user_id', user.id);
+      .or(buildOwnedOrIssuedFilter(user.id));
 
     if (apiKeysError) {
       return NextResponse.json({ error: apiKeysError.message }, { status: 500 });

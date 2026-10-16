@@ -71,7 +71,7 @@ export default async function MarketingContentPage({ params }: { params: Promise
     </section>
 
     <section className="info-capabilities">
-      <FadeIn><div className="info-section-heading"><p>FUNCIONES VERIFICADAS</p><h2>Qué incluye esta sección</h2><span>Contenido construido a partir de rutas, componentes, servicios y migraciones presentes en FondosEG.</span></div></FadeIn>
+      <FadeIn><div className="info-section-heading"><p>QUÉ PUEDES HACER</p><h2>Explora las funciones</h2><span>Conoce las herramientas disponibles y elige las que mejor se adaptan a ti.</span></div></FadeIn>
       <StaggerContainer><div className="info-capability-grid">
         {page.sections.map((section, index) => <StaggerItem key={section.title}><Card asChild><article className="info-capability-card">
           <div className="info-card-number">{String(index + 1).padStart(2, '0')}</div>

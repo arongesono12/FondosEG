@@ -84,7 +84,7 @@ export const marketingPages = {
       { title: 'Billeteras de clientes', description: 'Los clientes registrados pueden transferir saldo a otro cliente mediante teléfono, verificación y confirmación.', items: ['Reserva de saldo durante la operación', 'Código y QR de verificación', 'Confirmación, cancelación y expiración', 'Actualización de ambos saldos en una transacción'] },
       { title: 'Seguimiento operativo', description: 'La aplicación conserva el contexto necesario para consultar cada movimiento y actuar según el rol.', items: ['Historial combinado de transferencias', 'Notificaciones internas y SMS configurables', 'Recibos y referencias de operación', 'Soporte y reclamaciones vinculadas a transacciones'] },
     ],
-    note: 'Estas funciones corresponden a rutas, componentes y operaciones presentes actualmente en el repositorio.',
+    note: 'La disponibilidad de cada función depende de tu tipo de cuenta y de los permisos asignados.',
   },
   seguridad: {
     eyebrow: 'Producto',
@@ -117,7 +117,7 @@ export const marketingPages = {
   novedades: {
     eyebrow: 'Producto',
     title: 'Cambios recientes presentes en FondosEG',
-    description: 'Este historial resume funcionalidades incorporadas mediante las migraciones y módulos fechados del repositorio.',
+    description: 'Un resumen de las mejoras incorporadas a la plataforma y las integraciones disponibles.',
     cta: 'Explorar la plataforma',
     destination: '/register',
     points: ['Cumplimiento CEMAC', 'Pagos de alquiler', 'API test y production'],
@@ -126,7 +126,7 @@ export const marketingPages = {
       { title: 'Mayo de 2026', description: 'Se añadió el flujo opcional de payout externo.', items: ['Enlaces de payout mediante Revolut', 'Estados y caducidad del enlace', 'Métodos Revolut y cuenta bancaria configurables', 'Evento webhook al generar el enlace'] },
       { title: 'Abril de 2026', description: 'Se consolidó la base financiera y developer.', items: ['Eventos financieros y reglas tarifarias', 'Outbox de notificaciones SMS', 'Claves API, uso, idempotencia y rate limits', 'Webhooks firmados y rotación de secretos'] },
     ],
-    note: 'La cronología se deriva exclusivamente de migraciones y módulos existentes; no representa una promesa sobre próximas versiones.',
+    note: 'Estas novedades describen funciones disponibles; no representan una promesa sobre próximas versiones.',
   },
   dashboard: {
     eyebrow: 'Para gestores',

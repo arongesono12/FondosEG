@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { AuthzError, requireAuthUser, requireDeveloperAccess } from '@/lib/server/authz';
+import { buildOwnedOrIssuedFilter } from '@/lib/server/credential-ownership';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { SUBSCRIBABLE_WEBHOOK_EVENTS } from '@/lib/server/webhook-events';
 
-const eventTypes = ['transfer.created', 'transfer.paid_out', 'wallet_transfer.confirmed'] as const;
+const eventTypes = SUBSCRIBABLE_WEBHOOK_EVENTS;
 
 const updateWebhookSchema = z.object({
   name: z.string().trim().min(1).optional(),
@@ -53,7 +55,7 @@ export async function PATCH(
       .from('webhook_subscriptions')
       .update(updatePayload)
       .eq('id', id)
-      .eq('user_id', user.id)
+      .or(buildOwnedOrIssuedFilter(user.id))
       .select(subscriptionSelect)
       .single();
 
@@ -92,7 +94,7 @@ export async function DELETE(
         updated_at: new Date().toISOString(),
       })
       .eq('id', id)
-      .eq('user_id', user.id)
+      .or(buildOwnedOrIssuedFilter(user.id))
       .select(subscriptionSelect)
       .single();
 

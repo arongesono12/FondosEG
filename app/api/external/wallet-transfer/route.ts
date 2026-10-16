@@ -1,7 +1,11 @@
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
 import { authenticateAPIKey, requirePermission } from '@/lib/api-auth';
-import { persistIdempotencyResponse, readIdempotencyState } from '@/modules/public-api/application/idempotency';
+import {
+  persistIdempotencyResponse,
+  readIdempotencyState,
+  releaseIdempotencyKeyAfterRejection,
+} from '@/modules/public-api/application/idempotency';
 import { emitWebhookEvent } from '@/lib/server/webhook-outbox';
 import { createSandboxWalletTransfer } from '@/lib/server/public-api-sandbox';
 import {
@@ -151,15 +155,24 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    const { transfer, new_balance } = await createWalletTransferDirectOperation({
-      senderId: user_id,
-      receiverName: receiver_name,
-      receiverPhone: receiver_phone,
-      amount,
-      currency,
-      notes,
-      originChannel: 'external_api',
-    });
+    let operationResult: Awaited<ReturnType<typeof createWalletTransferDirectOperation>>;
+    try {
+      operationResult = await createWalletTransferDirectOperation({
+        senderId: user_id,
+        receiverName: receiver_name,
+        receiverPhone: receiver_phone,
+        amount,
+        currency,
+        notes,
+        originChannel: 'external_api',
+      });
+    } catch (operationError) {
+      // Rechazo de Postgres = transacción revertida: el integrador puede
+      // reintentar con la misma clave (p. ej. tras recargar saldo).
+      await releaseIdempotencyKeyAfterRejection(auth.apiKey!.id, idempotencyState, operationError);
+      throw operationError;
+    }
+    const { transfer, new_balance } = operationResult;
 
     const responseBody = {
       success: true,
