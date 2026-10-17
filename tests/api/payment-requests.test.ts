@@ -199,6 +199,18 @@ test('los webhooks de solicitudes se entregan solo al comercio dueño', async ()
   assert.match(outbox, /\.eq\('user_id', input\.ownerUserId\)/);
 });
 
+test('un fallo interno al autenticar la key responde JSON con request_id, no un 500 vacío', async () => {
+  const auth = await load('lib/server/payments-key-auth.ts');
+
+  // Regresión 2026-10-17: la RPC consume_api_rate_limit faltaba en prod y el
+  // throw escapaba de la ruta; CasasEG solo veía "HTTP 500" sin mensaje.
+  assert.match(auth, /try \{\s+auth = await authenticateAPIKey\(request\);\s+\} catch \(error\) \{/);
+  const catchBlock = auth.slice(auth.indexOf('catch (error)'), auth.indexOf('if (!auth.success'));
+  assert.match(catchBlock, /console\.error\(/);
+  assert.match(catchBlock, /logPublicApiRequest\(\{ context, status: 500, errorCode: 'internal_error' \}\)/);
+  assert.match(catchBlock, /publicApiError\(context, 'internal_error', '[^']+', 500\)/);
+});
+
 test('la API acepta Authorization: Bearer como alternativa a x-api-key', async () => {
   const auth = await load('lib/api-auth.ts');
 
