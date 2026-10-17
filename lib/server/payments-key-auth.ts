@@ -18,7 +18,19 @@ export async function authorizePaymentsKey(
   request: NextRequest,
   context: PublicApiContext
 ): Promise<{ apiKey: AuthorizedApiKey; auth: APIKeyAuthResult } | { response: Response }> {
-  const auth = await authenticateAPIKey(request);
+  let auth: APIKeyAuthResult;
+  try {
+    auth = await authenticateAPIKey(request);
+  } catch (error) {
+    // Un fallo de infraestructura (p. ej. una RPC ausente en la base de datos)
+    // no debe escapar como un 500 sin cuerpo: el integrador necesita el
+    // request_id para reportarlo.
+    console.error('API key authentication failed:', error);
+    await logPublicApiRequest({ context, status: 500, errorCode: 'internal_error' });
+    return {
+      response: publicApiError(context, 'internal_error', 'No se pudo verificar la credencial; inténtalo más tarde', 500),
+    };
+  }
 
   if (!auth.success || !auth.apiKey) {
     const status = auth.status || 401;
