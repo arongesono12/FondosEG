@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 import {
+  buildCheckoutReturnUrl,
   buildCheckoutUrl,
   isSafeReturnUrl,
   parseCreatePaymentRequest,
@@ -87,6 +88,18 @@ test('rechaza solicitudes sin referencia, con importe inválido o returnUrl inse
     parseCreatePaymentRequest({ orderId: 'A', amount: 100, metadata: { blob: 'x'.repeat(5000) } }).success,
     false
   );
+});
+
+test('la URL de regreso lleva el resultado y la orden del integrador', () => {
+  const url = buildCheckoutReturnUrl('https://casaseg.com/profile?tab=x', 'paid', 'orden-1');
+  assert.ok(url);
+  const parsed = new URL(url!);
+  assert.equal(parsed.origin + parsed.pathname, 'https://casaseg.com/profile');
+  assert.equal(parsed.searchParams.get('tab'), 'x');
+  assert.equal(parsed.searchParams.get('payment'), 'paid');
+  assert.equal(parsed.searchParams.get('order'), 'orden-1');
+  // Nunca redirige a un destino inseguro aunque llegara a guardarse.
+  assert.equal(buildCheckoutReturnUrl('javascript:alert(1)', 'paid', 'o'), null);
 });
 
 test('solo se permite volver a URLs https o localhost', () => {

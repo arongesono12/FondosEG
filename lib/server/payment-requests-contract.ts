@@ -120,6 +120,24 @@ export function resolvePaymentRequestStatus(
   return 'pending';
 }
 
+/**
+ * URL a la que vuelve el cliente tras pagar, rechazar o ver caducada la
+ * solicitud. Añade `payment` (resultado) y `order` (la referencia del
+ * integrador) para que su app sepa qué orden confirmar. Son solo una pista:
+ * el integrador debe verificar el estado con la API, nunca fiarse de la URL.
+ */
+export function buildCheckoutReturnUrl(
+  returnUrl: string,
+  status: Exclude<PaymentRequestStatus, 'pending'>,
+  externalReference: string
+): string | null {
+  if (!isSafeReturnUrl(returnUrl)) return null;
+  const url = new URL(returnUrl);
+  url.searchParams.set('payment', status);
+  url.searchParams.set('order', externalReference);
+  return url.toString();
+}
+
 export function buildCheckoutUrl(baseUrl: string, requestId: string): string {
   return `${baseUrl.replace(/\/+$/, '')}/pay/${encodeURIComponent(requestId)}`;
 }

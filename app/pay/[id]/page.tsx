@@ -57,6 +57,7 @@ export default async function PayPaymentRequestPage({ params }: { params: Promis
       currency={paymentRequest.currency}
       description={paymentRequest.description}
       reference={paymentRequest.payment_reference || paymentRequest.external_reference}
+      externalReference={paymentRequest.external_reference}
       status={resolvePaymentRequestStatus(paymentRequest.status, paymentRequest.expires_at)}
       expiresAt={paymentRequest.expires_at}
       returnUrl={paymentRequest.return_url}

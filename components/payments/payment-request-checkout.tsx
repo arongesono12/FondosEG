@@ -1,12 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { DashboardLogo } from '@/components/layout/dashboard-logo';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogBody, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { PAYMENT_REGULATION } from '@/lib/compliance';
-import type { PaymentRequestStatus } from '@/lib/server/payment-requests-contract';
+import { buildCheckoutReturnUrl, type PaymentRequestStatus } from '@/lib/server/payment-requests-contract';
 import { formatCurrency } from '@/lib/utils';
 
 interface PaymentRequestCheckoutProps {
@@ -16,6 +16,8 @@ interface PaymentRequestCheckoutProps {
   currency: string;
   description: string | null;
   reference: string;
+  /** Referencia del integrador (su id de orden); viaja de vuelta en la URL. */
+  externalReference: string;
   status: PaymentRequestStatus;
   expiresAt: string;
   returnUrl: string | null;
@@ -25,6 +27,9 @@ interface PaymentRequestCheckoutProps {
 }
 
 type CheckoutState = PaymentRequestStatus | 'submitting';
+
+/** Segundos que se muestra el resultado antes de volver a la app del comercio. */
+const RETURN_DELAY_SECONDS = 4;
 
 const FINAL_MESSAGES: Record<Exclude<PaymentRequestStatus, 'pending'>, { title: string; description: string }> = {
   paid: { title: 'Pago completado', description: 'El importe se descontó de tu billetera y el comercio ya ha sido avisado.' },
@@ -75,6 +80,23 @@ export function PaymentRequestCheckout(props: PaymentRequestCheckoutProps) {
   }
 
   const isFinal = state === 'paid' || state === 'cancelled' || state === 'expired';
+  const returnHref = isFinal && props.returnUrl
+    ? buildCheckoutReturnUrl(props.returnUrl, state, props.externalReference)
+    : null;
+  const [secondsLeft, setSecondsLeft] = useState(RETURN_DELAY_SECONDS);
+
+  // Vuelve sola a la app del comercio para que muestre el resultado. La
+  // cuenta atrás deja leer la confirmación y el enlace cubre el caso de que el
+  // navegador bloquee la redirección.
+  useEffect(() => {
+    if (!returnHref) return;
+    if (secondsLeft <= 0) {
+      window.location.assign(returnHref);
+      return;
+    }
+    const timer = window.setTimeout(() => setSecondsLeft((value) => value - 1), 1000);
+    return () => window.clearTimeout(timer);
+  }, [returnHref, secondsLeft]);
 
   return (
     <main className="min-h-screen flex items-center justify-center bg-background px-4 py-10">
@@ -148,10 +170,15 @@ export function PaymentRequestCheckout(props: PaymentRequestCheckoutProps) {
         )}
 
         <div className="mt-6 flex flex-col items-center gap-2">
-          {props.returnUrl && isFinal && (
-            <a href={props.returnUrl} className="text-sm font-bold text-primary underline-offset-4 hover:underline">
-              Volver a {props.merchantName}
-            </a>
+          {returnHref && (
+            <>
+              <p className="text-xs text-muted-foreground" aria-live="polite">
+                Volviendo a {props.merchantName} en {Math.max(secondsLeft, 0)} s…
+              </p>
+              <a href={returnHref} className="text-sm font-bold text-primary underline-offset-4 hover:underline">
+                Volver ahora a {props.merchantName}
+              </a>
+            </>
           )}
           <Link href="/dashboard" className="text-xs font-semibold text-muted-foreground hover:text-foreground">
             Ir a mi billetera FondosEG
