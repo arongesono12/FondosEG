@@ -379,6 +379,69 @@ X-FondosEG-Webhook-Signature: v1=<hex HMAC-SHA256 de "${timestamp}.${body}">
 Verifica la firma con 5 minutos de tolerancia y comprueba que `amount`/`currency`
 coinciden con tu pedido antes de darlo por pagado.
 
+## 6. Vinculo de billetera (mostrar el saldo del cliente)
+
+Permite que tu app muestre a SU usuario el saldo de su billetera FondosEG antes
+de pagar, sin guardar credenciales del cliente. El cliente autoriza una vez; tu
+app recibe un token que **solo** permite leer su saldo (`balance:read`): no puede
+mover dinero ni leer movimientos. Requiere una credencial `production` con
+permiso `payments` de una billetera **cliente** (la misma que cobra).
+
+### 1. Crear la solicitud de vinculo
+
+```http
+POST /api/v1/external/wallet-links
+Content-Type: application/json
+
+{ "externalUserRef": "id-del-usuario-en-tu-app", "returnUrl": "https://tuapp.com/perfil", "state": "valor-aleatorio-8-128" }
+```
+
+Respuesta `201`: `{ "id", "authorize_url", "expires_at" }` (15 minutos). Guarda
+`state` asociado a tu usuario y lleva al cliente a `authorize_url`.
+
+### 2. El cliente autoriza
+
+En `fondoseg.com/link/{id}` el cliente inicia sesion y pulsa Autorizar o
+Rechazar. FondosEG vuelve a tu `returnUrl` con:
+
+- `?fondoseg_link=<code>&state=<state>` si autoriza (codigo de un solo uso, 10 minutos);
+- `?fondoseg_link_error=denied&state=<state>` si rechaza.
+
+Comprueba que `state` es el que guardaste para ese usuario antes de seguir.
+
+### 3. Canjear el codigo por el token (desde tu servidor)
+
+```http
+POST /api/v1/external/wallet-links/token
+Content-Type: application/json
+
+{ "code": "<code>" }
+```
+
+Respuesta `201`: `{ "link_id", "access_token", "scopes": ["balance:read"], "wallet_phone_masked" }`.
+`access_token` (`wlt_live_...`) solo se muestra esta vez: guardalo cifrado en tu
+servidor y nunca lo envies al navegador. Un codigo ya usado o caducado responde `409`.
+
+### 4. Leer el saldo
+
+```http
+GET /api/v1/external/wallet-links/balance
+X-Wallet-Link-Token: wlt_live_...
+```
+
+Respuesta `200`: `{ "available": 400000, "currency": "XAF", "as_of": "..." }`.
+Si el cliente retiro el acceso (desde su perfil -> Apps conectadas) responde
+`401` con `error.code = "link_revoked"`: marca el vinculo como inactivo y ofrece
+vincular de nuevo.
+
+### 5. Revocar desde tu app
+
+```http
+DELETE /api/v1/external/wallet-links/{link_id}
+```
+
+Vincular de nuevo al mismo cliente revoca el vinculo anterior automaticamente.
+
 ## Errores comunes
 
 ### 401
