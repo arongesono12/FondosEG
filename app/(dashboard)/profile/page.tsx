@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/card';
 import { Dialog, DialogBody, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { ConnectedApps } from '@/components/profile/connected-apps';
 import { useAppStore } from '@/lib/store';
 
 function getInitials(name: string) {
@@ -475,6 +476,8 @@ export default function ProfilePage() {
           </CardContent>
         </Card>
       </div>
+
+      {user.role === 'cliente' && <ConnectedApps />}
         </>
       )}
       <Dialog open={Boolean(avatarDraftUrl)} onOpenChange={(open) => !open && !isUploadingAvatar && closeAvatarCropper()}>

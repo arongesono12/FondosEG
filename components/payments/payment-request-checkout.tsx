@@ -80,6 +80,10 @@ export function PaymentRequestCheckout(props: PaymentRequestCheckoutProps) {
   }
 
   const isFinal = state === 'paid' || state === 'cancelled' || state === 'expired';
+  // La comisión es 0: el saldo resultante es el disponible menos el importe.
+  // Solo tiene sentido mientras se puede pagar y en la misma divisa.
+  const balanceAfterPayment = props.availableBalance - props.amount;
+  const showBalanceAfterPayment = !isFinal && !props.isOwnRequest && !currencyMismatch;
   const returnHref = isFinal && props.returnUrl
     ? buildCheckoutReturnUrl(props.returnUrl, state, props.externalReference)
     : null;
@@ -116,6 +120,13 @@ export function PaymentRequestCheckout(props: PaymentRequestCheckoutProps) {
           <div className="flex justify-between gap-4"><dt className="text-muted-foreground">Referencia</dt><dd className="break-all text-right font-mono text-xs font-semibold text-foreground">{props.reference}</dd></div>
           <div className="flex justify-between gap-4"><dt className="text-muted-foreground">Tu saldo disponible</dt><dd className="text-right font-semibold text-foreground">{formatCurrency(props.availableBalance, props.walletCurrency)}</dd></div>
           <div className="flex justify-between gap-4"><dt className="text-muted-foreground">Comisión</dt><dd className="text-right font-semibold text-foreground">{formatCurrency(0, props.currency)}</dd></div>
+          {showBalanceAfterPayment && (
+            insufficientBalance ? (
+              <div className="flex justify-between gap-4 border-t border-border/30 pt-2"><dt className="font-semibold text-amber-600 dark:text-amber-400">Te faltan</dt><dd className="text-right font-black text-amber-600 dark:text-amber-400">{formatCurrency(-balanceAfterPayment, props.currency)}</dd></div>
+            ) : (
+              <div className="flex justify-between gap-4 border-t border-border/30 pt-2"><dt className="font-semibold text-foreground">Saldo tras el pago</dt><dd className="text-right font-black text-foreground">{formatCurrency(balanceAfterPayment, props.currency)}</dd></div>
+            )
+          )}
         </dl>
 
         {isFinal ? (

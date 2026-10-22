@@ -14,6 +14,7 @@ export type PublicApiErrorCode =
   | 'idempotency_conflict'
   | 'not_found'
   | 'business_rule_failed'
+  | 'link_revoked'
   | 'internal_error';
 
 export interface PublicApiContext {
