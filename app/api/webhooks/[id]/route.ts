@@ -34,7 +34,7 @@ export async function PATCH(
 ) {
   try {
     const user = await requireAuthUser();
-    await requireDeveloperAccess();
+    const access = await requireDeveloperAccess();
     const { id } = await context.params;
     const payload = updateWebhookSchema.safeParse(await request.json());
 
@@ -55,7 +55,7 @@ export async function PATCH(
       .from('webhook_subscriptions')
       .update(updatePayload)
       .eq('id', id)
-      .or(buildOwnedOrIssuedFilter(user.id))
+      .or(buildOwnedOrIssuedFilter(user.id, access.access_role))
       .select(subscriptionSelect)
       .single();
 
@@ -83,7 +83,7 @@ export async function DELETE(
 ) {
   try {
     const user = await requireAuthUser();
-    await requireDeveloperAccess();
+    const access = await requireDeveloperAccess();
     const { id } = await context.params;
     const adminClient = createAdminClient();
 
@@ -94,7 +94,7 @@ export async function DELETE(
         updated_at: new Date().toISOString(),
       })
       .eq('id', id)
-      .or(buildOwnedOrIssuedFilter(user.id))
+      .or(buildOwnedOrIssuedFilter(user.id, access.access_role))
       .select(subscriptionSelect)
       .single();
 

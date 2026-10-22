@@ -3,9 +3,9 @@
  *
  * Una integración como CasasEG necesita que la API key y el webhook
  * pertenezcan a la billetera CLIENTE que cobra (solo así FondosEG le abona
- * los cobros y le envía sus eventos), pero solo los administradores tienen
- * acceso al portal de desarrolladores. Un administrador emite la credencial
- * "en nombre de" esa billetera; él queda como emisor y puede gestionarla.
+ * los cobros y le envía sus eventos). Esa credencial opera el saldo de la
+ * billetera, así que solo el SUPERADMIN la emite "en nombre de" ella y solo
+ * él gestiona (rota, revoca) las credenciales emitidas para clientes.
  *
  * Sin imports con alias: lo cargan las rutas y los tests de `node --test`.
  */
@@ -31,8 +31,8 @@ export function decideIssuance(input: {
   const ownerPhone = typeof input.ownerPhone === 'string' ? input.ownerPhone.trim() : '';
   if (!ownerPhone) return { kind: 'self' };
 
-  if (input.actorAccessRole !== 'admin' && input.actorAccessRole !== 'superadmin') {
-    return { kind: 'rejected', status: 403, message: 'Solo un administrador puede emitir a nombre de otra billetera' };
+  if (input.actorAccessRole !== 'superadmin') {
+    return { kind: 'rejected', status: 403, message: 'Solo el superadmin puede emitir a nombre de otra billetera' };
   }
 
   if (ownerPhone.length > MAX_OWNER_PHONE_LENGTH || !/\d{6,}/.test(ownerPhone.replace(/\D/g, ''))) {
@@ -49,12 +49,17 @@ export function decideIssuance(input: {
 }
 
 /**
- * Filtro PostgREST "es mío o lo emití yo". El id viene de la sesión, pero se
- * valida como UUID para que nunca pueda inyectar sintaxis en `.or()`.
+ * Filtro PostgREST de las credenciales que el actor puede ver y gestionar:
+ * siempre las suyas y, solo para el superadmin, todas las emitidas para una
+ * billetera cliente (también las que emitió un admin antes de esta regla).
+ * El id viene de la sesión, pero se valida como UUID para que nunca pueda
+ * inyectar sintaxis en `.or()`.
  */
-export function buildOwnedOrIssuedFilter(userId: string): string {
+export function buildOwnedOrIssuedFilter(userId: string, actorAccessRole: string): string {
   if (!UUID_PATTERN.test(userId)) {
     throw new Error('Identificador de usuario inválido');
   }
-  return `user_id.eq.${userId},issued_by_user_id.eq.${userId}`;
+  return actorAccessRole === 'superadmin'
+    ? `user_id.eq.${userId},issued_by_user_id.not.is.null`
+    : `user_id.eq.${userId}`;
 }

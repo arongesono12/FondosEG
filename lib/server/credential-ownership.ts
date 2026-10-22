@@ -22,8 +22,8 @@ export interface ResolvedCredentialOwner {
 }
 
 /**
- * Resuelve el titular de una credencial o webhook. Con `ownerPhone`, un
- * administrador la emite para una billetera cliente activa; se busca por
+ * Resuelve el titular de una credencial o webhook. Con `ownerPhone`, el
+ * superadmin la emite para una billetera cliente activa; se busca por
  * coincidencia exacta de teléfono, nunca aproximada.
  */
 export async function resolveCredentialOwner(params: {

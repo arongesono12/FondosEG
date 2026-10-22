@@ -94,15 +94,15 @@ function publicApiKeyRecord(row: Record<string, unknown>) {
 export async function GET() {
   try {
     const user = await requireAuthUser();
-    await requireDeveloperAccess();
+    const access = await requireDeveloperAccess();
     const adminClient = createAdminClient();
     
     const { data: apiKeys, error } = await withSupabaseRetry(() =>
       adminClient
         .from('api_keys')
         .select(apiKeySelect)
-        // Las propias y las que este administrador emitió para un cliente.
-        .or(buildOwnedOrIssuedFilter(user.id))
+        // Las propias y, para el superadmin, las emitidas para un cliente.
+        .or(buildOwnedOrIssuedFilter(user.id, access.access_role))
         .eq('is_active', true)
         .order('created_at', { ascending: false })
     );
@@ -163,7 +163,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Con `owner_phone`, un administrador emite la credencial para la
+    // Con `owner_phone`, solo el superadmin emite la credencial para la
     // billetera cliente que cobra (p. ej. la de CasasEG): solo así la key
     // opera ese saldo y las solicitudes de cobro se le abonan a ella.
     const owner = await resolveCredentialOwner({
@@ -236,7 +236,7 @@ export async function POST(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   try {
     const user = await requireAuthUser();
-    await requireDeveloperAccess();
+    const access = await requireDeveloperAccess();
 
     const { searchParams } = new URL(request.url);
     const keyId = searchParams.get('id');
@@ -255,7 +255,7 @@ export async function DELETE(request: NextRequest) {
         .from('api_keys')
         .update({ is_active: false, updated_at: new Date().toISOString() })
         .eq('id', keyId)
-        .or(buildOwnedOrIssuedFilter(user.id))
+        .or(buildOwnedOrIssuedFilter(user.id, access.access_role))
     );
 
     if (error) {

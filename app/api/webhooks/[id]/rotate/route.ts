@@ -16,7 +16,7 @@ export async function POST(
 ) {
   try {
     const user = await requireAuthUser();
-    await requireDeveloperAccess();
+    const access = await requireDeveloperAccess();
     const { id } = await context.params;
 
     if (!isWebhookEncryptionConfigured()) {
@@ -35,7 +35,7 @@ export async function POST(
         updated_at: new Date().toISOString(),
       })
       .eq('id', id)
-      .or(buildOwnedOrIssuedFilter(user.id))
+      .or(buildOwnedOrIssuedFilter(user.id, access.access_role))
       .select(
         'id,name,description,target_url,event_types,signing_secret_preview,status,last_delivery_at,created_at,updated_at'
       )

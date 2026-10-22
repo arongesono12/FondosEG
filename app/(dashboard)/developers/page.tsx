@@ -27,7 +27,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAppStore } from '@/lib/store';
 import { cn, formatDateShort } from '@/lib/utils';
-import { isAdminRole } from '@/lib/roles';
+import { isAdminRole, isSuperAdminRole } from '@/lib/roles';
 import { createApiKey, getApiKeyUsage, getApiKeys, revokeApiKey, rotateApiKey } from '@/services/api-keys';
 import type { ApiEnvironment, ApiKeyRecord, ApiPermission, ApiUsageResponse, CreateApiKeyData, RotateApiKeyResponse, UserRole } from '@/types';
 
@@ -521,7 +521,7 @@ const event = parseFondosEGWebhookBody(rawBody);`;
                 </select>
               </div>
 
-              {isAdminRole(user?.role) && (
+              {isSuperAdminRole(user?.role) && (
                 <div className="grid gap-2">
                   <Label htmlFor="owner_phone">Billetera titular (opcional)</Label>
                   <Input
@@ -902,7 +902,7 @@ const event = parseFondosEGWebhookBody(rawBody);`;
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4 p-6">
-            <WebhookSubscriptionsPanel canIssueForClient={isAdminRole(user?.role)} />
+            <WebhookSubscriptionsPanel canIssueForClient={isSuperAdminRole(user?.role)} />
 
             <div className="rounded-3xl border border-border/10 bg-slate-950 p-4 text-slate-100">
               <div className="mb-3 flex items-center justify-between gap-3">

@@ -6,7 +6,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 export async function GET(request: NextRequest) {
   try {
     const user = await requireAuthUser();
-    await requireDeveloperAccess();
+    const access = await requireDeveloperAccess();
     const adminClient = createAdminClient();
     const { searchParams } = new URL(request.url);
     const requestedApiKeyId = searchParams.get('api_key_id');
@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
     const { data: apiKeys, error: apiKeysError } = await adminClient
       .from('api_keys')
       .select('id, app_name')
-      .or(buildOwnedOrIssuedFilter(user.id));
+      .or(buildOwnedOrIssuedFilter(user.id, access.access_role));
 
     if (apiKeysError) {
       return NextResponse.json({ error: apiKeysError.message }, { status: 500 });

@@ -28,17 +28,17 @@ export async function POST(
 ) {
   try {
     const user = await requireAuthUser();
-    await requireDeveloperAccess();
+    const access = await requireDeveloperAccess();
     const { id } = await params;
     const adminClient = createAdminClient();
 
-    // La puede rotar su titular o el administrador que la emitió. La RPC
+    // La puede rotar su titular o el superadmin si se emitió para un cliente. La RPC
     // comprueba el titular, así que se le pasa el `user_id` real de la key.
     const { data: ownedKey, error: ownedKeyError } = await adminClient
       .from('api_keys')
       .select('id, user_id')
       .eq('id', id)
-      .or(buildOwnedOrIssuedFilter(user.id))
+      .or(buildOwnedOrIssuedFilter(user.id, access.access_role))
       .maybeSingle();
 
     if (ownedKeyError) {

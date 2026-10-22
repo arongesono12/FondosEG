@@ -24,7 +24,7 @@ const createWebhookSchema = z.object({
   description: z.string().trim().optional(),
   target_url: z.string().url('target_url debe ser una URL valida'),
   event_types: z.array(z.enum(eventTypes)).min(1, 'Selecciona al menos un evento'),
-  /** Billetera cliente titular; solo administradores. Vacío = webhook propio. */
+  /** Billetera cliente titular; solo el superadmin. Vacío = webhook propio. */
   owner_phone: z.string().trim().max(32).optional(),
 });
 
@@ -46,13 +46,13 @@ const subscriptionSelect = [
 export async function GET() {
   try {
     const user = await requireAuthUser();
-    await requireDeveloperAccess();
+    const access = await requireDeveloperAccess();
     const adminClient = createAdminClient();
 
     const { data, error } = await adminClient
       .from('webhook_subscriptions')
       .select(subscriptionSelect)
-      .or(buildOwnedOrIssuedFilter(user.id))
+      .or(buildOwnedOrIssuedFilter(user.id, access.access_role))
       .order('created_at', { ascending: false });
 
     if (error) {
