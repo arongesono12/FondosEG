@@ -111,11 +111,11 @@ export function WebhookSubscriptionsPanel({ application, subscriptions, onChange
       </div>
 
       {subscriptions.length === 0 ? (
-        <p className="rounded-xl border border-dashed border-border px-4 py-5 text-center text-sm text-muted-foreground">
+        <p className="dashboard-inset rounded-xl border border-dashed border-border px-4 py-5 text-center text-sm text-muted-foreground">
           Sin webhooks. Añade uno para enterarte al instante de cada pago.
         </p>
       ) : (
-        <ul className="divide-y divide-border rounded-xl border border-border">
+        <ul className="dashboard-inset divide-y divide-border rounded-xl border border-border">
           {subscriptions.map((subscription) => (
             <li key={subscription.id} className="flex items-center gap-3 px-3 py-2.5">
               <Webhook className="h-4 w-4 shrink-0 text-muted-foreground" />
@@ -164,7 +164,7 @@ export function WebhookSubscriptionsPanel({ application, subscriptions, onChange
               </div>
               <fieldset>
                 <legend className="mb-2 text-sm font-medium">Eventos</legend>
-                <div className="divide-y divide-border rounded-xl border border-border">
+                <div className="dashboard-inset divide-y divide-border rounded-xl border border-border">
                   {APPLICATION_EVENTS.map((event) => (
                     <label key={event} className="flex cursor-pointer items-start gap-3 px-3 py-2.5">
                       <input

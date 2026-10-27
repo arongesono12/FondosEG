@@ -132,8 +132,8 @@ export default function CompliancePage() {
         </CardHeader>
         <CardContent className="space-y-5">
           {receipt ? (
-            <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 p-5">
-              <div className="flex items-center gap-3 text-emerald-700 dark:text-emerald-300">
+            <div className="dashboard-inset rounded-2xl border p-5">
+              <div className="flex items-center gap-3 text-foreground">
                 <FileCheck2 className="h-6 w-6" />
                 <p className="font-black">Reclamación recibida</p>
               </div>
@@ -224,7 +224,7 @@ export default function CompliancePage() {
         </CardContent>
       </Card>
 
-      <div className="rounded-2xl border border-amber-500/20 bg-amber-500/10 p-4 text-sm font-semibold leading-6 text-amber-800 dark:text-amber-200">
+      <div className="dashboard-inset rounded-2xl border p-4 text-sm font-semibold leading-6 text-foreground text-foreground">
         Este módulo documenta controles técnicos de FondosEG. La autorización para prestar servicios de pago,
         la protección de fondos, la lucha contra el blanqueo, la externalización y los reportes regulatorios
         requieren procedimientos corporativos y validación de las autoridades competentes.

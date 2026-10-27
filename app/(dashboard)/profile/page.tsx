@@ -427,7 +427,7 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            <div className="space-y-4 rounded-xl border border-border/20 bg-background/80 p-4 dark:bg-slate-900/60">
+            <div className="dashboard-inset space-y-4 rounded-xl border border-border/20 bg-background/80 p-4 dark:bg-slate-900/60">
               <div className="flex items-center gap-3">
                 <div className="h-10 w-10 rounded-full bg-rose-500/10 flex items-center justify-center text-rose-600 dark:text-rose-300">
                   <KeyRound className="h-5 w-5" />
@@ -510,7 +510,7 @@ export default function ProfilePage() {
               )}
             </div>
 
-            <div className="space-y-4 rounded-2xl border border-border/10 bg-card p-4">
+            <div className="dashboard-inset space-y-4 rounded-2xl border border-border/10 bg-card p-4">
               <label className="block text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
                 Zoom
                 <input

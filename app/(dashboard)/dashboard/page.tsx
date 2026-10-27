@@ -1,5 +1,6 @@
 'use client';
 
+import { DashboardMetric } from '@/components/dashboard/dashboard-metric';
 import { useState } from 'react';
 import { DashboardOverview } from '@/components/dashboard/dashboard-overview';
 import { useAppStore } from '@/lib/store';
@@ -12,13 +13,9 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { SupportModal } from '@/components/layout/support-modal';
 import {
   AlertTriangle,
-  BarChart3,
-  Gauge,
   Landmark,
   Send,
   ShieldCheck,
-  Target,
-  TrendingUp,
   Users,
   Wallet,
 } from '@/components/ui/hugeicons';
@@ -56,15 +53,15 @@ export default function DashboardPage() {
   const cancelledRate = totalStates ? Math.round(((stats?.cancelledTransfers ?? 0) / totalStates) * 100) : 0;
   const primaryAction = isGestor ? { href: '/transfers', label: 'Nuevo envío', icon: Send } : isAdmin ? { href: '/balance', label: 'Gestionar tesorería', icon: Landmark } : { href: '/balance', label: 'Ver billetera', icon: Wallet };
 
-  const additionalMetrics: { label: string; value: string; icon: React.ElementType; tone: string }[] = [
-    { label: 'Volumen 30 días', value: money(stats?.monthlyVolume), icon: BarChart3, tone: 'border-sky-500/20 bg-sky-500 shadow-sky-500/20' },
-    { label: 'Ticket medio', value: money(stats?.averageTicket), icon: Target, tone: 'border-fuchsia-500/20 bg-fuchsia-500 shadow-fuchsia-500/20' },
+  const additionalMetrics: { label: string; value: string }[] = [
+    { label: 'Volumen 30 días', value: money(stats?.monthlyVolume) },
+    { label: 'Ticket medio', value: money(stats?.averageTicket) },
     ...(isClient
-      ? [{ label: 'Tasa de cancelación', value: percent(cancelledRate), icon: AlertTriangle, tone: 'border-rose-500/20 bg-rose-500 shadow-rose-500/20' }]
+      ? [{ label: 'Tasa de cancelación', value: percent(cancelledRate) }]
       : [
-          { label: 'Recarga proyectada 24h', value: money(stats?.projectedTopups24h), icon: TrendingUp, tone: 'border-emerald-500/20 bg-emerald-500 shadow-emerald-500/20' },
-          { label: 'Cobertura de float', value: stats ? `${(stats.liquidityCoverageDays ?? 0).toFixed(1)} días` : '—', icon: Gauge, tone: 'border-violet-500/20 bg-violet-500 shadow-violet-500/20' },
-          { label: 'Utilización del float', value: percent(stats?.floatUtilization ?? 0), icon: Target, tone: 'border-amber-500/20 bg-amber-500 shadow-amber-500/20' },
+          { label: 'Recarga proyectada 24h', value: money(stats?.projectedTopups24h) },
+          { label: 'Cobertura de float', value: stats ? `${(stats.liquidityCoverageDays ?? 0).toFixed(1)} días` : '—' },
+          { label: 'Utilización del float', value: percent(stats?.floatUtilization ?? 0) },
         ]),
   ];
 
@@ -107,56 +104,42 @@ export default function DashboardPage() {
           El color lo pone `.dashboard-tray`, que reescribe los tokens para
           todo el subárbol. */}
       <section className="dashboard-tray" aria-label="Indicadores financieros y salud operativa">
-      <div className="grid gap-4 @xl:grid-cols-2 @4xl:grid-cols-3 @6xl:grid-cols-5">
-        {additionalMetrics.map((metric) => {
-          const MetricIcon = metric.icon;
-
-          return (
-            <Card key={metric.label} className="min-w-0 overflow-hidden">
-              <CardContent className="flex items-center justify-between gap-4 p-5">
-                <div className="min-w-0">
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">{metric.label}</p>
-                  <p className="mt-2 truncate text-2xl font-bold tabular-nums text-foreground">{metric.value}</p>
-                </div>
-                <div className={cn('flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border text-white shadow-lg', metric.tone)}>
-                  <MetricIcon className="h-5 w-5" />
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
+      <div className="dashboard-tray-metrics">
+        {additionalMetrics.map((metric) => (
+          <DashboardMetric key={metric.label} label={metric.label} value={metric.value} className="dashboard-tray-metric" />
+        ))}
       </div>
       {!isClient && (
-      <div className="grid grid-cols-1 gap-6 @4xl:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
-        <Card className="min-w-0 overflow-hidden">
-          <CardHeader className="border-b border-border/5 pb-5">
+      <div className="dashboard-tray-panels">
+        <Card interactive={false} className="dashboard-tray-health min-w-0 overflow-hidden">
+          <CardHeader className="dashboard-tray-panel-header border-b border-border/5 pb-5">
             <CardTitle className="flex items-center gap-2 text-xl font-bold text-foreground"><ShieldCheck className="h-5 w-5 text-primary" /> Salud operativa</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-5 p-6">
-            <div className="rounded-3xl border border-border/10 bg-background/70 p-5">
+          <CardContent className="dashboard-tray-panel-content space-y-5 p-6">
+            <div className="dashboard-tray-inset rounded-3xl border border-border/10 bg-background/70 p-5">
               <div className="flex items-center justify-between"><p className="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">Tasa de liquidación</p><p className="text-2xl font-bold text-foreground">{percent(settlementRate)}</p></div>
               <div className="mt-4">
-                <RateMeter label="Tasa de liquidación" value={settlementRate} known={!!stats} color="var(--chart-3)" className="h-3" />
+                <RateMeter label="Tasa de liquidación" value={settlementRate} known={!!stats} color="var(--primary)" className="h-3" />
               </div>
             </div>
-            <div className="space-y-4 rounded-3xl border border-border/10 bg-background/70 p-5">
+            <div className="dashboard-tray-inset space-y-4 rounded-3xl border border-border/10 bg-background/70 p-5">
               <div>
-                <div className="mb-2 flex items-center justify-between"><span className="text-xs font-semibold text-foreground">Pendientes</span><span className="text-xs font-semibold text-amber-300">{percent(pendingRate)}</span></div>
-                <RateMeter label="Pendientes" value={pendingRate} known={!!stats} color="var(--chart-4)" className="h-2" />
+                <div className="mb-2 flex items-center justify-between"><span className="text-xs font-semibold text-foreground">Pendientes</span><span className="text-xs font-semibold text-foreground">{percent(pendingRate)}</span></div>
+                <RateMeter label="Pendientes" value={pendingRate} known={!!stats} color="var(--primary)" className="h-2" />
               </div>
               <div>
-                <div className="mb-2 flex items-center justify-between"><span className="text-xs font-semibold text-foreground">Canceladas</span><span className="text-xs font-semibold text-rose-300">{percent(cancelledRate)}</span></div>
-                <RateMeter label="Canceladas" value={cancelledRate} known={!!stats} color="var(--chart-5)" className="h-2" />
+                <div className="mb-2 flex items-center justify-between"><span className="text-xs font-semibold text-foreground">Canceladas</span><span className="text-xs font-semibold text-foreground">{percent(cancelledRate)}</span></div>
+                <RateMeter label="Canceladas" value={cancelledRate} known={!!stats} color="var(--primary)" className="h-2" />
               </div>
             </div>
             <div className="grid gap-3 @xl:grid-cols-2">
-              <div className="rounded-3xl border border-border/10 bg-background/70 p-4"><p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">{isAdmin ? 'Gestores activos' : isGestor ? 'Clientes atendidos' : 'Confirmadas'}</p><p className="mt-2 text-2xl font-bold tabular-nums text-foreground">{count(isAdmin ? stats?.activeAgents : isGestor ? stats?.totalClients : stats?.completedTransfers)}</p></div>
-              <div className="rounded-3xl border border-border/10 bg-background/70 p-4"><p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">{isClient ? 'Saldo retenido' : 'Bajo umbral'}</p><p className="mt-2 text-2xl font-bold tabular-nums text-foreground">{isClient ? money(reservedBalance) : count(stats?.agentsBelowThreshold)}</p></div>
-              <div className="rounded-3xl border border-border/10 bg-background/70 p-4"><p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">{isClient ? 'Pendientes' : 'Disponibles para pago'}</p><p className="mt-2 text-2xl font-bold tabular-nums text-foreground">{count(isClient ? stats?.pendingTransfers : stats?.pickupReadyTransfers)}</p></div>
-              <div className="rounded-3xl border border-border/10 bg-background/70 p-4"><p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">{isClient ? 'Ticket medio' : 'Clientes únicos'}</p><p className="mt-2 text-2xl font-bold tabular-nums text-foreground">{isClient ? money(stats?.averageTicket) : count(stats?.totalClients)}</p></div>
+              <div className="dashboard-tray-inset rounded-3xl border border-border/10 bg-background/70 p-4"><p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">{isAdmin ? 'Gestores activos' : isGestor ? 'Clientes atendidos' : 'Confirmadas'}</p><p className="mt-2 text-2xl font-bold tabular-nums text-foreground">{count(isAdmin ? stats?.activeAgents : isGestor ? stats?.totalClients : stats?.completedTransfers)}</p></div>
+              <div className="dashboard-tray-inset rounded-3xl border border-border/10 bg-background/70 p-4"><p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">{isClient ? 'Saldo retenido' : 'Bajo umbral'}</p><p className="mt-2 text-2xl font-bold tabular-nums text-foreground">{isClient ? money(reservedBalance) : count(stats?.agentsBelowThreshold)}</p></div>
+              <div className="dashboard-tray-inset rounded-3xl border border-border/10 bg-background/70 p-4"><p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">{isClient ? 'Pendientes' : 'Disponibles para pago'}</p><p className="mt-2 text-2xl font-bold tabular-nums text-foreground">{count(isClient ? stats?.pendingTransfers : stats?.pickupReadyTransfers)}</p></div>
+              <div className="dashboard-tray-inset rounded-3xl border border-border/10 bg-background/70 p-4"><p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">{isClient ? 'Ticket medio' : 'Clientes únicos'}</p><p className="mt-2 text-2xl font-bold tabular-nums text-foreground">{isClient ? money(stats?.averageTicket) : count(stats?.totalClients)}</p></div>
             </div>
             {!isClient && (stats?.agentsBelowThreshold ?? 0) > 0 && (
-              <div className="rounded-3xl border border-amber-500/20 bg-amber-500/10 p-4 text-amber-200">
+              <div className="rounded-3xl border border-primary/20 bg-primary/10 p-4 text-foreground">
                 <div className="flex items-start gap-3"><AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" /><div><p className="text-xs font-bold uppercase tracking-[0.2em]">Atención de liquidez</p><p className="mt-1 text-sm font-medium">Hay {stats?.agentsBelowThreshold} gestor(es) por debajo del umbral operativo de 25.000 XAF.</p></div></div>
               </div>
             )}
@@ -164,11 +147,11 @@ export default function DashboardPage() {
         </Card>
 
         {isAdmin && (
-          <Card className="min-w-0 overflow-hidden">
-            <CardHeader className="border-b border-border/5 pb-5">
+          <Card interactive={false} className="dashboard-tray-ranking min-w-0 overflow-hidden">
+            <CardHeader className="dashboard-tray-panel-header border-b border-border/5 pb-5">
               <CardTitle className="flex items-center gap-2 text-xl font-bold text-foreground"><Users className="h-5 w-5 text-primary" /> Top gestores por volumen</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4 p-6">
+            <CardContent className="dashboard-tray-panel-content space-y-4 p-6">
               {agentsBlock.status === 'error' && !agentsBlock.data ? (
                 <BlockError message="No se pudo cargar el ranking de gestores." onRetry={agentsBlock.reload} />
               ) : agentsBlock.status === 'loading' && !agentsBlock.data ? (
@@ -176,7 +159,7 @@ export default function DashboardPage() {
               ) : agentStats.length === 0 ? (
                 <p className="rounded-3xl border border-dashed border-border/20 p-5 text-sm font-medium text-muted-foreground">Todavía no hay actividad de gestores para mostrar.</p>
               ) : agentStats.slice(0, 5).map((agent, index) => (
-                <div key={agent.agent_id} className="flex items-center justify-between rounded-3xl border border-border/10 bg-background/70 p-4">
+                <div key={agent.agent_id} className="dashboard-tray-rank flex items-center justify-between rounded-3xl border border-border/10 bg-background/70 p-4">
                   <div className="flex items-center gap-3">
                     <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white text-xs font-bold text-slate-900">#{index + 1}</div>
                     <div><p className="text-sm font-bold text-foreground">{agent.agent_name}</p><p className="text-xs font-medium text-muted-foreground">{agent.transfer_count} operaciones</p></div>

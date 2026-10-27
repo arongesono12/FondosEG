@@ -102,8 +102,8 @@
       margin: 0 0 12px;
       overflow: hidden;
       border: 1px solid var(--dashboard-card-border, var(--app-card-border));
-      border-radius: 16px;
-      background: var(--dashboard-card-bg, var(--card));
+      border-radius: 20px;
+      background: var(--dashboard-inset-bg, var(--card));
       box-shadow: none;
     }
 

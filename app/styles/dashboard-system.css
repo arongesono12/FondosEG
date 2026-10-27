@@ -5,9 +5,12 @@
   /* Las familias viven en tokens.css; aquí solo se les da el rol de la pantalla. */
   --dashboard-font-heading: var(--font-fondoseg-primary);
   --dashboard-font-body: var(--font-fondoseg-secondary);
-  --dashboard-card-bg: var(--surface);
-  --dashboard-card-border: color-mix(in srgb, var(--surface-border) 78%, transparent);
-  --dashboard-card-radius: 20px;
+  --dashboard-ink: #0f172a;
+  --dashboard-on-ink: #f8fafc;
+  --dashboard-inset-bg: #ffffff17;
+  --dashboard-card-bg: var(--dashboard-ink);
+  --dashboard-card-border: #ffffff25;
+  --dashboard-card-radius: 26px;
   --dashboard-card-padding: 20px;
   --dashboard-card-shadow: none;
   --dashboard-panel-bg: var(--background);
@@ -52,8 +55,8 @@
 
 .dark .dashboard-public-page,
 .dark .dashboard-module-panel {
-  --dashboard-card-bg: hsl(217 60% 9%);
-  --dashboard-card-border: hsl(215 20% 40% / .34);
+  --dashboard-card-bg: var(--dashboard-ink);
+  --dashboard-card-border: #ffffff25;
   --dashboard-panel-bg: hsl(224 71% 4%);
 }
 
@@ -97,7 +100,7 @@ html.dark .dashboard-public-page.main-container {
 }
 
 .dashboard-card-nested {
-  --dashboard-card-radius: 16px;
+  --dashboard-card-radius: 20px;
 }
 
 .dashboard-card-interactive {
@@ -175,7 +178,7 @@ html.dark .dashboard-public-page.main-container {
   section,
   div,
   li
-)[class*="rounded-3xl"][class*="border"] {
+)[class*="rounded-3xl"][class*="border"]:not(.dashboard-inset, .dashboard-tray-inset, .dashboard-tray-rank) {
   border-radius: var(--dashboard-card-radius) !important;
 }
 
@@ -184,7 +187,7 @@ html.dark .dashboard-public-page.main-container {
   section,
   div,
   li
-)[class*="rounded-2xl"][class*="border"] {
+)[class*="rounded-2xl"][class*="border"]:not(.dashboard-inset, .dashboard-tray-inset, .dashboard-tray-rank) {
   border-radius: 16px !important;
 }
 
@@ -206,6 +209,154 @@ html.dark .dashboard-public-page.main-container {
 
 :is(.dashboard-public-page .dashboard-main, .dashboard-module-panel) textarea {
   border-radius: var(--app-control-radius-multiline);
+}
+
+/* Shared card vocabulary for full pages and portaled module panels. Local
+   tokens keep dark cards readable even when the surrounding page is light. */
+:is(.dashboard-public-page, .dashboard-module-panel) :is(.app-card, .dashboard-card-surface, .glass, .glass-premium, .dashboard-card),
+.dashboard-inset {
+  --background: var(--dashboard-ink, #0f172a);
+  --foreground: #f8fafc;
+  --card: var(--background);
+  --card-foreground: var(--foreground);
+  --surface-fg: var(--foreground);
+  --muted: #ffffff17;
+  --muted-foreground: #ffffffcb;
+  --secondary: #ffffff17;
+  --secondary-foreground: #f8fafc;
+  --border: #ffffff25;
+  --input: #ffffff25;
+  --accent: #ffffff17;
+  --accent-foreground: #f8fafc;
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --chart-1: var(--primary);
+  --chart-2: #f8fafc;
+  --chart-3: color-mix(in srgb, var(--primary) 55%, white);
+  --chart-4: #9ca0aa;
+  --chart-5: #626978;
+  color-scheme: dark;
+  color: var(--foreground);
+}
+
+.dashboard-inset {
+  min-width: 0;
+  border-width: 1px;
+  border-style: solid;
+  border-color: #ffffff25 !important;
+  border-radius: 20px !important;
+  background: color-mix(in srgb, var(--dashboard-ink, #0f172a) 91%, white) !important;
+  box-shadow: none !important;
+}
+
+.dashboard-inset.border-dashed { border-style: dashed; }
+
+.dashboard-application-item[aria-current="true"] {
+  border-color: var(--primary) !important;
+  background: var(--primary) !important;
+}
+
+:is(.dashboard-public-page, .dashboard-module-panel) :is(a, button).app-card:hover {
+  border-color: var(--primary) !important;
+}
+
+:is(.dashboard-public-page, .dashboard-module-panel) .app-card-header {
+  gap: 6px;
+}
+
+:is(.dashboard-public-page, .dashboard-module-panel) .app-card-title {
+  color: var(--foreground) !important;
+  font-weight: 600;
+}
+
+:is(.dashboard-public-page, .dashboard-module-panel) .app-card-title > svg {
+  color: var(--primary);
+}
+
+:is(.dashboard-public-page, .dashboard-module-panel) .app-card-description {
+  color: var(--muted-foreground);
+  line-height: 1.5;
+}
+
+:is(.dashboard-public-page, .dashboard-module-panel) :is(.app-card, .dashboard-inset) :is(.font-black, .font-extrabold) {
+  font-weight: 600;
+}
+
+:is(.dashboard-public-page, .dashboard-module-panel) .app-card :is(.border-b, .border-t) {
+  border-color: #ffffff25 !important;
+}
+
+:is(.dashboard-public-page, .dashboard-module-panel) .app-card .app-badge {
+  border-color: #ffffff25 !important;
+  border-radius: var(--app-control-radius);
+  background: #ffffff17 !important;
+  color: #f8fafc !important;
+  box-shadow: none;
+}
+
+:is(.dashboard-public-page, .dashboard-module-panel) .app-card .app-badge[data-variant="destructive"] {
+  border-color: var(--primary) !important;
+  color: var(--primary) !important;
+}
+
+.dashboard-metric-group {
+  min-width: 0;
+  gap: 1px;
+  padding: 1px;
+  overflow: hidden;
+  border-radius: 26px 26px 0 0;
+  background: color-mix(in srgb, var(--dashboard-ink, #0f172a) 85%, white);
+}
+
+:is(.dashboard-public-page, .dashboard-module-panel) .dashboard-compact-metric.app-card {
+  min-width: 0;
+  background: color-mix(in srgb, var(--dashboard-ink, #0f172a) 91%, white) !important;
+}
+
+:is(.dashboard-public-page, .dashboard-module-panel) .dashboard-metric-group > .dashboard-compact-metric.app-card {
+  height: 100%;
+  border: 0 !important;
+  border-radius: 0 !important;
+}
+
+.dashboard-compact-metric .dashboard-metric-content { padding: 20px; }
+.dashboard-metric-label {
+  color: #ffffffcb;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.5;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+}
+.dashboard-metric-value {
+  margin-top: 8px;
+  color: #f8fafc;
+  font-family: var(--font-fondoseg-primary);
+  font-size: 16px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+.dashboard-metric-hint { margin-top: 8px; color: #ffffffcb; font-size: 12px; line-height: 1.5; }
+
+@media (max-width: 700px) {
+  .dashboard-public-page, .dashboard-module-panel {
+    --dashboard-card-radius: 20px;
+    --dashboard-card-padding: 18px;
+  }
+  .dashboard-metric-group { border-radius: 20px 20px 0 0; }
+  .dashboard-compact-metric .dashboard-metric-content { padding: 16px; }
 }
 
 /* Dashboard overview: the screenshot's four equal, opaque financial cards. */
@@ -800,11 +951,13 @@ html.dark .dashboard-public-page.main-container {
 .dashboard-tray {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 18px;
   min-width: 0;
-  padding: 18px;
+  padding: 0 18px 18px;
   border: 1px solid hsl(215 20% 40% / .34);
   border-radius: 26px;
+  overflow: hidden;
+  container-type: inline-size;
   /* El panel modular se portalea a <body> y no hereda los tokens de
      `.dashboard-public-page`, de ahí el valor de respaldo. */
   background: var(--dashboard-ink, #0f172a);
@@ -817,10 +970,11 @@ html.dark .dashboard-public-page.main-container {
   /* Tokens que leen las utilidades de Tailwind del subárbol. */
   --color-foreground: #f8fafc;
   --color-card-foreground: #f8fafc;
-  --color-muted-foreground: #9fb0c6;
-  --color-background: #223047;
-  --color-card: #223047;
+  --color-muted-foreground: #ffffffcb;
+  --color-background: var(--dashboard-ink, #0f172a);
+  --color-card: var(--dashboard-ink, #0f172a);
   --color-border: #cbd5e1;
+  --color-muted: #ffffff25;
   --color-accent: rgb(255 255 255 / .08);
 }
 
@@ -828,15 +982,108 @@ html.dark .dashboard-public-page.main-container {
   min-width: 0;
 }
 
+/* Los indicadores forman una sola franja, como la navegación integrada de
+   Operaciones recientes. El panel inferior conserva dos áreas de lectura. */
+.dashboard-tray-metrics {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 1px;
+  min-width: 0;
+  margin-inline: -18px;
+  padding: 1px;
+  border-radius: 25px 25px 0 0;
+  overflow: hidden;
+  background: #ffffff25;
+}
+
+.dashboard-tray-panels {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, .85fr);
+  align-items: stretch;
+  gap: 1px;
+  min-width: 0;
+  padding: 1px;
+  border-radius: 26px;
+  overflow: hidden;
+  background: #ffffff25;
+}
+
+.dashboard-public-page .dashboard-tray .dashboard-tray-metric.app-card {
+  border: 0 !important;
+  border-radius: 0 !important;
+  background-color: color-mix(in srgb, var(--dashboard-ink, #0f172a) 91%, white) !important;
+  background-image: none !important;
+}
+
+.dashboard-public-page .dashboard-tray .dashboard-tray-health.app-card,
+.dashboard-public-page .dashboard-tray .dashboard-tray-ranking.app-card {
+  border: 0 !important;
+  border-radius: 0 !important;
+}
+
+.dashboard-public-page .dashboard-tray .dashboard-tray-health.app-card,
+.dashboard-public-page .dashboard-tray .dashboard-tray-ranking.app-card {
+  border-color: var(--dashboard-card-border) !important;
+  background-color: var(--dashboard-ink, #0f172a) !important;
+  background-image: none !important;
+}
+
+.dashboard-tray .dashboard-tray-panel-header {
+  border-color: rgb(255 255 255 / .19) !important;
+}
+
+.dashboard-tray .dashboard-tray-panel-content {
+  color: #fff;
+  padding-top: 0;
+}
+
+.dashboard-tray .dashboard-tray-inset {
+  border-color: #ffffff25;
+  border-radius: 20px;
+  background: #ffffff17;
+}
+
+.dashboard-tray .dashboard-tray-rank {
+  border-color: #ffffff25;
+  border-radius: 20px;
+  background: #ffffff17;
+}
+
 /* Los separadores a 5% de un gris claro se perdían sobre la tinta. */
 .dashboard-tray :is(.border-b, .border-t) {
   border-color: rgb(255 255 255 / .1) !important;
 }
 
+.dashboard-tray .dashboard-tray-panel-header {
+  border-bottom: 0 !important;
+}
+
+@container (max-width: 1050px) {
+  .dashboard-tray-metrics { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .dashboard-tray-panels { grid-template-columns: minmax(0, 1fr); }
+}
+
+@container (max-width: 650px) {
+  .dashboard-tray-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@container (max-width: 330px) {
+  .dashboard-tray-metrics { grid-template-columns: minmax(0, 1fr); }
+}
+
 @media (max-width: 700px) {
   .dashboard-tray {
     gap: 12px;
-    padding: 14px;
+    padding: 0 14px 14px;
+    border-radius: 20px;
+  }
+
+  .dashboard-tray-metrics {
+    margin-inline: -14px;
+    border-radius: 19px 19px 0 0;
+  }
+
+  .dashboard-tray-panels {
     border-radius: 20px;
   }
 }

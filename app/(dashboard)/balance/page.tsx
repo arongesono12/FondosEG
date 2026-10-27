@@ -1,5 +1,6 @@
 'use client';
 
+import { DashboardMetric } from '@/components/dashboard/dashboard-metric';
 import { useCallback, useEffect, useState } from 'react';
 import { useAppStore } from '@/lib/store';
 import { Button } from '@/components/ui/button';
@@ -18,52 +19,10 @@ import { getAvailableClientBalance, getWithdrawalStatusLabel } from '@/lib/finan
 import { ClientWithdrawalModal } from '@/components/client-withdrawal-modal';
 import type { AgentBalance, AgentWithBalance, BalanceTransaction, ClientBalance, ClientWithdrawal, Transfer } from '@/types';
 import { isAdminRole } from '@/lib/roles';
-import {
-  AlertCircle,
-  ArrowDownUp,
-  Banknote,
-  HandCoins,
-  CheckCircle,
-  Clock3,
-  History,
-  Landmark,
-  ShieldAlert,
-  TrendingUp,
-  Wallet,
-} from '@/components/ui/hugeicons';
+import { AlertCircle, HandCoins, CheckCircle, History, Wallet } from '@/components/ui/hugeicons';
 
 type BalanceResponse = { balances: ClientBalance[] };
 
-function SummaryCard({
-  label,
-  value,
-  hint,
-  icon: Icon,
-  tone,
-}: {
-  label: string;
-  value: string;
-  hint: string;
-  icon: React.ElementType;
-  tone: string;
-}) {
-  return (
-    <Card>
-      <CardContent className="p-5">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">{label}</p>
-            <p className="mt-2 text-[clamp(1.125rem,1.4vw+0.75rem,1.5rem)] font-bold leading-tight tabular-nums text-foreground">{value}</p>
-            <p className="mt-2 text-xs font-medium text-muted-foreground">{hint}</p>
-          </div>
-          <div className={`flex h-11 w-11 items-center justify-center rounded-2xl border text-white shadow-lg ${tone}`}>
-            <Icon className="h-5 w-5" />
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
 
 function transactionTypeLabel(type: BalanceTransaction['type']) {
   switch (type) {
@@ -203,12 +162,12 @@ export default function BalancePage() {
           </p>
         </section>
 
-        <section className="grid gap-4 @xl:grid-cols-2 @4xl:grid-cols-3 @7xl:grid-cols-5">
-          <SummaryCard label="Float de red" value={formatCurrency(totalNetworkFloat)} hint="Saldo agregado de gestores" icon={Landmark} tone="border-sky-500/20 bg-sky-500 shadow-sky-500/20" />
-          <SummaryCard label="Efectivo en red" value={formatCurrency(totalNetworkCash)} hint="Caja total declarada" icon={Banknote} tone="border-emerald-500/20 bg-emerald-500 shadow-emerald-500/20" />
-          <SummaryCard label="Gestores activos" value={String(agents.filter((agent) => agent.is_active).length)} hint="Con cuenta habilitada" icon={Wallet} tone="border-emerald-500/20 bg-emerald-500 shadow-emerald-500/20" />
-          <SummaryCard label="Umbral crítico" value={String(lowFloatAgents)} hint="Por debajo de 25.000 XAF" icon={ShieldAlert} tone="border-amber-500/20 bg-amber-500 shadow-amber-500/20" />
-          <SummaryCard label="Float medio" value={formatCurrency(avgFloat)} hint={`Efectivo medio ${formatCurrency(avgCash)}`} icon={TrendingUp} tone="border-fuchsia-500/20 bg-fuchsia-500 shadow-fuchsia-500/20" />
+        <section className="dashboard-metric-group grid gap-4 @xl:grid-cols-2 @4xl:grid-cols-3 @7xl:grid-cols-5">
+          <DashboardMetric label="Float de red" value={formatCurrency(totalNetworkFloat)} hint="Saldo agregado de gestores" />
+          <DashboardMetric label="Efectivo en red" value={formatCurrency(totalNetworkCash)} hint="Caja total declarada" />
+          <DashboardMetric label="Gestores activos" value={String(agents.filter((agent) => agent.is_active).length)} hint="Con cuenta habilitada" />
+          <DashboardMetric label="Umbral crítico" value={String(lowFloatAgents)} hint="Por debajo de 25.000 XAF" />
+          <DashboardMetric label="Float medio" value={formatCurrency(avgFloat)} hint={`Efectivo medio ${formatCurrency(avgCash)}`} />
         </section>
 
         <Card className="overflow-hidden">
@@ -298,8 +257,8 @@ export default function BalancePage() {
               <DialogTitle className="text-2xl font-bold text-foreground">Recarga confirmada</DialogTitle>
             </DialogHeader>
             <DialogBody>
-              <div className="rounded-3xl border border-emerald-500/20 bg-emerald-500/10 p-6 text-center">
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-700">Monto recargado</p>
+              <div className="dashboard-inset rounded-3xl border p-6 text-center">
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-foreground">Monto recargado</p>
                 <p className="mt-2 text-[clamp(1.5rem,7vw,2.25rem)] font-bold tabular-nums text-foreground wrap-break-word">{formatCurrency(successAmount)}</p>
               </div>
             </DialogBody>
@@ -338,7 +297,7 @@ export default function BalancePage() {
                 />
               </div>
               {selectedAgent && (
-                <div className="rounded-2xl border border-border/10 bg-background/70 p-4">
+                <div className="dashboard-inset rounded-2xl border border-border/10 bg-background/70 p-4">
                   <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Saldo actual</p>
                   <p className="mt-2 text-2xl font-bold tabular-nums text-foreground wrap-break-word">{formatCurrency(selectedAgent.balance)}</p>
                 </div>
@@ -374,16 +333,16 @@ export default function BalancePage() {
               </DialogDescription>
             </DialogHeader>
             <DialogBody className="space-y-4">
-              <div className="rounded-2xl border border-border/10 bg-background/70 p-4 text-center">
+              <div className="dashboard-inset rounded-2xl border border-border/10 bg-background/70 p-4 text-center">
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Gestor</p>
                 <p className="mt-2 text-lg font-bold text-foreground wrap-break-word">{selectedAgent?.name}</p>
               </div>
-              <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 p-4 text-center">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700 dark:text-emerald-300">Monto</p>
+              <div className="dashboard-inset rounded-2xl border p-4 text-center">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-foreground">Monto</p>
                 <p className="mt-2 text-[clamp(1.5rem,7vw,2.25rem)] font-bold tabular-nums text-foreground wrap-break-word">{formatCurrency(parseFloat(topUpAmount) || 0)}</p>
               </div>
               {errorMessage && (
-                <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm font-bold text-rose-600 dark:border-rose-900/30 dark:bg-rose-950/30">
+                <div className="dashboard-inset rounded-2xl border p-4 text-sm font-bold text-foreground">
                   {errorMessage}
                 </div>
               )}
@@ -451,11 +410,11 @@ export default function BalancePage() {
           </p>
         </section>
 
-        <section className="grid gap-4 @xl:grid-cols-2 @4xl:grid-cols-4">
-          <SummaryCard label="Saldo disponible" value={formatCurrency(currentAgentBalance)} hint="Float utilizable ahora mismo" icon={Wallet} tone="border-emerald-500/20 bg-emerald-500 shadow-emerald-500/20" />
-          <SummaryCard label="Saldo en efectivo" value={formatCurrency(currentAgentCash)} hint="Caja física disponible" icon={Banknote} tone="border-amber-500/20 bg-amber-500 shadow-amber-500/20" />
-          <SummaryCard label="Total recargado" value={formatCurrency(totalTopups)} hint="Recargas acumuladas en cuenta" icon={TrendingUp} tone="border-sky-500/20 bg-sky-500 shadow-sky-500/20" />
-          <SummaryCard label="Total operado" value={formatCurrency(totalOperated)} hint="Salidas por transferencias" icon={ArrowDownUp} tone="border-fuchsia-500/20 bg-fuchsia-500 shadow-fuchsia-500/20" />
+        <section className="dashboard-metric-group grid gap-4 @xl:grid-cols-2 @4xl:grid-cols-4">
+          <DashboardMetric label="Saldo disponible" value={formatCurrency(currentAgentBalance)} hint="Float utilizable ahora mismo" />
+          <DashboardMetric label="Saldo en efectivo" value={formatCurrency(currentAgentCash)} hint="Caja física disponible" />
+          <DashboardMetric label="Total recargado" value={formatCurrency(totalTopups)} hint="Recargas acumuladas en cuenta" />
+          <DashboardMetric label="Total operado" value={formatCurrency(totalOperated)} hint="Salidas por transferencias" />
         </section>
 
         <Card className="overflow-hidden">
@@ -528,11 +487,11 @@ export default function BalancePage() {
         </p>
       </section>
 
-      <section className="grid gap-4 @xl:grid-cols-2 @4xl:grid-cols-4">
-        <SummaryCard label="Monedas activas" value={String(currencySnapshots.length)} hint="Balances abiertos en cuenta" icon={Banknote} tone="border-sky-500/20 bg-sky-500 shadow-sky-500/20" />
-        <SummaryCard label="Saldo principal" value={primaryClientCurrency ? formatCurrency(primaryClientCurrency.available, primaryClientCurrency.currency) : '0 XAF'} hint="Disponible en tu moneda principal" icon={Wallet} tone="border-emerald-500/20 bg-emerald-500 shadow-emerald-500/20" />
-        <SummaryCard label="Reservado" value={primaryClientCurrency ? formatCurrency(primaryClientCurrency.reserved, primaryClientCurrency.currency) : '0 XAF'} hint="Retenido por códigos de retiro u órdenes pendientes" icon={Clock3} tone="border-amber-500/20 bg-amber-500 shadow-amber-500/20" />
-        <SummaryCard label="Confirmadas" value={String(confirmedClientTransfers)} hint={`${pendingClientTransfers} pendientes`} icon={CheckCircle} tone="border-fuchsia-500/20 bg-fuchsia-500 shadow-fuchsia-500/20" />
+      <section className="dashboard-metric-group grid gap-4 @xl:grid-cols-2 @4xl:grid-cols-4">
+        <DashboardMetric label="Monedas activas" value={String(currencySnapshots.length)} hint="Balances abiertos en cuenta" />
+        <DashboardMetric label="Saldo principal" value={primaryClientCurrency ? formatCurrency(primaryClientCurrency.available, primaryClientCurrency.currency) : '0 XAF'} hint="Disponible en tu moneda principal" />
+        <DashboardMetric label="Reservado" value={primaryClientCurrency ? formatCurrency(primaryClientCurrency.reserved, primaryClientCurrency.currency) : '0 XAF'} hint="Retenido por códigos de retiro u órdenes pendientes" />
+        <DashboardMetric label="Confirmadas" value={String(confirmedClientTransfers)} hint={`${pendingClientTransfers} pendientes`} />
       </section>
 
       <Card className="overflow-hidden">
@@ -544,7 +503,7 @@ export default function BalancePage() {
         </CardHeader>
         <CardContent className="grid gap-4 p-6 @2xl:grid-cols-2 @6xl:grid-cols-3">
           {currencySnapshots.map((snapshot) => (
-            <div key={snapshot.currency} className="rounded-[1.75rem] border border-border/10 bg-background/70 p-5">
+            <div key={snapshot.currency} className="dashboard-inset rounded-[1.75rem] border border-border/10 bg-background/70 p-5">
               <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">{snapshot.currency}</p>
               <p className="mt-3 text-2xl font-bold text-foreground">{formatCurrency(snapshot.available, snapshot.currency)}</p>
               <div className="mt-4 space-y-2 text-xs font-semibold text-muted-foreground">
@@ -574,12 +533,12 @@ export default function BalancePage() {
         </CardHeader>
         <CardContent className="space-y-3 p-6">
           {withdrawals.length === 0 ? (
-            <div className="rounded-3xl border border-dashed border-border/20 bg-background/50 px-6 py-10 text-center text-sm font-bold text-muted-foreground">
+            <div className="dashboard-inset rounded-3xl border border-dashed border-border/20 bg-background/50 px-6 py-10 text-center text-sm font-bold text-muted-foreground">
               Tus fondos son tuyos desde que entran. Genera un código cuando quieras cobrarlos en efectivo.
             </div>
           ) : (
             withdrawals.slice(0, 10).map((withdrawal) => (
-              <div key={withdrawal.id} className="rounded-3xl border border-border/10 bg-background/70 p-4">
+              <div key={withdrawal.id} className="dashboard-inset rounded-3xl border border-border/10 bg-background/70 p-4">
                 <div className="flex items-start justify-between gap-4">
                   <div>
                     <p className="text-sm font-bold tracking-[0.12em] text-foreground">{withdrawal.withdrawal_code}</p>
@@ -615,12 +574,12 @@ export default function BalancePage() {
         </CardHeader>
         <CardContent className="space-y-3 p-6">
           {clientTransfers.length === 0 ? (
-            <div className="rounded-3xl border border-dashed border-border/20 bg-background/50 px-6 py-10 text-center text-sm font-bold text-muted-foreground">
+            <div className="dashboard-inset rounded-3xl border border-dashed border-border/20 bg-background/50 px-6 py-10 text-center text-sm font-bold text-muted-foreground">
               Aún no tienes movimientos registrados.
             </div>
           ) : (
             clientTransfers.slice(0, 12).map((transfer) => (
-            <div key={transfer.id} className="rounded-3xl border border-border/10 bg-background/70 p-4">
+            <div key={transfer.id} className="dashboard-inset rounded-3xl border border-border/10 bg-background/70 p-4">
                 <div className="flex items-start justify-between gap-4">
                   <div>
                     <p className="text-sm font-bold text-foreground">{transfer.transfer_code}</p>
@@ -657,8 +616,8 @@ export default function BalancePage() {
             <DialogTitle className="text-2xl font-bold text-foreground">Recarga confirmada</DialogTitle>
           </DialogHeader>
           <DialogBody>
-            <div className="rounded-3xl border border-emerald-500/20 bg-emerald-500/10 p-6 text-center">
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-700">Monto recargado</p>
+            <div className="dashboard-inset rounded-3xl border p-6 text-center">
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-foreground">Monto recargado</p>
               <p className="mt-2 text-[clamp(1.5rem,7vw,2.25rem)] font-bold tabular-nums text-foreground wrap-break-word">{formatCurrency(successAmount)}</p>
             </div>
           </DialogBody>
@@ -697,7 +656,7 @@ export default function BalancePage() {
               />
             </div>
             {selectedAgent && (
-              <div className="rounded-2xl border border-border/10 bg-background/70 p-4">
+              <div className="dashboard-inset rounded-2xl border border-border/10 bg-background/70 p-4">
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Saldo actual</p>
                 <p className="mt-2 text-2xl font-bold tabular-nums text-foreground wrap-break-word">{formatCurrency(selectedAgent.balance)}</p>
               </div>
@@ -733,16 +692,16 @@ export default function BalancePage() {
             </DialogDescription>
           </DialogHeader>
           <DialogBody className="space-y-4">
-            <div className="rounded-2xl border border-border/10 bg-background/70 p-4 text-center">
+            <div className="dashboard-inset rounded-2xl border border-border/10 bg-background/70 p-4 text-center">
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Gestor</p>
               <p className="mt-2 text-lg font-bold text-foreground wrap-break-word">{selectedAgent?.name}</p>
             </div>
-            <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 p-4 text-center">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700 dark:text-emerald-300">Monto</p>
+            <div className="dashboard-inset rounded-2xl border p-4 text-center">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-foreground">Monto</p>
               <p className="mt-2 text-[clamp(1.5rem,7vw,2.25rem)] font-bold tabular-nums text-foreground wrap-break-word">{formatCurrency(parseFloat(topUpAmount) || 0)}</p>
             </div>
             {errorMessage && (
-              <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm font-bold text-rose-600 dark:border-rose-900/30 dark:bg-rose-950/30">
+              <div className="dashboard-inset rounded-2xl border p-4 text-sm font-bold text-foreground">
                 {errorMessage}
               </div>
             )}

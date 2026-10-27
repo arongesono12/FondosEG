@@ -1,5 +1,6 @@
 'use client';
 
+import { DashboardMetric } from '@/components/dashboard/dashboard-metric';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useAppStore } from '@/lib/store';
@@ -32,17 +33,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from '@/components/ui/chart';
-import {
-  ArrowUpRight,
-  BarChart3,
-  CreditCard,
-  MousePointerClick,
-  PieChart as PieChartIcon,
-  ShieldCheck,
-  Sparkles,
-  TrendingUp,
-  Users,
-} from '@/components/ui/hugeicons';
+import { ArrowUpRight, BarChart3, MousePointerClick, PieChart as PieChartIcon, ShieldCheck, Sparkles } from '@/components/ui/hugeicons';
 
 // Captación de la portada comercial. Vive aquí y no en el dashboard porque
 // /stats ya es la pantalla de analítica y sólo abre para admin.
@@ -81,34 +72,6 @@ const settlementRateConfig = {
 
 const PIE_COLOR_VARS = ['var(--chart-1)', 'var(--chart-2)', 'var(--chart-3)', 'var(--chart-4)', 'var(--chart-5)'];
 
-function StatChip({
-  label,
-  value,
-  hint,
-  icon: Icon,
-  tone,
-}: {
-  label: string;
-  value: string;
-  hint: string;
-  icon: React.ElementType;
-  tone: string;
-}) {
-  return (
-    <Card className="min-w-0">
-      <CardContent className="flex items-center gap-4 p-5">
-        <div className={cn('flex h-12 w-12 items-center justify-center rounded-2xl border text-white shadow-lg', tone)}>
-          <Icon className="h-5 w-5" />
-        </div>
-        <div className="space-y-1">
-          <p className="text-xs font-black uppercase tracking-[0.22em] text-muted-foreground">{label}</p>
-          <p className="text-[clamp(1.125rem,1.4vw+0.75rem,1.5rem)] font-black leading-tight tabular-nums text-foreground">{value}</p>
-          <p className="text-xs font-semibold text-muted-foreground">{hint}</p>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
 
 export default function StatsPage() {
   const { user, preferredCurrency } = useAppStore();
@@ -260,23 +223,23 @@ export default function StatsPage() {
           </div>
 
           <div className="grid gap-3 @xl:grid-cols-2">
-            <div className="rounded-2xl border border-sky-500/20 bg-sky-500/10 px-4 py-3">
-              <p className="text-xs font-black uppercase tracking-[0.2em] text-sky-700 dark:text-sky-300">Volumen 30 días</p>
+            <div className="dashboard-inset rounded-2xl border px-4 py-3">
+              <p className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">Volumen 30 días</p>
               <p className="mt-1 text-xl font-black text-foreground">{fmt(stats?.monthlyVolume ?? 0)}</p>
             </div>
-            <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3">
-              <p className="text-xs font-black uppercase tracking-[0.2em] text-emerald-700 dark:text-emerald-300">Tasa de cierre</p>
+            <div className="dashboard-inset rounded-2xl border px-4 py-3">
+              <p className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">Tasa de cierre</p>
               <p className="mt-1 text-xl font-black text-foreground">{settlementRate}%</p>
             </div>
           </div>
         </div>
       </section>
 
-      <section className="grid gap-4 @xl:grid-cols-2 @4xl:grid-cols-4">
-        <StatChip label="Volumen total" value={fmt(stats?.monthlyVolume ?? 0)} hint="Acumulado de 30 días" icon={TrendingUp} tone="border-sky-500/20 bg-sky-500 shadow-sky-500/20" />
-        <StatChip label="Operaciones" value={String(totalOps)} hint={`${stats?.todayTransfers ?? 0} registradas hoy`} icon={BarChart3} tone="border-indigo-500/20 bg-indigo-500 shadow-indigo-500/20" />
-        <StatChip label="Ticket promedio" value={fmt(stats?.averageTicket ?? 0)} hint="Promedio por envío completado" icon={CreditCard} tone="border-fuchsia-500/20 bg-fuchsia-500 shadow-fuchsia-500/20" />
-        <StatChip label={isAdmin ? 'Gestores activos' : 'Clientes únicos'} value={String(isAdmin ? stats?.activeAgents ?? 0 : stats?.totalClients ?? 0)} hint={isAdmin ? 'Participando en la red' : 'Atendidos en el período'} icon={Users} tone="border-emerald-500/20 bg-emerald-500 shadow-emerald-500/20" />
+      <section className="dashboard-metric-group grid gap-4 @xl:grid-cols-2 @4xl:grid-cols-4">
+        <DashboardMetric label="Volumen total" value={fmt(stats?.monthlyVolume ?? 0)} hint="Acumulado de 30 días" />
+        <DashboardMetric label="Operaciones" value={String(totalOps)} hint={`${stats?.todayTransfers ?? 0} registradas hoy`} />
+        <DashboardMetric label="Ticket promedio" value={fmt(stats?.averageTicket ?? 0)} hint="Promedio por envío completado" />
+        <DashboardMetric label={isAdmin ? 'Gestores activos' : 'Clientes únicos'} value={String(isAdmin ? stats?.activeAgents ?? 0 : stats?.totalClients ?? 0)} hint={isAdmin ? 'Participando en la red' : 'Atendidos en el período'} />
       </section>
 
       <section className="grid gap-6 @4xl:grid-cols-[minmax(0,1.35fr)_minmax(0,0.95fr)]">
@@ -303,15 +266,15 @@ export default function StatsPage() {
             </div>
 
             <div className="grid gap-4 @2xl:grid-cols-3">
-              <div className="rounded-3xl border border-border/10 bg-background/70 p-4">
+              <div className="dashboard-inset rounded-3xl border border-border/10 bg-background/70 p-4">
                 <p className="text-xs font-black uppercase tracking-[0.18em] text-muted-foreground">Semana actual</p>
                 <p className="mt-2 text-2xl font-black tabular-nums text-foreground">{fmt(stats?.weeklyVolume ?? 0)}</p>
               </div>
-              <div className="rounded-3xl border border-border/10 bg-background/70 p-4">
+              <div className="dashboard-inset rounded-3xl border border-border/10 bg-background/70 p-4">
                 <p className="text-xs font-black uppercase tracking-[0.18em] text-muted-foreground">Hoy</p>
                 <p className="mt-2 text-2xl font-black tabular-nums text-foreground">{fmt(stats?.todayVolume ?? 0)}</p>
               </div>
-              <div className="rounded-3xl border border-border/10 bg-background/70 p-4">
+              <div className="dashboard-inset rounded-3xl border border-border/10 bg-background/70 p-4">
                 <p className="text-xs font-black uppercase tracking-[0.18em] text-muted-foreground">Comisión media</p>
                 <p className="mt-2 text-2xl font-black tabular-nums text-foreground">{fmt(stats?.commissionPerTransfer ?? 0)}</p>
               </div>
@@ -358,7 +321,7 @@ export default function StatsPage() {
 
             <div className="space-y-3">
               {(isAdmin ? concentrationData : statusData).map((item, index) => (
-                <div key={item.name} className="flex items-center justify-between rounded-2xl border border-border/10 bg-background/70 px-4 py-3">
+                <div key={item.name} className="dashboard-inset flex items-center justify-between rounded-2xl border border-border/10 bg-background/70 px-4 py-3">
                   <div className="flex items-center gap-3">
                     <div className="h-3 w-3 rounded-full" style={{ backgroundColor: PIE_COLOR_VARS[index % PIE_COLOR_VARS.length] }} />
                     <div>
@@ -383,7 +346,7 @@ export default function StatsPage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4 p-6">
-            <div className="rounded-3xl border border-border/10 bg-background/70 p-5">
+            <div className="dashboard-inset rounded-3xl border border-border/10 bg-background/70 p-5">
               <div className="flex items-center justify-between">
                 <p className="text-xs font-black uppercase tracking-[0.18em] text-muted-foreground">Liquidación</p>
                 <p className="text-2xl font-black text-foreground">{settlementRate}%</p>
@@ -400,19 +363,19 @@ export default function StatsPage() {
             </div>
 
             <div className="grid gap-3 @xl:grid-cols-2">
-              <div className="rounded-3xl border border-border/10 bg-background/70 p-4">
+              <div className="dashboard-inset rounded-3xl border border-border/10 bg-background/70 p-4">
                 <p className="text-xs font-black uppercase tracking-[0.18em] text-muted-foreground">Pendientes</p>
                 <p className="mt-2 text-2xl font-black tabular-nums text-foreground">{stats?.pendingTransfers ?? 0}</p>
               </div>
-              <div className="rounded-3xl border border-border/10 bg-background/70 p-4">
+              <div className="dashboard-inset rounded-3xl border border-border/10 bg-background/70 p-4">
                 <p className="text-xs font-black uppercase tracking-[0.18em] text-muted-foreground">Canceladas</p>
                 <p className="mt-2 text-2xl font-black tabular-nums text-foreground">{stats?.cancelledTransfers ?? 0}</p>
               </div>
-              <div className="rounded-3xl border border-border/10 bg-background/70 p-4">
+              <div className="dashboard-inset rounded-3xl border border-border/10 bg-background/70 p-4">
                 <p className="text-xs font-black uppercase tracking-[0.18em] text-muted-foreground">Float utilizado</p>
                 <p className="mt-2 text-2xl font-black tabular-nums text-foreground">{stats?.floatUtilization ?? 0}%</p>
               </div>
-              <div className="rounded-3xl border border-border/10 bg-background/70 p-4">
+              <div className="dashboard-inset rounded-3xl border border-border/10 bg-background/70 p-4">
                 <p className="text-xs font-black uppercase tracking-[0.18em] text-muted-foreground">Cobertura</p>
                 <p className="mt-2 text-2xl font-black tabular-nums text-foreground">{(stats?.liquidityCoverageDays ?? 0).toFixed(1)} días</p>
               </div>
@@ -437,11 +400,11 @@ export default function StatsPage() {
           <CardContent className="space-y-3 p-6">
             {isAdmin && (
               <div className="grid gap-3 @xl:grid-cols-2">
-                <div className="rounded-3xl border border-border/10 bg-background/70 p-4">
+                <div className="dashboard-inset rounded-3xl border border-border/10 bg-background/70 p-4">
                   <p className="text-xs font-black uppercase tracking-[0.18em] text-muted-foreground">Mes actual</p>
                   <p className="mt-2 text-2xl font-black tabular-nums text-foreground">{fmt(commissionStats?.monthCommission ?? 0)}</p>
                 </div>
-                <div className="rounded-3xl border border-border/10 bg-background/70 p-4">
+                <div className="dashboard-inset rounded-3xl border border-border/10 bg-background/70 p-4">
                   <p className="text-xs font-black uppercase tracking-[0.18em] text-muted-foreground">Año actual</p>
                   <p className="mt-2 text-2xl font-black tabular-nums text-foreground">{fmt(commissionStats?.yearCommission ?? 0)}</p>
                 </div>
@@ -449,12 +412,12 @@ export default function StatsPage() {
             )}
             {isAdmin ? (
               commissionAgents.length === 0 ? (
-                <div className="rounded-3xl border border-dashed border-border/20 bg-background/50 px-6 py-10 text-center">
+                <div className="dashboard-inset rounded-3xl border border-dashed border-border/20 bg-background/50 px-6 py-10 text-center">
                   <p className="text-sm font-bold text-muted-foreground">No hay datos de comisión todavía.</p>
                 </div>
               ) : (
                 commissionAgents.map((agent) => (
-                  <div key={agent.agent_id} className="rounded-3xl border border-border/10 bg-background/70 p-4">
+                  <div key={agent.agent_id} className="dashboard-inset rounded-3xl border border-border/10 bg-background/70 p-4">
                     <div className="flex items-start justify-between gap-4">
                       <div>
                         <p className="text-sm font-black text-foreground">{agent.agent_name}</p>
@@ -491,7 +454,7 @@ export default function StatsPage() {
               )
             ) : (
               recentTransfers.map((transfer) => (
-                <div key={transfer.id} className="rounded-3xl border border-border/10 bg-background/70 p-4">
+                <div key={transfer.id} className="dashboard-inset rounded-3xl border border-border/10 bg-background/70 p-4">
                   <div className="flex items-start justify-between gap-4">
                     <div>
                       <p className="text-sm font-black text-foreground">{transfer.transfer_code}</p>
@@ -532,12 +495,12 @@ export default function StatsPage() {
             </CardHeader>
             <CardContent className="space-y-3 p-6">
               {reconciliationPeriods.length === 0 ? (
-                <div className="rounded-3xl border border-dashed border-border/20 bg-background/50 px-6 py-10 text-center">
+                <div className="dashboard-inset rounded-3xl border border-dashed border-border/20 bg-background/50 px-6 py-10 text-center">
                   <p className="text-sm font-bold text-muted-foreground">No hay movimientos suficientes para conciliar.</p>
                 </div>
               ) : (
                 reconciliationPeriods.slice(0, 4).map((period) => (
-                  <div key={period.period} className="rounded-3xl border border-border/10 bg-background/70 p-4">
+                  <div key={period.period} className="dashboard-inset rounded-3xl border border-border/10 bg-background/70 p-4">
                     <div className="flex items-start justify-between gap-4">
                       <div>
                         <p className="text-sm font-black text-foreground">{formatPeriodLabel(period.period)}</p>
@@ -558,7 +521,7 @@ export default function StatsPage() {
               )}
 
               {reconciliation && (
-                <div className="rounded-2xl border border-border/10 bg-background/70 px-4 py-3">
+                <div className="dashboard-inset rounded-2xl border border-border/10 bg-background/70 px-4 py-3">
                   <div className="flex items-center justify-between">
                     <p className="text-xs font-black uppercase tracking-[0.18em] text-muted-foreground">Neto del período</p>
                     <p className="text-base font-black text-foreground">{fmt(reconciliation.totalNetFlow)}</p>
@@ -598,7 +561,7 @@ export default function StatsPage() {
                   ['7 días', marketingStats.totals.events_7d],
                   ['30 días', marketingStats.totals.events_30d],
                 ] as const).map(([label, value]) => (
-                  <div key={label} className="rounded-3xl border border-border/10 bg-background/70 p-4">
+                  <div key={label} className="dashboard-inset rounded-3xl border border-border/10 bg-background/70 p-4">
                     <p className="text-xs font-black uppercase tracking-[0.18em] text-muted-foreground">{label}</p>
                     <p className="mt-2 text-2xl font-black tabular-nums text-foreground">{value}</p>
                   </div>
@@ -611,7 +574,7 @@ export default function StatsPage() {
                   ['Top CTA', marketingStats.byCta],
                   ['Temas usados', marketingStats.byTheme],
                 ] as const).map(([label, items]) => (
-                  <div key={label} className="rounded-3xl border border-border/10 bg-background/70 p-5">
+                  <div key={label} className="dashboard-inset rounded-3xl border border-border/10 bg-background/70 p-5">
                     <p className="text-xs font-black uppercase tracking-[0.18em] text-muted-foreground">{label}</p>
                     <div className="mt-4 space-y-3">
                       {(items.length ? items : [{ label: 'Sin datos', count: 0 }]).map((item) => (
@@ -639,7 +602,7 @@ export default function StatsPage() {
                 ['Selección de audiencias', marketingStats.audienceSelections],
                 ['Targets más usados', marketingStats.byTarget],
               ] as const).map(([label, items]) => (
-                <div key={label} className="rounded-3xl border border-border/10 bg-background/70 p-4">
+                <div key={label} className="dashboard-inset rounded-3xl border border-border/10 bg-background/70 p-4">
                   <p className="text-xs font-black uppercase tracking-[0.18em] text-muted-foreground">{label}</p>
                   <div className="mt-3 space-y-2">
                     {(items.length ? items : [{ label: 'Sin datos', count: 0 }]).map((item) => (
@@ -654,12 +617,12 @@ export default function StatsPage() {
 
               <div className="space-y-3">
                 {marketingStats.recent.length === 0 ? (
-                  <div className="rounded-3xl border border-dashed border-border/20 bg-background/50 px-5 py-6 text-center text-sm font-semibold text-muted-foreground">
+                  <div className="dashboard-inset rounded-3xl border border-dashed border-border/20 bg-background/50 px-5 py-6 text-center text-sm font-semibold text-muted-foreground">
                     Aún no hay eventos recientes de marketing.
                   </div>
                 ) : (
                   marketingStats.recent.map((event, index) => (
-                    <div key={`${event.created_at}-${event.action}-${index}`} className="rounded-3xl border border-border/10 bg-background/70 p-4">
+                    <div key={`${event.created_at}-${event.action}-${index}`} className="dashboard-inset rounded-3xl border border-border/10 bg-background/70 p-4">
                       <div className="flex items-center justify-between gap-3">
                         <p className="truncate text-sm font-black text-foreground">{event.cta || event.action}</p>
                         <Badge className="shrink-0 rounded-full border border-border/20 bg-background/70 px-2 py-1 text-xs font-black uppercase tracking-[0.16em] text-muted-foreground">

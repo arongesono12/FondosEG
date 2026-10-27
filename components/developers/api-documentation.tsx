@@ -43,8 +43,8 @@ const GETTING_STARTED = [
 ] as const;
 
 const METHOD_STYLE: Record<EndpointDoc['method'], string> = {
-  GET: 'text-sky-600 dark:text-sky-400',
-  POST: 'text-emerald-600 dark:text-emerald-400',
+  GET: 'text-foreground',
+  POST: 'text-primary',
   DELETE: 'text-rose-600 dark:text-rose-400',
 };
 
@@ -69,7 +69,7 @@ function DocSection({ id, title, description, children }: DocSectionProps) {
 
 function DefinitionTable({ rows }: { rows: ReadonlyArray<{ name: string; detail: string }> }) {
   return (
-    <dl className="divide-y divide-border rounded-xl border border-border">
+    <dl className="dashboard-inset divide-y divide-border rounded-xl border border-border">
       {rows.map((row) => (
         <div key={row.name} className="grid gap-1 px-4 py-3 sm:grid-cols-[220px_1fr] sm:gap-4">
           <dt className="font-mono text-xs font-medium text-foreground">{row.name}</dt>
@@ -106,7 +106,7 @@ export function ApiDocumentation({ baseUrl }: ApiDocumentationProps) {
         >
           <ol className="grid gap-3 md:grid-cols-3">
             {GETTING_STARTED.map((step) => (
-              <li key={step.title} className="rounded-xl border border-border p-4">
+              <li key={step.title} className="dashboard-inset rounded-xl border border-border p-4">
                 <step.icon className="h-5 w-5 text-primary" />
                 <p className="mt-3 text-sm font-medium text-foreground">{step.title}</p>
                 <p className="mt-1 text-sm text-muted-foreground">{step.detail}</p>
@@ -157,7 +157,7 @@ export function ApiDocumentation({ baseUrl }: ApiDocumentationProps) {
         >
           <div className="grid gap-3 md:grid-cols-2">
             {MONEY_RULES.map((rule) => (
-              <div key={rule.title} className="rounded-xl border border-border p-4">
+              <div key={rule.title} className="dashboard-inset rounded-xl border border-border p-4">
                 <p className="text-sm font-medium text-foreground">{rule.title}</p>
                 <p className="mt-1 text-sm text-muted-foreground">{rule.detail}</p>
               </div>
@@ -170,7 +170,7 @@ export function ApiDocumentation({ baseUrl }: ApiDocumentationProps) {
             {ENDPOINT_GROUPS.map((group) => (
               <div key={group.id} className="space-y-2">
                 <h3 className="text-sm font-semibold text-foreground">{group.title}</h3>
-                <ul className="divide-y divide-border rounded-xl border border-border">
+                <ul className="dashboard-inset divide-y divide-border rounded-xl border border-border">
                   {group.endpoints.map((endpoint) => (
                     <li
                       key={`${endpoint.method}-${endpoint.path}-${endpoint.title}`}
@@ -202,7 +202,7 @@ export function ApiDocumentation({ baseUrl }: ApiDocumentationProps) {
                 </div>
                 <CodeBlock tabs={recipe.samples} />
                 {recipe.response && (
-                  <details className="rounded-xl border border-border">
+                  <details className="dashboard-inset rounded-xl border border-border">
                     <summary className="cursor-pointer select-none px-4 py-2.5 text-sm font-medium text-muted-foreground hover:text-foreground">
                       Respuesta de ejemplo
                     </summary>
@@ -231,7 +231,7 @@ export function ApiDocumentation({ baseUrl }: ApiDocumentationProps) {
           title="Errores"
           description="Todas las respuestas de error tienen la forma { success: false, error: { code, message, details }, request_id }."
         >
-          <ul className="divide-y divide-border rounded-xl border border-border">
+          <ul className="dashboard-inset divide-y divide-border rounded-xl border border-border">
             {ERROR_DOCS.map((item) => (
               <li key={item.code} className="grid gap-1 px-4 py-3 sm:grid-cols-[56px_200px_1fr] sm:items-center sm:gap-4">
                 <span className="font-mono text-xs font-semibold text-foreground">{item.status}</span>
@@ -274,7 +274,7 @@ export function ApiDocumentation({ baseUrl }: ApiDocumentationProps) {
           <ul className="grid gap-2 md:grid-cols-2">
             {PRODUCTION_CHECKLIST.map((item) => (
               <li key={item} className="flex items-start gap-2.5 text-sm text-muted-foreground">
-                <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
                 {item}
               </li>
             ))}

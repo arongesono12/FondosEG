@@ -40,8 +40,8 @@ const COPIED_FEEDBACK_MS = 1600;
 const RECENT_ACTIVITY_ROWS = 6;
 
 const ENVIRONMENT_BADGE: Record<ApiKeyRecord['environment'], { label: string; className: string }> = {
-  test: { label: 'Prueba', className: 'bg-amber-500/10 text-amber-700 ring-amber-500/25 dark:text-amber-300' },
-  production: { label: 'Producción', className: 'bg-emerald-500/10 text-emerald-700 ring-emerald-500/25 dark:text-emerald-300' },
+  test: { label: 'Prueba', className: 'bg-muted text-muted-foreground ring-border' },
+  production: { label: 'Producción', className: 'bg-primary/10 text-primary ring-primary/25' },
 };
 
 function maskKey(apiKey: string): string {
@@ -187,7 +187,7 @@ export function ApplicationsPanel({ canIssueProduction }: ApplicationsPanelProps
   return (
     <div className="space-y-4">
       {error && (
-        <div role="alert" className="flex items-start gap-2.5 rounded-2xl border border-rose-500/25 bg-rose-500/10 px-4 py-3 text-sm text-rose-700 dark:text-rose-300">
+        <div role="alert" className="dashboard-inset flex items-start gap-2.5 rounded-2xl border px-4 py-3 text-sm text-foreground text-foreground">
           <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
           <p className="flex-1">{error}</p>
           <button type="button" className="text-xs font-medium underline-offset-2 hover:underline" onClick={() => setError(null)}>Cerrar</button>
@@ -226,7 +226,7 @@ export function ApplicationsPanel({ canIssueProduction }: ApplicationsPanelProps
                       onClick={() => setSelectedId(application.id)}
                       aria-current={active ? 'true' : undefined}
                       className={cn(
-                        'flex w-full items-center gap-3 rounded-2xl border px-3 py-2.5 text-left transition-colors',
+                        'dashboard-inset dashboard-application-item flex w-full items-center gap-3 rounded-2xl border px-3 py-2.5 text-left transition-colors',
                         active ? 'border-primary/40 bg-primary/5' : 'border-border bg-background hover:bg-muted/50'
                       )}
                     >
@@ -234,7 +234,7 @@ export function ApplicationsPanel({ canIssueProduction }: ApplicationsPanelProps
                       <span className="min-w-0 flex-1">
                         <span className="flex items-center gap-1.5 text-sm font-medium text-foreground">
                           <span className="truncate">{application.name}</span>
-                          {application.is_trusted && <BadgeCheck className="h-3.5 w-3.5 shrink-0 text-sky-500" aria-label="Verificada" />}
+                          {application.is_trusted && <BadgeCheck className="h-3.5 w-3.5 shrink-0 text-primary" aria-label="Verificada" />}
                         </span>
                         <span className="mt-0.5 block text-xs tabular-nums text-muted-foreground">
                           {formatCurrency(application.wallet.available_balance, application.wallet.currency)}
@@ -256,14 +256,14 @@ export function ApplicationsPanel({ canIssueProduction }: ApplicationsPanelProps
                     <div className="flex flex-wrap items-center gap-2">
                       <h2 id="application-heading" className="truncate text-xl font-semibold tracking-tight text-foreground">{selected.name}</h2>
                       {selected.is_trusted && (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-sky-500/10 px-2 py-0.5 text-xs font-medium text-sky-700 ring-1 ring-inset ring-sky-500/25 dark:text-sky-300">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary ring-1 ring-inset ring-primary/25">
                           <BadgeCheck className="h-3 w-3" /> Verificada
                         </span>
                       )}
                     </div>
                     {selected.description && <p className="mt-1 text-sm text-muted-foreground">{selected.description}</p>}
                     {!selected.has_dedicated_wallet && (
-                      <p className="mt-2 text-xs text-amber-700 dark:text-amber-300">
+                      <p className="mt-2 text-xs text-muted-foreground">
                         Aplicación anterior: opera la billetera de la cuenta para la que se emitió.
                       </p>
                     )}
@@ -328,11 +328,11 @@ export function ApplicationsPanel({ canIssueProduction }: ApplicationsPanelProps
                   <p className="text-xs text-muted-foreground">Úsalas solo desde tu servidor. El secret se muestra una única vez.</p>
                 </div>
                 {selectedKeys.length === 0 ? (
-                  <p className="rounded-xl border border-dashed border-border px-4 py-5 text-center text-sm text-muted-foreground">
+                  <p className="dashboard-inset rounded-xl border border-dashed border-border px-4 py-5 text-center text-sm text-muted-foreground">
                     Sin credenciales. Crea una de prueba para empezar a integrar.
                   </p>
                 ) : (
-                  <ul className="divide-y divide-border rounded-xl border border-border">
+                  <ul className="dashboard-inset divide-y divide-border rounded-xl border border-border">
                     {selectedKeys.map((key) => (
                       <li key={key.id} className="flex flex-col gap-2 px-3 py-3 sm:flex-row sm:items-center sm:gap-3">
                         <span className={cn('w-fit shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ring-1 ring-inset', ENVIRONMENT_BADGE[key.environment].className)}>
@@ -375,12 +375,12 @@ export function ApplicationsPanel({ canIssueProduction }: ApplicationsPanelProps
                 {!usage || usage.logs.length === 0 ? (
                   <p className="text-sm text-muted-foreground">Todavía no hay llamadas con las credenciales de esta aplicación.</p>
                 ) : (
-                  <ul className="divide-y divide-border rounded-xl border border-border">
+                  <ul className="dashboard-inset divide-y divide-border rounded-xl border border-border">
                     {usage.logs.slice(0, RECENT_ACTIVITY_ROWS).map((log) => (
                       <li key={log.id} className="flex items-center gap-3 px-3 py-2">
                         <span className={cn(
                           'w-10 shrink-0 text-center font-mono text-xs font-semibold',
-                          log.status_code < 400 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'
+                          log.status_code < 400 ? 'text-foreground' : 'text-primary'
                         )}>
                           {log.status_code}
                         </span>
@@ -404,7 +404,7 @@ export function ApplicationsPanel({ canIssueProduction }: ApplicationsPanelProps
               Emitidas antes de las aplicaciones. Siguen funcionando; revócalas cuando las sustituyas.
             </p>
           </div>
-          <ul className="divide-y divide-border rounded-xl border border-border">
+          <ul className="dashboard-inset divide-y divide-border rounded-xl border border-border">
             {orphanKeys.map((key) => (
               <li key={key.id} className="flex items-center gap-3 px-3 py-2.5">
                 <div className="min-w-0 flex-1">

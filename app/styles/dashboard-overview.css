@@ -115,7 +115,12 @@
 .overview-operations-heading { display: grid; grid-template-columns: 34% 1fr auto; align-items: center; gap: 12px; min-height: 62px; padding-inline: 10px; }
 .overview-operations-heading h2 { font-size: 14px; font-weight: 500; }
 .overview-operations-heading > div > span { display: block; margin-top: 3px; font-size: 11px; color: #b4bdcd; }
-.overview-operation-tabs { display: flex; align-items: center; gap: 4px; justify-self: start; border: 5px solid var(--background); border-top: 0; padding: 7px 5px 5px; margin-top: -1px; border-radius: 0 0 25px 25px; background: var(--background); align-self: start; }
+.overview-operation-tabs { position: relative; z-index: 1; display: flex; align-items: center; gap: 4px; justify-self: start; border: 5px solid var(--background); border-top: 0; padding: 7px 5px 5px; margin-top: -1px; border-radius: 0 0 25px 25px; background: var(--background); align-self: start; }
+/* Los hombros de la tarjeta se redondean hacia la barra, como en la referencia. */
+.overview-operation-tabs::before,
+.overview-operation-tabs::after { content: ''; position: absolute; top: 0; width: 40px; height: 40px; pointer-events: none; }
+.overview-operation-tabs::before { left: -45px; background: radial-gradient(circle at bottom left, var(--dashboard-ink) 39.5px, var(--background) 40px); }
+.overview-operation-tabs::after { right: -45px; background: radial-gradient(circle at bottom right, var(--dashboard-ink) 39.5px, var(--background) 40px); }
 .overview-operation-tabs button { display: flex; justify-content: center; align-items: center; gap: 9px; padding: 9px 15px; color: var(--foreground); border-radius: var(--app-control-radius); font-size: 12px; white-space: nowrap; }
 .overview-operation-tabs button > span { font-family: var(--font-fondoseg-secondary); font-size: 12px; }
 .overview-operation-tabs button.is-active { background: var(--dashboard-brand); color: #fff; box-shadow: 0 3px 12px color-mix(in srgb, var(--primary) 22%, transparent); }
@@ -243,6 +248,7 @@
   .overview-filters { grid-template-columns: auto 1fr 1fr; gap: 8px; }
   .overview-operations-heading { grid-template-columns: 1fr auto; padding-block: 12px; }
   .overview-operation-tabs { grid-row: 2; grid-column: 1 / -1; border-radius: 30px; padding: 3px; border: 0; margin: 0; justify-self: start; }
+  .overview-operation-tabs::before, .overview-operation-tabs::after { display: none; }
   .overview-history-link { grid-column: 2; grid-row: 1; }
   .overview-operations-body { grid-template-columns: minmax(0, 36%) minmax(0, 1fr); gap: 12px; }
   .overview-transfer { grid-template-columns: 28px minmax(0, 1fr) auto; padding-inline: 8px; gap: 6px; }

@@ -38,7 +38,7 @@ export function CodeBlock({ tabs, title, className }: CodeBlockProps) {
   }
 
   return (
-    <div className={cn('overflow-hidden rounded-2xl border border-slate-800 bg-slate-950 text-slate-100', className)}>
+    <div className={cn('dashboard-inset overflow-hidden rounded-2xl border border-border text-foreground', className)}>
       <div className="flex items-center justify-between gap-2 border-b border-white/10 px-3 py-1.5">
         {tabs.length > 1 ? (
           <div role="tablist" aria-label="Lenguaje del ejemplo" className="flex gap-1">

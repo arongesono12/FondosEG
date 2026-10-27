@@ -382,7 +382,7 @@ export function CreateCredentialDialog({
 
             <fieldset>
               <legend className="mb-2 text-sm font-medium">Permisos</legend>
-              <div className="divide-y divide-border rounded-xl border border-border">
+              <div className="dashboard-inset divide-y divide-border rounded-xl border border-border">
                 {PERMISSION_ORDER.map((permission) => (
                   <label key={permission} className="flex cursor-pointer items-center gap-3 px-3 py-2.5">
                     <input

@@ -1,5 +1,6 @@
 'use client';
 
+import { DashboardMetric } from '@/components/dashboard/dashboard-metric';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useAppStore } from '@/lib/store';
 import { Badge } from '@/components/ui/badge';
@@ -14,7 +15,7 @@ import { correctTransfer, getTransferHistory, type TransferHistoryStatus } from 
 import { isTransferCompleted, isTransferPending, normalizeTransferStatus } from '@/lib/financial';
 import { formatCurrency, formatDate, getStatusColor, getStatusText } from '@/lib/utils';
 import type { Transfer } from '@/types';
-import { AlertTriangle, Download, History, PencilLine, Search, TrendingUp, Wallet, XCircle } from '@/components/ui/hugeicons';
+import { AlertTriangle, Download, History, PencilLine, Search } from '@/components/ui/hugeicons';
 import { isAdminRole } from '@/lib/roles';
 import Link from 'next/link';
 
@@ -23,36 +24,6 @@ type StatusFilter = TransferHistoryStatus;
 const PAGE_SIZE = 50;
 const SEARCH_DEBOUNCE_MS = 300;
 
-function MetricTile({
-  label,
-  value,
-  hint,
-  icon: Icon,
-  tone,
-}: {
-  label: string;
-  value: string;
-  hint: string;
-  icon: React.ElementType;
-  tone: string;
-}) {
-  return (
-    <Card>
-      <CardContent className="p-5">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <p className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">{label}</p>
-            <p className="mt-2 text-[clamp(1.125rem,1.4vw+0.75rem,1.5rem)] font-black leading-tight tabular-nums text-foreground">{value}</p>
-            <p className="mt-2 text-xs font-semibold text-muted-foreground">{hint}</p>
-          </div>
-          <div className={`flex h-11 w-11 items-center justify-center rounded-2xl border text-white shadow-lg ${tone}`}>
-            <Icon className="h-5 w-5" />
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
 
 export default function HistoryPage() {
   const { user } = useAppStore();
@@ -281,12 +252,12 @@ export default function HistoryPage() {
         </div>
       </section>
 
-      <section className="grid gap-4 @xl:grid-cols-2 @4xl:grid-cols-4">
+      <section className="dashboard-metric-group grid gap-4 @xl:grid-cols-2 @4xl:grid-cols-4">
         {/* Estos totales describen sólo lo cargado en pantalla, no todo el historial. */}
-        <MetricTile label="Completadas" value={listStatus === 'error' ? '—' : String(completedTransfers.length)} hint={scopeHint} icon={History} tone="border-emerald-500/20 bg-emerald-500 shadow-emerald-500/20" />
-        <MetricTile label="Pendientes" value={listStatus === 'error' ? '—' : String(createdTransfers.length)} hint={scopeHint} icon={Wallet} tone="border-amber-500/20 bg-amber-500 shadow-amber-500/20" />
-        <MetricTile label="Canceladas" value={listStatus === 'error' ? '—' : String(cancelledTransfers.length)} hint={scopeHint} icon={XCircle} tone="border-rose-500/20 bg-rose-500 shadow-rose-500/20" />
-        <MetricTile label="Ticket medio" value={listStatus === 'error' ? '—' : formatCurrency(averageTicket)} hint={`${formatCurrency(totalVolume)} confirmados · ${transfers.length} cargadas`} icon={TrendingUp} tone="border-sky-500/20 bg-sky-500 shadow-sky-500/20" />
+        <DashboardMetric label="Completadas" value={listStatus === 'error' ? '—' : String(completedTransfers.length)} hint={scopeHint} />
+        <DashboardMetric label="Pendientes" value={listStatus === 'error' ? '—' : String(createdTransfers.length)} hint={scopeHint} />
+        <DashboardMetric label="Canceladas" value={listStatus === 'error' ? '—' : String(cancelledTransfers.length)} hint={scopeHint} />
+        <DashboardMetric label="Ticket medio" value={listStatus === 'error' ? '—' : formatCurrency(averageTicket)} hint={`${formatCurrency(totalVolume)} confirmados · ${transfers.length} cargadas`} />
       </section>
 
       <Card className="overflow-hidden">

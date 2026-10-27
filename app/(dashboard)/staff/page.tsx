@@ -1,5 +1,6 @@
 'use client';
 
+import { DashboardMetric } from '@/components/dashboard/dashboard-metric';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useAppStore } from '@/lib/store';
 import { isTransientNetworkMessage } from '@/lib/network-errors';
@@ -36,17 +37,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn, formatCurrency, formatDate, getStatusText } from '@/lib/utils';
 import { getRoleLabel, isSuperAdminRole } from '@/lib/roles';
-import {
-  Activity,
-  Download,
-  Eye,
-  Power,
-  Search,
-  ShieldCheck,
-  UserPlus,
-  Users,
-  Wallet,
-} from '@/components/ui/hugeicons';
+import { Download, Eye, Search, UserPlus } from '@/components/ui/hugeicons';
 
 function movementKindTone(kind: UserMovementItem['kind']) {
   switch (kind) {
@@ -438,78 +429,18 @@ export default function StaffPage() {
       </div>
 
       {loadError && (
-        <div className="rounded-3xl border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-sm font-semibold text-amber-900 dark:text-amber-200">
+        <div className="dashboard-inset rounded-3xl border px-4 py-3 text-sm font-semibold text-foreground text-foreground">
           {loadError}
         </div>
       )}
 
-      <div className="grid grid-cols-2 gap-3 @xl:grid-cols-3 @6xl:grid-cols-6">
-        <Card className="min-w-0">
-          <CardHeader className="p-4 pb-0">
-            <CardTitle className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.12em] text-muted-foreground">
-              <ShieldCheck className="h-4 w-4" />
-              Admins activos
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-4 pt-2">
-            <p className="text-2xl font-black tabular-nums">{activeAdmins}</p>
-          </CardContent>
-        </Card>
-        <Card className="min-w-0">
-          <CardHeader className="p-4 pb-0">
-            <CardTitle className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.12em] text-muted-foreground">
-              <Power className="h-4 w-4" />
-              Admins inactivos
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-4 pt-2">
-            <p className="text-2xl font-black tabular-nums">{inactiveAdmins}</p>
-          </CardContent>
-        </Card>
-        <Card className="min-w-0">
-          <CardHeader className="p-4 pb-0">
-            <CardTitle className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.12em] text-muted-foreground">
-              <Users className="h-4 w-4" />
-              Gestores
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-4 pt-2">
-            <p className="text-2xl font-black tabular-nums">{managedAgents}</p>
-          </CardContent>
-        </Card>
-        <Card className="min-w-0">
-          <CardHeader className="p-4 pb-0">
-            <CardTitle className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.12em] text-muted-foreground">
-              <Users className="h-4 w-4" />
-              Clientes
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-4 pt-2">
-            <p className="text-2xl font-black tabular-nums">{managedClients}</p>
-          </CardContent>
-        </Card>
-        <Card className="min-w-0">
-          <CardHeader className="p-4 pb-0">
-            <CardTitle className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.12em] text-muted-foreground">
-              <Wallet className="h-4 w-4" />
-              Usuarios activos
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-4 pt-2">
-            <p className="text-2xl font-black tabular-nums">{managedActive}</p>
-          </CardContent>
-        </Card>
-        <Card className="min-w-0">
-          <CardHeader className="p-4 pb-0">
-            <CardTitle className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.12em] text-muted-foreground">
-              <Activity className="h-4 w-4" />
-              Acciones staff
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-4 pt-2">
-            <p className="text-2xl font-black tabular-nums">{activity.length}</p>
-          </CardContent>
-        </Card>
+      <div className="dashboard-metric-group grid grid-cols-2 @xl:grid-cols-3 @6xl:grid-cols-6">
+        <DashboardMetric label="Admins activos" value={activeAdmins} />
+        <DashboardMetric label="Admins inactivos" value={inactiveAdmins} />
+        <DashboardMetric label="Gestores" value={managedAgents} />
+        <DashboardMetric label="Clientes" value={managedClients} />
+        <DashboardMetric label="Usuarios activos" value={managedActive} />
+        <DashboardMetric label="Acciones staff" value={activity.length} />
       </div>
 
       <Card>
@@ -675,7 +606,7 @@ export default function StaffPage() {
             <p className="text-sm text-muted-foreground">Aún no hay acciones registradas por administradores.</p>
           ) : (
             activity.map((item) => (
-              <div key={item.id} className="rounded-2xl border border-border/10 p-4">
+              <div key={item.id} className="dashboard-inset rounded-2xl border border-border/10 p-4">
                 <div className="flex flex-col gap-2 @2xl:flex-row @2xl:items-center @2xl:justify-between">
                   <div>
                     <p className="font-black text-foreground">{item.actor_name}</p>
@@ -710,19 +641,19 @@ export default function StaffPage() {
               de la ventana. */}
           <DialogBody className="space-y-4">
             <div className="grid grid-cols-2 gap-3 @3xl:grid-cols-4">
-              <div className="min-w-0 rounded-2xl border border-border/10 p-4">
+              <div className="dashboard-inset min-w-0 rounded-2xl border border-border/10 p-4">
                 <p className="text-xs font-black uppercase tracking-[0.08em] text-muted-foreground @md:tracking-[0.18em]">Rol</p>
                 <p className="mt-2 font-bold text-foreground wrap-break-word">{selectedUser ? getRoleLabel(selectedUser.role) : '-'}</p>
               </div>
-              <div className="min-w-0 rounded-2xl border border-border/10 p-4">
+              <div className="dashboard-inset min-w-0 rounded-2xl border border-border/10 p-4">
                 <p className="text-xs font-black uppercase tracking-[0.08em] text-muted-foreground @md:tracking-[0.18em]">Estado</p>
                 <p className="mt-2 font-bold text-foreground wrap-break-word">{selectedUser?.is_active ? 'Activo' : 'Inactivo'}</p>
               </div>
-              <div className="min-w-0 rounded-2xl border border-border/10 p-4">
+              <div className="dashboard-inset min-w-0 rounded-2xl border border-border/10 p-4">
                 <p className="text-xs font-black uppercase tracking-[0.08em] text-muted-foreground @md:tracking-[0.18em]">Movimientos</p>
                 <p className="mt-2 font-bold text-foreground wrap-break-word">{selectedUser?.movement_count ?? 0}</p>
               </div>
-              <div className="min-w-0 rounded-2xl border border-border/10 p-4">
+              <div className="dashboard-inset min-w-0 rounded-2xl border border-border/10 p-4">
                 <p className="text-xs font-black uppercase tracking-[0.08em] text-muted-foreground @md:tracking-[0.18em]">Último</p>
                 <p className="mt-2 font-bold text-foreground wrap-break-word">
                   {selectedUser?.last_movement_at ? formatDate(selectedUser.last_movement_at) : 'Sin datos'}
@@ -783,7 +714,7 @@ export default function StaffPage() {
 
             {/* "Exportar CSV" pasó al pie, junto a "Cerrar": es una acción del
                 modal, no de esta franja de resumen. */}
-            <div className="rounded-2xl border border-border/10 bg-muted/20 p-4">
+            <div className="dashboard-inset rounded-2xl border border-border/10 bg-muted/20 p-4">
               <p className="text-sm font-black text-foreground">
                 {filteredUserMovements.length} movimiento{filteredUserMovements.length !== 1 ? 's' : ''} visible{filteredUserMovements.length !== 1 ? 's' : ''}
               </p>
@@ -801,7 +732,7 @@ export default function StaffPage() {
                 <Skeleton className="h-24 rounded-2xl" />
               </div>
             ) : filteredUserMovements.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-border/20 px-6 py-12 text-center">
+              <div className="dashboard-inset rounded-2xl border border-dashed border-border/20 px-6 py-12 text-center">
                 <p className="text-sm font-semibold text-muted-foreground">
                   No hay movimientos que coincidan con los filtros actuales.
                 </p>
@@ -809,7 +740,7 @@ export default function StaffPage() {
             ) : (
               <div className="space-y-3">
                 {filteredUserMovements.map((movement) => (
-                  <div key={movement.id} className="rounded-2xl border border-border/10 p-4">
+                  <div key={movement.id} className="dashboard-inset rounded-2xl border border-border/10 p-4">
                     <div className="flex flex-col gap-3 @md:flex-row @md:items-start @md:justify-between">
                       <div className="min-w-0 space-y-2">
                         <div className="flex flex-wrap items-center gap-2">

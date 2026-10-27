@@ -408,7 +408,7 @@ export default function AgentsPage() {
           {selectedAgent && (
             <>
               <DialogBody className="space-y-4">
-                <div className="p-4 bg-muted rounded-lg">
+                <div className="dashboard-inset p-4 bg-muted rounded-lg">
                   <p className="font-medium wrap-break-word">{selectedAgent.name}</p>
                   <p className="text-sm text-muted-foreground">Saldo actual: {formatCurrency(selectedAgent.balance)}</p>
                 </div>
@@ -464,7 +464,7 @@ export default function AgentsPage() {
             <p className="text-center text-muted-foreground">
               Se ha recargado exitosamente el saldo del gestor.
             </p>
-            <div className="p-4 bg-muted rounded-lg text-center">
+            <div className="dashboard-inset p-4 bg-muted rounded-lg text-center">
               <p className="text-sm text-muted-foreground">Monto recargado</p>
               <p className="text-2xl font-bold text-green-600 tabular-nums wrap-break-word">{formatCurrency(successAmount)}</p>
             </div>
@@ -488,7 +488,7 @@ export default function AgentsPage() {
           {selectedAgent && (
             <>
               <DialogBody className="space-y-4">
-                <div className="p-4 bg-muted rounded-lg">
+                <div className="dashboard-inset p-4 bg-muted rounded-lg">
                   <p className="font-medium wrap-break-word">{selectedAgent.name}</p>
                   <p className="text-sm text-muted-foreground">Saldo actual: {formatCurrency(selectedAgent.balance)}</p>
                 </div>

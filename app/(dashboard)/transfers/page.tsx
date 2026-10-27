@@ -197,14 +197,14 @@ export default function TransfersPage() {
         {user?.role === 'cliente' && (
           <ActionCard label="Transferir a cliente" onSelect={() => setWalletTransferOpen(true)}>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-bold text-green-600 dark:text-green-400 flex items-center gap-2">
+              <CardTitle className="text-sm font-bold text-foreground flex items-center gap-2">
                 <Wallet className="h-4 w-4" /> Transferir a Cliente
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-bold text-green-600 dark:text-green-400">Sin comisión</p>
-              <p className="text-xs text-green-500 mt-1">Envía dinero a otro cliente</p>
-              <span className={`${actionHintClasses} text-green-600`}>
+              <p className="text-2xl font-bold text-foreground">Sin comisión</p>
+              <p className="text-xs text-muted-foreground mt-1">Envía dinero a otro cliente</p>
+              <span className={`${actionHintClasses} text-primary`}>
                 Iniciar <ArrowUpRight className="h-3 w-3 ml-1" />
               </span>
             </CardContent>
@@ -220,14 +220,14 @@ export default function TransfersPage() {
         {user?.role === 'cliente' && (
           <ActionCard label="Retirar efectivo" onSelect={() => setWithdrawalOpen(true)}>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-bold text-amber-600 dark:text-amber-400 flex items-center gap-2">
+              <CardTitle className="text-sm font-bold text-foreground flex items-center gap-2">
                 <HandCoins className="h-4 w-4" /> Retirar Efectivo
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-bold text-amber-600 dark:text-amber-400">Tu código</p>
-              <p className="text-xs text-amber-500 mt-1">Genera tu código y cóbralo en un gestor</p>
-              <span className={`${actionHintClasses} text-amber-600`}>
+              <p className="text-2xl font-bold text-foreground">Tu código</p>
+              <p className="text-xs text-muted-foreground mt-1">Genera tu código y cóbralo en un gestor</p>
+              <span className={`${actionHintClasses} text-primary`}>
                 Generar <ArrowUpRight className="h-3 w-3 ml-1" />
               </span>
             </CardContent>
@@ -238,14 +238,14 @@ export default function TransfersPage() {
         {user?.role === 'gestor' && (
           <ActionCard label="Pagar transferencia" onSelect={() => setAgentPayoutOpen(true)}>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-2">
+              <CardTitle className="text-sm font-bold text-foreground flex items-center gap-2">
                 <QrCode className="h-4 w-4" /> Pagar transferencia
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">Código de retiro</p>
-              <p className="text-xs text-emerald-500 mt-1">Valida la transferencia y registra el pago</p>
-              <span className={`${actionHintClasses} text-emerald-600`}>
+              <p className="text-2xl font-bold text-foreground">Código de retiro</p>
+              <p className="text-xs text-muted-foreground mt-1">Valida la transferencia y registra el pago</p>
+              <span className={`${actionHintClasses} text-primary`}>
                 Ver disponibles <ArrowUpRight className="h-3 w-3 ml-1" />
               </span>
             </CardContent>
@@ -255,14 +255,14 @@ export default function TransfersPage() {
         {user?.role !== 'cliente' && (
           <ActionCard label="Payout Revolut" onSelect={() => setRevolutPayoutOpen(true)}>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-bold text-sky-700 dark:text-sky-300 flex items-center gap-2">
+              <CardTitle className="text-sm font-bold text-foreground flex items-center gap-2">
                 <Landmark className="h-4 w-4" /> Payout Revolut
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-bold text-sky-700 dark:text-sky-300">Link externo</p>
-              <p className="text-xs text-sky-600 dark:text-sky-400 mt-1">Alternativa cuando no hay gestor</p>
-              <span className={`${actionHintClasses} text-sky-700 dark:text-sky-300`}>
+              <p className="text-2xl font-bold text-foreground">Link externo</p>
+              <p className="text-xs text-muted-foreground mt-1">Alternativa cuando no hay gestor</p>
+              <span className={`${actionHintClasses} text-primary`}>
                 Generar <ArrowUpRight className="h-3 w-3 ml-1" />
               </span>
             </CardContent>
@@ -395,15 +395,15 @@ export default function TransfersPage() {
           <DialogBody>
             {/* Tres columnas cuando el cuerpo del modal (no la ventana) mide 32rem. */}
             <div className="grid grid-cols-1 gap-3 @lg:grid-cols-3 @lg:gap-4">
-              <div className="min-w-0 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-2xl">
+              <div className="min-w-0 p-4 dashboard-inset rounded-2xl">
                 <p className="text-xs font-bold text-muted-foreground uppercase">Transacciones Hoy</p>
                 <p className="text-xl font-bold tabular-nums wrap-break-word @lg:text-2xl">{stats?.todayTransfers || 0}</p>
               </div>
-              <div className="min-w-0 p-4 bg-purple-50 dark:bg-purple-900/20 rounded-2xl">
+              <div className="min-w-0 p-4 dashboard-inset rounded-2xl">
                 <p className="text-xs font-bold text-muted-foreground uppercase">Monto Enviado</p>
                 <p className="text-xl font-bold tabular-nums wrap-break-word @lg:text-2xl">{formatBalance(stats?.totalSent || 0)}</p>
               </div>
-              <div className="min-w-0 p-4 bg-green-50 dark:bg-green-900/20 rounded-2xl">
+              <div className="min-w-0 p-4 dashboard-inset rounded-2xl">
                 <p className="text-xs font-bold text-muted-foreground uppercase">Comisión Hoy</p>
                 <p className="text-xl font-bold tabular-nums wrap-break-word @lg:text-2xl">{formatBalance(stats?.todayCommission || 0)}</p>
               </div>
@@ -454,15 +454,15 @@ export default function TransfersPage() {
           </DialogHeader>
           <DialogBody className="space-y-4">
             <div className="grid grid-cols-1 gap-3 @lg:grid-cols-3 @lg:gap-4">
-              <div className="min-w-0 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-2xl">
+              <div className="min-w-0 p-4 dashboard-inset rounded-2xl">
                 <p className="text-xs font-bold text-muted-foreground uppercase">Esta Semana</p>
                 <p className="text-xl font-bold tabular-nums wrap-break-word @lg:text-2xl">{formatBalance(totalWeekly)}</p>
               </div>
-              <div className="min-w-0 p-4 bg-purple-50 dark:bg-purple-900/20 rounded-2xl">
+              <div className="min-w-0 p-4 dashboard-inset rounded-2xl">
                 <p className="text-xs font-bold text-muted-foreground uppercase">Este Mes</p>
                 <p className="text-xl font-bold tabular-nums wrap-break-word @lg:text-2xl">{formatBalance(totalMonthly)}</p>
               </div>
-              <div className="min-w-0 p-4 bg-green-50 dark:bg-green-900/20 rounded-2xl">
+              <div className="min-w-0 p-4 dashboard-inset rounded-2xl">
                 <p className="text-xs font-bold text-muted-foreground uppercase">Promedio Diario</p>
                 <p className="text-xl font-bold tabular-nums wrap-break-word @lg:text-2xl">{formatBalance(avgDaily)}</p>
               </div>
