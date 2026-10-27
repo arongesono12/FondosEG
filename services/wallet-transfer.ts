@@ -5,6 +5,7 @@ import { emitWebhookEvent } from '@/lib/server/webhook-outbox';
 import { PAYMENT_REGULATION } from '@/lib/compliance';
 import { getAvailableClientBalance } from '@/lib/financial';
 import { assertComplianceInfrastructure } from '@/lib/server/compliance-events';
+import { isDefinitiveDatabaseRejection } from '@/lib/server/db-errors';
 import { getPhoneLookupCandidates, normalizePhoneDigits } from '@/lib/utils';
 import {
   cancelWalletTransferOperation,
@@ -202,24 +203,63 @@ async function canReceiveWalletTransfer(
   return data?.status === 'active';
 }
 
-export async function createWalletTransfer(
+export interface SettleWalletTransferInput {
+  receiverPhone: string;
+  receiverName: string;
+  amount: number;
+  currency?: string | null;
+  notes?: string | null;
+}
+
+export interface SettleWalletTransferOptions {
+  originChannel: 'dashboard' | 'external_api';
+  consentChannel: string;
+  /** `source` del evento `wallet_transfer.confirmed`. */
+  webhookSource: string;
+  /**
+   * Una persona necesita teléfono para enviar (es su identidad en el recibo).
+   * La billetera de una aplicación no tiene: el recibo lleva su nombre.
+   */
+  requireSenderPhone: boolean;
+  requestEvidence?: { ipAddress?: string | null; userAgent?: string | null };
+}
+
+export type SettleWalletTransferErrorCode =
+  | 'invalid_amount'
+  | 'sender_not_allowed'
+  | 'receiver_not_found'
+  | 'receiver_inactive'
+  | 'currency_mismatch'
+  | 'insufficient_funds'
+  | 'rejected';
+
+export type SettleWalletTransferResult =
+  | { success: true; transfer: WalletTransfer; availableBalance: number | null }
+  | {
+      success: false;
+      code: SettleWalletTransferErrorCode;
+      error: string;
+      /** Solo ante un fallo ambiguo de la RPC (red, timeout): el dinero pudo moverse. */
+      outcomeUnknown?: boolean;
+    };
+
+/**
+ * Envío entre billeteras, el mismo para el panel y para la API de
+ * integradores: localiza al beneficiario por su teléfono normalizado, exige
+ * saldo DISPONIBLE en la divisa de la billetera y liquida en una sola
+ * transacción con la evidencia de consentimiento (Reglamento CEMAC).
+ */
+export async function settleClientWalletTransfer(
   senderId: string,
-  data: CreateWalletTransferData,
-  requestEvidence?: { ipAddress?: string | null; userAgent?: string | null }
-): Promise<{ success: boolean; transfer?: WalletTransfer; error?: string }> {
+  input: SettleWalletTransferInput,
+  options: SettleWalletTransferOptions
+): Promise<SettleWalletTransferResult> {
   const adminClient = createAdminClient();
 
-  if (
-    data.compliance_consent !== true ||
-    data.disclosure_version !== PAYMENT_REGULATION.disclosureVersion
-  ) {
-    return { success: false, error: 'Debe revisar y aceptar la información previa del servicio de pago' };
-  }
-
   // El cliente valida el importe, pero la ruta es invocable directamente.
-  const amount = Number(data.amount);
+  const amount = Number(input.amount);
   if (!Number.isFinite(amount) || amount <= 0) {
-    return { success: false, error: 'El importe debe ser un número mayor que cero' };
+    return { success: false, code: 'invalid_amount', error: 'El importe debe ser un número mayor que cero' };
   }
 
   await assertComplianceInfrastructure();
@@ -244,33 +284,34 @@ export async function createWalletTransfer(
     .maybeSingle();
 
   if (senderError || !sender) {
-    return { success: false, error: 'No se ha encontrado tu perfil de usuario' };
+    return { success: false, code: 'sender_not_allowed', error: 'No se ha encontrado la billetera emisora' };
   }
 
-  if (sender.role !== 'cliente') {
-    return { success: false, error: 'Sólo los clientes pueden enviar dinero desde la billetera' };
+  if (sender.role !== 'cliente' || sender.is_active === false) {
+    return { success: false, code: 'sender_not_allowed', error: 'Sólo una billetera de cliente activa puede enviar dinero' };
   }
 
   // `users.phone` admite NULL desde la migración a Clerk, pero
   // `wallet_transfers.sender_phone` sigue siendo NOT NULL: sin esta comprobación
   // el INSERT falla con un error de constraint que no le dice nada al usuario.
-  if (!sender.phone?.trim()) {
-    return { success: false, error: 'Añade tu número de teléfono en tu perfil antes de enviar dinero' };
+  if (options.requireSenderPhone && !sender.phone?.trim()) {
+    return { success: false, code: 'sender_not_allowed', error: 'Añade tu número de teléfono en tu perfil antes de enviar dinero' };
   }
 
-  const receiver = await findClientByPhone(adminClient, data.receiver_phone);
+  const receiver = await findClientByPhone(adminClient, input.receiverPhone);
 
   if (!receiver) {
-    return { success: false, error: 'No existe ningún cliente registrado con ese número de teléfono' };
+    return { success: false, code: 'receiver_not_found', error: 'No existe ningún cliente registrado con ese número de teléfono' };
   }
 
   if (receiver.id === senderId) {
-    return { success: false, error: 'No puedes enviarte dinero a ti mismo' };
+    return { success: false, code: 'rejected', error: 'No puedes enviarte dinero a ti mismo' };
   }
 
   if (!(await canReceiveWalletTransfer(adminClient, receiver))) {
     return {
       success: false,
+      code: 'receiver_inactive',
       error: 'La cuenta del destinatario no está activa, así que no podría cobrar el envío',
     };
   }
@@ -287,20 +328,21 @@ export async function createWalletTransfer(
 
   if (senderBalanceError) {
     console.error('No se pudo leer el saldo del emisor:', senderBalanceError);
-    return { success: false, error: 'No se pudo consultar tu saldo. Inténtalo de nuevo.' };
+    return { success: false, code: 'rejected', error: 'No se pudo consultar el saldo. Inténtalo de nuevo.' };
   }
 
   if (!senderBalance) {
-    return { success: false, error: 'Tu billetera todavía no tiene saldo disponible' };
+    return { success: false, code: 'insufficient_funds', error: 'La billetera todavía no tiene saldo disponible' };
   }
 
   // La billetera opera en una única divisa. No hay conversión en ninguna capa,
   // así que aceptar otra divisa movería importes con el valor equivocado.
   const currency = senderBalance.currency || 'XAF';
-  if (data.currency && data.currency !== currency) {
+  if (input.currency && input.currency !== currency) {
     return {
       success: false,
-      error: `Tu billetera opera en ${currency}, así que no es posible enviar en ${data.currency}`,
+      code: 'currency_mismatch',
+      error: `La billetera opera en ${currency}, así que no es posible enviar en ${input.currency}`,
     };
   }
 
@@ -312,7 +354,7 @@ export async function createWalletTransfer(
     Number(senderBalance.reserved_balance ?? 0)
   );
   if (availableBalance < amount) {
-    return { success: false, error: 'Saldo insuficiente para realizar esta transferencia' };
+    return { success: false, code: 'insufficient_funds', error: 'Saldo insuficiente para realizar esta transferencia' };
   }
 
   // Todo pasa por `create_wallet_transfer_settled_operation`: en UNA sola
@@ -327,33 +369,40 @@ export async function createWalletTransfer(
   // `client_withdrawals`, cuando un cliente quiere sacar en efectivo su propio
   // saldo.
   let transfer: WalletTransfer;
+  let availableAfter: number | null = null;
   try {
     const result = await createWalletTransferSettledOperation({
       senderId,
       receiverId: receiver.id,
       senderName: sender.name,
-      senderPhone: sender.phone,
-      receiverName: data.receiver_name,
+      senderPhone: sender.phone ?? '',
+      receiverName: input.receiverName,
       // Se guarda el teléfono canónico del beneficiario, no el que se tecleó,
       // para que el registro no herede el formato de entrada.
-      receiverPhone: receiver.phone ?? data.receiver_phone,
+      receiverPhone: receiver.phone ?? input.receiverPhone,
       amount,
       currency,
       // El envoltorio ya normaliza `undefined` a NULL antes de la RPC.
-      notes: data.notes,
-      originChannel: 'dashboard',
+      notes: input.notes ?? undefined,
+      originChannel: options.originChannel,
       regulationCode: PAYMENT_REGULATION.code,
       disclosureVersion: PAYMENT_REGULATION.disclosureVersion,
-      consentChannel: 'dashboard_wallet',
-      ipAddress: requestEvidence?.ipAddress,
-      userAgent: requestEvidence?.userAgent,
+      consentChannel: options.consentChannel,
+      ipAddress: options.requestEvidence?.ipAddress,
+      userAgent: options.requestEvidence?.userAgent,
     });
     transfer = result.transfer as unknown as WalletTransfer;
+    availableAfter = Number.isFinite(Number(result.sender_available_balance))
+      ? Number(result.sender_available_balance)
+      : null;
   } catch (settleError) {
     console.error('No se pudo registrar la transferencia de billetera:', settleError);
+    const error = translateRpcError(settleError, 'No se pudo registrar la transferencia. Inténtalo de nuevo.');
     return {
       success: false,
-      error: translateRpcError(settleError, 'No se pudo registrar la transferencia. Inténtalo de nuevo.'),
+      code: /saldo insuficiente/i.test(error) ? 'insufficient_funds' : 'rejected',
+      error,
+      outcomeUnknown: !isDefinitiveDatabaseRejection(settleError),
     };
   }
 
@@ -364,7 +413,7 @@ export async function createWalletTransfer(
       transferId: transfer.id,
       phone: receiver.phone,
       senderName: sender.name,
-      receiverName: data.receiver_name,
+      receiverName: input.receiverName,
       amount,
       currency,
     });
@@ -372,24 +421,24 @@ export async function createWalletTransfer(
     console.error('Failed to queue wallet settlement notice:', notifErr);
   }
 
-  // Para un integrador, este envío ya está completado: si no se emitiera aquí,
-  // los envíos del panel dejarían de aparecer en `wallet_transfer.confirmed`,
-  // que hasta ahora los recogía al confirmarse.
+  // Para un integrador, este envío ya está completado. Solo lo reciben los
+  // webhooks del emisor y del beneficiario.
   try {
     await emitWebhookEvent(
       {
         eventType: 'wallet_transfer.confirmed',
+        ownerUserIds: [transfer.sender_id, transfer.receiver_id],
         payload: {
           transfer_id: transfer.id,
           amount: Number(transfer.amount),
           currency: transfer.currency,
           status: transfer.status,
           sender_name: transfer.sender_name,
-          sender_phone: transfer.sender_phone,
+          sender_phone: transfer.sender_phone || null,
           receiver_name: transfer.receiver_name,
           receiver_phone: transfer.receiver_phone,
           confirmed_at: transfer.confirmed_at ?? null,
-          source: 'dashboard_wallet',
+          source: options.webhookSource,
         },
       }
     );
@@ -397,7 +446,42 @@ export async function createWalletTransfer(
     console.error('Failed to dispatch wallet settlement webhook:', webhookErr);
   }
 
-  return { success: true, transfer };
+  return { success: true, transfer, availableBalance: availableAfter };
+}
+
+export async function createWalletTransfer(
+  senderId: string,
+  data: CreateWalletTransferData,
+  requestEvidence?: { ipAddress?: string | null; userAgent?: string | null }
+): Promise<{ success: boolean; transfer?: WalletTransfer; error?: string }> {
+  if (
+    data.compliance_consent !== true ||
+    data.disclosure_version !== PAYMENT_REGULATION.disclosureVersion
+  ) {
+    return { success: false, error: 'Debe revisar y aceptar la información previa del servicio de pago' };
+  }
+
+  const result = await settleClientWalletTransfer(
+    senderId,
+    {
+      receiverPhone: data.receiver_phone,
+      receiverName: data.receiver_name,
+      amount: Number(data.amount),
+      currency: data.currency,
+      notes: data.notes,
+    },
+    {
+      originChannel: 'dashboard',
+      consentChannel: 'dashboard_wallet',
+      webhookSource: 'dashboard_wallet',
+      requireSenderPhone: true,
+      requestEvidence,
+    }
+  );
+
+  return result.success
+    ? { success: true, transfer: result.transfer }
+    : { success: false, error: result.error };
 }
 
 export async function confirmWalletTransfer(
@@ -485,6 +569,7 @@ export async function confirmWalletTransfer(
     await emitWebhookEvent(
       {
         eventType: 'wallet_transfer.confirmed',
+        ownerUserIds: [confirmedTransfer.sender_id, confirmedTransfer.receiver_id],
         payload: {
           transfer_id: confirmedTransfer.id,
           amount: confirmedTransfer.amount,

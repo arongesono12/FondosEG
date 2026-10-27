@@ -147,7 +147,8 @@ export async function GET() {
         post: {
           tags: ['Transfers'],
           operationId: 'createWalletTransfer',
-          summary: 'Crear transferencia entre billeteras',
+          summary: 'Enviar desde la billetera de la aplicación a un cliente',
+          description: 'Se liquida al instante con las mismas reglas que la app: teléfono normalizado, saldo disponible, una sola divisa y consentimiento CEMAC. Un rechazo de negocio libera la idempotency-key.',
           parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }],
           requestBody: {
             required: true,
@@ -170,10 +171,11 @@ export async function GET() {
             '400': { $ref: '#/components/responses/BadRequest' },
             '401': { $ref: '#/components/responses/Unauthorized' },
             '403': { $ref: '#/components/responses/Forbidden' },
-            '404': { $ref: '#/components/responses/NotFound' },
             '409': { $ref: '#/components/responses/IdempotencyConflict' },
+            '422': { $ref: '#/components/responses/BusinessRuleFailed' },
             '429': { $ref: '#/components/responses/RateLimited' },
             '500': { $ref: '#/components/responses/InternalError' },
+            '503': { $ref: '#/components/responses/OutcomeUnknown' },
           },
         },
       },
@@ -560,6 +562,16 @@ export async function GET() {
           },
           content: { 'application/json': { schema: baseErrorSchema } },
         },
+        BusinessRuleFailed: {
+          description: 'Regla de negocio: no se movió dinero. error.details.reason indica la causa (receiver_not_found, receiver_inactive, insufficient_funds, currency_mismatch).',
+          headers: publicApiResponseHeaders,
+          content: { 'application/json': { schema: baseErrorSchema } },
+        },
+        OutcomeUnknown: {
+          description: 'No se pudo confirmar el resultado. Reintenta con la MISMA idempotency-key.',
+          headers: publicApiResponseHeaders,
+          content: { 'application/json': { schema: baseErrorSchema } },
+        },
         InternalError: {
           description: 'Error interno no esperado.',
           headers: publicApiResponseHeaders,
@@ -585,8 +597,12 @@ export async function GET() {
                 data: {
                   type: 'object',
                   properties: {
-                    role: { type: 'string', enum: ['admin', 'superadmin', 'gestor', 'cliente'] },
-                    balance: { type: 'number' },
+                    role: { type: 'string', enum: ['admin', 'superadmin', 'gestor', 'cliente'], description: 'cliente para las credenciales de aplicación.' },
+                    balance: { type: 'number', description: 'Saldo bruto.' },
+                    available_balance: { type: 'number', description: 'Lo que se puede enviar ahora (bruto menos retenido).' },
+                    reserved_balance: { type: 'number', description: 'Retenido por códigos de retiro vivos.' },
+                    formatted: { type: 'string', example: '150.000 XAF' },
+                    formatted_available: { type: 'string', example: '150.000 XAF' },
                     cash_balance: { type: 'number' },
                     total_balance: { type: 'number' },
                     currency: { type: 'string', example: 'XAF' },
@@ -656,11 +672,12 @@ export async function GET() {
           type: 'object',
           required: ['receiver_phone', 'receiver_name', 'amount'],
           properties: {
-            receiver_phone: { type: 'string' },
-            receiver_name: { type: 'string' },
-            amount: { type: 'number', exclusiveMinimum: 0 },
-            currency: { type: 'string', default: 'XAF' },
-            notes: { type: 'string' },
+            receiver_phone: { type: 'string', example: '+240222654321', description: 'Teléfono de un cliente FondosEG activo. Se ignoran espacios y guiones.' },
+            receiver_name: { type: 'string', maxLength: 120 },
+            amount: { type: 'number', exclusiveMinimum: 0, maximum: 10000000 },
+            currency: { type: 'string', example: 'XAF', description: 'Opcional; debe coincidir con la divisa de la billetera.' },
+            reference: { type: 'string', maxLength: 100, description: 'Referencia propia del integrador; se guarda en las notas del envío.' },
+            notes: { type: 'string', maxLength: 500, description: 'Con reference, el conjunto se recorta a 500 caracteres.' },
           },
         },
         CreateWalletTransferResponse: {
@@ -674,15 +691,16 @@ export async function GET() {
                   properties: {
                     transfer_id: { type: 'string', format: 'uuid' },
                     transfer_type: { type: 'string', example: 'wallet' },
+                    reference: { type: ['string', 'null'] },
                     amount: { type: 'number' },
                     currency: { type: 'string' },
                     sender_name: { type: 'string' },
-                    sender_phone: { type: 'string' },
                     receiver_name: { type: 'string' },
-                    receiver_phone: { type: 'string' },
+                    receiver_phone: { type: 'string', description: 'Teléfono canónico del cliente que recibió.' },
                     status: { type: 'string', example: 'completed' },
                     created_at: { type: 'string', format: 'date-time' },
-                    new_balance: { type: 'number' },
+                    confirmed_at: { type: ['string', 'null'], format: 'date-time' },
+                    new_balance: { type: ['number', 'null'], description: 'Saldo disponible de la aplicación tras el envío.' },
                     sandbox: { type: 'boolean', description: 'true cuando la credencial es test.' },
                   },
                 },
@@ -696,7 +714,27 @@ export async function GET() {
             {
               type: 'object',
               properties: {
-                data: { type: 'array', items: { type: 'object' } },
+                data: {
+                  type: 'array',
+                  description: 'Con credenciales de aplicación, cada elemento es un movimiento de su billetera.',
+                  items: {
+                    type: 'object',
+                    properties: {
+                      transfer_id: { type: 'string', format: 'uuid' },
+                      transfer_type: { type: 'string', example: 'wallet' },
+                      direction: { type: 'string', enum: ['sent', 'received'] },
+                      amount: { type: 'number' },
+                      currency: { type: 'string' },
+                      status: { type: 'string', example: 'completed' },
+                      counterparty_name: { type: 'string' },
+                      counterparty_phone: { type: ['string', 'null'] },
+                      channel: { type: ['string', 'null'], example: 'payment_request' },
+                      notes: { type: ['string', 'null'] },
+                      created_at: { type: 'string', format: 'date-time' },
+                      completed_at: { type: ['string', 'null'], format: 'date-time' },
+                    },
+                  },
+                },
                 pagination: {
                   type: 'object',
                   properties: {

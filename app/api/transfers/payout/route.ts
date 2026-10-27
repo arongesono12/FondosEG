@@ -82,6 +82,7 @@ export async function POST(request: NextRequest) {
       await emitWebhookEvent(
         {
           eventType: 'transfer.paid_out',
+          ownerUserIds: [String(paidTransfer.agent_id || transfer.agent_id || ''), profile.id],
           payload: {
             transfer_id: String(paidTransfer.id),
             transfer_code: String(paidTransfer.transfer_code),

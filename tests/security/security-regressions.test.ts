@@ -96,7 +96,8 @@ test('dashboard and developer portal use independent product grants', async () =
   assert.match(migration, /UNIQUE \(user_id, product\)/);
   assert.match(migration, /WHERE role IN \('admin', 'superadmin'\)/);
   assert.match(apiKeys, /requireDeveloperAccess\(\)/);
-  assert.match(apiKeys, /isApplicationAdmin \? requestedEnvironment : 'test'/);
+  // Solo administración emite credenciales de producción.
+  assert.match(apiKeys, /environment === 'production' && !canIssueProductionCredentials\(access\.access_role\)/);
 });
 
 test('CSP permits Next development tooling without weakening production', async () => {

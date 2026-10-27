@@ -76,18 +76,33 @@ export async function createWalletLinkRequest(params: {
     throw new WalletLinkRejectedError('La credencial debe pertenecer a una billetera de cliente para vincular billeteras');
   }
 
-  // Solo un integrador dado de alta por el superadmin (credencial emitida "en
-  // nombre de" su billetera) puede pedir ver saldos: así nadie se registra con
-  // el nombre de otro comercio para engañar a los clientes en el consentimiento.
+  // Solo una aplicación dada de alta por el superadmin puede pedir ver saldos:
+  // así nadie registra una app con el nombre de otro comercio para engañar a
+  // los clientes en la pantalla de consentimiento. Las credenciales anteriores
+  // a las aplicaciones conservan la regla de siempre (emitidas por él).
   const { data: key, error: keyError } = await adminClient
     .from('api_keys')
-    .select('issued_by_user_id')
+    .select('issued_by_user_id, application_id')
     .eq('id', params.apiKeyId)
     .maybeSingle();
 
   if (keyError) throw new Error(keyError.message);
-  if (!key?.issued_by_user_id) {
-    throw new WalletLinkRejectedError('Solo las credenciales emitidas por el superadmin para una billetera cliente pueden vincular billeteras');
+
+  let trusted = false;
+  if (key?.application_id) {
+    const { data: application, error: applicationError } = await adminClient
+      .from('api_applications')
+      .select('is_trusted, status')
+      .eq('id', key.application_id)
+      .maybeSingle();
+    if (applicationError) throw new Error(applicationError.message);
+    trusted = application?.status === 'active' && application.is_trusted === true;
+  } else {
+    trusted = Boolean(key?.issued_by_user_id);
+  }
+
+  if (!trusted) {
+    throw new WalletLinkRejectedError('Solo las aplicaciones verificadas por FondosEG pueden vincular billeteras. Pide al superadmin que dé de alta tu aplicación.');
   }
 
   const { data, error } = await adminClient

@@ -1,25 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { AuthzError, requireAuthUser, requireDeveloperAccess } from '@/lib/server/authz';
+import { z } from 'zod';
+import { requireAuthUser, requireDeveloperAccess } from '@/lib/server/authz';
 import { normalizeApiEnvironment } from '@/lib/server/api-environments';
 import { generateApiKey, generateApiSecret, getApiSecretPreview, hashApiSecret } from '@/lib/server/api-security';
 import { isTransientNetworkError } from '@/lib/network-errors';
 import {
-  attachOwnerLabels,
-  buildOwnedOrIssuedFilter,
+  buildCredentialScopeFilter,
   CredentialOwnerError,
-  resolveCredentialOwner,
+  credentialRouteError,
+  requireVisibleApplication,
 } from '@/lib/server/credential-ownership';
+import {
+  canIssueProductionCredentials,
+  isUuid,
+  normalizeCredentialPermissions,
+} from '@/lib/server/credential-ownership-rules';
 import { createAdminClient } from '@/lib/supabase/admin';
-import type { ApiPermission, UserRole } from '@/types';
 
 const apiKeySelect = [
   'id',
+  'application_id',
   'app_name',
   'app_description',
   'api_key',
   'environment',
   'api_secret_preview',
-  'role_access',
   'permissions',
   'is_active',
   'rate_limit',
@@ -27,11 +32,17 @@ const apiKeySelect = [
   'last_used_at',
   'expires_at',
   'created_at',
-  'user_id',
-  'issued_by_user_id',
 ].join(',');
 
-const permissionKeys: ApiPermission[] = ['balance', 'transfer', 'history', 'properties', 'payments'];
+/**
+ * Una credencial se emite PARA UNA APLICACIÓN. Opera la billetera de la
+ * aplicación, así que no hay rol que elegir ni teléfono que indicar.
+ */
+const createApiKeySchema = z.object({
+  application_id: z.string().trim().min(1, 'Selecciona una aplicación'),
+  environment: z.enum(['test', 'production']).default('test'),
+  permissions: z.record(z.string(), z.boolean()).optional(),
+});
 
 async function withSupabaseRetry<T>(operation: () => PromiseLike<T>, attempts: number = 3): Promise<Awaited<T>> {
   let lastError: unknown;
@@ -54,32 +65,15 @@ async function withSupabaseRetry<T>(operation: () => PromiseLike<T>, attempts: n
   throw lastError;
 }
 
-function normalizePermissions(input: unknown, role: UserRole) {
-  const values = typeof input === 'object' && input !== null ? input as Record<string, unknown> : {};
-  return permissionKeys.reduce<Record<ApiPermission, boolean>>((acc, key) => {
-    let defaultValue: boolean;
-    if (key === 'transfer') {
-      defaultValue = role === 'gestor' || role === 'cliente';
-    } else if (key === 'properties' || key === 'payments') {
-      // Opt-in scopes: only granted when explicitly requested.
-      defaultValue = false;
-    } else {
-      defaultValue = true;
-    }
-    acc[key] = typeof values[key] === 'boolean' ? Boolean(values[key]) : defaultValue;
-    return acc;
-  }, { balance: true, transfer: false, history: true, properties: false, payments: false });
-}
-
 function publicApiKeyRecord(row: Record<string, unknown>) {
   return {
     id: row.id,
+    application_id: row.application_id ?? null,
     app_name: row.app_name,
     app_description: row.app_description,
     api_key: row.api_key,
     environment: normalizeApiEnvironment(row.environment),
     api_secret_preview: row.api_secret_preview,
-    role_access: row.role_access,
     permissions: row.permissions,
     is_active: row.is_active,
     rate_limit: row.rate_limit,
@@ -87,7 +81,6 @@ function publicApiKeyRecord(row: Record<string, unknown>) {
     last_used_at: row.last_used_at,
     expires_at: row.expires_at,
     created_at: row.created_at,
-    owner_label: row.owner_label ?? null,
   };
 }
 
@@ -95,40 +88,22 @@ export async function GET() {
   try {
     const user = await requireAuthUser();
     const access = await requireDeveloperAccess();
-    const adminClient = createAdminClient();
-    
+    const scopeFilter = await buildCredentialScopeFilter(user.id, access.access_role);
+
     const { data: apiKeys, error } = await withSupabaseRetry(() =>
-      adminClient
+      createAdminClient()
         .from('api_keys')
         .select(apiKeySelect)
-        // Las propias y, para el superadmin, las emitidas para un cliente.
-        .or(buildOwnedOrIssuedFilter(user.id, access.access_role))
+        .or(scopeFilter)
         .eq('is_active', true)
         .order('created_at', { ascending: false })
     );
 
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
-    }
+    if (error) throw new Error(error.message);
 
-    const labelled = await attachOwnerLabels((apiKeys || []) as unknown as Array<Record<string, unknown>>);
-    return NextResponse.json(labelled.map(publicApiKeyRecord));
-
+    return NextResponse.json(((apiKeys || []) as unknown as Array<Record<string, unknown>>).map(publicApiKeyRecord));
   } catch (error) {
-    console.error('API Keys GET Error:', error);
-    if (isTransientNetworkError(error)) {
-      return NextResponse.json(
-        { error: 'No se pudo conectar con Supabase para consultar las credenciales. Intenta de nuevo en unos segundos.' },
-        { status: 503 }
-      );
-    }
-    if (error instanceof AuthzError) {
-      return NextResponse.json({ error: error.message }, { status: error.status });
-    }
-    return NextResponse.json(
-      { error: 'Error interno del servidor' },
-      { status: 500 }
-    );
+    return credentialRouteError(error, 'API Keys GET');
   }
 }
 
@@ -136,100 +111,60 @@ export async function POST(request: NextRequest) {
   try {
     const user = await requireAuthUser();
     const access = await requireDeveloperAccess();
+    const parsed = createApiKeySchema.safeParse(await request.json().catch(() => null));
 
-    const body = await request.json();
-    const { app_name, app_description, role_access = 'cliente', permissions } = body;
-    const requestedEnvironment = normalizeApiEnvironment(body?.environment);
-    const isApplicationAdmin = access.access_role === 'admin' || access.access_role === 'superadmin';
-    const environment = isApplicationAdmin ? requestedEnvironment : 'test';
-
-    if (!app_name) {
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: 'El nombre de la app es requerido' },
+        { error: 'Revisa los datos de la credencial', details: parsed.error.flatten().fieldErrors },
         { status: 400 }
       );
     }
 
-    const adminClient = createAdminClient();
-    const requestedRole = String(role_access) as UserRole;
-    const allowedRoles: UserRole[] = isApplicationAdmin
-      ? ['admin', 'superadmin', 'gestor', 'cliente']
-      : ['cliente'];
-
-    if (!allowedRoles.includes(requestedRole)) {
-      return NextResponse.json(
-        { error: 'No puedes emitir credenciales para ese rol' },
-        { status: 403 }
-      );
+    const { environment, permissions } = parsed.data;
+    if (environment === 'production' && !canIssueProductionCredentials(access.access_role)) {
+      throw new CredentialOwnerError('Solo administración puede emitir credenciales de producción', 403);
     }
 
-    // Con `owner_phone`, solo el superadmin emite la credencial para la
-    // billetera cliente que cobra (p. ej. la de CasasEG): solo así la key
-    // opera ese saldo y las solicitudes de cobro se le abonan a ella.
-    const owner = await resolveCredentialOwner({
-      actorUserId: user.id,
-      actorAccessRole: access.access_role,
-      ownerPhone: body?.owner_phone,
-      requestedRole,
-    });
-
+    const application = await requireVisibleApplication(parsed.data.application_id, user.id, access.access_role);
     const keyData = generateApiKey(environment);
     const secretData = generateApiSecret();
     const secretHash = hashApiSecret(secretData);
 
     const { data: apiKey, error: insertError } = await withSupabaseRetry(() =>
-      adminClient
+      createAdminClient()
         .from('api_keys')
         .insert({
-          app_name,
-          app_description,
+          application_id: application.id,
+          app_name: application.name,
+          app_description: application.description,
           api_key: keyData,
           api_secret: secretHash,
           api_secret_hash: secretHash,
           api_secret_preview: getApiSecretPreview(secretData),
           environment,
-          user_id: owner.ownerUserId,
-          issued_by_user_id: owner.issuedByUserId,
-          role_access: requestedRole,
-          permissions: normalizePermissions(permissions, requestedRole),
+          // Titular: la billetera de la aplicación. `role_access` es interno:
+          // las billeteras de aplicación son de cliente.
+          user_id: application.wallet_user_id,
+          issued_by_user_id: user.id,
+          role_access: 'cliente',
+          permissions: normalizeCredentialPermissions(permissions),
         })
         .select(apiKeySelect)
         .single()
     );
 
-    if (insertError) {
-      return NextResponse.json({ error: insertError.message }, { status: 500 });
-    }
-
-    const [labelled] = await attachOwnerLabels([apiKey as unknown as Record<string, unknown>]);
+    if (insertError || !apiKey) throw new Error(insertError?.message || 'No se pudo crear la credencial');
 
     return NextResponse.json({
       success: true,
       apiKey: {
-        ...publicApiKeyRecord(labelled),
+        ...publicApiKeyRecord(apiKey as unknown as Record<string, unknown>),
         api_key: keyData,
         api_secret: secretData,
       },
     });
-
   } catch (error) {
-    if (error instanceof CredentialOwnerError) {
-      return NextResponse.json({ error: error.message }, { status: error.status });
-    }
-    console.error('API Keys POST Error:', error);
-    if (isTransientNetworkError(error)) {
-      return NextResponse.json(
-        { error: 'No se pudo conectar con Supabase para crear la credencial. Intenta de nuevo en unos segundos.' },
-        { status: 503 }
-      );
-    }
-    if (error instanceof AuthzError) {
-      return NextResponse.json({ error: error.message }, { status: error.status });
-    }
-    return NextResponse.json(
-      { error: 'Error interno del servidor' },
-      { status: 500 }
-    );
+    return credentialRouteError(error, 'API Keys POST');
   }
 }
 
@@ -237,48 +172,25 @@ export async function DELETE(request: NextRequest) {
   try {
     const user = await requireAuthUser();
     const access = await requireDeveloperAccess();
+    const keyId = new URL(request.url).searchParams.get('id');
 
-    const { searchParams } = new URL(request.url);
-    const keyId = searchParams.get('id');
-
-    if (!keyId) {
-      return NextResponse.json(
-        { error: 'ID de API key requerido' },
-        { status: 400 }
-      );
+    if (!isUuid(keyId)) {
+      return NextResponse.json({ error: 'ID de API key requerido' }, { status: 400 });
     }
 
-    const adminClient = createAdminClient();
-    
+    const scopeFilter = await buildCredentialScopeFilter(user.id, access.access_role);
     const { error } = await withSupabaseRetry(() =>
-      adminClient
+      createAdminClient()
         .from('api_keys')
         .update({ is_active: false, updated_at: new Date().toISOString() })
         .eq('id', keyId)
-        .or(buildOwnedOrIssuedFilter(user.id, access.access_role))
+        .or(scopeFilter)
     );
 
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
-    }
+    if (error) throw new Error(error.message);
 
     return NextResponse.json({ success: true });
-
   } catch (error) {
-    console.error('API Keys DELETE Error:', error);
-    if (isTransientNetworkError(error)) {
-      return NextResponse.json(
-        { error: 'No se pudo conectar con Supabase para revocar la credencial. Intenta de nuevo en unos segundos.' },
-        { status: 503 }
-      );
-    }
-    if (error instanceof AuthzError) {
-      return NextResponse.json({ error: error.message }, { status: error.status });
-    }
-    return NextResponse.json(
-      { error: 'Error interno del servidor' },
-      { status: 500 }
-    );
+    return credentialRouteError(error, 'API Keys DELETE');
   }
 }
-

@@ -34,8 +34,11 @@ export function createSandboxBalance(role: string) {
   return {
     role: 'cliente',
     balance: 150000,
+    available_balance: 150000,
+    reserved_balance: 0,
     currency: 'XAF',
     formatted: '150.000 XAF',
+    formatted_available: '150.000 XAF',
     sandbox: true,
   };
 }
@@ -87,16 +90,36 @@ export function createSandboxHistory(role: string) {
   const now = new Date().toISOString();
 
   if (role === 'cliente') {
+    // Mismo formato que el historial real de una billetera de aplicación.
     return [
       {
-        id: randomUUID(),
-        amount: 5000,
-        currency: 'XAF',
-        status: 'confirmed',
+        transfer_id: randomUUID(),
         transfer_type: 'wallet',
-        receiver_name: 'Cliente Sandbox Destino',
-        receiver_phone: '+240000000002',
+        direction: 'received',
+        amount: 75000,
+        currency: 'XAF',
+        status: 'completed',
+        counterparty_name: 'Cliente Sandbox Pagador',
+        counterparty_phone: '+240000000001',
+        channel: 'payment_request',
+        notes: 'Pago a Sandbox | ALQ-2026-001',
         created_at: now,
+        completed_at: now,
+        sandbox: true,
+      },
+      {
+        transfer_id: randomUUID(),
+        transfer_type: 'wallet',
+        direction: 'sent',
+        amount: 70000,
+        currency: 'XAF',
+        status: 'completed',
+        counterparty_name: 'Cliente Sandbox Destino',
+        counterparty_phone: '+240000000002',
+        channel: 'external_api',
+        notes: 'Ref: LIQ-2026-001',
+        created_at: now,
+        completed_at: now,
         sandbox: true,
       },
     ];

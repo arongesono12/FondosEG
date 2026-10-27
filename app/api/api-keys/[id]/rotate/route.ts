@@ -2,17 +2,17 @@ import { NextRequest, NextResponse } from 'next/server';
 import { AuthzError, requireAuthUser, requireDeveloperAccess } from '@/lib/server/authz';
 import { normalizeApiEnvironment } from '@/lib/server/api-environments';
 import { generateApiSecret, getApiSecretPreview, hashApiSecret } from '@/lib/server/api-security';
-import { buildOwnedOrIssuedFilter } from '@/lib/server/credential-ownership';
+import { buildCredentialScopeFilter } from '@/lib/server/credential-ownership';
 import { createAdminClient } from '@/lib/supabase/admin';
 
 const apiKeySelect = [
   'id',
+  'application_id',
   'app_name',
   'app_description',
   'api_key',
   'environment',
   'api_secret_preview',
-  'role_access',
   'permissions',
   'is_active',
   'rate_limit',
@@ -38,7 +38,7 @@ export async function POST(
       .from('api_keys')
       .select('id, user_id')
       .eq('id', id)
-      .or(buildOwnedOrIssuedFilter(user.id, access.access_role))
+      .or(await buildCredentialScopeFilter(user.id, access.access_role))
       .maybeSingle();
 
     if (ownedKeyError) {

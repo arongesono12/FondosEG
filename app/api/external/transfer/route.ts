@@ -234,6 +234,7 @@ export async function POST(request: NextRequest) {
       await emitWebhookEvent(
         {
           eventType: 'transfer.created',
+          ownerUserId: user_id,
           payload: {
             transfer_id: (transfer as { id: string }).id,
             transfer_code: transferCode,

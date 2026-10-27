@@ -20,6 +20,45 @@ const historyQuerySchema = z.object({
   created_to: z.string().trim().datetime({ offset: true }).optional(),
 }).strict();
 
+interface WalletTransferRow {
+  id: string;
+  sender_id: string | null;
+  receiver_id: string | null;
+  sender_name: string;
+  sender_phone: string | null;
+  receiver_name: string;
+  receiver_phone: string | null;
+  amount: number | string;
+  currency: string;
+  status: string;
+  notes: string | null;
+  origin_channel: string | null;
+  created_at: string;
+  confirmed_at: string | null;
+}
+
+/**
+ * Movimiento de billetera visto desde la billetera de la credencial: el mismo
+ * formato para envíos y cobros, con dirección y contraparte explícitas.
+ */
+function toPublicWalletMovement(row: WalletTransferRow, walletUserId: string) {
+  const direction = row.sender_id === walletUserId ? 'sent' : 'received';
+  return {
+    transfer_id: row.id,
+    transfer_type: 'wallet',
+    direction,
+    amount: Number(row.amount),
+    currency: row.currency,
+    status: row.status === 'confirmed' ? 'completed' : row.status,
+    counterparty_name: direction === 'sent' ? row.receiver_name : row.sender_name,
+    counterparty_phone: (direction === 'sent' ? row.receiver_phone : row.sender_phone) || null,
+    channel: row.origin_channel,
+    notes: row.notes,
+    created_at: row.created_at,
+    completed_at: row.confirmed_at,
+  };
+}
+
 export async function GET(request: NextRequest) {
   const context = createPublicApiContext(request);
   let apiKeyId: string | null = null;
@@ -94,7 +133,7 @@ export async function GET(request: NextRequest) {
 
     const adminClient = createAdminClient();
 
-    let transfers = [];
+    let transfers: unknown[] = [];
 
     if (isAdminRole(role_access)) {
       let query = adminClient
@@ -124,19 +163,21 @@ export async function GET(request: NextRequest) {
       
       transfers = data || [];
     } else {
+      // Columnas explícitas: nunca `verification_code` ni ids internos.
       let query = adminClient
         .from('wallet_transfers')
-        .select('*')
+        .select('id, sender_id, receiver_id, sender_name, sender_phone, receiver_name, receiver_phone, amount, currency, status, notes, origin_channel, created_at, confirmed_at')
         .or(`sender_id.eq.${user_id},receiver_id.eq.${user_id}`)
         .order('created_at', { ascending: false });
 
-      if (status) query = query.eq('status', status);
+      // Hacia fuera el envío liquidado se llama `completed`, igual que en la respuesta.
+      if (status) query = query.eq('status', status === 'completed' ? 'confirmed' : status);
       if (created_from) query = query.gte('created_at', created_from);
       if (created_to) query = query.lte('created_at', created_to);
 
       const { data } = await query.range(offset, rangeEnd);
-      
-      transfers = data || [];
+
+      transfers = (data || []).map((row) => toPublicWalletMovement(row, user_id));
     }
 
     const hasMore = transfers.length > limit;

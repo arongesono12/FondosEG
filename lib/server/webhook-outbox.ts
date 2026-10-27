@@ -31,6 +31,26 @@ interface QueueWebhookEventInput {
    * suscriptor del tipo de evento recibiría los cobros de otro comercio.
    */
   ownerUserId?: string;
+  /** Igual que `ownerUserId` para eventos con varias partes (emisor y beneficiario). */
+  ownerUserIds?: ReadonlyArray<string | null | undefined>;
+}
+
+/**
+ * Eventos que cualquier integrador puede suscribir desde el portal. Llevan
+ * nombres, teléfonos e importes de clientes, así que sin titular no se
+ * entregan a nadie: antes llegaban a TODOS los suscriptores del tipo.
+ */
+const OWNER_SCOPED_EVENTS: ReadonlySet<FondosEGWebhookEvent> = new Set([
+  'transfer.created',
+  'transfer.paid_out',
+  'wallet_transfer.confirmed',
+  'payment_request.paid',
+  'payment_request.cancelled',
+  'payment_request.payment_failed',
+]);
+
+function resolveOwnerIds(input: QueueWebhookEventInput): string[] {
+  return [...new Set([input.ownerUserId, ...(input.ownerUserIds ?? [])].filter((id): id is string => Boolean(id)))];
 }
 
 interface WebhookDispatchErrorDetails {
@@ -51,6 +71,12 @@ class WebhookDispatchError extends Error {
 }
 
 export async function queueWebhookEvent(input: QueueWebhookEventInput): Promise<number> {
+  const ownerIds = resolveOwnerIds(input);
+  if (ownerIds.length === 0 && OWNER_SCOPED_EVENTS.has(input.eventType)) {
+    console.error(`Webhook ${input.eventType} sin titular: no se entrega a nadie`);
+    return 0;
+  }
+
   const adminClient = createAdminClient();
   let subscriptionsQuery = adminClient
     .from('webhook_subscriptions')
@@ -58,8 +84,8 @@ export async function queueWebhookEvent(input: QueueWebhookEventInput): Promise<
     .eq('status', 'active')
     .contains('event_types', [input.eventType]);
 
-  if (input.ownerUserId) {
-    subscriptionsQuery = subscriptionsQuery.eq('user_id', input.ownerUserId);
+  if (ownerIds.length > 0) {
+    subscriptionsQuery = subscriptionsQuery.in('user_id', ownerIds);
   }
 
   const { data: subscriptions, error } = await subscriptionsQuery;

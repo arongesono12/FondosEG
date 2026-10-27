@@ -135,10 +135,13 @@ test('las rutas de saldo exigen la API key y el token del vínculo', async () =>
   assert.match(decide, /requireProfile/);
 });
 
-test('solo un integrador dado de alta por el superadmin pide vínculos', async () => {
+test('solo una aplicación verificada por el superadmin pide vínculos', async () => {
   const service = await load('lib/server/wallet-links.ts');
-  assert.match(service, /\.select\('issued_by_user_id'\)/);
-  assert.match(service, /if \(!key\?\.issued_by_user_id\)/);
+  assert.match(service, /\.select\('issued_by_user_id, application_id'\)/);
+  // Con aplicación: solo si es de confianza (creada por el superadmin).
+  assert.match(service, /application\?\.status === 'active' && application\.is_trusted === true/);
+  // Credenciales anteriores a las aplicaciones: la regla de siempre.
+  assert.match(service, /trusted = Boolean\(key\?\.issued_by_user_id\)/);
 
   const consent = await load('components/payments/wallet-link-consent.tsx');
   assert.match(consent, /props\.destinationHost/);

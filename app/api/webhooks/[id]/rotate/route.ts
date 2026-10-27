@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { AuthzError, requireAuthUser, requireDeveloperAccess } from '@/lib/server/authz';
-import { buildOwnedOrIssuedFilter } from '@/lib/server/credential-ownership';
+import { buildCredentialScopeFilter } from '@/lib/server/credential-ownership';
 import { createAdminClient } from '@/lib/supabase/admin';
 import {
   encryptWebhookSecret,
@@ -35,7 +35,7 @@ export async function POST(
         updated_at: new Date().toISOString(),
       })
       .eq('id', id)
-      .or(buildOwnedOrIssuedFilter(user.id, access.access_role))
+      .or(await buildCredentialScopeFilter(user.id, access.access_role))
       .select(
         'id,name,description,target_url,event_types,signing_secret_preview,status,last_delivery_at,created_at,updated_at'
       )

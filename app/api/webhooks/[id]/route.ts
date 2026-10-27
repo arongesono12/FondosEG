@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { AuthzError, requireAuthUser, requireDeveloperAccess } from '@/lib/server/authz';
-import { buildOwnedOrIssuedFilter } from '@/lib/server/credential-ownership';
+import { buildCredentialScopeFilter } from '@/lib/server/credential-ownership';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { SUBSCRIBABLE_WEBHOOK_EVENTS } from '@/lib/server/webhook-events';
 
@@ -55,7 +55,7 @@ export async function PATCH(
       .from('webhook_subscriptions')
       .update(updatePayload)
       .eq('id', id)
-      .or(buildOwnedOrIssuedFilter(user.id, access.access_role))
+      .or(await buildCredentialScopeFilter(user.id, access.access_role))
       .select(subscriptionSelect)
       .single();
 
@@ -94,7 +94,7 @@ export async function DELETE(
         updated_at: new Date().toISOString(),
       })
       .eq('id', id)
-      .or(buildOwnedOrIssuedFilter(user.id, access.access_role))
+      .or(await buildCredentialScopeFilter(user.id, access.access_role))
       .select(subscriptionSelect)
       .single();
 

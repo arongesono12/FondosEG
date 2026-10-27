@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { AuthzError, requireAuthUser, requireDeveloperAccess } from '@/lib/server/authz';
-import { buildOwnedOrIssuedFilter } from '@/lib/server/credential-ownership';
+import { buildCredentialScopeFilter } from '@/lib/server/credential-ownership';
 import { createAdminClient } from '@/lib/supabase/admin';
 
 export async function GET(request: NextRequest) {
@@ -10,19 +10,23 @@ export async function GET(request: NextRequest) {
     const adminClient = createAdminClient();
     const { searchParams } = new URL(request.url);
     const requestedApiKeyId = searchParams.get('api_key_id');
+    const requestedApplicationId = searchParams.get('application_id');
     const limit = Math.min(Math.max(parseInt(searchParams.get('limit') || '25', 10), 1), 100);
 
     const { data: apiKeys, error: apiKeysError } = await adminClient
       .from('api_keys')
-      .select('id, app_name')
-      .or(buildOwnedOrIssuedFilter(user.id, access.access_role));
+      .select('id, app_name, application_id')
+      .or(await buildCredentialScopeFilter(user.id, access.access_role));
 
     if (apiKeysError) {
       return NextResponse.json({ error: apiKeysError.message }, { status: 500 });
     }
 
     const allowedKeyIds = (apiKeys || []).map((key) => key.id);
-    const targetKeyIds = requestedApiKeyId ? [requestedApiKeyId] : allowedKeyIds;
+    const applicationKeyIds = requestedApplicationId
+      ? (apiKeys || []).filter((key) => key.application_id === requestedApplicationId).map((key) => key.id)
+      : allowedKeyIds;
+    const targetKeyIds = requestedApiKeyId ? [requestedApiKeyId] : applicationKeyIds;
 
     if (targetKeyIds.some((keyId) => !allowedKeyIds.includes(keyId))) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });

@@ -369,14 +369,44 @@ export interface CreateClientWithdrawalData {
 export type ApiPermission = 'balance' | 'transfer' | 'history' | 'properties' | 'payments';
 export type ApiEnvironment = 'test' | 'production';
 
+/** Integración (p. ej. CasasEG) con su propia billetera, credenciales y webhooks. */
+export interface ApiApplication {
+  id: string;
+  name: string;
+  description: string | null;
+  /** Icono subido por el gestor; NULL muestra las iniciales. */
+  icon_url: string | null;
+  /** Creada por el superadmin: puede pedir a los clientes ver su saldo. */
+  is_trusted: boolean;
+  /** FALSE en las anteriores a las aplicaciones, que operan la billetera de una persona. */
+  has_dedicated_wallet: boolean;
+  status: 'active' | 'disabled';
+  created_at: string;
+  wallet: {
+    balance: number;
+    available_balance: number;
+    currency: string;
+  };
+}
+
+export interface CreateApiApplicationData {
+  name: string;
+  description?: string;
+}
+
+export interface UpdateApiApplicationData {
+  name?: string;
+  description?: string | null;
+}
+
 export interface ApiKeyRecord {
   id: string;
+  application_id: string | null;
   app_name: string;
   app_description?: string;
   api_key: string;
   environment: ApiEnvironment;
   api_secret_preview?: string;
-  role_access: UserRole;
   permissions: Record<ApiPermission, boolean>;
   is_active: boolean;
   rate_limit: number;
@@ -384,18 +414,12 @@ export interface ApiKeyRecord {
   last_used_at?: string;
   expires_at?: string;
   created_at: string;
-  /** "Nombre · teléfono" de la billetera titular si la emitió un administrador para ella. */
-  owner_label?: string | null;
 }
 
 export interface CreateApiKeyData {
-  app_name: string;
-  app_description?: string;
+  application_id: string;
   environment: ApiEnvironment;
-  role_access: UserRole;
   permissions: Record<ApiPermission, boolean>;
-  /** Solo administradores: teléfono de la billetera cliente titular. */
-  owner_phone?: string;
 }
 
 export interface CreatedApiKeyResponse {

@@ -25,9 +25,10 @@ export async function revokeApiKey(id: string): Promise<{ success: boolean }> {
   });
 }
 
-export async function getApiKeyUsage(apiKeyId?: string): Promise<ApiUsageResponse> {
+export async function getApiKeyUsage(filter: { apiKeyId?: string; applicationId?: string } = {}): Promise<ApiUsageResponse> {
   const params = new URLSearchParams({ limit: '20' });
-  if (apiKeyId) params.set('api_key_id', apiKeyId);
+  if (filter.apiKeyId) params.set('api_key_id', filter.apiKeyId);
+  if (filter.applicationId) params.set('application_id', filter.applicationId);
   return fetchJSON<ApiUsageResponse>(`/api/api-keys/usage?${params.toString()}`);
 }
 

@@ -1,9 +1,13 @@
 import 'server-only';
-import { findRegisteredClientByPhone } from '@/lib/server/client-recipient';
-import { decideIssuance } from '@/lib/server/credential-ownership-rules';
+import { NextResponse } from 'next/server';
+import { AuthzError } from '@/lib/server/authz';
+import {
+  buildOwnedOrIssuedFilter,
+  canManageEveryApplication,
+  isUuid,
+} from '@/lib/server/credential-ownership-rules';
+import { isTransientNetworkError } from '@/lib/network-errors';
 import { createAdminClient } from '@/lib/supabase/admin';
-
-export { buildOwnedOrIssuedFilter } from '@/lib/server/credential-ownership-rules';
 
 export class CredentialOwnerError extends Error {
   readonly status: number;
@@ -14,66 +18,100 @@ export class CredentialOwnerError extends Error {
   }
 }
 
-export interface ResolvedCredentialOwner {
-  /** Titular: la billetera que opera la key o recibe los eventos. */
-  ownerUserId: string;
-  /** Administrador que la emitió a nombre del titular; null si es propia. */
-  issuedByUserId: string | null;
+/** Respuesta común de las rutas del portal (aplicaciones, credenciales, webhooks). */
+export function credentialRouteError(error: unknown, label: string): NextResponse {
+  if (error instanceof CredentialOwnerError || error instanceof AuthzError) {
+    return NextResponse.json({ error: error.message }, { status: error.status });
+  }
+  console.error(`${label} Error:`, error);
+  // `APPLICATION_SELECT` pide `icon_url`: sin la migración fallaría todo el
+  // portal con un 500 genérico. Mejor decir qué falta.
+  if (error instanceof Error && /icon_url.*does not exist/i.test(error.message)) {
+    return NextResponse.json(
+      { error: 'Falta aplicar la migración 20261027_api_application_icons.sql en la base de datos' },
+      { status: 503 }
+    );
+  }
+  if (isTransientNetworkError(error)) {
+    return NextResponse.json(
+      { error: 'No se pudo conectar con la base de datos. Intenta de nuevo en unos segundos.' },
+      { status: 503 }
+    );
+  }
+  return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 });
+}
+
+export const APPLICATION_SELECT =
+  'id, name, description, icon_url, owner_user_id, wallet_user_id, has_dedicated_wallet, is_trusted, status, created_at, updated_at';
+
+export interface ApiApplicationRow {
+  id: string;
+  name: string;
+  description: string | null;
+  /** URL pública en el bucket `application-icons`; NULL muestra las iniciales. */
+  icon_url: string | null;
+  owner_user_id: string;
+  /** Billetera que operan sus credenciales y a la que se abonan sus cobros. */
+  wallet_user_id: string;
+  has_dedicated_wallet: boolean;
+  is_trusted: boolean;
+  status: 'active' | 'disabled';
+  created_at: string;
+  updated_at: string;
+}
+
+/** Aplicaciones activas que el actor gestiona (todas, para el superadmin). */
+export async function listVisibleApplications(actorUserId: string, actorAccessRole: string): Promise<ApiApplicationRow[]> {
+  let query = createAdminClient()
+    .from('api_applications')
+    .select(APPLICATION_SELECT)
+    .eq('status', 'active')
+    .order('created_at', { ascending: false });
+
+  if (!canManageEveryApplication(actorAccessRole)) {
+    query = query.eq('owner_user_id', actorUserId);
+  }
+
+  const { data, error } = await query;
+  if (error) throw new Error(error.message);
+  return (data || []) as ApiApplicationRow[];
+}
+
+/** Aplicación activa que el actor puede gestionar; 404 si no existe para él. */
+export async function requireVisibleApplication(
+  applicationId: unknown,
+  actorUserId: string,
+  actorAccessRole: string
+): Promise<ApiApplicationRow> {
+  if (!isUuid(applicationId)) {
+    throw new CredentialOwnerError('Selecciona una aplicación válida', 400);
+  }
+
+  let query = createAdminClient()
+    .from('api_applications')
+    .select(APPLICATION_SELECT)
+    .eq('id', applicationId)
+    .eq('status', 'active');
+
+  if (!canManageEveryApplication(actorAccessRole)) {
+    query = query.eq('owner_user_id', actorUserId);
+  }
+
+  const { data, error } = await query.maybeSingle();
+  if (error) throw new Error(error.message);
+  if (!data) throw new CredentialOwnerError('Aplicación no encontrada', 404);
+  return data as ApiApplicationRow;
 }
 
 /**
- * Resuelve el titular de una credencial o webhook. Con `ownerPhone`, el
- * superadmin la emite para una billetera cliente activa; se busca por
- * coincidencia exacta de teléfono, nunca aproximada.
+ * Filtro `.or()` de las credenciales y webhooks que el actor gestiona: los de
+ * sus aplicaciones y los anteriores a ellas (ver `buildOwnedOrIssuedFilter`).
  */
-export async function resolveCredentialOwner(params: {
-  actorUserId: string;
-  actorAccessRole: string;
-  ownerPhone: unknown;
-  requestedRole: string | null;
-}): Promise<ResolvedCredentialOwner> {
-  const decision = decideIssuance(params);
-
-  if (decision.kind === 'rejected') {
-    throw new CredentialOwnerError(decision.message, decision.status);
-  }
-  if (decision.kind === 'self') {
-    return { ownerUserId: params.actorUserId, issuedByUserId: null };
-  }
-
-  const client = await findRegisteredClientByPhone(createAdminClient(), decision.ownerPhone);
-  if (!client) {
-    throw new CredentialOwnerError('No existe una billetera cliente activa con ese teléfono', 404);
-  }
-
-  return { ownerUserId: client.id, issuedByUserId: params.actorUserId };
-}
-
-/**
- * Añade `owner_label` ("Nombre · teléfono") a las filas emitidas para otra
- * billetera, para que el administrador sepa a quién pertenece cada una.
- */
-export async function attachOwnerLabels<T extends { user_id?: unknown; issued_by_user_id?: unknown }>(
-  rows: T[]
-): Promise<Array<T & { owner_label: string | null }>> {
-  const ownerIds = [...new Set(
-    rows.filter((row) => row.issued_by_user_id).map((row) => String(row.user_id))
-  )];
-
-  const labels = new Map<string, string>();
-  if (ownerIds.length > 0) {
-    const { data, error } = await createAdminClient()
-      .from('users')
-      .select('id, name, phone')
-      .in('id', ownerIds);
-    if (error) throw new Error(error.message);
-    for (const owner of data || []) {
-      labels.set(String(owner.id), [owner.name, owner.phone].filter(Boolean).join(' · '));
-    }
-  }
-
-  return rows.map((row) => ({
-    ...row,
-    owner_label: row.issued_by_user_id ? labels.get(String(row.user_id)) ?? 'Billetera cliente' : null,
-  }));
+export async function buildCredentialScopeFilter(actorUserId: string, actorAccessRole: string): Promise<string> {
+  const applications = await listVisibleApplications(actorUserId, actorAccessRole);
+  return buildOwnedOrIssuedFilter(
+    actorUserId,
+    actorAccessRole,
+    applications.map((application) => application.wallet_user_id)
+  );
 }

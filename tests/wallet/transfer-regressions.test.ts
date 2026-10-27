@@ -184,7 +184,10 @@ test('el emisor sin teléfono recibe un mensaje accionable', async () => {
 
   // `users.phone` admite NULL desde la migración a Clerk, pero
   // `wallet_transfers.sender_phone` sigue siendo NOT NULL.
-  assert.match(source, /if \(!sender\.phone\?\.trim\(\)\)/);
+  assert.match(source, /if \(options\.requireSenderPhone && !sender\.phone\?\.trim\(\)\)/);
+  // El panel lo exige siempre; solo la billetera de una aplicación (API) no tiene teléfono.
+  const dashboard = source.slice(source.indexOf('export async function createWalletTransfer('));
+  assert.match(dashboard, /requireSenderPhone: true/);
 });
 
 test('la evidencia de consentimiento se escribe con el dinero, no después', async () => {

@@ -3,6 +3,7 @@ import { fetchJSON } from './http';
 
 export interface WebhookSubscriptionRecord {
   id: string;
+  application_id: string | null;
   name: string;
   description: string | null;
   target_url: string;
@@ -11,16 +12,14 @@ export interface WebhookSubscriptionRecord {
   status: 'active' | 'paused' | 'disabled';
   last_delivery_at: string | null;
   created_at: string;
-  /** "Nombre · teléfono" de la billetera titular si la emitió un administrador para ella. */
-  owner_label?: string | null;
 }
 
 export interface CreateWebhookData {
-  name: string;
+  /** Aplicación cuyos eventos recibe el webhook. */
+  application_id: string;
+  name?: string;
   target_url: string;
   event_types: SubscribableWebhookEvent[];
-  /** Solo administradores: teléfono de la billetera cliente titular. */
-  owner_phone?: string;
 }
 
 export interface CreatedWebhookResponse {

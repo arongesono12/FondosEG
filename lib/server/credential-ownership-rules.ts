@@ -1,65 +1,89 @@
 /**
- * Reglas para emitir credenciales y webhooks a nombre de otra billetera.
+ * Reglas de las credenciales y webhooks de integradores.
  *
- * Una integración como CasasEG necesita que la API key y el webhook
- * pertenezcan a la billetera CLIENTE que cobra (solo así FondosEG le abona
- * los cobros y le envía sus eventos). Esa credencial opera el saldo de la
- * billetera, así que solo el SUPERADMIN la emite "en nombre de" ella y solo
- * él gestiona (rota, revoca) las credenciales emitidas para clientes.
+ * Cada credencial pertenece a una APLICACIÓN (p. ej. CasasEG), no a un rol ni
+ * a la billetera de una persona. La aplicación tiene su propia billetera de
+ * cliente: sus credenciales y webhooks apuntan a ella (`user_id`), así que los
+ * cobros se le abonan y los envíos salen de su saldo.
  *
  * Sin imports con alias: lo cargan las rutas y los tests de `node --test`.
  */
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const MAX_OWNER_PHONE_LENGTH = 32;
 
-export type IssuanceDecision =
-  | { kind: 'self' }
-  | { kind: 'for_client'; ownerPhone: string }
-  | { kind: 'rejected'; status: 400 | 403; message: string };
+export const API_PERMISSIONS = ['balance', 'transfer', 'history', 'payments', 'properties'] as const;
+export type CredentialPermission = (typeof API_PERMISSIONS)[number];
 
-/**
- * Decide para quién se emite. `requestedRole` es `null` para webhooks, que
- * no llevan rol. Sin `ownerPhone`, la credencial es del propio emisor (el
- * comportamiento de siempre).
- */
-export function decideIssuance(input: {
-  actorAccessRole: string;
-  ownerPhone: unknown;
-  requestedRole: string | null;
-}): IssuanceDecision {
-  const ownerPhone = typeof input.ownerPhone === 'string' ? input.ownerPhone.trim() : '';
-  if (!ownerPhone) return { kind: 'self' };
+/** Lo que necesita una app que cobra y paga con billeteras FondosEG. */
+export const DEFAULT_APPLICATION_PERMISSIONS: Readonly<Record<CredentialPermission, boolean>> = {
+  balance: true,
+  transfer: true,
+  history: true,
+  payments: true,
+  properties: false,
+};
 
-  if (input.actorAccessRole !== 'superadmin') {
-    return { kind: 'rejected', status: 403, message: 'Solo el superadmin puede emitir a nombre de otra billetera' };
-  }
+export function isUuid(value: unknown): value is string {
+  return typeof value === 'string' && UUID_PATTERN.test(value);
+}
 
-  if (ownerPhone.length > MAX_OWNER_PHONE_LENGTH || !/\d{6,}/.test(ownerPhone.replace(/\D/g, ''))) {
-    return { kind: 'rejected', status: 400, message: 'El teléfono de la billetera titular no es válido' };
-  }
-
-  // Una billetera cliente solo puede tener credenciales de cliente: emitirle
-  // una de gestor o admin le daría permisos que su cuenta no tiene.
-  if (input.requestedRole !== null && input.requestedRole !== 'cliente') {
-    return { kind: 'rejected', status: 400, message: 'A una billetera cliente solo se le emiten credenciales con rol cliente' };
-  }
-
-  return { kind: 'for_client', ownerPhone };
+/** Solo administración emite credenciales que mueven dinero real. */
+export function canIssueProductionCredentials(actorAccessRole: string): boolean {
+  return actorAccessRole === 'admin' || actorAccessRole === 'superadmin';
 }
 
 /**
- * Filtro PostgREST de las credenciales que el actor puede ver y gestionar:
- * siempre las suyas y, solo para el superadmin, todas las emitidas para una
- * billetera cliente (también las que emitió un admin antes de esta regla).
- * El id viene de la sesión, pero se valida como UUID para que nunca pueda
- * inyectar sintaxis en `.or()`.
+ * Una aplicación creada por el superadmin es de confianza: puede pedir a los
+ * clientes ver su saldo (vínculos de billetera). Así nadie da de alta una app
+ * con el nombre de otro comercio para engañar a los clientes.
  */
-export function buildOwnedOrIssuedFilter(userId: string, actorAccessRole: string): string {
-  if (!UUID_PATTERN.test(userId)) {
+export function isTrustedApplicationCreator(actorAccessRole: string): boolean {
+  return actorAccessRole === 'superadmin';
+}
+
+/** El superadmin ve y gestiona todas las aplicaciones; el resto, las suyas. */
+export function canManageEveryApplication(actorAccessRole: string): boolean {
+  return actorAccessRole === 'superadmin';
+}
+
+/**
+ * Permisos de una credencial nueva: los pedidos explícitamente y, para el
+ * resto, los de una app que cobra y paga. Ignora claves desconocidas.
+ */
+export function normalizeCredentialPermissions(input: unknown): Record<CredentialPermission, boolean> {
+  const values = typeof input === 'object' && input !== null ? input as Record<string, unknown> : {};
+  return API_PERMISSIONS.reduce<Record<CredentialPermission, boolean>>((acc, key) => ({
+    ...acc,
+    [key]: typeof values[key] === 'boolean' ? values[key] as boolean : DEFAULT_APPLICATION_PERMISSIONS[key],
+  }), { ...DEFAULT_APPLICATION_PERMISSIONS });
+}
+
+/**
+ * Filtro PostgREST de las credenciales y webhooks que el actor puede ver y
+ * gestionar: los de las billeteras de sus aplicaciones, los que operan su
+ * propia billetera (anteriores a las aplicaciones) y, para el superadmin, los
+ * que emitió para un cliente. Todos los ids se validan como UUID para que
+ * nunca puedan inyectar sintaxis en `.or()`.
+ */
+export function buildOwnedOrIssuedFilter(
+  userId: string,
+  actorAccessRole: string,
+  applicationWalletIds: readonly string[] = []
+): string {
+  if (!isUuid(userId)) {
     throw new Error('Identificador de usuario inválido');
   }
-  return actorAccessRole === 'superadmin'
-    ? `user_id.eq.${userId},issued_by_user_id.not.is.null`
-    : `user_id.eq.${userId}`;
+  if (!applicationWalletIds.every(isUuid)) {
+    throw new Error('Identificador de billetera inválido');
+  }
+
+  const clauses = [`user_id.eq.${userId}`];
+  const walletIds = [...new Set(applicationWalletIds)].filter((id) => id !== userId);
+  if (walletIds.length > 0) {
+    clauses.push(`user_id.in.(${walletIds.join(',')})`);
+  }
+  if (canManageEveryApplication(actorAccessRole)) {
+    clauses.push('issued_by_user_id.not.is.null');
+  }
+  return clauses.join(',');
 }

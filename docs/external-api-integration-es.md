@@ -23,56 +23,60 @@ Content-Type: application/json
 
 La validacion se hace en `lib/api-auth.ts`.
 
-## Crear credenciales
+## Aplicaciones y credenciales
 
-Ruta:
+Las credenciales se emiten **por aplicación**, no por rol ni por el teléfono de
+una cuenta. Cada aplicación (por ejemplo CasasEG) nace con su propia billetera
+FondosEG: los cobros entran en ella y los envíos salen de ella. Se gestiona en el
+portal de desarrolladores (`/developers` o `/developer-console`, pestaña
+*Aplicaciones*) o con estas rutas del portal (sesión de desarrollador):
+
+```http
+POST /api/applications
+```
+
+```json
+{ "name": "CasasEG", "description": "Cobro de alquileres" }
+```
 
 ```http
 POST /api/api-keys
 ```
 
-Body:
-
 ```json
 {
-  "app_name": "CasasEG",
-  "app_description": "Integracion movil o web",
-  "role_access": "gestor",
-  "permissions": {
-    "balance": true,
-    "transfer": true,
-    "history": true
-  }
+  "application_id": "uuid-de-la-aplicacion",
+  "environment": "test",
+  "permissions": { "balance": true, "transfer": true, "history": true, "payments": true }
 }
 ```
 
-Notas:
-
-- `role_access` puede ser `admin`, `superadmin`, `gestor` o `cliente`.
-- por defecto el sistema crea permisos de `balance` e `history`
-- el permiso `transfer` se activa automaticamente para `gestor`
-- si tu otra app necesita operar como cliente y como gestor, conviene crear dos credenciales separadas
-
-Respuesta esperada:
+Respuesta (el `api_secret` solo aparece aquí):
 
 ```json
 {
   "success": true,
   "apiKey": {
     "id": "uuid",
+    "application_id": "uuid-de-la-aplicacion",
     "app_name": "CasasEG",
-    "api_key": "key_xxx",
-    "api_secret": "secret_xxx",
-    "role_access": "gestor",
-    "permissions": {
-      "balance": true,
-      "transfer": true,
-      "history": true
-    },
-    "created_at": "2026-04-06T10:00:00.000Z"
+    "environment": "test",
+    "api_key": "sk_test_xxx",
+    "api_secret": "xxx",
+    "permissions": { "balance": true, "transfer": true, "history": true, "payments": true, "properties": false },
+    "created_at": "2026-10-26T10:00:00.000Z"
   }
 }
 ```
+
+Notas:
+
+- `environment = production` solo lo emiten administradores; `test` responde con datos simulados.
+- sin `permissions`, la credencial recibe saldo, envíos, historial y cobros.
+- los webhooks también se registran por aplicación (`POST /api/webhooks` con `application_id`).
+- las aplicaciones creadas por el superadmin quedan *verificadas* y pueden pedir vínculos de billetera.
+- las credenciales anteriores siguen funcionando: la migración `20261026_api_applications.sql`
+  las agrupa en aplicaciones que conservan la billetera que ya operaban.
 
 ## 1. Consultar saldo
 
@@ -237,21 +241,23 @@ Ruta:
 POST /api/v1/external/wallet-transfer
 ```
 
-Solo funciona si la API key tiene `role_access = "cliente"` y permiso `transfer = true`.
+Envía desde la billetera de la aplicación a la de un cliente FondosEG. Requiere
+permiso `transfer` y el header `idempotency-key`.
 
 Body:
 
 ```json
 {
-  "receiver_phone": "222999888",
+  "receiver_phone": "+240222999888",
   "receiver_name": "Maria",
   "amount": 10000,
   "currency": "XAF",
-  "notes": "Pago interno"
+  "reference": "LIQ-2026-0042",
+  "notes": "Liquidación alquiler octubre"
 }
 ```
 
-Respuesta:
+Respuesta (`201`):
 
 ```json
 {
@@ -259,32 +265,38 @@ Respuesta:
   "data": {
     "transfer_id": "uuid",
     "transfer_type": "wallet",
+    "reference": "LIQ-2026-0042",
     "amount": 10000,
     "currency": "XAF",
-    "sender_name": "Juan",
-    "sender_phone": "222000111",
+    "sender_name": "CasasEG",
     "receiver_name": "Maria",
-    "receiver_phone": "222999888",
+    "receiver_phone": "+240222999888",
     "status": "completed",
-    "created_at": "2026-04-06T10:40:00.000Z",
+    "created_at": "2026-10-26T10:40:00.000Z",
+    "confirmed_at": "2026-10-26T10:40:00.000Z",
     "new_balance": 70000
   }
 }
 ```
 
-Notas:
+Notas (mismas reglas que un envío desde la app de FondosEG):
 
-- esta operacion se confirma inmediatamente
-- descuenta saldo de la billetera del emisor
-- acredita saldo a la billetera del receptor
+- el teléfono se normaliza (espacios, guiones, prefijo) y solo se acepta una coincidencia exacta
+- solo se puede enviar el saldo **disponible** (`available_balance` en `/balance`)
+- la divisa debe ser la de la billetera; no hay conversión
+- se liquida al instante, con la evidencia de consentimiento CEMAC en la misma transacción
+- un rechazo de negocio responde `422` con `error.details.reason`
+  (`receiver_not_found`, `receiver_inactive`, `insufficient_funds`, `currency_mismatch`);
+  no se movió dinero y la misma `idempotency-key` puede reutilizarse
+- un `503` significa resultado incierto: reintenta con la **misma** `idempotency-key`
+- el webhook `wallet_transfer.confirmed` solo llega a las aplicaciones del emisor y del beneficiario
 
 ## 5. Solicitudes de cobro (cobrar a un cliente FondosEG)
 
 Permite que tu aplicacion cobre a un cliente desde SU billetera sin guardar
-credenciales suyas. El importe se abona en la billetera del dueno de la API key.
+credenciales suyas. El importe se abona en la billetera de la aplicación.
 
-Requisitos de la credencial: `role_access = "cliente"` y permiso `payments = true`
-(opt-in: hay que marcarlo al crearla). La autenticacion admite `x-api-key` o
+Requisito de la credencial: permiso `payments = true`. La autenticacion admite `x-api-key` o
 `Authorization: Bearer <api_key>`, siempre con `x-api-secret`.
 
 ### Crear
@@ -494,23 +506,18 @@ o
 
 ## Recomendacion de integracion
 
-### Si tu otra app es para gestores
+Una aplicación por producto. Para cobrar a clientes y pagarles (caso CasasEG):
 
-Usa:
+- crea la aplicación y sus credenciales en el portal
+- `POST /api/v1/external/payment-requests` para cobrar
+- `GET /api/v1/external/payment-requests/{id}` o el webhook `payment_request.paid` para confirmar
+- `POST /api/v1/external/wallet-transfer` para pagar desde el saldo de la aplicación
+- `GET /api/v1/external/balance` y `GET /api/v1/external/history` para conciliar
 
-- `POST /api/api-keys` con `role_access = "gestor"`
-- `GET /api/v1/external/balance`
-- `GET /api/v1/external/history`
-- `POST /api/v1/external/transfer`
+Guía completa paso a paso: [guia-integracion-casaseg-es.md](guia-integracion-casaseg-es.md).
 
-### Si tu otra app es para clientes
-
-Usa:
-
-- `POST /api/api-keys` con `role_access = "cliente"`
-- `GET /api/v1/external/balance`
-- `GET /api/v1/external/history`
-- `POST /api/v1/external/wallet-transfer`
+`POST /api/v1/external/transfer` (envío de gestor con código de ventanilla) solo
+funciona con credenciales de gestor emitidas antes de las aplicaciones.
 
 ## Recomendaciones antes de produccion
 

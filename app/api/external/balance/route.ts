@@ -3,6 +3,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { authenticateAPIKey, requirePermission } from '@/lib/api-auth';
 import { isAdminRole } from '@/lib/roles';
 import { formatCurrency } from '@/lib/utils';
+import { getAvailableClientBalance } from '@/lib/financial';
 import { createSandboxBalance } from '@/lib/server/public-api-sandbox';
 import {
   createPublicApiContext,
@@ -92,15 +93,23 @@ export async function GET(request: NextRequest) {
     } else {
       const { data: balance } = await adminClient
         .from('client_balances')
-        .select('*')
+        .select('balance, reserved_balance, currency')
         .eq('client_id', user_id)
-        .single();
+        .maybeSingle();
 
+      const gross = Number(balance?.balance || 0);
+      const reserved = Number(balance?.reserved_balance || 0);
+      const available = getAvailableClientBalance(gross, reserved);
+      // `available_balance` es lo que se puede enviar ahora: lo retenido por
+      // códigos de retiro vivos ya está comprometido.
       balanceData = {
         role: 'cliente',
-        balance: balance?.balance || 0,
+        balance: gross,
+        available_balance: available,
+        reserved_balance: reserved,
         currency: balance?.currency || 'XAF',
-        formatted: formatCurrency(balance?.balance || 0),
+        formatted: formatCurrency(gross),
+        formatted_available: formatCurrency(available),
       };
     }
 

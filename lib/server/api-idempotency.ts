@@ -92,7 +92,23 @@ export async function releaseIdempotencyKeyAfterRejection(
   state: IdempotencyState | null,
   error: unknown
 ): Promise<void> {
-  if (!state?.lockToken || !isDefinitiveDatabaseRejection(error)) {
+  if (!isDefinitiveDatabaseRejection(error)) {
+    return;
+  }
+
+  await releaseIdempotencyKey(apiKeyId, state);
+}
+
+/**
+ * Libera la clave de una operación que se rechazó ANTES de mover dinero
+ * (validación de negocio: destinatario inexistente, saldo insuficiente...),
+ * para que el integrador pueda reintentar con la misma clave.
+ */
+export async function releaseIdempotencyKey(
+  apiKeyId: string,
+  state: IdempotencyState | null
+): Promise<void> {
+  if (!state?.lockToken) {
     return;
   }
 

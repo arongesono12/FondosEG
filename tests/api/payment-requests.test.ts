@@ -209,7 +209,12 @@ test('los webhooks de solicitudes se entregan solo al comercio dueño', async ()
   const outbox = await load('lib/server/webhook-outbox.ts');
 
   assert.match(outbox, /ownerUserId/);
-  assert.match(outbox, /\.eq\('user_id', input\.ownerUserId\)/);
+  assert.match(outbox, /\.in\('user_id', ownerIds\)/);
+  // Sin titular, un evento con datos de clientes no se entrega a nadie.
+  assert.match(outbox, /ownerIds\.length === 0 && OWNER_SCOPED_EVENTS\.has\(input\.eventType\)/);
+  for (const event of ['wallet_transfer.confirmed', 'transfer.created', 'transfer.paid_out', 'payment_request.paid']) {
+    assert.ok(outbox.slice(outbox.indexOf('OWNER_SCOPED_EVENTS')).includes(`'${event}'`), event);
+  }
 });
 
 test('un fallo interno al autenticar la key responde JSON con request_id, no un 500 vacío', async () => {
