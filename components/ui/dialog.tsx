@@ -142,7 +142,14 @@ const DialogContent = React.forwardRef<
           // tarjeta de acceso; ancho, alto, relleno y desplazamiento los aporta
           // `modals.css`. Aquí sólo queda el posicionamiento: cualquier utilidad
           // de tamaño o espaciado ganaría a la capa y rompería la especificación.
-          "dialog-shell fixed left-1/2 top-1/2 z-(--z-overlay) -translate-x-1/2 -translate-y-1/2",
+          //
+          // Con `none` no se centra: el modal se coloca solo. Antes recibía
+          // también `-translate-*` y lo anulaba con `translate: none`, pero
+          // Lightning CSS (sólo corre en `next build`) descarta `translate`
+          // cuando la misma regla declara `transform`: en producción el panel
+          // de módulos salía desplazado al centro y cortado por arriba.
+          "dialog-shell fixed z-(--z-overlay)",
+          mobile !== "none" && "left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2",
           className
         )}
         {...props}

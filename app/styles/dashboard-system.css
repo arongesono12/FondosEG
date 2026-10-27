@@ -393,8 +393,9 @@ html.dark .dashboard-public-page.main-container {
   height: 100dvh !important;
   max-height: none !important;
   min-height: 0;
-  translate: none !important;
-  transform: none !important;
+  /* Sin `translate`/`transform`: con `mobile="none"` el primitivo ya no
+     centra el panel. No los reintroduzcas juntos en una regla: Lightning CSS
+     descarta `translate` al minificar y el fallo sólo se ve en producción. */
   overflow: hidden !important;
   border: 0 !important;
   border-left: 1px solid var(--dashboard-card-border) !important;

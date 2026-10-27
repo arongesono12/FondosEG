@@ -176,7 +176,9 @@
     position: fixed; inset: 0; z-index: var(--z-overlay);
     width: 100vw; width: 100dvw; min-width: 0; max-width: none;
     height: 100vh; height: 100dvh; min-height: 0; max-height: none;
-    margin: 0; translate: none; transform: none;
+    /* Sólo `translate` (anula `-translate-*`): con `transform` en la misma
+       regla Lightning CSS lo descarta al compilar para producción. */
+    margin: 0; translate: none;
     border: 0; border-radius: 0;
     background-color: var(--dialog-surface); background-image: none;
     color: var(--foreground); box-shadow: none;
