@@ -33,7 +33,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from '@/components/ui/chart';
-import { ArrowUpRight, BarChart3, MousePointerClick, PieChart as PieChartIcon, ShieldCheck, Sparkles } from '@/components/ui/hugeicons';
+import { ArrowUpRight } from '@/components/ui/hugeicons';
 
 // Captación de la portada comercial. Vive aquí y no en el dashboard porque
 // /stats ya es la pantalla de analítica y sólo abre para admin.
@@ -202,9 +202,7 @@ export default function StatsPage() {
 
   return (
     // Las rejillas usan variantes de contenedor (`@xl:` ≈ `sm:`, `@2xl:` ≈
-    // `md:`, `@4xl:` ≈ `lg:`, `@6xl:` ≈ `xl:`): la página también se pinta en
-    // el panel de media pantalla, y a 1024px de viewport ese panel sólo deja
-    // ~470px de ancho útil aunque `lg:` ya se hubiera disparado.
+    // `md:`, `@4xl:` ≈ `lg:`, `@6xl:` ≈ `xl:`), según el ancho de la página.
     <div className="space-y-8">
       <section className="app-card p-6 @2xl:p-8">
         <div className="flex flex-col gap-5 @4xl:flex-row @4xl:items-end @4xl:justify-between">
@@ -245,8 +243,7 @@ export default function StatsPage() {
       <section className="grid gap-6 @4xl:grid-cols-[minmax(0,1.35fr)_minmax(0,0.95fr)]">
         <Card className="min-w-0">
           <CardHeader className="border-b border-border/5 pb-5">
-            <CardTitle className="flex items-center gap-2 text-xl font-black text-foreground">
-              <BarChart3 className="h-5 w-5 text-primary" />
+            <CardTitle className="text-xl font-black text-foreground">
               Flujo de volumen y actividad
             </CardTitle>
           </CardHeader>
@@ -284,8 +281,7 @@ export default function StatsPage() {
 
         <Card className="min-w-0">
           <CardHeader className="border-b border-border/5 pb-5">
-            <CardTitle className="flex items-center gap-2 text-xl font-black text-foreground">
-              <PieChartIcon className="h-5 w-5 text-primary" />
+            <CardTitle className="text-xl font-black text-foreground">
               {isAdmin ? 'Distribución de red' : 'Distribución operativa'}
             </CardTitle>
           </CardHeader>
@@ -305,7 +301,7 @@ export default function StatsPage() {
                     cx="50%"
                     cy="50%"
                     // Radios relativos: con 62/104px fijos el anillo se salía del lienzo
-                    // cuando la tarjeta estrechaba (panel de media pantalla, teléfono).
+                    // cuando la tarjeta estrechaba en el teléfono.
                     innerRadius="55%"
                     outerRadius="90%"
                     paddingAngle={4}
@@ -340,8 +336,7 @@ export default function StatsPage() {
       <section className="grid gap-6 @4xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
         <Card className="min-w-0">
           <CardHeader className="border-b border-border/5 pb-5">
-            <CardTitle className="flex items-center gap-2 text-xl font-black text-foreground">
-              <ShieldCheck className="h-5 w-5 text-primary" />
+            <CardTitle className="text-xl font-black text-foreground">
               Calidad operativa
             </CardTitle>
           </CardHeader>
@@ -392,8 +387,7 @@ export default function StatsPage() {
 
         <Card className="min-w-0">
           <CardHeader className="border-b border-border/5 pb-5">
-            <CardTitle className="flex items-center gap-2 text-xl font-black text-foreground">
-              <Sparkles className="h-5 w-5 text-primary" />
+            <CardTitle className="text-xl font-black text-foreground">
               {isAdmin ? 'Comisiones por gestor' : 'Últimas operaciones observadas'}
             </CardTitle>
           </CardHeader>
@@ -488,8 +482,7 @@ export default function StatsPage() {
         <section className="grid gap-6">
           <Card className="min-w-0">
             <CardHeader className="border-b border-border/5 pb-5">
-              <CardTitle className="flex items-center gap-2 text-xl font-black text-foreground">
-                <ShieldCheck className="h-5 w-5 text-primary" />
+              <CardTitle className="text-xl font-black text-foreground">
                 Conciliación mensual
               </CardTitle>
             </CardHeader>
@@ -538,8 +531,7 @@ export default function StatsPage() {
             <CardHeader className="border-b border-border/5 pb-5">
               <div className="flex flex-col gap-3 @2xl:flex-row @2xl:items-center @2xl:justify-between">
                 <div>
-                  <CardTitle className="flex items-center gap-2 text-xl font-black text-foreground">
-                    <MousePointerClick className="h-5 w-5 text-primary" />
+                  <CardTitle className="text-xl font-black text-foreground">
                     Rendimiento de la landing
                   </CardTitle>
                   <p className="mt-2 text-sm font-medium text-muted-foreground">
@@ -592,8 +584,7 @@ export default function StatsPage() {
 
           <Card className="min-w-0">
             <CardHeader className="border-b border-border/5 pb-5">
-              <CardTitle className="flex items-center gap-2 text-xl font-black text-foreground">
-                <BarChart3 className="h-5 w-5 text-primary" />
+              <CardTitle className="text-xl font-black text-foreground">
                 Actividad reciente de captación
               </CardTitle>
             </CardHeader>

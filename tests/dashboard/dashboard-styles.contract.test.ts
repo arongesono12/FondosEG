@@ -36,10 +36,3 @@ test('ninguna regla declara a la vez `translate` y `transform`', async () => {
   }
 });
 
-test('el panel de módulos no recibe el centrado del primitivo', async () => {
-  const dialog = await load('components/ui/dialog.tsx');
-  const panel = await load('components/dashboard/dashboard-module-panel.tsx');
-
-  assert.match(panel, /mobile="none"/);
-  assert.match(dialog, /mobile !== "none" && "left-1\/2 top-1\/2 -translate-x-1\/2 -translate-y-1\/2"/);
-});

@@ -9,7 +9,6 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
-import { Settings, DollarSign, Palette } from '@/components/ui/hugeicons';
 import { useAppStore } from '@/lib/store';
 import { useState, useEffect } from 'react';
 import { useTheme } from '@/components/theme-provider';
@@ -49,8 +48,8 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent size="md" className="outline-none">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-xl font-semibold text-foreground">
-            <Settings className="h-5 w-5 text-primary" /> Configuración
+          <DialogTitle className="text-xl font-semibold text-foreground">
+            Configuración
           </DialogTitle>
           <DialogDescription className="text-sm text-muted-foreground">
             Personaliza tu experiencia en FondosEG
@@ -60,10 +59,7 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
         <DialogBody className="space-y-6">
           {/* Moneda preferida */}
           <div className="space-y-3">
-            <label className="flex items-center gap-2 text-sm font-medium text-foreground">
-              <DollarSign className="h-4 w-4 text-primary" />
-              Moneda para envíos
-            </label>
+            <label className="text-sm font-medium text-foreground">Moneda para envíos</label>
             <div className="grid grid-cols-1 gap-2 @xs:grid-cols-2">
               {currencies.map((curr) => (
                 <button
@@ -91,10 +87,7 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
 
           {/* Tema */}
           <div className="space-y-3">
-            <label className="flex items-center gap-2 text-sm font-medium text-foreground">
-              <Palette className="h-4 w-4 text-primary" />
-              Apariencia
-            </label>
+            <label className="text-sm font-medium text-foreground">Apariencia</label>
             <div className="flex gap-2">
               <button
                 type="button"

@@ -77,9 +77,6 @@
 .role-grid-item { display: flex; min-width: 0; }
 .role-card { display: flex; width: 100%; min-height: 220px; padding: 24px 22px; }
 .role-card-content { position: relative; z-index: 2; display: flex; min-height: 100%; max-width: 270px; flex-direction: column; align-items: flex-start; }
-.role-card-content > svg { width: 27px; height: 27px; flex: none; color: #f0267e; }
-.role-2 .role-card-content > svg { color: #ec4899; }
-.role-3 .role-card-content > svg { color: #d946ef; }
 .role-card p { position: static; z-index: auto; }
 .role-card strong { position: static; margin-top: auto; padding-top: 20px; }
 .role-1 strong{color:#ff4ba0}.role-2 strong{color:#38bdf8}.role-3 strong{color:#c084fc}

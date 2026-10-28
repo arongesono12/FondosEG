@@ -15,7 +15,7 @@ import { correctTransfer, getTransferHistory, type TransferHistoryStatus } from 
 import { isTransferCompleted, isTransferPending, normalizeTransferStatus } from '@/lib/financial';
 import { formatCurrency, formatDate, getStatusColor, getStatusText } from '@/lib/utils';
 import type { Transfer } from '@/types';
-import { AlertTriangle, Download, History, PencilLine, Search } from '@/components/ui/hugeicons';
+import { AlertTriangle, Download, PencilLine, Search } from '@/components/ui/hugeicons';
 import { isAdminRole } from '@/lib/roles';
 import Link from 'next/link';
 
@@ -228,9 +228,7 @@ export default function HistoryPage() {
 
   return (
     <div className="space-y-8">
-      {/* Variantes de contenedor (`@4xl:` ≈ `lg:`): la página también se pinta
-          en el panel de media pantalla, donde las de viewport se disparaban
-          con ~470px de ancho útil. */}
+      {/* Variantes de contenedor (`@4xl:` ≈ `lg:`) según el ancho de la página. */}
       <section className="app-card p-6 @2xl:p-8">
         <div className="flex flex-col gap-5 @4xl:flex-row @4xl:items-end @4xl:justify-between">
           <div>
@@ -263,8 +261,7 @@ export default function HistoryPage() {
       <Card className="overflow-hidden">
         <CardHeader className="border-b border-border/5 pb-5">
           <div className="flex flex-col gap-4 @4xl:flex-row @4xl:items-center @4xl:justify-between">
-            <CardTitle className="flex items-center gap-2 text-xl font-black text-foreground">
-              <History className="h-5 w-5 text-primary" />
+            <CardTitle className="text-xl font-black text-foreground">
               Registro operativo
             </CardTitle>
 

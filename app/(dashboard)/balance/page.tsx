@@ -19,7 +19,7 @@ import { getAvailableClientBalance, getWithdrawalStatusLabel } from '@/lib/finan
 import { ClientWithdrawalModal } from '@/components/client-withdrawal-modal';
 import type { AgentBalance, AgentWithBalance, BalanceTransaction, ClientBalance, ClientWithdrawal, Transfer } from '@/types';
 import { isAdminRole } from '@/lib/roles';
-import { AlertCircle, HandCoins, CheckCircle, History, Wallet } from '@/components/ui/hugeicons';
+import { AlertCircle, CheckCircle } from '@/components/ui/hugeicons';
 
 type BalanceResponse = { balances: ClientBalance[] };
 
@@ -150,8 +150,8 @@ export default function BalancePage() {
   if (isAdmin) {
     return (
       <div className="space-y-8">
-        {/* Variantes de contenedor (`@xl:` ≈ `sm:`, `@4xl:` ≈ `lg:`): la página
-            también se pinta en el panel de media pantalla. */}
+        {/* Variantes de contenedor (`@xl:` ≈ `sm:`, `@4xl:` ≈ `lg:`):
+            responden al ancho disponible en la página. */}
         <section className="app-card p-6 @2xl:p-8">
           <Badge className="rounded-full border border-white/30 bg-white/70 px-3 py-1 text-xs font-bold uppercase tracking-[0.24em] text-slate-700 shadow-sm dark:border-white/10 dark:bg-white/10 dark:text-slate-200">
             Tesorería central
@@ -172,8 +172,7 @@ export default function BalancePage() {
 
         <Card className="overflow-hidden">
           <CardHeader className="border-b border-border/5 pb-5">
-            <CardTitle className="flex items-center gap-2 text-xl font-bold text-foreground">
-              <Wallet className="h-5 w-5 text-primary" />
+            <CardTitle className="text-xl font-bold text-foreground">
               Disponibilidad por gestor
             </CardTitle>
           </CardHeader>
@@ -419,8 +418,7 @@ export default function BalancePage() {
 
         <Card className="overflow-hidden">
           <CardHeader className="border-b border-border/5 pb-5">
-            <CardTitle className="flex items-center gap-2 text-xl font-bold text-foreground">
-              <History className="h-5 w-5 text-primary" />
+            <CardTitle className="text-xl font-bold text-foreground">
               Movimientos de cuenta
             </CardTitle>
           </CardHeader>
@@ -496,8 +494,7 @@ export default function BalancePage() {
 
       <Card className="overflow-hidden">
         <CardHeader className="border-b border-border/5 pb-5">
-          <CardTitle className="flex items-center gap-2 text-xl font-bold text-foreground">
-            <Wallet className="h-5 w-5 text-primary" />
+          <CardTitle className="text-xl font-bold text-foreground">
             Saldos por moneda
           </CardTitle>
         </CardHeader>
@@ -523,8 +520,7 @@ export default function BalancePage() {
 
       <Card className="overflow-hidden">
         <CardHeader className="flex flex-row items-center justify-between gap-4 border-b border-border/5 pb-5">
-          <CardTitle className="flex items-center gap-2 text-xl font-bold text-foreground">
-            <HandCoins className="h-5 w-5 text-primary" />
+          <CardTitle className="text-xl font-bold text-foreground">
             Retiros en efectivo
           </CardTitle>
           <Button className="rounded-xl font-bold" onClick={() => setWithdrawalOpen(true)}>
@@ -567,8 +563,7 @@ export default function BalancePage() {
 
       <Card className="overflow-hidden">
         <CardHeader className="border-b border-border/5 pb-5">
-          <CardTitle className="flex items-center gap-2 text-xl font-bold text-foreground">
-            <History className="h-5 w-5 text-primary" />
+          <CardTitle className="text-xl font-bold text-foreground">
             Operaciones recientes
           </CardTitle>
         </CardHeader>

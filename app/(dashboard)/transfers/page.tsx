@@ -17,17 +17,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { 
-  TrendingUp,
+import {
   ArrowUpRight,
-  Users,
-  BarChart3,
-  Landmark,
-  MessageSquare,
-  Wallet,
-  QrCode,
-  Send,
-  HandCoins,
 } from '@/components/ui/hugeicons';
 import { SupportModal } from '@/components/layout/support-modal';
 import { Bar, BarChart, XAxis, YAxis } from 'recharts';
@@ -162,9 +153,7 @@ export default function TransfersPage() {
   return (
     <div className="transfers-mobile-page space-y-6">
       {/* Header */}
-      {/* Variantes de contenedor (`@2xl:`), no de viewport: la página también
-          se pinta dentro del panel de media pantalla, donde a 1024px de
-          viewport sólo quedan ~470px de ancho. */}
+      {/* Variantes de contenedor (`@2xl:`) según el ancho de la página. */}
       <div className="flex flex-col @2xl:flex-row justify-between items-start @2xl:items-center gap-4">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold text-foreground">Envíos</h1>
@@ -178,8 +167,8 @@ export default function TransfersPage() {
         {user?.role === 'gestor' && (
           <ActionCard label="Nueva transferencia" onSelect={() => setAgentTransferOpen(true)}>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-bold flex items-center gap-2">
-                <Send className="h-4 w-4" /> Nueva Transferencia
+              <CardTitle className="text-sm font-bold">
+                Nueva Transferencia
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -197,8 +186,8 @@ export default function TransfersPage() {
         {user?.role === 'cliente' && (
           <ActionCard label="Transferir a cliente" onSelect={() => setWalletTransferOpen(true)}>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-bold text-foreground flex items-center gap-2">
-                <Wallet className="h-4 w-4" /> Transferir a Cliente
+              <CardTitle className="text-sm font-bold text-foreground">
+                Transferir a Cliente
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -220,8 +209,8 @@ export default function TransfersPage() {
         {user?.role === 'cliente' && (
           <ActionCard label="Retirar efectivo" onSelect={() => setWithdrawalOpen(true)}>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-bold text-foreground flex items-center gap-2">
-                <HandCoins className="h-4 w-4" /> Retirar Efectivo
+              <CardTitle className="text-sm font-bold text-foreground">
+                Retirar Efectivo
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -238,8 +227,8 @@ export default function TransfersPage() {
         {user?.role === 'gestor' && (
           <ActionCard label="Pagar transferencia" onSelect={() => setAgentPayoutOpen(true)}>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-bold text-foreground flex items-center gap-2">
-                <QrCode className="h-4 w-4" /> Pagar transferencia
+              <CardTitle className="text-sm font-bold text-foreground">
+                Pagar transferencia
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -255,8 +244,8 @@ export default function TransfersPage() {
         {user?.role !== 'cliente' && (
           <ActionCard label="Payout Revolut" onSelect={() => setRevolutPayoutOpen(true)}>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-bold text-foreground flex items-center gap-2">
-                <Landmark className="h-4 w-4" /> Payout Revolut
+              <CardTitle className="text-sm font-bold text-foreground">
+                Payout Revolut
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -272,8 +261,8 @@ export default function TransfersPage() {
         {user?.role !== 'cliente' && (
         <ActionCard label="Flujo del día" onSelect={() => setShowDailyModal(true)}>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-bold text-muted-foreground flex items-center gap-2">
-              <TrendingUp className="h-4 w-4" /> Flujo del Día
+            <CardTitle className="text-sm font-bold text-muted-foreground">
+              Flujo del Día
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -291,8 +280,8 @@ export default function TransfersPage() {
         {user?.role !== 'cliente' && (
         <ActionCard label="Envíos de gestores" onSelect={() => setShowAgentsModal(true)}>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-bold text-muted-foreground flex items-center gap-2">
-              <Users className="h-4 w-4" /> Envíos de Gestores
+            <CardTitle className="text-sm font-bold text-muted-foreground">
+              Envíos de Gestores
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -309,8 +298,8 @@ export default function TransfersPage() {
         {user?.role !== 'cliente' && (
         <ActionCard label="Volumen semanal" onSelect={() => setShowWeeklyModal(true)}>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-bold text-muted-foreground flex items-center gap-2">
-              <BarChart3 className="h-4 w-4" /> Volumen Semanal
+            <CardTitle className="text-sm font-bold text-muted-foreground">
+              Volumen Semanal
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -326,8 +315,8 @@ export default function TransfersPage() {
         {/* Card 4: Soporte */}
         <ActionCard label="Soporte" onSelect={() => setSupportOpen(true)}>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-bold text-muted-foreground flex items-center gap-2">
-              <MessageSquare className="h-4 w-4" /> Soporte
+            <CardTitle className="text-sm font-bold text-muted-foreground">
+              Soporte
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -388,8 +377,8 @@ export default function TransfersPage() {
       <Dialog open={showDailyModal} onOpenChange={setShowDailyModal}>
         <DialogContent size="xl" aria-describedby={undefined}>
           <DialogHeader>
-            <DialogTitle className="text-xl font-bold flex items-center gap-2">
-              <TrendingUp className="h-5 w-5" /> Flujo del Día
+            <DialogTitle className="text-xl font-bold">
+              Flujo del Día
             </DialogTitle>
           </DialogHeader>
           <DialogBody>
@@ -416,8 +405,8 @@ export default function TransfersPage() {
       <Dialog open={showAgentsModal} onOpenChange={setShowAgentsModal}>
         <DialogContent size="xl" aria-describedby={undefined}>
           <DialogHeader>
-            <DialogTitle className="text-xl font-bold flex items-center gap-2">
-              <Users className="h-5 w-5" /> Envíos de Gestores
+            <DialogTitle className="text-xl font-bold">
+              Envíos de Gestores
             </DialogTitle>
           </DialogHeader>
           <DialogBody className="space-y-3">
@@ -448,8 +437,8 @@ export default function TransfersPage() {
       <Dialog open={showWeeklyModal} onOpenChange={setShowWeeklyModal}>
         <DialogContent size="xl" aria-describedby={undefined}>
           <DialogHeader>
-            <DialogTitle className="text-xl font-bold flex items-center gap-2">
-              <BarChart3 className="h-5 w-5" /> Volumen Semanal
+            <DialogTitle className="text-xl font-bold">
+              Volumen Semanal
             </DialogTitle>
           </DialogHeader>
           <DialogBody className="space-y-4">

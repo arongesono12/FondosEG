@@ -30,7 +30,6 @@
 .overview-metric-value { margin-top: 13px; overflow-wrap: anywhere; font-family: var(--font-fondoseg-primary); font-size: clamp(18px, 1.85vw, 27px); font-weight: 600; line-height: 1.25; letter-spacing: -.7px; font-variant-numeric: tabular-nums; }
 .overview-metric-value small { font-family: var(--font-fondoseg-secondary); font-size: 17px; font-weight: 400; }
 .overview-metric-caption { display: flex; align-items: center; flex-wrap: wrap; column-gap: 4px; margin-top: 8px; font-size: 12px; color: var(--muted-foreground); }
-.overview-metric-caption svg { width: 12px; height: 12px; }
 .overview-tone-primary { color: var(--primary); }
 .overview-tone-warning { color: var(--chart-4); }
 .overview-tone-success { color: var(--chart-3); }
@@ -74,7 +73,6 @@
    ========================================================================= */
 .overview-filters { display: grid; grid-template-columns: auto 1fr 1fr 1fr 1fr 1.2fr; align-items: center; gap: 12px; --overview-control-height: 44px; }
 .overview-filter-label { display: flex; align-items: center; gap: 7px; padding-right: 8px; font-weight: 500; }
-.overview-filter-label > svg { width: 15px; height: 15px; }
 /* El contador sólo se enciende cuando hay filtros puestos. Antes iba siempre
    en tinta, que sobre la barra oscura no se veía. */
 .overview-filter-label b { display: grid; place-items: center; width: 21px; height: 21px; border-radius: 50%; background: var(--muted); color: var(--muted-foreground); font-weight: 600; }
@@ -171,7 +169,6 @@
 .overview-detail-action { display: flex; align-items: center; justify-content: center; gap: 7px; min-height: 36px; padding: 9px 15px; border-radius: var(--app-control-radius); background: #fff; color: var(--dashboard-ink); font-size: 12px; font-weight: 500; }
 .overview-detail-action svg { width: 13px; height: 13px; }
 .overview-empty { display: flex; flex: 1; flex-direction: column; align-items: center; justify-content: center; gap: 14px; min-height: 190px; padding: 25px; text-align: center; font-size: 13px; color: #cbd5e1; }
-.overview-empty > svg { width: 27px; height: 27px; }
 .overview-empty button { text-decoration: underline; text-underline-offset: 4px; }
 .overview-empty > a { text-decoration: underline; text-underline-offset: 4px; }
 .overview-empty-detail { color: #fff; }

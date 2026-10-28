@@ -18,12 +18,8 @@
    ========================================================================= */
 
 /* ---------- Carcasa móvil ----------
-   Los selectores nombran las DOS rutas en las que se pinta una página de
-   módulo: `<main>` cuando se abre por su URL, y `.dashboard-module-panel-body`
-   cuando se abre desde la navegación, que es lo que hace el usuario. El panel
-   se portalea a <body>, así que no cuelga de `.dashboard-public-page` ni de
-   `<main>`: con el selector corto estas reglas no llegaban a él y las páginas
-   conservaban en el teléfono los rellenos pensados para escritorio. */
+   Las páginas de cada módulo se muestran dentro de `<main>`, que ajusta los
+   rellenos al ancho disponible en el teléfono. */
 @media (max-width: 1023.98px) {
   /* La carcasa mide el alto exacto de la pantalla y lo que se desplaza es
      `<main>` (ver scrollMainToTop en el wrapper). Sin el recorte, en iOS el
@@ -34,59 +30,59 @@
     overflow: hidden;
   }
 
-  :is(.dashboard-public-page main, .dashboard-module-panel-body) > :is(div, section, article) {
+  .dashboard-public-page main > :is(div, section, article) {
     max-width: 100%;
   }
 
   /* Los rellenos de 32–40px pensados para escritorio se comían un tercio
      del ancho útil en un teléfono. */
-  :is(.dashboard-public-page main, .dashboard-module-panel-body) :is(.p-8, .p-10) {
+  .dashboard-public-page main :is(.p-8, .p-10) {
     padding: 18px;
   }
 
-  :is(.dashboard-public-page main, .dashboard-module-panel-body) :is(.px-8, .px-10) {
+  .dashboard-public-page main :is(.px-8, .px-10) {
     padding-left: 18px;
     padding-right: 18px;
   }
 
-  :is(.dashboard-public-page main, .dashboard-module-panel-body) :is(.py-8, .py-10) {
+  .dashboard-public-page main :is(.py-8, .py-10) {
     padding-top: 18px;
     padding-bottom: 18px;
   }
 
-  :is(.dashboard-public-page, .dashboard-module-panel) :is(button, a, [role="button"]) {
+  .dashboard-public-page :is(button, a, [role="button"]) {
     -webkit-tap-highlight-color: transparent;
   }
 
   /* Sin el retardo del doble toque para hacer zoom. */
-  :is(.dashboard-public-page, .dashboard-module-panel) button:not(.dashboard-mobile-action):not(.dashboard-mobile-user-trigger),
-  :is(.dashboard-public-page, .dashboard-module-panel) a:not(.dashboard-mobile-action) {
+  .dashboard-public-page button:not(.dashboard-mobile-action):not(.dashboard-mobile-user-trigger),
+  .dashboard-public-page a:not(.dashboard-mobile-action) {
     touch-action: manipulation;
   }
 }
 
 @media (max-width: 767.98px) {
-  :is(.dashboard-public-page main, .dashboard-module-panel-body) form {
+  .dashboard-public-page main form {
     width: 100%;
   }
 
-  :is(.dashboard-public-page main, .dashboard-module-panel-body) label {
+  .dashboard-public-page main label {
     line-height: 1.35;
   }
 
   /* Filas de botones y chips: en un teléfono se parten en varias líneas en
      vez de empujar la página hacia un lado. */
-  :is(.dashboard-public-page main, .dashboard-module-panel-body) :is(.flex.gap-2, .flex.gap-3) {
+  .dashboard-public-page main :is(.flex.gap-2, .flex.gap-3) {
     flex-wrap: wrap;
   }
 
-  :is(.dashboard-public-page main, .dashboard-module-panel-body) form :is(.flex.gap-2, .flex.gap-3) > button {
+  .dashboard-public-page main form :is(.flex.gap-2, .flex.gap-3) > button {
     flex: 1 1 140px;
   }
 }
 
 @media (max-width: 640px) {
-  :is(.dashboard-public-page main, .dashboard-module-panel-body) .flex:not(.dashboard-mobile-bottom-scroll):not(.dashboard-mobile-user-trigger):not([class*="min-w-"]) {
+  .dashboard-public-page main .flex:not(.dashboard-mobile-bottom-scroll):not(.dashboard-mobile-user-trigger):not([class*="min-w-"]) {
     min-width: 0;
   }
 }
@@ -100,7 +96,7 @@
    remapeo `.text-sm → 14px` de la escala tipográfica de
    dashboard-system.css, que si no devolvía los campos a 14px. */
 @media (pointer: coarse) {
-  :is(.dashboard-public-page .dashboard-main, .dashboard-module-panel) :is(
+  .dashboard-public-page .dashboard-main :is(
     input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]),
     select,
     textarea,

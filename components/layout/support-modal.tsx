@@ -9,7 +9,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
-import { MessageSquare, Send, Loader2, ShieldCheck } from '@/components/ui/hugeicons';
+import { Send, Loader2, ShieldCheck } from '@/components/ui/hugeicons';
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -118,8 +118,8 @@ export function SupportModal({ open, onOpenChange, requestType = 'general', defa
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent size="md" className="outline-none">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-xl font-semibold text-foreground">
-            <MessageSquare className="h-5 w-5 text-primary" /> {titleMap[requestType]}
+          <DialogTitle className="text-xl font-semibold text-foreground">
+            {titleMap[requestType]}
           </DialogTitle>
           <DialogDescription className="text-sm text-muted-foreground">
             {descMap[requestType]}

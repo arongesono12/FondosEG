@@ -29,14 +29,12 @@ function Drawer({
   onClose,
   title,
   subtitle,
-  icon: Icon,
   children,
 }: {
   open: boolean;
   onClose: () => void;
   title: string;
   subtitle?: string;
-  icon: React.ElementType;
   children: React.ReactNode;
 }) {
   // No es un Dialog de Radix, así que no hereda el bloqueo de scroll: sin esto,
@@ -72,14 +70,9 @@ function Drawer({
       >
         {/* Header */}
         <div className="dashboard-drawer-header flex items-start justify-between p-6 border-b border-border/10 shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-2xl bg-brand-gradient flex items-center justify-center text-white shadow-lg shadow-pink-500/20">
-              <Icon className="h-5 w-5" />
-            </div>
-            <div>
-              <h2 className="text-lg font-black text-foreground">{title}</h2>
-              {subtitle && <p className="text-xs text-muted-foreground font-bold">{subtitle}</p>}
-            </div>
+          <div>
+            <h2 className="text-lg font-black text-foreground">{title}</h2>
+            {subtitle && <p className="text-xs text-muted-foreground font-bold">{subtitle}</p>}
           </div>
           <button
             onClick={onClose}
@@ -194,7 +187,7 @@ export function FlujoDiaModal({ open, onClose, stats, preferredCurrency }: Flujo
   };
 
   return (
-    <Drawer open={open} onClose={onClose} title="Flujo del Día" subtitle="Resumen financiero completo" icon={TrendingUp}>
+    <Drawer open={open} onClose={onClose} title="Flujo del Día" subtitle="Resumen financiero completo">
       <div className="grid grid-cols-1 gap-4">
         {cards.map((c) => {
           const Icon = c.icon;
@@ -251,7 +244,7 @@ export function GestoresModal({ open, onClose, userRole, preferredCurrency }: Ge
     : 'Tus transferencias recientes';
 
   return (
-    <Drawer open={open} onClose={onClose} title="Envíos de Gestores" subtitle={subtitle} icon={Send}>
+    <Drawer open={open} onClose={onClose} title="Envíos de Gestores" subtitle={subtitle}>
       {isAdminRole(userRole) && (
         <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400">
           <ShieldAlert className="h-3.5 w-3.5 shrink-0" />
@@ -338,7 +331,7 @@ export function VolumenSemanalModal({ open, onClose, preferredCurrency }: Volume
   );
 
   return (
-    <Drawer open={open} onClose={onClose} title="Volumen Semanal" subtitle="Actividad de los últimos 7 días" icon={BarChart3}>
+    <Drawer open={open} onClose={onClose} title="Volumen Semanal" subtitle="Actividad de los últimos 7 días">
       {loading ? (
         <PanelSkeleton rows={5} />
       ) : (
@@ -472,7 +465,7 @@ export function SoporteModal({
   const actions = isGestor ? gestorActions : adminActions;
 
   return (
-    <Drawer open={open} onClose={onClose} title="Centro de Soporte" subtitle="Comunicación con administración" icon={MessageSquare}>
+    <Drawer open={open} onClose={onClose} title="Centro de Soporte" subtitle="Comunicación con administración">
       {/* Info Banner */}
       <div className="p-4 rounded-2xl bg-primary/5 border border-primary/10 space-y-1">
         <p className="text-xs font-black text-foreground">📋 Hola {firstName}, estamos aquí para ayudarte</p>
@@ -546,7 +539,7 @@ export function ComisionesModal({ open, onClose, userRole, stats, commissionStat
   const isAdmin = isAdminRole(userRole);
 
   return (
-    <Drawer open={open} onClose={onClose} title="Comisiones" subtitle={isAdmin ? 'Resumen de todos los gestores' : 'Tus ganancias por envíos'} icon={TrendingUp}>
+    <Drawer open={open} onClose={onClose} title="Comisiones" subtitle={isAdmin ? 'Resumen de todos los gestores' : 'Tus ganancias por envíos'}>
       {isAdmin ? (
         <>
           {/* Admin: Ver todos los agentes con sus comisiones */}

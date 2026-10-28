@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ArrowLeft, ArrowUpRight, CalendarDays, CheckCheck, ChevronDown, Clock3, Filter, Landmark, LifeBuoy, Plus, Receipt, Search, Wallet, X } from '@/components/ui/hugeicons';
+import { ArrowLeft, ArrowUpRight, CalendarDays, ChevronDown, Landmark, LifeBuoy, Plus, Receipt, Search, Wallet, X } from '@/components/ui/hugeicons';
 import { Area, AreaChart, Bar, BarChart, XAxis } from 'recharts';
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from '@/components/ui/chart';
 import { cn, convertCurrency, formatCurrency, formatDateShort, getInitials } from '@/lib/utils';
@@ -87,7 +87,7 @@ export function DashboardOverview({ stats, dailyStats, dailyStatus, onRetryDaily
       <section className="overview-metrics" aria-label="Resumen financiero">
         <DashboardCard asChild variant="metric">
         <article className="overview-metric overview-metric-desk">
-          <div className="overview-metric-label"><h2>{isClient ? 'Saldo retenido' : 'En tránsito'}</h2><Clock3 className="overview-tone-warning" /></div>
+          <div className="overview-metric-label"><h2>{isClient ? 'Saldo retenido' : 'En tránsito'}</h2></div>
           <p className="overview-metric-value">{money(reserved)}</p>
           <p className="overview-metric-caption"><span className="overview-tone-warning">{count(stats?.pendingTransfers)} pendientes</span> de liquidación</p>
           <div className="overview-desk"><Image src="/images/dashboard-desk.png" alt="" fill sizes="(max-width: 600px) 50vw, 25vw" /></div>
@@ -96,7 +96,7 @@ export function DashboardOverview({ stats, dailyStats, dailyStatus, onRetryDaily
 
         <DashboardCard asChild variant="metric">
         <article className="overview-metric">
-          <div className="overview-metric-label"><h2>Volumen de la semana</h2><CalendarDays className="overview-tone-primary" /></div>
+          <div className="overview-metric-label"><h2>Volumen de la semana</h2></div>
           <p className="overview-metric-value">{money(stats?.weeklyVolume)}</p>
           <p className="overview-metric-caption"><span className="overview-tone-primary">{count(stats?.todayTransfers)} operaciones</span> registradas hoy</p>
           {trend.length ? <ChartContainer config={chartConfig} className="overview-mini-chart aspect-auto">
@@ -112,7 +112,7 @@ export function DashboardOverview({ stats, dailyStats, dailyStatus, onRetryDaily
 
         <DashboardCard asChild variant="metric">
         <article className="overview-metric">
-          <div className="overview-metric-label"><h2>{isClient ? 'Tasa de cierre' : 'Comisiones generadas'}</h2><CheckCheck className="overview-tone-success" /></div>
+          <div className="overview-metric-label"><h2>{isClient ? 'Tasa de cierre' : 'Comisiones generadas'}</h2></div>
           <p className="overview-metric-value">{isClient ? <>{count(stats?.settlementRate)}<small> %</small></> : money(stats?.totalCommission)}</p>
           <p className="overview-metric-caption"><span className="overview-tone-success">{isClient ? `${count(stats?.completedTransfers)} completadas` : money(stats?.todayCommission)}</span>{isClient ? ' en total' : ' generadas hoy'}</p>
           {trend.length ? <ChartContainer config={chartConfig} className="overview-mini-chart aspect-auto">
@@ -130,7 +130,7 @@ export function DashboardOverview({ stats, dailyStats, dailyStatus, onRetryDaily
         <article className="overview-metric overview-balance">
           <div className="overview-metric-label"><h2>Disponible para operar</h2><Link href="/balance" aria-label="Ver saldo y movimientos" className="overview-icon-button"><ArrowUpRight /></Link></div>
           <p className="overview-metric-value">{money(balance)}</p>
-          <p className="overview-metric-caption"><Wallet className="overview-tone-success" />{isClient ? 'Tu billetera FondosEG' : 'Liquidez inmediata'}</p>
+          <p className="overview-metric-caption">{isClient ? 'Tu billetera FondosEG' : 'Liquidez inmediata'}</p>
           <div className="overview-wallets">
             <Link className="overview-wallet" href="/balance"><Landmark /><strong>Capital</strong><span>{money(stats?.totalBalance)}</span></Link>
             <Link className="overview-wallet is-featured" href="/balance"><Wallet /><strong>Disponible</strong><span>{currency}</span></Link>
@@ -141,7 +141,7 @@ export function DashboardOverview({ stats, dailyStats, dailyStatus, onRetryDaily
       </section>
 
       <section className="overview-filters" aria-label="Filtrar operaciones recientes">
-        <div className="overview-filter-label"><Filter /><span>Filtros</span><b data-active={activeFilters > 0}>{activeFilters}</b>{activeFilters > 0 && <button onClick={clearFilters} aria-label="Limpiar filtros"><X /></button>}</div>
+        <div className="overview-filter-label"><span>Filtros</span><b data-active={activeFilters > 0}>{activeFilters}</b>{activeFilters > 0 && <button onClick={clearFilters} aria-label="Limpiar filtros"><X /></button>}</div>
         <label className="overview-select"><span className="sr-only">Ciudad de destino</span><select value={city} onChange={(event) => setCity(event.target.value)}><option value="all">Todas las ciudades</option>{cities.map((item) => <option key={item}>{item}</option>)}</select><ChevronDown /></label>
         <label className="overview-select"><span className="sr-only">Estado de la operación</span><select value={status} onChange={(event) => setStatus(event.target.value)}><option value="all">Todos los estados</option>{Object.entries(statusLabels).map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select><ChevronDown /></label>
         <label className="overview-date"><span>Desde</span><input type="date" aria-label="Fecha inicial" data-empty={!fromDate} value={fromDate} max={toDate || undefined} onChange={(event) => setFromDate(event.target.value)} /></label>
@@ -159,16 +159,16 @@ export function DashboardOverview({ stats, dailyStats, dailyStatus, onRetryDaily
         </header>
         <div className="overview-operations-body">
           <div className="overview-transfer-list" aria-label="Seleccionar una operación">
-            {transfersUnavailable ? <div className="overview-empty" role={transfersStatus === 'error' ? 'alert' : 'status'} aria-busy={transfersStatus === 'loading'}>{transfersStatus === 'error' ? <><Receipt /><p>No se pudieron cargar las operaciones recientes.</p><button type="button" onClick={onRetryTransfers}>Reintentar</button></> : <p>Cargando operaciones…</p>}</div>
+            {transfersUnavailable ? <div className="overview-empty" role={transfersStatus === 'error' ? 'alert' : 'status'} aria-busy={transfersStatus === 'loading'}>{transfersStatus === 'error' ? <><p>No se pudieron cargar las operaciones recientes.</p><button type="button" onClick={onRetryTransfers}>Reintentar</button></> : <p>Cargando operaciones…</p>}</div>
             : visible.length ? visible.map((transfer) => <button key={transfer.id} className={cn('overview-transfer', selected?.id === transfer.id && 'is-selected')} aria-pressed={selected?.id === transfer.id} onClick={() => setSelectedId(transfer.id)}>
               <span className="overview-person-avatar">{getInitials(transfer.receiver_name || transfer.sender_name)}</span>
               <span className="overview-transfer-identity"><strong>#{transfer.transfer_code}</strong><small>{formatDateShort(transfer.created_at)}</small></span>
               <span className="overview-transfer-state">{statusLabels[transfer.status]}</span>
               <strong className="overview-transfer-amount">{fmtTransfer(transfer.amount, transfer.currency)}</strong>
-            </button>) : <div className="overview-empty"><Search /><p>{transfers.length ? 'No hay operaciones con estos filtros.' : 'Todavía no hay operaciones.'}</p>{transfers.length > 0 && <button onClick={clearFilters}>Limpiar filtros</button>}</div>}
+            </button>) : <div className="overview-empty"><p>{transfers.length ? 'No hay operaciones con estos filtros.' : 'Todavía no hay operaciones.'}</p>{transfers.length > 0 && <button onClick={clearFilters}>Limpiar filtros</button>}</div>}
           </div>
           <div className="overview-transfer-detail" aria-live="polite" aria-atomic="true">
-            {transfersUnavailable ? <div className="overview-empty overview-empty-detail"><Receipt /><h3>{transfersStatus === 'error' ? 'Operaciones no disponibles' : 'Cargando…'}</h3></div>
+            {transfersUnavailable ? <div className="overview-empty overview-empty-detail"><h3>{transfersStatus === 'error' ? 'Operaciones no disponibles' : 'Cargando…'}</h3></div>
             : selected ? <>
               <div className="overview-detail-heading">
                 <div><span className="overview-detail-label">Detalle de la operación</span><div className="overview-detail-code"><h3>#{selected.transfer_code}</h3><span>{statusLabels[selected.status]}</span></div></div>
@@ -188,7 +188,7 @@ export function DashboardOverview({ stats, dailyStats, dailyStatus, onRetryDaily
                 <div><span>Estado</span><strong>{statusLabels[selected.status]}</strong></div>
                 <Link href="/history" className="overview-detail-action">Ver en historial<ArrowUpRight /></Link>
               </footer>
-            </> : <div className="overview-empty overview-empty-detail"><Receipt /><h3>{transfers.length ? 'Sin resultados' : 'Cada envío, al detalle'}</h3><p>{transfers.length ? 'Ajusta los filtros para consultar una operación.' : 'Aquí aparecerán el importe, el destinatario y el estado de tus operaciones.'}</p><Link href={transfers.length ? '/history' : primaryAction.href}>{transfers.length ? 'Ver historial completo' : primaryAction.label}<ArrowUpRight /></Link></div>}
+            </> : <div className="overview-empty overview-empty-detail"><h3>{transfers.length ? 'Sin resultados' : 'Cada envío, al detalle'}</h3><p>{transfers.length ? 'Ajusta los filtros para consultar una operación.' : 'Aquí aparecerán el importe, el destinatario y el estado de tus operaciones.'}</p><Link href={transfers.length ? '/history' : primaryAction.href}>{transfers.length ? 'Ver historial completo' : primaryAction.label}<ArrowUpRight /></Link></div>}
           </div>
         </div>
       </section>

@@ -15,7 +15,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import {
-  Wallet,
   Send,
   Loader2,
   CheckCircle2,
@@ -161,8 +160,7 @@ export function WalletTransferModal({ open, onOpenChange, onSuccess }: WalletTra
         {step === 'form' && (
           <>
             <DialogHeader>
-              <DialogTitle className="flex items-center gap-2 text-xl font-bold text-foreground">
-                <Wallet className="h-5 w-5 text-primary" />
+              <DialogTitle className="text-xl font-bold text-foreground">
                 Transferir a Cliente
               </DialogTitle>
               <DialogDescription className="text-sm text-muted-foreground">

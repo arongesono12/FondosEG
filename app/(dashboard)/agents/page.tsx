@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { getAgents, toggleAgentStatus, topUpAgentBalance, resetAgentBalance, createAgent } from '@/services/agent';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import type { AgentWithBalance, UserRole } from '@/types';
-import { Users, Plus, Search, Phone, Mail, CreditCard, CheckCircle, AlertCircle, RotateCcw } from '@/components/ui/hugeicons';
+import { Users, Phone, Mail, CreditCard, CheckCircle, AlertCircle, RotateCcw } from '@/components/ui/hugeicons';
 import { useAppStore } from '@/lib/store';
 import { isAdminRole } from '@/lib/roles';
 
@@ -175,7 +175,7 @@ export default function AgentsPage() {
 
   return (
     <div className="space-y-6">
-      {/* `@xl:` mira el contenedor (main o el panel de media pantalla), no la ventana. */}
+      {/* `@xl:` mira el contenedor de la página, no la ventana. */}
       <div className="flex flex-col gap-4 @xl:flex-row @xl:items-center @xl:justify-between">
         <div className="min-w-0">
           <h1 className="text-3xl font-bold">Gestores</h1>
@@ -190,8 +190,7 @@ export default function AgentsPage() {
           }
         }}>
           <DialogTrigger asChild>
-            <Button className="w-full shrink-0 gap-2 bg-linear-to-r from-pink-500 to-rose-600 hover:from-pink-600 hover:to-rose-700 text-white shadow-lg shadow-pink-500/25 sm:w-auto">
-              <Plus className="h-4 w-4" />
+            <Button className="w-full shrink-0 bg-linear-to-r from-pink-500 to-rose-600 hover:from-pink-600 hover:to-rose-700 text-white shadow-lg shadow-pink-500/25 sm:w-auto">
               Nuevo gestor
             </Button>
           </DialogTrigger>
@@ -283,8 +282,7 @@ export default function AgentsPage() {
 
       <Card>
         <CardHeader>
-          <div className="flex items-center gap-2">
-            <Search className="h-4 w-4 text-muted-foreground" />
+          <div>
             <Input
               placeholder="Buscar gestores..."
               value={searchTerm}
@@ -450,8 +448,7 @@ export default function AgentsPage() {
       <Dialog open={successOpen} onOpenChange={setSuccessOpen}>
         <DialogContent size="sm" aria-describedby={undefined}>
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-green-600">
-              <CheckCircle className="h-5 w-5" />
+            <DialogTitle className="text-green-600">
               Recarga exitosa
             </DialogTitle>
           </DialogHeader>
@@ -480,8 +477,7 @@ export default function AgentsPage() {
       <Dialog open={resetOpen} onOpenChange={setResetOpen}>
         <DialogContent size="md" aria-describedby={undefined}>
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <RotateCcw className="h-5 w-5" />
+            <DialogTitle>
               Restablecer saldo
             </DialogTitle>
           </DialogHeader>

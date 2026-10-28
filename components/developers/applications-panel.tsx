@@ -6,7 +6,6 @@ import {
   BadgeCheck,
   Copy,
   KeyRound,
-  Package,
   Plus,
   RefreshCw,
   Settings,
@@ -196,10 +195,7 @@ export function ApplicationsPanel({ canIssueProduction }: ApplicationsPanelProps
 
       {applications.length === 0 ? (
         <div className="app-card flex flex-col items-center px-6 py-14 text-center">
-          <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-            <Package className="h-6 w-6" />
-          </span>
-          <h2 className="mt-4 text-lg font-semibold text-foreground">Crea tu primera aplicación</h2>
+          <h2 className="text-lg font-semibold text-foreground">Crea tu primera aplicación</h2>
           <p className="mt-1 max-w-md text-sm text-muted-foreground">
             Una aplicación agrupa su billetera, sus credenciales y sus webhooks. Por ejemplo: CasasEG.
           </p>

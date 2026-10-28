@@ -89,8 +89,7 @@ export function RevolutPayoutModal({ open, onOpenChange, onSuccess }: RevolutPay
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent size="md" className="outline-none">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-xl font-bold text-foreground">
-            <Landmark className="h-5 w-5 text-primary" />
+          <DialogTitle className="text-xl font-bold text-foreground">
             Payout por Revolut
           </DialogTitle>
           <DialogDescription className="text-sm text-muted-foreground">

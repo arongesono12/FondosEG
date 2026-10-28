@@ -319,9 +319,9 @@ export function AgentTransferModal({ open, onOpenChange, onSuccess }: AgentTrans
               <DialogTitle
                 ref={formHeadingRef}
                 tabIndex={-1}
-                className="flex items-center gap-2 text-xl font-bold text-foreground focus:outline-none"
+                className="text-xl font-bold text-foreground focus:outline-none"
               >
-                <Send className="h-5 w-5 text-primary" /> Nueva Transferencia
+                Nueva Transferencia
               </DialogTitle>
               <DialogDescription className="text-sm text-muted-foreground">
                 Complete los datos del destinatario para realizar el envío de dinero
@@ -673,9 +673,9 @@ export function AgentTransferModal({ open, onOpenChange, onSuccess }: AgentTrans
               <DialogTitle
                 ref={confirmHeadingRef}
                 tabIndex={-1}
-                className="flex items-center gap-2 text-xl font-bold text-foreground focus:outline-none"
+                className="text-xl font-bold text-foreground focus:outline-none"
               >
-                <CheckCircle2 className="h-5 w-5 text-green-500" /> Confirmar Transferencia
+                Confirmar Transferencia
               </DialogTitle>
               <DialogDescription className="text-sm text-muted-foreground">
                 Verifique los datos antes de confirmar el envío

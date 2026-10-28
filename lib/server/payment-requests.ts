@@ -4,6 +4,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { emitWebhookEvent } from '@/lib/server/webhook-outbox';
 import {
   resolvePaymentRequestStatus,
+  resolvePublicAppBaseUrl,
   toPaymentRequestWebhookPayload,
   type NormalizedPaymentRequestInput,
   type PaymentRequestRow,
@@ -35,7 +36,7 @@ export class PaymentRequestConflictError extends Error {
 }
 
 export function getPublicAppBaseUrl(requestUrl: string): string {
-  return process.env.NEXT_PUBLIC_APP_URL?.trim() || new URL(requestUrl).origin;
+  return resolvePublicAppBaseUrl(process.env.NEXT_PUBLIC_APP_URL, requestUrl);
 }
 
 export async function findPaymentRequestById(id: string): Promise<StoredPaymentRequest | null> {

@@ -123,7 +123,6 @@ export function UsersPanel({ open, onClose, getReturnFocusTarget }: UsersPanelPr
           {/* Header */}
           <div className="flex shrink-0 items-center justify-between gap-3 border-b border-border/10 pb-3 pl-5 pr-[max(1rem,env(safe-area-inset-right))] pt-[max(0.75rem,env(safe-area-inset-top))]">
             <div className="flex min-w-0 items-center gap-2">
-              <Users className="h-5 w-5 shrink-0 text-primary" />
               <DialogPrimitive.Title className="text-lg font-bold text-foreground">Usuarios</DialogPrimitive.Title>
               {onlineCount > 0 && (
                 <span className="h-5 shrink-0 px-1.5 bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-bold rounded-full flex items-center">

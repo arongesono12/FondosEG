@@ -41,11 +41,9 @@ import { getUnreadNotificationCount, getClientUnreadNotificationCount, getAdminU
 import { getAgentBalance } from '@/services/agent';
 import { HttpError } from '@/services/http';
 import { getRoleLabel, isAdminRole } from '@/lib/roles';
-import { DashboardModulePanel } from '@/components/dashboard/dashboard-module-panel';
 import {
   canAccessDashboardModule,
-  getDashboardModuleFromPath,
-  getDashboardNavigationHref,
+  getDashboardModuleHref,
   parseDashboardModule,
 } from '@/components/dashboard/dashboard-modules';
 
@@ -254,9 +252,6 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
   
   const requestedModuleValue = searchParams.get('module');
   const requestedModule = parseDashboardModule(requestedModuleValue);
-  const activeModule = requestedModule && canAccessDashboardModule(requestedModule, user?.role)
-    ? requestedModule
-    : null;
 
   useEffect(() => {
     setMounted(true);
@@ -265,6 +260,8 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
   useEffect(() => {
     if (!requestedModuleValue) return;
 
+    if (pathname !== '/dashboard') return;
+
     if (!requestedModule || !canAccessDashboardModule(requestedModule, user?.role)) {
       setModuleNotice(
         requestedModule
@@ -272,8 +269,11 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
           : 'El módulo solicitado no existe.',
       );
       router.replace('/dashboard', { scroll: false });
+      return;
     }
-  }, [requestedModule, requestedModuleValue, router, user?.role]);
+
+    router.replace(getDashboardModuleHref(requestedModule));
+  }, [pathname, requestedModule, requestedModuleValue, router, user?.role]);
 
   useEffect(() => {
     if (!moduleNotice) return;
@@ -329,10 +329,6 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
     document.querySelector('main')?.scrollTo({ top: 0, behavior: 'smooth' });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
-
-  const closeModulePanel = useCallback(() => {
-    router.replace('/dashboard', { scroll: false });
-  }, [router]);
 
   useEffect(() => {
     document.querySelector('main')?.scrollTo({ top: 0 });
@@ -431,11 +427,7 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
   // admin (6) y superadmin (7) llegan a tener «Más».
   const desktopOverflowNavItems = navItems.slice(DESKTOP_INLINE_NAV_ITEMS);
 
-  const isNavItemActive = (href: string) => (
-    href === '/dashboard'
-      ? pathname === '/dashboard' && !activeModule
-      : activeModule === getDashboardModuleFromPath(href) || (pathname === href && !activeModule)
-  );
+  const isNavItemActive = (href: string) => pathname === href;
 
   // Menú de usuario de la cabecera móvil. Antes tenía dos ramas según un
   // parámetro que la única llamada fijaba a `true`: se ha eliminado la rama
@@ -556,8 +548,7 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
               return (
                 <Link
                   key={item.href}
-                  href={getDashboardNavigationHref(item.href)}
-                  scroll={item.href === '/dashboard'}
+                  href={item.href}
                   onClick={item.href === '/dashboard' ? scrollMainToTop : undefined}
                   aria-current={isActive ? 'page' : undefined}
                   className={cn(
@@ -597,8 +588,7 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
                     return (
                       <DropdownMenuItem key={item.href} asChild>
                         <Link
-                          href={getDashboardNavigationHref(item.href)}
-                          scroll={false}
+                          href={item.href}
                           aria-current={isNavItemActive(item.href) ? 'page' : undefined}
                         >
                           <Icon className="mr-2 h-4 w-4" />
@@ -759,16 +749,14 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
 
           `@container` implica contención de layout: `<main>` pasa a ser el
           bloque contenedor de cualquier `position: fixed` que cuelgue de él y
-          crea un contexto de apilamiento. Hoy no afecta a nada —los modales,
-          cajones y paneles se portalean a <body>, y la barra inferior es
-          hermana de `<main>`—, pero un elemento fijo escrito dentro de una
+          crea un contexto de apilamiento. Los modales y cajones se portalean a
+          <body>, y la barra inferior es hermana de `<main>`. Un elemento fijo escrito dentro de una
           página del dashboard quedaría anclado aquí y por debajo de la
           cabecera. Si hace falta uno, que se portalee.
 
           `@container`: las páginas de módulo usan variantes de contenedor
           (`@xl:`, `@4xl:`…) y las tablas se apilan según el ancho del
-          contenedor (tables.css). Así responden igual aquí que dentro del
-          panel de media pantalla, que ya es contenedor.
+          contenedor (tables.css), que responde al ancho real de la página.
 
           Relleno inferior: la barra fija mide 72px + la zona segura; con
           `pb-28` fijo el último elemento quedaba pegado a ella en los iPhone
@@ -783,17 +771,12 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
         <nav className="dashboard-mobile-bottom-bar lg:hidden" aria-label="Navegación principal del dashboard">
           <div className="dashboard-mobile-bottom-scroll">
             {primaryNavItems.map((item) => {
-              const moduleId = getDashboardModuleFromPath(item.href);
-              const navigationHref = getDashboardNavigationHref(item.href);
-              const isActive = item.href === '/dashboard'
-                ? pathname === '/dashboard' && !activeModule
-                : activeModule === moduleId || (pathname === item.href && !activeModule);
+              const isActive = pathname === item.href;
               const Icon = item.icon;
               return (
                 <Link
                   key={item.href}
-                  href={navigationHref}
-                  scroll={item.href === '/dashboard'}
+                  href={item.href}
                   onClick={item.href === '/dashboard' ? scrollMainToTop : undefined}
                   aria-current={isActive ? 'page' : undefined}
                   className={cn("dashboard-mobile-action", isActive && "is-active")}
@@ -811,8 +794,7 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
                     className={cn(
                       "dashboard-mobile-action",
                       overflowNavItems.some((item) => {
-                        const moduleId = getDashboardModuleFromPath(item.href);
-                        return activeModule === moduleId || item.href === pathname;
+                        return item.href === pathname;
                       }) && "is-active"
                     )}
                   >
@@ -826,7 +808,7 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
                     return (
                       <DropdownMenuItem
                         key={item.href}
-                        onClick={() => router.push(getDashboardNavigationHref(item.href), { scroll: false })}
+                        onClick={() => router.push(item.href)}
                       >
                         <Icon className="mr-2 h-4 w-4" />
                         <span>{item.label}</span>
@@ -850,9 +832,6 @@ export function DashboardLayoutWrapper({ children }: { children: React.ReactNode
         </nav>
 
         {/* Modals */}
-        {activeModule && (
-          <DashboardModulePanel moduleId={activeModule} onClose={closeModulePanel} />
-        )}
         {moduleNotice && (
           <div className="dashboard-module-notice" role="status" aria-live="polite">
             {moduleNotice}

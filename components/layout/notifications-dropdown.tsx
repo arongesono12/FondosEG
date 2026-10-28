@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { ModalListSkeleton } from '@/components/skeletons/app-skeletons';
-import { Bell, CheckCircle, AlertCircle, Clock, Trash2, CheckCheck, Mail, MailOpen } from '@/components/ui/hugeicons';
+import { Bell, CheckCircle, AlertCircle, Clock, Trash2, CheckCheck } from '@/components/ui/hugeicons';
 import { 
   getAdminNotifications, getAgentNotifications, getClientNotifications, 
   deleteNotification, markNotificationAsRead, 
@@ -171,9 +171,7 @@ export function NotificationsDropdown({ notificationCount, onCountChange, trigge
           {/* Header */}
           <div className="p-4 border-b border-border/10 shrink-0">
             <div className="flex items-center justify-between gap-2">
-              <p className="text-sm font-bold text-foreground flex items-center gap-2">
-                <Bell className="h-4 w-4 text-primary" /> Notificaciones
-              </p>
+              <p className="text-sm font-bold text-foreground">Notificaciones</p>
               {/* Elemento del menú y no un <button> suelto: así entra en la
                   navegación con flechas de Radix. `preventDefault` mantiene el
                   menú abierto para ver cómo se marcan las filas. */}
@@ -284,12 +282,7 @@ export function NotificationsDropdown({ notificationCount, onCountChange, trigge
         <DialogContent size="lg" className="outline-none" aria-describedby={undefined}>
           <DialogHeader>
             <div className="flex items-center justify-between">
-              <DialogTitle className="flex items-center gap-2 text-xl font-semibold text-foreground">
-                {selectedNotification?.is_read
-                  ? <MailOpen className="h-5 w-5 text-muted-foreground" />
-                  : <Mail className="h-5 w-5 text-primary" />}
-                Detalle de Notificación
-              </DialogTitle>
+              <DialogTitle className="text-xl font-semibold text-foreground">Detalle de notificación</DialogTitle>
             </div>
           </DialogHeader>
 

@@ -6,12 +6,8 @@
    clases de las tablas de actividad y de movimientos no tenían CSS. En un
    teléfono la tabla estiraba `<main>` y la página se desplazaba de lado.
 
-   Cambio respecto al original: el apilado ya no mira el VIEWPORT sino el
-   CONTENEDOR. Las páginas de módulo se pintan a pantalla completa y también
-   dentro del panel de media pantalla (50vw): a 1280px el panel deja ~580px
-   de contenido aunque el viewport sea de escritorio. `<main>` del dashboard
-   y `.dashboard-module-viewport` son contenedores `inline-size`, así que la
-   consulta responde al hueco real donde vive la tabla.
+   El apilado mira el CONTENEDOR de la página para responder al ancho real
+   disponible en el dashboard.
 
    Umbral: 767.98px de contenedor. Un iPad en vertical deja 720px de
    contenido y siete columnas no caben ahí sin desplazamiento lateral.
@@ -25,10 +21,8 @@
 }
 
 /* Una tabla que no se apila conserva un ancho legible y se desplaza dentro de
-   su envoltorio en vez de estrujar las columnas. Sustituye a la regla
-   `.dashboard-module-panel table { min-width: 680px }`, que también se
-   aplicaba a las tablas apiladas y peleaba con ellas. */
-:is(.dashboard-main, .dashboard-module-panel) .table-scroll:not(.is-stacked) > table {
+   su envoltorio en vez de estrujar las columnas. */
+.dashboard-main .table-scroll:not(.is-stacked) > table {
   min-width: 680px;
 }
 

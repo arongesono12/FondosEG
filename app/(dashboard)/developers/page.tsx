@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { BookOpen, Package } from '@/components/ui/hugeicons';
 import { ApiDocumentation } from '@/components/developers/api-documentation';
 import { ApplicationsPanel } from '@/components/developers/applications-panel';
 import { useAppStore } from '@/lib/store';
@@ -10,9 +9,9 @@ import { cn } from '@/lib/utils';
 
 type PortalTab = 'applications' | 'docs';
 
-const TABS: Array<{ id: PortalTab; label: string; icon: typeof Package }> = [
-  { id: 'applications', label: 'Aplicaciones', icon: Package },
-  { id: 'docs', label: 'Documentación', icon: BookOpen },
+const TABS: Array<{ id: PortalTab; label: string }> = [
+  { id: 'applications', label: 'Aplicaciones' },
+  { id: 'docs', label: 'Documentación' },
 ];
 
 /** Anclas de la documentación: si la URL apunta a una, se abre esa pestaña. */
@@ -56,11 +55,10 @@ export default function DevelopersPage() {
               aria-controls={`portal-panel-${item.id}`}
               onClick={() => selectTab(item.id)}
               className={cn(
-                'inline-flex items-center gap-2 rounded-lg px-3.5 py-1.5 text-sm font-medium transition-colors',
+                'inline-flex items-center rounded-lg px-3.5 py-1.5 text-sm font-medium transition-colors',
                 tab === item.id ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
               )}
             >
-              <item.icon className="h-4 w-4" />
               {item.label}
             </button>
           ))}

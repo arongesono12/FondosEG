@@ -20,9 +20,7 @@ import {
   Banknote,
   Check,
   Copy,
-  HandCoins,
   Loader2,
-  QrCode,
 } from '@/components/ui/hugeicons';
 import { QRGenerator, generateWithdrawalQRData } from '@/components/ui/qr-generator';
 import { useAppStore } from '@/lib/store';
@@ -211,8 +209,7 @@ export function ClientWithdrawalModal({ open, onOpenChange, onSuccess }: ClientW
         {step === 'form' && (
           <>
             <DialogHeader>
-              <DialogTitle className="flex items-center gap-2 text-xl font-bold text-foreground">
-                <HandCoins className="h-5 w-5 text-primary" />
+              <DialogTitle className="text-xl font-bold text-foreground">
                 Retirar efectivo
               </DialogTitle>
               <DialogDescription className="text-sm text-muted-foreground">
@@ -343,8 +340,7 @@ export function ClientWithdrawalModal({ open, onOpenChange, onSuccess }: ClientW
         {step === 'code' && withdrawal && (
           <>
             <DialogHeader>
-              <DialogTitle className="flex items-center gap-2 text-xl font-bold text-foreground">
-                <QrCode className="h-5 w-5 text-primary" />
+              <DialogTitle className="text-xl font-bold text-foreground">
                 Tu código de retiro
               </DialogTitle>
               <DialogDescription className="text-sm text-muted-foreground">

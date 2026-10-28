@@ -8,10 +8,6 @@ export type DashboardModuleId =
   | 'history'
   | 'staff';
 
-export interface DashboardModuleViewProps {
-  presentation?: 'page' | 'panel';
-}
-
 export interface DashboardModuleDefinition {
   id: DashboardModuleId;
   href: string;
@@ -66,17 +62,8 @@ export function parseDashboardModule(value: string | null): DashboardModuleId | 
     : null;
 }
 
-export function getDashboardModuleFromPath(path: string): DashboardModuleId | null {
-  return moduleIds.find((id) => DASHBOARD_MODULES[id].href === path) ?? null;
-}
-
 export function getDashboardModuleHref(moduleId: DashboardModuleId): string {
-  return `/dashboard?module=${encodeURIComponent(moduleId)}`;
-}
-
-export function getDashboardNavigationHref(path: string): string {
-  const moduleId = getDashboardModuleFromPath(path);
-  return moduleId ? getDashboardModuleHref(moduleId) : path;
+  return DASHBOARD_MODULES[moduleId].href;
 }
 
 export function canAccessDashboardModule(

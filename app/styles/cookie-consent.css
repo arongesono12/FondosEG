@@ -38,13 +38,8 @@
      y al abrir «Personalizar». A eso se le suma lo que el aviso se levanta
      del borde: la barra inferior (72px), su zona segura y los 8px de aire.
      La reserva de respaldo cubre el caso de que no haya ResizeObserver, y
-     también las dos pantallas que se desplazan a la vez: `<main>` cuando la
-     página se abre por su URL y el panel de módulo cuando se abre desde la
-     navegación. */
-  body:has(.cookie-consent-toast) :is(
-    .dashboard-public-page .dashboard-main,
-    .dashboard-module-panel-body
-  ) {
+     también la página desplazable del dashboard. */
+  body:has(.cookie-consent-toast) .dashboard-public-page .dashboard-main {
     padding-bottom: calc(var(--consent-height, 210px) + 80px + env(safe-area-inset-bottom));
     scroll-padding-bottom: calc(var(--consent-height, 210px) + 80px + env(safe-area-inset-bottom));
   }
@@ -52,10 +47,7 @@
 
 @media (max-width: 639.98px) {
   /* Respaldo mayor: con los botones apilados el aviso crece a ~340px. */
-  body:has(.cookie-consent-toast) :is(
-    .dashboard-public-page .dashboard-main,
-    .dashboard-module-panel-body
-  ) {
+  body:has(.cookie-consent-toast) .dashboard-public-page .dashboard-main {
     padding-bottom: calc(var(--consent-height, 350px) + 80px + env(safe-area-inset-bottom));
     scroll-padding-bottom: calc(var(--consent-height, 350px) + 80px + env(safe-area-inset-bottom));
   }

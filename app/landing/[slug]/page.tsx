@@ -1,11 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import {
-  ArrowLeft, ArrowRight, BarChart3, BookOpen, CheckCircle2, Code2,
-  Gauge, Headphones, LayoutDashboard, LockKeyhole, Newspaper, ReceiptText, ShieldCheck,
-  Sparkles, TestTube2, TrendingUp, WalletCards, Zap,
-} from '@/components/ui/hugeicons';
+import { ArrowLeft, ArrowRight, CheckCircle2, ShieldCheck } from '@/components/ui/hugeicons';
 
 import { DashboardLogo } from '@/components/layout/dashboard-logo';
 import { ThemeToggle } from '@/components/theme-toggle';
@@ -14,24 +10,6 @@ import { Card } from '@/components/ui/card';
 import { FadeIn, FadeInRight, StaggerContainer, StaggerItem } from '@/components/marketing/motion-elements';
 import { legalDocuments } from '@/lib/legal-content';
 import { marketingPages, type MarketingPageSlug } from '@/lib/marketing-content';
-
-const pageIcons = {
-  'transferencias-instantaneas': Zap,
-  'billetera-segura': LockKeyhole,
-  'trazabilidad-completa': TrendingUp,
-  'api-integraciones': Code2,
-  funciones: Sparkles,
-  seguridad: ShieldCheck,
-  precios: ReceiptText,
-  novedades: Newspaper,
-  dashboard: LayoutDashboard,
-  liquidaciones: WalletCards,
-  reportes: BarChart3,
-  soporte: Headphones,
-  'api-reference': Code2,
-  sandbox: TestTube2,
-  'estado-api': Gauge,
-} satisfies Record<MarketingPageSlug, typeof Sparkles>;
 
 export function generateStaticParams() {
   return [...Object.keys(marketingPages), ...Object.keys(legalDocuments)].map((slug) => ({ slug }));
@@ -52,19 +30,16 @@ export default async function MarketingContentPage({ params }: { params: Promise
 
   const page = marketingPages[slug as MarketingPageSlug];
   if (!page) notFound();
-  const Icon = pageIcons[slug as MarketingPageSlug];
-
   return <main className="info-page detailed-info-page">
     <PublicHeader />
     <section className="info-hero detailed-info-hero">
       <FadeIn><div className="info-copy">
-        <span><Icon /> {page.eyebrow}</span>
+        <span>{page.eyebrow}</span>
         <h1>{page.title}</h1>
         <p>{page.description}</p>
         <Button asChild variant="brand" size="xl" className="btn-primary"><Link href={page.destination}>{page.cta}<ArrowRight /></Link></Button>
       </div></FadeIn>
       <FadeInRight><Card asChild><article className="info-panel">
-        <div className="info-panel-icon"><Icon /></div>
         <h2>Disponible actualmente</h2>
         {page.points.map((point) => <p key={point}><CheckCircle2 />{point}</p>)}
       </article></Card></FadeInRight>
@@ -82,7 +57,7 @@ export default async function MarketingContentPage({ params }: { params: Promise
       </div></StaggerContainer>
     </section>
 
-    <FadeIn><Card asChild interactive={false}><section className="info-note"><BookOpen /><div><h2>Alcance de esta página</h2><p>{page.note}</p></div></section></Card></FadeIn>
+    <FadeIn><Card asChild interactive={false}><section className="info-note"><div><h2>Alcance de esta página</h2><p>{page.note}</p></div></section></Card></FadeIn>
     <FadeIn><Card asChild interactive={false}><section className="info-final-cta"><div><p>FondosEG</p><h2>Continúa desde la función correspondiente</h2></div><Button asChild variant="brand" size="xl" className="btn-primary"><Link href={page.destination}>{page.cta}<ArrowRight /></Link></Button></section></Card></FadeIn>
   </main>;
 }

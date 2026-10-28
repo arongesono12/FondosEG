@@ -355,9 +355,7 @@ export default function StaffPage() {
 
   return (
     <div className="space-y-8">
-      {/* Variantes de contenedor (`@2xl:` ≈ `md:`): la página también se pinta
-          en el panel de media pantalla, donde las de viewport se disparaban
-          con ~470px de ancho útil. */}
+      {/* Variantes de contenedor (`@2xl:` ≈ `md:`) según el ancho de la página. */}
       <div className="flex flex-col gap-4 @2xl:flex-row @2xl:items-center @2xl:justify-between">
         <div>
           <h1 className="text-3xl font-black text-foreground">Control de administración</h1>

@@ -1,7 +1,6 @@
 /* Authenticated application surfaces. Marketing, documentation and auth keep
-   their own visual language; every rule here is dashboard- or panel-scoped. */
-.dashboard-public-page,
-.dashboard-module-panel {
+   their own visual language; every rule here is dashboard-scoped. */
+.dashboard-public-page {
   /* Las familias viven en tokens.css; aquí solo se les da el rol de la pantalla. */
   --dashboard-font-heading: var(--font-fondoseg-primary);
   --dashboard-font-body: var(--font-fondoseg-secondary);
@@ -21,13 +20,12 @@
   font-family: var(--dashboard-font-body);
 }
 
-:is(.dashboard-public-page, .dashboard-module-panel) :is(h1, h2, h3, h4, h5, h6, .app-card-title, .dashboard-card-title),
-.dashboard-module-panel-header h2 {
+.dashboard-public-page :is(h1, h2, h3, h4, h5, h6, .app-card-title, .dashboard-card-title) {
   font-family: var(--dashboard-font-heading);
   font-weight: 600;
 }
 
-:is(.dashboard-public-page .dashboard-main, .dashboard-module-panel) :is(
+.dashboard-public-page .dashboard-main :is(
   .tabular-nums,
   .overview-metric-value,
   .overview-transfer-amount,
@@ -40,7 +38,7 @@
   font-variant-numeric: tabular-nums;
 }
 
-:is(.dashboard-public-page .dashboard-main, .dashboard-module-panel) :is(
+.dashboard-public-page .dashboard-main :is(
   table,
   input,
   select,
@@ -53,8 +51,7 @@
   font-family: var(--dashboard-font-body);
 }
 
-.dark .dashboard-public-page,
-.dark .dashboard-module-panel {
+.dark .dashboard-public-page {
   --dashboard-card-bg: var(--dashboard-ink);
   --dashboard-card-border: #ffffff25;
   --dashboard-panel-bg: hsl(224 71% 4%);
@@ -137,7 +134,7 @@ html.dark .dashboard-public-page.main-container {
   padding: 0 var(--dashboard-card-padding) var(--dashboard-card-padding);
 }
 
-:is(.dashboard-public-page, .dashboard-module-panel) :is(
+.dashboard-public-page :is(
   .app-card,
   .glass,
   .glass-premium,
@@ -153,7 +150,7 @@ html.dark .dashboard-public-page.main-container {
   backdrop-filter: none !important;
 }
 
-:is(.dashboard-public-page, .dashboard-module-panel) :is(
+.dashboard-public-page :is(
   .app-card,
   .glass,
   .glass-premium,
@@ -162,7 +159,7 @@ html.dark .dashboard-public-page.main-container {
   box-shadow: none !important;
 }
 
-:is(.dashboard-public-page .dashboard-main, .dashboard-module-panel) :is(
+.dashboard-public-page .dashboard-main :is(
   article,
   section,
   div,
@@ -173,7 +170,7 @@ html.dark .dashboard-public-page.main-container {
   backdrop-filter: none !important;
 }
 
-:is(.dashboard-public-page .dashboard-main, .dashboard-module-panel) :is(
+.dashboard-public-page .dashboard-main :is(
   article,
   section,
   div,
@@ -182,7 +179,7 @@ html.dark .dashboard-public-page.main-container {
   border-radius: var(--dashboard-card-radius) !important;
 }
 
-:is(.dashboard-public-page .dashboard-main, .dashboard-module-panel) :is(
+.dashboard-public-page .dashboard-main :is(
   article,
   section,
   div,
@@ -191,29 +188,29 @@ html.dark .dashboard-public-page.main-container {
   border-radius: 16px !important;
 }
 
-:is(.dashboard-public-page .dashboard-main, .dashboard-module-panel) [class*="backdrop-blur"] {
+.dashboard-public-page .dashboard-main [class*="backdrop-blur"] {
   -webkit-backdrop-filter: none !important;
   backdrop-filter: none !important;
 }
 
-:is(.dashboard-public-page .dashboard-main, .dashboard-module-panel) [class*="shadow-"] {
+.dashboard-public-page .dashboard-main [class*="shadow-"] {
   box-shadow: none !important;
 }
 
-:is(.dashboard-public-page .dashboard-main, .dashboard-module-panel) :is(
+.dashboard-public-page .dashboard-main :is(
   input:not([type="checkbox"]):not([type="radio"]),
   select
 ) {
   border-radius: var(--app-control-radius);
 }
 
-:is(.dashboard-public-page .dashboard-main, .dashboard-module-panel) textarea {
+.dashboard-public-page .dashboard-main textarea {
   border-radius: var(--app-control-radius-multiline);
 }
 
 /* Shared card vocabulary for full pages and portaled module panels. Local
    tokens keep dark cards readable even when the surrounding page is light. */
-:is(.dashboard-public-page, .dashboard-module-panel) :is(.app-card, .dashboard-card-surface, .glass, .glass-premium, .dashboard-card),
+.dashboard-public-page :is(.app-card, .dashboard-card-surface, .glass, .glass-premium, .dashboard-card),
 .dashboard-inset {
   --background: var(--dashboard-ink, #0f172a);
   --foreground: #f8fafc;
@@ -266,37 +263,37 @@ html.dark .dashboard-public-page.main-container {
   background: var(--primary) !important;
 }
 
-:is(.dashboard-public-page, .dashboard-module-panel) :is(a, button).app-card:hover {
+.dashboard-public-page :is(a, button).app-card:hover {
   border-color: var(--primary) !important;
 }
 
-:is(.dashboard-public-page, .dashboard-module-panel) .app-card-header {
+.dashboard-public-page .app-card-header {
   gap: 6px;
 }
 
-:is(.dashboard-public-page, .dashboard-module-panel) .app-card-title {
+.dashboard-public-page .app-card-title {
   color: var(--foreground) !important;
   font-weight: 600;
 }
 
-:is(.dashboard-public-page, .dashboard-module-panel) .app-card-title > svg {
+.dashboard-public-page .app-card-title > svg {
   color: var(--primary);
 }
 
-:is(.dashboard-public-page, .dashboard-module-panel) .app-card-description {
+.dashboard-public-page .app-card-description {
   color: var(--muted-foreground);
   line-height: 1.5;
 }
 
-:is(.dashboard-public-page, .dashboard-module-panel) :is(.app-card, .dashboard-inset) :is(.font-black, .font-extrabold) {
+.dashboard-public-page :is(.app-card, .dashboard-inset) :is(.font-black, .font-extrabold) {
   font-weight: 600;
 }
 
-:is(.dashboard-public-page, .dashboard-module-panel) .app-card :is(.border-b, .border-t) {
+.dashboard-public-page .app-card :is(.border-b, .border-t) {
   border-color: #ffffff25 !important;
 }
 
-:is(.dashboard-public-page, .dashboard-module-panel) .app-card .app-badge {
+.dashboard-public-page .app-card .app-badge {
   border-color: #ffffff25 !important;
   border-radius: var(--app-control-radius);
   background: #ffffff17 !important;
@@ -304,7 +301,7 @@ html.dark .dashboard-public-page.main-container {
   box-shadow: none;
 }
 
-:is(.dashboard-public-page, .dashboard-module-panel) .app-card .app-badge[data-variant="destructive"] {
+.dashboard-public-page .app-card .app-badge[data-variant="destructive"] {
   border-color: var(--primary) !important;
   color: var(--primary) !important;
 }
@@ -318,12 +315,12 @@ html.dark .dashboard-public-page.main-container {
   background: color-mix(in srgb, var(--dashboard-ink, #0f172a) 85%, white);
 }
 
-:is(.dashboard-public-page, .dashboard-module-panel) .dashboard-compact-metric.app-card {
+.dashboard-public-page .dashboard-compact-metric.app-card {
   min-width: 0;
   background: color-mix(in srgb, var(--dashboard-ink, #0f172a) 91%, white) !important;
 }
 
-:is(.dashboard-public-page, .dashboard-module-panel) .dashboard-metric-group > .dashboard-compact-metric.app-card {
+.dashboard-public-page .dashboard-metric-group > .dashboard-compact-metric.app-card {
   height: 100%;
   border: 0 !important;
   border-radius: 0 !important;
@@ -351,7 +348,7 @@ html.dark .dashboard-public-page.main-container {
 .dashboard-metric-hint { margin-top: 8px; color: #ffffffcb; font-size: 12px; line-height: 1.5; }
 
 @media (max-width: 700px) {
-  .dashboard-public-page, .dashboard-module-panel {
+  .dashboard-public-page {
     --dashboard-card-radius: 20px;
     --dashboard-card-padding: 18px;
   }
@@ -384,12 +381,6 @@ html.dark .dashboard-public-page.main-container {
   letter-spacing: -.015em;
 }
 
-.dashboard-public-page .overview-metric-label > svg {
-  width: 20px;
-  height: 20px;
-  stroke-width: 1.8;
-}
-
 /* El tamaño de la cifra lo fija sólo la escala tipográfica, más abajo. */
 .dashboard-public-page .overview-metric-value {
   margin-top: 14px;
@@ -406,11 +397,6 @@ html.dark .dashboard-public-page.main-container {
   column-gap: 5px;
   font-size: 13px;
   line-height: 1.45;
-}
-
-.dashboard-public-page .overview-metric-caption svg {
-  width: 14px;
-  height: 14px;
 }
 
 .dashboard-public-page .overview-chart-legend {
@@ -519,139 +505,6 @@ html.dark .dashboard-public-page.main-container {
   box-shadow: none !important;
 }
 
-/* Half-screen module surface. It is portalled to <body>, so it carries the
-   dashboard tokens itself instead of depending on DOM ancestry. */
-.dashboard-module-overlay {
-  z-index: var(--z-overlay);
-  /* El mismo velo que el resto de modales (tokens.css). */
-  background: var(--dialog-scrim) !important;
-  -webkit-backdrop-filter: none !important;
-  backdrop-filter: none !important;
-}
-
-.dashboard-module-panel {
-  position: fixed !important;
-  inset: 0 0 0 auto !important;
-  z-index: var(--z-overlay);
-  /* El panel usa `mobile="none"`, así que la anatomía compartida de los
-    modales no le llega: la columna (cabecera fija + cuerpo que se desplaza)
-    se declara aquí y no depende de `modals.css`. */
-  display: flex !important;
-  flex-direction: column !important;
-  width: 50vw !important;
-  max-width: none !important;
-  height: 100vh !important;
-  height: 100dvh !important;
-  max-height: none !important;
-  min-height: 0;
-  /* Sin `translate`/`transform`: con `mobile="none"` el primitivo ya no
-     centra el panel. No los reintroduzcas juntos en una regla: Lightning CSS
-     descarta `translate` al minificar y el fallo sólo se ve en producción. */
-  overflow: hidden !important;
-  border: 0 !important;
-  border-left: 1px solid var(--dashboard-card-border) !important;
-  /* Sin curvatura: ocupa media pantalla de arriba abajo, y una esquina
-     redondeada sólo en el lado izquierdo leía como una tarjeta a medias. */
-  border-radius: 0 !important;
-  background: var(--dashboard-panel-bg) !important;
-  background-image: none !important;
-  box-shadow: none !important;
-  container: dashboard-module / inline-size;
-}
-
-.dashboard-module-panel[data-state="open"] {
-  animation: dashboard-module-in .24s cubic-bezier(.22, 1, .36, 1);
-}
-
-.dashboard-module-panel[data-state="closed"] {
-  animation: dashboard-module-out .18s ease-in;
-}
-
-.dashboard-module-panel-header {
-  position: sticky;
-  top: 0;
-  z-index: 4;
-  flex: none;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: space-between;
-  min-height: 82px;
-  padding: 18px 22px;
-  border-bottom: 1px solid var(--dashboard-card-border);
-  background: var(--dashboard-panel-bg);
-}
-
-.dashboard-module-panel-header h2 {
-  margin-top: 3px;
-  font-size: clamp(20px, 2vw, 28px);
-  font-weight: 600;
-  letter-spacing: -.035em;
-}
-
-.dashboard-module-eyebrow {
-  display: block;
-  color: var(--primary);
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: .16em;
-  text-transform: uppercase;
-}
-
-.dashboard-module-close {
-  display: grid;
-  width: 42px;
-  height: 42px;
-  flex: none;
-  place-items: center;
-  border: 1px solid var(--dashboard-card-border);
-  border-radius: var(--app-control-radius);
-  background: var(--dashboard-card-bg);
-  color: var(--surface-fg);
-  transition: border-color .18s ease, background-color .18s ease;
-}
-
-.dashboard-module-close:hover {
-  border-color: color-mix(in srgb, var(--primary) 36%, var(--dashboard-card-border));
-  background: var(--accent);
-}
-
-.dashboard-module-close:focus-visible {
-  outline: 3px solid var(--ring);
-  outline-offset: 3px;
-}
-
-.dashboard-module-close svg {
-  width: 19px;
-  height: 19px;
-}
-
-.dashboard-module-panel-body {
-  flex: 1 1 auto;
-  min-width: 0;
-  min-height: 0;
-  overflow: auto;
-  overscroll-behavior: contain;
-  -webkit-overflow-scrolling: touch;
-  scroll-padding-block: 16px;
-  padding: 22px;
-  scrollbar-gutter: stable;
-}
-
-.dashboard-module-viewport {
-  min-width: 0;
-  container: module-content / inline-size;
-}
-
-.dashboard-module-viewport > * {
-  min-width: 0;
-}
-
-.dashboard-module-loading {
-  display: grid;
-  gap: 16px;
-}
-
 .dashboard-module-notice {
   position: fixed;
   top: max(18px, env(safe-area-inset-top));
@@ -668,13 +521,8 @@ html.dark .dashboard-public-page.main-container {
   font-weight: 600;
 }
 
-/* Aquí vivía un `!important` que forzaba dos columnas en el panel para todo
-   `lg:grid-cols-*` / `xl:grid-cols-*`, y un `min-width: 680px` para toda
-   tabla del panel. Las páginas de módulo usan ahora variantes de contenedor
-   (`@4xl:`…) que ya responden al ancho del panel, y el ancho mínimo de tabla
-   vive en tables.css limitado a las tablas que NO se apilan: el de aquí
-   también alcanzaba a las apiladas y peleaba con ellas. Además el selector
-   `[class*="xl:grid-cols-3"]` casaba con `@4xl:grid-cols-3` por subcadena. */
+/* Las páginas usan variantes de contenedor (`@4xl:`…) y el ancho mínimo de
+   las tablas que no se apilan se define en tables.css. */
 
 @media (max-width: 1023.98px) {
   .dashboard-public-page .overview-metric {
@@ -689,20 +537,6 @@ html.dark .dashboard-public-page.main-container {
     font-size: 12px;
   }
 
-  .dashboard-module-panel {
-    width: 100vw !important;
-    width: 100dvw !important;
-    border-left: 0 !important;
-  }
-
-  .dashboard-module-panel-header {
-    min-height: 72px;
-    padding: max(14px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) 14px max(18px, env(safe-area-inset-left));
-  }
-
-  .dashboard-module-panel-body {
-    padding: 18px max(18px, env(safe-area-inset-right)) calc(24px + env(safe-area-inset-bottom)) max(18px, env(safe-area-inset-left));
-  }
 }
 
 @media (max-width: 700px) {
@@ -739,19 +573,18 @@ html.dark .dashboard-public-page.main-container {
   }
 }
 
-@keyframes dashboard-module-in {
+@keyframes dashboard-drawer-in {
   from { opacity: .85; transform: translateX(100%); }
   to { opacity: 1; transform: translateX(0); }
 }
 
-@keyframes dashboard-module-out {
+@keyframes dashboard-drawer-out {
   from { opacity: 1; transform: translateX(0); }
   to { opacity: .85; transform: translateX(100%); }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .dashboard-card-interactive,
-  .dashboard-module-panel[data-state] {
+  .dashboard-card-interactive {
     animation: none !important;
     transition: none !important;
   }
@@ -771,7 +604,7 @@ html.dark .dashboard-public-page.main-container {
    en este código las etiquetas de metadato siempre llevan `uppercase` con
    tracking, mientras que un `text-xs` suelto es cuerpo encogido.
    ========================================================================= */
-:is(.dashboard-public-page .dashboard-main, .dashboard-module-panel) {
+.dashboard-public-page .dashboard-main {
   --dashboard-text-meta: 12px;     /* etiqueta secundaria compacta */
   --dashboard-text-body: 14px;     /* cuerpo, tablas, inputs, botones */
   --dashboard-text-lead: 16px;     /* cuerpo destacado y cifra de tarjeta */
@@ -783,7 +616,7 @@ html.dark .dashboard-public-page.main-container {
 }
 
 /* Suelo de 12px: por debajo no baja nada. */
-:is(.dashboard-public-page .dashboard-main, .dashboard-module-panel) :is(
+.dashboard-public-page .dashboard-main :is(
   .text-\[9px\],
   .text-\[10px\],
   .text-\[11px\],
@@ -794,7 +627,7 @@ html.dark .dashboard-public-page.main-container {
   line-height: 1.45;
 }
 
-:is(.dashboard-public-page .dashboard-main, .dashboard-module-panel) :is(
+.dashboard-public-page .dashboard-main :is(
   .text-xs:not(.uppercase),
   .text-\[13px\],
   .text-sm
@@ -803,7 +636,7 @@ html.dark .dashboard-public-page.main-container {
   line-height: 1.5;
 }
 
-:is(.dashboard-public-page .dashboard-main, .dashboard-module-panel) :is(
+.dashboard-public-page .dashboard-main :is(
   .text-\[15px\],
   .text-base
 ) {
@@ -811,7 +644,7 @@ html.dark .dashboard-public-page.main-container {
   line-height: 1.5;
 }
 
-:is(.dashboard-public-page .dashboard-main, .dashboard-module-panel) :is(
+.dashboard-public-page .dashboard-main :is(
   .text-lg,
   .text-xl
 ) {
@@ -824,18 +657,18 @@ html.dark .dashboard-public-page.main-container {
    <strong>; un título, en un encabezado —DialogTitle renderiza un <h2>.
    Las cifras van al mismo paso que los importes de «Operaciones recientes»:
    a 26px se salían de su caja y truncaban («525.000 X…»). */
-:is(.dashboard-public-page .dashboard-main, .dashboard-module-panel) :is(p, span, strong, b, dd, dt, div, li):is(.text-2xl, .text-3xl) {
+.dashboard-public-page .dashboard-main :is(p, span, strong, b, dd, dt, div, li):is(.text-2xl, .text-3xl) {
   font-size: var(--dashboard-text-lead);
   line-height: 1.4;
 }
 
-:is(.dashboard-public-page .dashboard-main, .dashboard-module-panel) :is(h1, h2, h3, h4, h5, h6).text-2xl {
+.dashboard-public-page .dashboard-main :is(h1, h2, h3, h4, h5, h6).text-2xl {
   font-size: var(--dashboard-text-title);
   line-height: 1.35;
 }
 
-:is(.dashboard-public-page .dashboard-main, .dashboard-module-panel) :is(h1, h2, h3, h4, h5, h6):is(.text-3xl, .text-4xl, .text-5xl),
-:is(.dashboard-public-page .dashboard-main, .dashboard-module-panel) :is(p, span, strong, b, dd, dt, div, li):is(.text-4xl, .text-5xl) {
+.dashboard-public-page .dashboard-main :is(h1, h2, h3, h4, h5, h6):is(.text-3xl, .text-4xl, .text-5xl),
+.dashboard-public-page .dashboard-main :is(p, span, strong, b, dd, dt, div, li):is(.text-4xl, .text-5xl) {
   font-size: var(--dashboard-text-display);
   line-height: 1.2;
 }
@@ -844,7 +677,7 @@ html.dark .dashboard-public-page.main-container {
    misma escala por rol. La especificidad de estos selectores está por encima
    de las reglas de `dashboard-overview.css` y de los bloques responsive de
    más arriba, así que no dependen del orden de importación. */
-:is(.dashboard-public-page .dashboard-main, .dashboard-module-panel) :is(
+.dashboard-public-page .dashboard-main :is(
   .overview-metric-caption,
   .overview-chart-legend,
   .overview-chart-empty,
@@ -858,14 +691,13 @@ html.dark .dashboard-public-page.main-container {
   .overview-wallet,
   .overview-wallet strong,
   .overview-wallet span,
-  .overview-operations-heading > div > span,
-  .dashboard-module-eyebrow
+  .overview-operations-heading > div > span
 ) {
   font-size: var(--dashboard-text-meta);
   line-height: 1.45;
 }
 
-:is(.dashboard-public-page .dashboard-main, .dashboard-module-panel) :is(
+.dashboard-public-page .dashboard-main :is(
   .overview-title-group p,
   .overview-primary-action,
   .overview-metric h2,
@@ -891,7 +723,7 @@ html.dark .dashboard-public-page.main-container {
   line-height: 1.5;
 }
 
-:is(.dashboard-public-page .dashboard-main, .dashboard-module-panel) :is(
+.dashboard-public-page .dashboard-main :is(
   .overview-metric-value small,
   .overview-detail-tiles strong,
   .overview-detail-footer strong
@@ -900,7 +732,7 @@ html.dark .dashboard-public-page.main-container {
   line-height: 1.4;
 }
 
-:is(.dashboard-public-page .dashboard-main, .dashboard-module-panel) :is(
+.dashboard-public-page .dashboard-main :is(
   .overview-detail-code h3,
   .overview-empty-detail h3,
   .app-card-title,
@@ -913,12 +745,12 @@ html.dark .dashboard-public-page.main-container {
 /* La cifra escala con la ventana entre 20 y 26px. Si un importe supera el
    ancho disponible, la tarjeta crece para mostrarlo completo; esta regla es
    la única que fija el tamaño y las reglas responsive no lo pisan. */
-:is(.dashboard-public-page .dashboard-main, .dashboard-module-panel) .overview-metric-value {
+.dashboard-public-page .dashboard-main .overview-metric-value {
   font-size: clamp(20px, 1.6vw + 6px, 26px);
   line-height: 1.2;
 }
 
-:is(.dashboard-public-page .dashboard-main, .dashboard-module-panel) .overview h1 {
+.dashboard-public-page .dashboard-main .overview h1 {
   font-size: var(--dashboard-text-display);
   line-height: 1.2;
 }
@@ -926,7 +758,7 @@ html.dark .dashboard-public-page.main-container {
 /* En móvil sólo se mueven los dos pasos grandes: el cuerpo se queda en 14px
    porque encogerlo es justo lo que producía el desequilibrio. */
 @media (max-width: 700px) {
-  :is(.dashboard-public-page .dashboard-main, .dashboard-module-panel) {
+  .dashboard-public-page .dashboard-main {
     --dashboard-text-metric: 22px;
     --dashboard-text-display: 24px;
     --dashboard-text-title: 17px;
@@ -1092,10 +924,7 @@ html.dark .dashboard-public-page.main-container {
    CAJONES LATERALES
    -------------------------------------------------------------------------
    «Usuarios conectados» y el detalle de operación comparten la clase
-   `.dashboard-drawer`, y ahora también la superficie del panel de módulo:
-   mismo fondo, mismo borde, sin sombra y sin curvatura. Son el mismo tipo de
-   pantalla —algo que entra por la derecha sobre el dashboard—, así que no
-   tiene sentido que cada una llegue con su propio color.
+   `.dashboard-drawer`: mismo fondo, mismo borde, sin sombra y sin curvatura.
 
    «Usuarios conectados» se porta a <body> (Dialog de Radix) y declara sus
    propios tokens más abajo; el detalle de operación (sin uso hoy) cuelga del
@@ -1108,9 +937,8 @@ html.dark .dashboard-public-page.main-container {
   box-shadow: none;
 }
 
-/* El cajón de usuarios es ahora un Dialog de Radix portado a <body>: ya no
-   cuelga del árbol del dashboard, así que, como el panel de módulo, trae él
-   mismo los tokens y la tipografía de cuerpo que antes heredaba. */
+/* El cajón de usuarios es un Dialog de Radix portado a <body>: declara sus
+   propios tokens y la tipografía de cuerpo. */
 .dashboard-drawer {
   --dashboard-card-border: color-mix(in srgb, var(--surface-border) 78%, transparent);
   --dashboard-panel-bg: var(--background);
@@ -1122,13 +950,13 @@ html.dark .dashboard-public-page.main-container {
   --dashboard-panel-bg: hsl(224 71% 4%);
 }
 
-/* Entra y sale por la derecha con las mismas curvas que el panel de módulo. */
+/* El cajón entra y sale por la derecha. */
 .dashboard-drawer[data-state="open"] {
-  animation: dashboard-module-in .24s cubic-bezier(.22, 1, .36, 1);
+  animation: dashboard-drawer-in .24s cubic-bezier(.22, 1, .36, 1);
 }
 
 .dashboard-drawer[data-state="closed"] {
-  animation: dashboard-module-out .18s ease-in;
+  animation: dashboard-drawer-out .18s ease-in;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1155,7 +983,6 @@ html.dark .dashboard-public-page.main-container {
    ========================================================================= */
 :is(
   .dashboard-public-page,
-  .dashboard-module-panel,
   .dashboard-drawer,
   .dialog-shell,
   .landing-root,

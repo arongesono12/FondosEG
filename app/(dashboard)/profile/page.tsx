@@ -3,7 +3,7 @@
 import { ChangeEvent, useEffect, useRef, useState, useTransition } from 'react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { Calendar, Camera, Clock, Image as ImageIcon, KeyRound, Mail, Phone, Shield, User as UserIcon } from '@/components/ui/hugeicons';
+import { Calendar, Camera, Clock, KeyRound, Mail, Phone, Shield, User as UserIcon } from '@/components/ui/hugeicons';
 import { DashboardLogo } from '@/components/layout/dashboard-logo';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -483,8 +483,7 @@ export default function ProfilePage() {
       <Dialog open={Boolean(avatarDraftUrl)} onOpenChange={(open) => !open && !isUploadingAvatar && closeAvatarCropper()}>
         <DialogContent size="md">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-xl font-semibold text-foreground">
-              <ImageIcon className="h-5 w-5 text-primary" />
+            <DialogTitle className="text-xl font-semibold text-foreground">
               Recortar foto de perfil
             </DialogTitle>
             <DialogDescription>

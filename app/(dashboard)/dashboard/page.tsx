@@ -15,8 +15,6 @@ import {
   AlertTriangle,
   Landmark,
   Send,
-  ShieldCheck,
-  Users,
   Wallet,
 } from '@/components/ui/hugeicons';
 type SupportRequestType = 'balance_topup' | 'report_error' | 'general';
@@ -113,7 +111,7 @@ export default function DashboardPage() {
       <div className="dashboard-tray-panels">
         <Card interactive={false} className="dashboard-tray-health min-w-0 overflow-hidden">
           <CardHeader className="dashboard-tray-panel-header border-b border-border/5 pb-5">
-            <CardTitle className="flex items-center gap-2 text-xl font-bold text-foreground"><ShieldCheck className="h-5 w-5 text-primary" /> Salud operativa</CardTitle>
+            <CardTitle className="text-xl font-bold text-foreground">Salud operativa</CardTitle>
           </CardHeader>
           <CardContent className="dashboard-tray-panel-content space-y-5 p-6">
             <div className="dashboard-tray-inset rounded-3xl border border-border/10 bg-background/70 p-5">
@@ -149,7 +147,7 @@ export default function DashboardPage() {
         {isAdmin && (
           <Card interactive={false} className="dashboard-tray-ranking min-w-0 overflow-hidden">
             <CardHeader className="dashboard-tray-panel-header border-b border-border/5 pb-5">
-              <CardTitle className="flex items-center gap-2 text-xl font-bold text-foreground"><Users className="h-5 w-5 text-primary" /> Top gestores por volumen</CardTitle>
+              <CardTitle className="text-xl font-bold text-foreground">Top gestores por volumen</CardTitle>
             </CardHeader>
             <CardContent className="dashboard-tray-panel-content space-y-4 p-6">
               {agentsBlock.status === 'error' && !agentsBlock.data ? (

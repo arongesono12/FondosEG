@@ -7,6 +7,7 @@ import {
   isSafeReturnUrl,
   parseCreatePaymentRequest,
   resolvePaymentRequestStatus,
+  resolvePublicAppBaseUrl,
   toPaymentRequestWebhookPayload,
   toPublicPaymentRequest,
   type PaymentRequestRow,
@@ -16,6 +17,19 @@ import { SUBSCRIBABLE_WEBHOOK_EVENTS } from '../../lib/server/webhook-events.ts'
 
 const root = new URL('../../', import.meta.url);
 const load = (path: string) => readFile(new URL(path, root), 'utf8');
+
+test('el checkout nunca apunta a localhost cuando la petición llega por el dominio público', () => {
+  const prodRequest = 'https://fondoseg.com/api/v1/external/payment-requests';
+  assert.equal(resolvePublicAppBaseUrl('http://localhost:3001', prodRequest), 'https://fondoseg.com');
+  assert.equal(resolvePublicAppBaseUrl('http://127.0.0.1:3000', prodRequest), 'https://fondoseg.com');
+  assert.equal(resolvePublicAppBaseUrl('https://fondoseg.com', prodRequest), 'https://fondoseg.com');
+  assert.equal(resolvePublicAppBaseUrl(undefined, prodRequest), 'https://fondoseg.com');
+  // En desarrollo se respeta la URL local configurada.
+  assert.equal(
+    resolvePublicAppBaseUrl('http://localhost:3001', 'http://localhost:3001/api/v1/external/payment-requests'),
+    'http://localhost:3001'
+  );
+});
 
 // Cuerpo real que envía `rental-payment-initiate` de CasasEG.
 const casasEgBody = {

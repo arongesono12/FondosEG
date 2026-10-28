@@ -2,23 +2,22 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   canAccessDashboardModule,
-  getDashboardModuleFromPath,
   getDashboardModuleHref,
-  getDashboardNavigationHref,
   parseDashboardModule,
 } from '../../components/dashboard/dashboard-modules.ts';
 
-test('dashboard module values and legacy paths resolve to panel URLs', () => {
+test('dashboard modules resolve to their own page routes', () => {
   assert.equal(parseDashboardModule('transfers'), 'transfers');
   assert.equal(parseDashboardModule('staff'), 'staff');
   assert.equal(parseDashboardModule('unknown'), null);
   assert.equal(parseDashboardModule(null), null);
 
-  assert.equal(getDashboardModuleFromPath('/history'), 'history');
-  assert.equal(getDashboardModuleFromPath('/dashboard'), null);
-  assert.equal(getDashboardModuleHref('balance'), '/dashboard?module=balance');
-  assert.equal(getDashboardNavigationHref('/stats'), '/dashboard?module=stats');
-  assert.equal(getDashboardNavigationHref('/dashboard'), '/dashboard');
+  assert.equal(getDashboardModuleHref('balance'), '/balance');
+  assert.equal(getDashboardModuleHref('transfers'), '/transfers');
+  assert.equal(getDashboardModuleHref('agents'), '/agents');
+  assert.equal(getDashboardModuleHref('stats'), '/stats');
+  assert.equal(getDashboardModuleHref('history'), '/history');
+  assert.equal(getDashboardModuleHref('staff'), '/staff');
 });
 
 test('module permissions mirror the role-aware dashboard navbar', () => {

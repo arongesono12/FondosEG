@@ -138,6 +138,30 @@ export function buildCheckoutReturnUrl(
   return url.toString();
 }
 
+const LOCAL_HOSTNAME = /^(localhost|127\.\d+\.\d+\.\d+|0\.0\.0\.0|\[::1\])$|\.localhost$/i;
+
+function isLocalUrl(value: string): boolean {
+  try {
+    return LOCAL_HOSTNAME.test(new URL(value).hostname);
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Origen con el que se construyen `checkout_url` y `authorize_url`. Se usa
+ * `NEXT_PUBLIC_APP_URL` salvo que apunte a localhost y la petición llegue por
+ * un dominio público: así una variable de desarrollo copiada a producción no
+ * manda a los clientes de los integradores a una página inexistente.
+ */
+export function resolvePublicAppBaseUrl(configuredUrl: string | undefined, requestUrl: string): string {
+  const configured = configuredUrl?.trim() ?? '';
+  const requestOrigin = new URL(requestUrl).origin;
+  if (!configured) return requestOrigin;
+  if (isLocalUrl(configured) && !isLocalUrl(requestOrigin)) return requestOrigin;
+  return configured;
+}
+
 export function buildCheckoutUrl(baseUrl: string, requestId: string): string {
   return `${baseUrl.replace(/\/+$/, '')}/pay/${encodeURIComponent(requestId)}`;
 }

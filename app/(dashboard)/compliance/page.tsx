@@ -7,7 +7,6 @@ import {
   CheckCircle2,
   ExternalLink,
   FileCheck2,
-  MessageSquareWarning,
   ShieldCheck,
 } from '@/components/ui/hugeicons';
 import { PAYMENT_COMPLAINT_TARGET_DAYS, PAYMENT_REGULATION } from '@/lib/compliance';
@@ -125,8 +124,7 @@ export default function CompliancePage() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-3 text-xl font-black">
-            <MessageSquareWarning className="h-5 w-5 text-primary" />
+          <CardTitle className="text-xl font-black">
             Registrar una reclamación de pago
           </CardTitle>
         </CardHeader>

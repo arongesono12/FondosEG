@@ -16,7 +16,7 @@ import { Badge } from '@/components/ui/badge';
 import { PanelSkeleton } from '@/components/skeletons/app-skeletons';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import type { ClientWithdrawal, Transfer } from '@/types';
-import { AlertCircle, CheckCircle2, HandCoins, Loader2, Search, Wallet } from '@/components/ui/hugeicons';
+import { AlertCircle, CheckCircle2, Loader2, Search, Wallet } from '@/components/ui/hugeicons';
 
 interface AgentPayoutModalProps {
   open: boolean;
@@ -153,8 +153,7 @@ export function AgentPayoutModal({ open, onOpenChange, onSuccess }: AgentPayoutM
         {!success ? (
           <>
             <DialogHeader>
-              <DialogTitle className="flex items-center gap-2 text-xl font-bold text-foreground">
-                <HandCoins className="h-5 w-5 text-primary" />
+              <DialogTitle className="text-xl font-bold text-foreground">
                 Pagar en efectivo
               </DialogTitle>
               <DialogDescription className="text-sm text-muted-foreground">
