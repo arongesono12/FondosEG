@@ -7,12 +7,10 @@ import {
   estimateLiquidityCoverageDays,
   estimateProjectedTopups24h,
   getAvailableClientBalance,
+  LOW_FLOAT_THRESHOLD,
 } from '@/lib/financial';
 import type { DashboardStats } from '@/types';
 import { isAdminRole } from '@/lib/roles';
-
-/** Umbral operativo de float por gestor (XAF). */
-const LOW_BALANCE_THRESHOLD = 25000;
 
 type Numeric = number | string | null | undefined;
 
@@ -104,7 +102,7 @@ export async function GET() {
         ...periods,
         p_month_start: monthStart.toISOString(),
         p_year_start: yearStart.toISOString(),
-        p_low_balance_threshold: LOW_BALANCE_THRESHOLD,
+        p_low_balance_threshold: LOW_FLOAT_THRESHOLD,
       });
       if (error) throw error;
 

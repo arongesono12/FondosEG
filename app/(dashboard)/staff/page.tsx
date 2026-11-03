@@ -1,6 +1,8 @@
 'use client';
 
-import { DashboardMetric } from '@/components/dashboard/dashboard-metric';
+import { MetricBars, MetricCard, MetricDesk, MetricRate, MetricTiles, ModuleMetrics, ModuleMetricsSkeleton } from '@/components/dashboard/module-metric-card';
+import { ManagedUsersPanel, StaffActivityPanel, StaffTeamPanel } from '@/components/dashboard/panels/staff-record-panels';
+import { lastDaysSeries, shareOf } from '@/lib/dashboard-series';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useAppStore } from '@/lib/store';
 import { isTransientNetworkMessage } from '@/lib/network-errors';
@@ -17,7 +19,6 @@ import {
   type UserMovementItem,
 } from '@/services/staff';
 import { HttpError } from '@/services/http';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -33,11 +34,10 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn, formatCurrency, formatDate, getStatusText } from '@/lib/utils';
 import { getRoleLabel, isSuperAdminRole } from '@/lib/roles';
-import { Download, Eye, Search, UserPlus } from '@/components/ui/hugeicons';
+import { ArrowUpRight, Download, Search, Shield, ShieldCheck, UserPlus, X } from '@/components/ui/hugeicons';
 
 function movementKindTone(kind: UserMovementItem['kind']) {
   switch (kind) {
@@ -100,8 +100,6 @@ export default function StaffPage() {
   const [createOpen, setCreateOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
-  const [userSearch, setUserSearch] = useState('');
-  const [roleFilter, setRoleFilter] = useState<'all' | 'gestor' | 'cliente'>('all');
   const [selectedUser, setSelectedUser] = useState<ManagedDashboardUser | null>(null);
   const [userMovements, setUserMovements] = useState<UserMovementItem[]>([]);
   const [movementsLoading, setMovementsLoading] = useState(false);
@@ -121,8 +119,9 @@ export default function StaffPage() {
     city: '',
   });
 
+  // El esqueleto es sólo de la primera carga: al refrescar, las tarjetas no se
+  // desmontan y conservan el registro seleccionado y la pestaña.
   const loadData = useCallback(async () => {
-    setLoading(true);
     setLoadError('');
 
     const [staffResult, activityResult, managedUsersResult] = await Promise.allSettled([
@@ -180,20 +179,7 @@ export default function StaffPage() {
   const managedClients = managedUsers.filter((member) => member.role === 'cliente').length;
   const managedActive = managedUsers.filter((member) => member.is_active).length;
 
-  const filteredManagedUsers = useMemo(() => {
-    const normalizedSearch = userSearch.trim().toLowerCase();
 
-    return managedUsers.filter((member) => {
-      const matchesRole = roleFilter === 'all' || member.role === roleFilter;
-      if (!matchesRole) return false;
-
-      if (!normalizedSearch) return true;
-
-      return [member.name, member.email, member.phone]
-        .filter(Boolean)
-        .some((value) => value.toLowerCase().includes(normalizedSearch));
-    });
-  }, [managedUsers, roleFilter, userSearch]);
 
   const handleCreateAdmin = async () => {
     setSubmitting(true);
@@ -346,7 +332,7 @@ export default function StaffPage() {
   if (loading) {
     return (
       <div className="space-y-6">
-        <Skeleton className="h-28 w-full rounded-3xl" />
+        <ModuleMetricsSkeleton />
         <Skeleton className="h-96 w-full rounded-3xl" />
         <Skeleton className="h-96 w-full rounded-3xl" />
       </div>
@@ -432,193 +418,49 @@ export default function StaffPage() {
         </div>
       )}
 
-      <div className="dashboard-metric-group grid grid-cols-2 @xl:grid-cols-3 @6xl:grid-cols-6">
-        <DashboardMetric label="Admins activos" value={activeAdmins} />
-        <DashboardMetric label="Admins inactivos" value={inactiveAdmins} />
-        <DashboardMetric label="Gestores" value={managedAgents} />
-        <DashboardMetric label="Clientes" value={managedClients} />
-        <DashboardMetric label="Usuarios activos" value={managedActive} />
-        <DashboardMetric label="Acciones staff" value={activity.length} />
-      </div>
+      <ModuleMetrics label="Resumen de administración">
+        <MetricCard
+          layout="desk"
+          title="Clientes"
+          value={String(managedClients)}
+          caption={<><span className="overview-tone-warning">{managedAgents} gestores</span> en la red</>}
+        >
+          <MetricDesk />
+        </MetricCard>
+        <MetricCard
+          title="Acciones staff"
+          value={String(activity.length)}
+          caption={<><span className="overview-tone-primary">Últimas registradas</span> por el equipo</>}
+        >
+          <MetricBars data={lastDaysSeries(activity, (item) => item.created_at, () => 1)} seriesLabel="Acciones" />
+        </MetricCard>
+        <MetricCard
+          title="Usuarios activos"
+          value={String(managedActive)}
+          caption={<><span className="overview-tone-success">de {managedUsers.length}</span> gestionados</>}
+        >
+          <MetricRate value={shareOf(managedActive, managedUsers.length)} label={`${shareOf(managedActive, managedUsers.length)}% con cuenta habilitada`} />
+        </MetricCard>
+        <MetricCard
+          layout="tiles"
+          title="Admins activos"
+          value={String(activeAdmins)}
+          caption={`${inactiveAdmins} inactivos`}
+          action={{ href: '/agents', label: 'Ir a gestores', icon: <ArrowUpRight /> }}
+        >
+          <MetricTiles tiles={[
+            { icon: <Shield />, title: 'Total', detail: String(activeAdmins + inactiveAdmins) },
+            { icon: <ShieldCheck />, title: 'Activos', detail: String(activeAdmins), featured: true },
+            { icon: <X />, title: 'Inactivos', detail: String(inactiveAdmins) },
+          ]} />
+        </MetricCard>
+      </ModuleMetrics>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Equipo administrativo</CardTitle>
-        </CardHeader>
-        <CardContent className="activity-records-scroll">
-          <Table className="activity-records-table" wrapperClassName="is-stacked">
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nombre</TableHead>
-                <TableHead>Rol</TableHead>
-                <TableHead>Estado</TableHead>
-                <TableHead>Actividad</TableHead>
-                <TableHead>Alta</TableHead>
-                <TableHead className="text-right">Acciones</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {staff.map((member) => (
-                <TableRow key={member.id} className="activity-record-row">
-                  <TableCell data-label="Nombre">
-                    <div>
-                      <p className="font-bold">{member.name}</p>
-                      <p className="text-xs text-muted-foreground">{member.email}</p>
-                    </div>
-                  </TableCell>
-                  <TableCell data-label="Rol">
-                    <Badge variant="outline">{getRoleLabel(member.role)}</Badge>
-                  </TableCell>
-                  <TableCell data-label="Estado">
-                    <Badge variant={member.is_active ? 'default' : 'secondary'}>
-                      {member.is_active ? 'Activo' : 'Inactivo'}
-                    </Badge>
-                  </TableCell>
-                  <TableCell data-label="Actividad">
-                    <div>
-                      <p className="font-semibold">{member.action_count} acciones</p>
-                      <p className="text-xs text-muted-foreground">{member.last_action || 'Sin actividad'}</p>
-                    </div>
-                  </TableCell>
-                  <TableCell data-label="Alta">{formatDate(member.created_at)}</TableCell>
-                  <TableCell data-label="Acciones" className="text-right">
-                    {member.role === 'admin' ? (
-                      <Button type="button" variant="outline" size="sm" className="rounded-xl font-black" onClick={() => handleToggleStatus(member)}>
-                        {member.is_active ? 'Desactivar' : 'Activar'}
-                      </Button>
-                    ) : (
-                      <span className="text-xs font-semibold text-muted-foreground">Protegido</span>
-                    )}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+      <StaffTeamPanel staff={staff} onToggleStatus={handleToggleStatus} />
 
-      <Card>
-        <CardHeader className="gap-4">
-          <div>
-            <CardTitle>Usuarios del dashboard</CardTitle>
-            <p className="text-sm font-semibold text-muted-foreground">
-              Consulta agentes y clientes, y abre su historial de movimientos recientes dentro del sistema.
-            </p>
-          </div>
-          <div className="flex flex-col gap-3 @2xl:flex-row">
-            <div className="relative w-full @2xl:max-w-sm">
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                value={userSearch}
-                onChange={(e) => setUserSearch(e.target.value)}
-                placeholder="Buscar por nombre, email o teléfono"
-                className="pl-9"
-              />
-            </div>
-            <Select value={roleFilter} onValueChange={(value: 'all' | 'gestor' | 'cliente') => setRoleFilter(value)}>
-              <SelectTrigger className="w-full @2xl:w-52">
-                <SelectValue placeholder="Filtrar por rol" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos</SelectItem>
-                <SelectItem value="gestor">Gestores</SelectItem>
-                <SelectItem value="cliente">Clientes</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </CardHeader>
-        <CardContent className="activity-records-scroll">
-          <Table className="activity-records-table" wrapperClassName="is-stacked">
-            <TableHeader>
-              <TableRow>
-                <TableHead>Usuario</TableHead>
-                <TableHead>Rol</TableHead>
-                <TableHead>Estado</TableHead>
-                <TableHead>Último movimiento</TableHead>
-                <TableHead>Movimientos</TableHead>
-                <TableHead>Alta</TableHead>
-                <TableHead className="text-right">Detalle</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredManagedUsers.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={7} className="py-10 text-center text-sm font-semibold text-muted-foreground">
-                    No hay usuarios que coincidan con el filtro actual.
-                  </TableCell>
-                </TableRow>
-              ) : (
-                filteredManagedUsers.map((member) => (
-                  <TableRow key={member.id} className="activity-record-row">
-                    <TableCell data-label="Usuario">
-                      <div>
-                        <p className="font-bold">{member.name}</p>
-                        <p className="text-xs text-muted-foreground">{member.email}</p>
-                        <p className="text-xs text-muted-foreground">{member.phone}</p>
-                      </div>
-                    </TableCell>
-                    <TableCell data-label="Rol">
-                      <Badge variant="outline">{getRoleLabel(member.role)}</Badge>
-                    </TableCell>
-                    <TableCell data-label="Estado">
-                      <Badge variant={member.is_active ? 'default' : 'secondary'}>
-                        {member.is_active ? 'Activo' : 'Inactivo'}
-                      </Badge>
-                    </TableCell>
-                    <TableCell data-label="Último movimiento">
-                      {member.last_movement_at ? (
-                        <div>
-                          <p className="font-semibold">{member.last_movement_label || 'Movimiento reciente'}</p>
-                          <p className="text-xs text-muted-foreground">{formatDate(member.last_movement_at)}</p>
-                        </div>
-                      ) : (
-                        <span className="text-xs font-semibold text-muted-foreground">Sin movimientos registrados</span>
-                      )}
-                    </TableCell>
-                    <TableCell data-label="Movimientos">
-                      <p className="font-semibold tabular-nums">{member.movement_count}</p>
-                    </TableCell>
-                    <TableCell data-label="Alta">{formatDate(member.created_at)}</TableCell>
-                    {/* Misma etiqueta que la cabecera de la columna («Detalle»):
-                        en las tarjetas apiladas es lo que se lee en su lugar. */}
-                    <TableCell data-label="Detalle" className="text-right">
-                      <Button type="button" variant="outline" size="sm" className="rounded-xl font-black" onClick={() => openUserMovements(member)}>
-                        <Eye className="mr-2 h-4 w-4" />
-                        Ver movimientos
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+      <ManagedUsersPanel users={managedUsers} onOpenMovements={openUserMovements} />
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Bitácora del staff</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {activity.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Aún no hay acciones registradas por administradores.</p>
-          ) : (
-            activity.map((item) => (
-              <div key={item.id} className="dashboard-inset rounded-2xl border border-border/10 p-4">
-                <div className="flex flex-col gap-2 @2xl:flex-row @2xl:items-center @2xl:justify-between">
-                  <div>
-                    <p className="font-black text-foreground">{item.actor_name}</p>
-                    <p className="text-xs font-semibold text-muted-foreground">
-                      {getRoleLabel(item.actor_role)} · {item.action}
-                    </p>
-                  </div>
-                  <p className="text-xs font-semibold text-muted-foreground">{formatDate(item.created_at)}</p>
-                </div>
-              </div>
-            ))
-          )}
-        </CardContent>
-      </Card>
+      <StaffActivityPanel activity={activity} />
 
       <Dialog open={!!selectedUser} onOpenChange={(open) => !open && setSelectedUser(null)}>
         <DialogContent size="2xl">

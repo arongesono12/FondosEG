@@ -1,39 +1,25 @@
 'use client';
 
-import { DashboardMetric } from '@/components/dashboard/dashboard-metric';
+import { MetricArea, MetricBars, MetricCard, MetricDesk, MetricTiles, ModuleMetrics, ModuleMetricsSkeleton } from '@/components/dashboard/module-metric-card';
+import { CommissionsPanel, ReconciliationPanel } from '@/components/dashboard/panels/stats-record-panels';
+import { RecentTransfersPanel } from '@/components/dashboard/transfer-record-panel';
+import { dailySeries, shareOf } from '@/lib/dashboard-series';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useAppStore } from '@/lib/store';
 import { getAgentTransferStats, getAgentsCommissionStats, getDashboardReconciliation, getDashboardStats, getDailyTransferStats, getRecentTransfers } from '@/services/dashboard';
 import type { AgentTransferStats, AgentsCommissionStats, DashboardStats, DailyTransferStats, ReconciliationSummary, Transfer } from '@/types';
-import { cn, convertCurrency, formatCurrency, formatDateShort, formatMonthYear, getStatusColor } from '@/lib/utils';
+import { convertCurrency, formatCurrency, formatDateShort, formatMonthYear } from '@/lib/utils';
 import { fetchJSON, HttpError } from '@/services/http';
 import { isAdminRole, isSuperAdminRole } from '@/lib/roles';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Cell,
-  Line,
-  LineChart,
-  Pie,
-  PieChart,
-  XAxis,
-  YAxis,
-} from 'recharts';
-import {
-  type ChartConfig,
-  ChartContainer,
-  ChartLegend,
-  ChartLegendContent,
-  ChartTooltip,
-  ChartTooltipContent,
-} from '@/components/ui/chart';
-import { ArrowUpRight } from '@/components/ui/hugeicons';
+import { Bar, BarChart, XAxis, YAxis } from 'recharts';
+import { type ChartConfig, ChartContainer } from '@/components/ui/chart';
+import { ActivityBarChart, ShareRadialChart, type ShareRow } from '@/components/dashboard/stats-charts';
+import { ArrowUpRight, CheckCircle2, Clock, TrendingUp } from '@/components/ui/hugeicons';
 
 // Captación de la portada comercial. Vive aquí y no en el dashboard porque
 // /stats ya es la pantalla de analítica y sólo abre para admin.
@@ -61,16 +47,11 @@ type MarketingStatsResponse = {
   }[];
 };
 
-const lineChartConfig = {
-  amount: { label: 'Volumen', color: 'var(--chart-1)' },
-  count: { label: 'Operaciones', color: 'var(--chart-2)' },
-} satisfies ChartConfig;
-
 const settlementRateConfig = {
   value: { label: 'Liquidación', color: 'var(--chart-3)' },
 } satisfies ChartConfig;
 
-const PIE_COLOR_VARS = ['var(--chart-1)', 'var(--chart-2)', 'var(--chart-3)', 'var(--chart-4)', 'var(--chart-5)'];
+const TOP_AGENTS_LIMIT = 5;
 
 
 export default function StatsPage() {
@@ -126,30 +107,36 @@ export default function StatsPage() {
   const fmt = (amount: number) => formatCurrency(convertCurrency(amount, 'XAF', currency), currency);
 
   const chartData = dailyStats.map((item) => ({
-    date: formatDateShort(item.date).slice(0, 5),
-    amount: Math.round(convertCurrency(item.total_amount, 'XAF', currency)),
+    date: item.date,
+    amount: convertCurrency(item.total_amount, 'XAF', currency),
     count: item.transfer_count,
-    agents: item.agent_count,
   }));
 
-  const statusData: { name: string; value: number; ops?: number }[] = [
-    { name: 'Completadas', value: stats?.completedTransfers ?? 0 },
-    { name: 'Pendientes', value: stats?.pendingTransfers ?? 0 },
-    { name: 'Canceladas', value: stats?.cancelledTransfers ?? 0 },
-  ].filter((item) => item.value > 0);
+  const volumeTrend = dailySeries(dailyStats, (day) => convertCurrency(day.total_amount, 'XAF', currency));
+  const ticketTrend = dailySeries(dailyStats, (day) => (day.transfer_count ? convertCurrency(day.total_amount / day.transfer_count, 'XAF', currency) : 0));
+  const formatTrend = (value: number) => formatCurrency(value, currency);
 
-  const concentrationData: { name: string; value: number; ops?: number }[] = (isAdmin ? agentStats : []).slice(0, 5).map((agent) => ({
-    name: agent.agent_name,
-    value: Math.round(convertCurrency(agent.total_sent, 'XAF', currency)),
-    ops: agent.transfer_count,
-  }));
   // Sin recorte: la tabla de comisiones del dashboard —retirada por estar
   // duplicada aquí— listaba a todos los gestores, y esta tarjeta se llama
   // «Comisiones por gestor», no «Top 5».
   const commissionAgents = commissionStats?.agents || [];
 
-  const totalOps = (stats?.completedTransfers ?? 0) + (stats?.pendingTransfers ?? 0) + (stats?.cancelledTransfers ?? 0);
+  const completedOps = stats?.completedTransfers ?? 0;
+  const pendingOps = stats?.pendingTransfers ?? 0;
+  const cancelledOps = stats?.cancelledTransfers ?? 0;
+  const totalOps = completedOps + pendingOps + cancelledOps;
   const settlementRate = stats?.settlementRate ?? 0;
+
+  // El endpoint ya entrega a los gestores de mayor a menor volumen.
+  const leadingAgent = agentStats[0];
+  const networkVolume = agentStats.reduce((sum, agent) => sum + agent.total_sent, 0);
+  const leadingShare = shareOf(leadingAgent?.total_sent ?? 0, networkVolume);
+
+  const statusRows: ShareRow[] = [
+    { name: 'Completadas', value: String(completedOps), highlighted: true },
+    { name: 'Pendientes', value: String(pendingOps) },
+    { name: 'Canceladas', value: String(cancelledOps) },
+  ].filter((row) => row.value !== '0');
   const reconciliationPeriods = reconciliation?.periods ?? [];
 
   const formatPeriodLabel = (period: string) => {
@@ -162,12 +149,7 @@ export default function StatsPage() {
     return (
       <div className="space-y-6">
         <Skeleton className="h-36 w-full rounded-4xl" />
-        <div className="grid gap-4 @xl:grid-cols-2 @4xl:grid-cols-4">
-          <Skeleton className="h-28" />
-          <Skeleton className="h-28" />
-          <Skeleton className="h-28" />
-          <Skeleton className="h-28" />
-        </div>
+        <ModuleMetricsSkeleton />
         <div className="grid gap-6 @4xl:grid-cols-[minmax(0,1.35fr)_minmax(0,0.95fr)]">
           <Skeleton className="h-96" />
           <Skeleton className="h-96" />
@@ -233,107 +215,88 @@ export default function StatsPage() {
         </div>
       </section>
 
-      <section className="dashboard-metric-group grid gap-4 @xl:grid-cols-2 @4xl:grid-cols-4">
-        <DashboardMetric label="Volumen total" value={fmt(stats?.monthlyVolume ?? 0)} hint="Acumulado de 30 días" />
-        <DashboardMetric label="Operaciones" value={String(totalOps)} hint={`${stats?.todayTransfers ?? 0} registradas hoy`} />
-        <DashboardMetric label="Ticket promedio" value={fmt(stats?.averageTicket ?? 0)} hint="Promedio por envío completado" />
-        <DashboardMetric label={isAdmin ? 'Gestores activos' : 'Clientes únicos'} value={String(isAdmin ? stats?.activeAgents ?? 0 : stats?.totalClients ?? 0)} hint={isAdmin ? 'Participando en la red' : 'Atendidos en el período'} />
-      </section>
+      <ModuleMetrics label="Resumen de estadísticas">
+        <MetricCard
+          layout="desk"
+          title="Operaciones"
+          value={String(totalOps)}
+          caption={<><span className="overview-tone-warning">{stats?.todayTransfers ?? 0}</span> registradas hoy</>}
+        >
+          <MetricDesk />
+        </MetricCard>
+        <MetricCard title="Volumen total" value={fmt(stats?.monthlyVolume ?? 0)} caption="Acumulado de 30 días">
+          <MetricBars data={volumeTrend} seriesLabel="Volumen" format={formatTrend} />
+        </MetricCard>
+        <MetricCard title="Ticket promedio" value={fmt(stats?.averageTicket ?? 0)} caption="Promedio por envío completado">
+          <MetricArea data={ticketTrend} seriesLabel="Ticket" format={formatTrend} legend="Ticket por día · 7 días" />
+        </MetricCard>
+        <MetricCard
+          layout="tiles"
+          title={isAdmin ? 'Gestores activos' : 'Clientes únicos'}
+          value={String(isAdmin ? stats?.activeAgents ?? 0 : stats?.totalClients ?? 0)}
+          caption={isAdmin ? 'Participando en la red' : 'Atendidos en el período'}
+          action={{ href: '/history', label: 'Ver historial', icon: <ArrowUpRight /> }}
+        >
+          <MetricTiles tiles={[
+            { icon: <CheckCircle2 />, title: 'Completas', detail: String(stats?.completedTransfers ?? 0) },
+            { icon: <TrendingUp />, title: 'Cierre', detail: `${settlementRate} %`, featured: true },
+            { icon: <Clock />, title: 'Pendientes', detail: String(stats?.pendingTransfers ?? 0) },
+          ]} />
+        </MetricCard>
+      </ModuleMetrics>
 
       <section className="grid gap-6 @4xl:grid-cols-[minmax(0,1.35fr)_minmax(0,0.95fr)]">
-        <Card className="min-w-0">
-          <CardHeader className="border-b border-border/5 pb-5">
-            <CardTitle className="text-xl font-black text-foreground">
-              Flujo de volumen y actividad
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-5 p-6">
-            <div className="h-64 w-full min-w-0 @xl:h-80">
-              <ChartContainer config={lineChartConfig} className="aspect-auto h-full w-full">
-                <LineChart data={chartData} margin={{ top: 8, right: 12, bottom: 0, left: -12 }}>
-                  <CartesianGrid strokeDasharray="4 4" vertical={false} stroke="rgba(148,163,184,0.18)" />
-                  <XAxis dataKey="date" tick={{ fontSize: 11, fill: 'currentColor', fontWeight: 800 }} axisLine={false} tickLine={false} className="text-muted-foreground" />
-                  <YAxis tick={{ fontSize: 11, fill: 'currentColor', fontWeight: 800 }} axisLine={false} tickLine={false} className="text-muted-foreground" />
-                  <ChartTooltip content={<ChartTooltipContent hideLabel />} />
-                  <ChartLegend content={<ChartLegendContent />} />
-                  <Line type="monotone" dataKey="amount" stroke="var(--color-amount)" strokeWidth={3.5} dot={{ r: 3 }} activeDot={{ r: 6 }} />
-                  <Line type="monotone" dataKey="count" stroke="var(--color-count)" strokeWidth={2.5} dot={{ r: 2 }} activeDot={{ r: 5 }} />
-                </LineChart>
-              </ChartContainer>
+        <ActivityBarChart
+          title="Flujo de volumen y actividad"
+          description="Operaciones completadas en los últimos 30 días"
+          data={chartData}
+          formatAmount={formatTrend}
+        >
+          <div className="grid gap-4 @2xl:grid-cols-3">
+            <div className="dashboard-inset rounded-3xl border border-border/10 bg-background/70 p-4">
+              <p className="text-xs font-black uppercase tracking-[0.18em] text-muted-foreground">Semana actual</p>
+              <p className="mt-2 text-2xl font-black tabular-nums text-foreground">{fmt(stats?.weeklyVolume ?? 0)}</p>
             </div>
+            <div className="dashboard-inset rounded-3xl border border-border/10 bg-background/70 p-4">
+              <p className="text-xs font-black uppercase tracking-[0.18em] text-muted-foreground">Hoy</p>
+              <p className="mt-2 text-2xl font-black tabular-nums text-foreground">{fmt(stats?.todayVolume ?? 0)}</p>
+            </div>
+            <div className="dashboard-inset rounded-3xl border border-border/10 bg-background/70 p-4">
+              <p className="text-xs font-black uppercase tracking-[0.18em] text-muted-foreground">Comisión media</p>
+              <p className="mt-2 text-2xl font-black tabular-nums text-foreground">{fmt(stats?.commissionPerTransfer ?? 0)}</p>
+            </div>
+          </div>
+        </ActivityBarChart>
 
-            <div className="grid gap-4 @2xl:grid-cols-3">
-              <div className="dashboard-inset rounded-3xl border border-border/10 bg-background/70 p-4">
-                <p className="text-xs font-black uppercase tracking-[0.18em] text-muted-foreground">Semana actual</p>
-                <p className="mt-2 text-2xl font-black tabular-nums text-foreground">{fmt(stats?.weeklyVolume ?? 0)}</p>
-              </div>
-              <div className="dashboard-inset rounded-3xl border border-border/10 bg-background/70 p-4">
-                <p className="text-xs font-black uppercase tracking-[0.18em] text-muted-foreground">Hoy</p>
-                <p className="mt-2 text-2xl font-black tabular-nums text-foreground">{fmt(stats?.todayVolume ?? 0)}</p>
-              </div>
-              <div className="dashboard-inset rounded-3xl border border-border/10 bg-background/70 p-4">
-                <p className="text-xs font-black uppercase tracking-[0.18em] text-muted-foreground">Comisión media</p>
-                <p className="mt-2 text-2xl font-black tabular-nums text-foreground">{fmt(stats?.commissionPerTransfer ?? 0)}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="min-w-0">
-          <CardHeader className="border-b border-border/5 pb-5">
-            <CardTitle className="text-xl font-black text-foreground">
-              {isAdmin ? 'Distribución de red' : 'Distribución operativa'}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-5 p-6">
-            <div className="h-64 min-w-0 @xl:h-72">
-              <ChartContainer
-                config={{
-                  value: { label: 'Valor' },
-                }}
-                className="aspect-square h-full w-full"
-              >
-                <PieChart>
-                  <Pie
-                    data={isAdmin ? concentrationData : statusData}
-                    dataKey="value"
-                    nameKey="name"
-                    cx="50%"
-                    cy="50%"
-                    // Radios relativos: con 62/104px fijos el anillo se salía del lienzo
-                    // cuando la tarjeta estrechaba en el teléfono.
-                    innerRadius="55%"
-                    outerRadius="90%"
-                    paddingAngle={4}
-                  >
-                    {(isAdmin ? concentrationData : statusData).map((_, index) => (
-                      <Cell key={index} fill={PIE_COLOR_VARS[index % PIE_COLOR_VARS.length]} />
-                    ))}
-                  </Pie>
-                  <ChartTooltip content={<ChartTooltipContent hideLabel />} />
-                </PieChart>
-              </ChartContainer>
-            </div>
-
-            <div className="space-y-3">
-              {(isAdmin ? concentrationData : statusData).map((item, index) => (
-                <div key={item.name} className="dashboard-inset flex items-center justify-between rounded-2xl border border-border/10 bg-background/70 px-4 py-3">
-                  <div className="flex items-center gap-3">
-                    <div className="h-3 w-3 rounded-full" style={{ backgroundColor: PIE_COLOR_VARS[index % PIE_COLOR_VARS.length] }} />
-                    <div>
-                      <p className="text-sm font-black text-foreground">{item.name}</p>
-                      {item.ops !== undefined && <p className="text-xs font-semibold text-muted-foreground">{item.ops} operaciones</p>}
-                    </div>
-                  </div>
-                  <p className="text-sm font-black text-foreground">{isAdmin ? fmt(item.value) : item.value}</p>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+        {isAdmin ? (
+          <ShareRadialChart
+            title="Distribución de red"
+            description="Histórico de envíos completados"
+            share={leadingShare}
+            shareLabel="Gestor líder"
+            summary={`${leadingAgent?.agent_name} concentra el ${leadingShare} % del volumen`}
+            detail={`${agentStats.length} ${agentStats.length === 1 ? 'gestor' : 'gestores'} con envíos completados`}
+            rows={agentStats.slice(0, TOP_AGENTS_LIMIT).map((agent, index) => ({
+              name: agent.agent_name,
+              value: fmt(agent.total_sent),
+              detail: `${agent.transfer_count} operaciones`,
+              highlighted: index === 0,
+            }))}
+          />
+        ) : (
+          <ShareRadialChart
+            title="Distribución operativa"
+            description="Estado de tus operaciones"
+            share={shareOf(completedOps, totalOps)}
+            shareLabel="Completadas"
+            summary={`${completedOps} de ${totalOps} operaciones completadas`}
+            detail={`${pendingOps} pendientes · ${cancelledOps} canceladas`}
+            rows={statusRows}
+          />
+        )}
       </section>
 
-      <section className="grid gap-6 @4xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
+      <section className="grid grid-cols-1 gap-6">
         <Card className="min-w-0">
           <CardHeader className="border-b border-border/5 pb-5">
             <CardTitle className="text-xl font-black text-foreground">
@@ -357,7 +320,7 @@ export default function StatsPage() {
               </div>
             </div>
 
-            <div className="grid gap-3 @xl:grid-cols-2">
+            <div className="grid gap-3 @xl:grid-cols-2 @4xl:grid-cols-4">
               <div className="dashboard-inset rounded-3xl border border-border/10 bg-background/70 p-4">
                 <p className="text-xs font-black uppercase tracking-[0.18em] text-muted-foreground">Pendientes</p>
                 <p className="mt-2 text-2xl font-black tabular-nums text-foreground">{stats?.pendingTransfers ?? 0}</p>
@@ -385,144 +348,32 @@ export default function StatsPage() {
           </CardContent>
         </Card>
 
-        <Card className="min-w-0">
-          <CardHeader className="border-b border-border/5 pb-5">
-            <CardTitle className="text-xl font-black text-foreground">
-              {isAdmin ? 'Comisiones por gestor' : 'Últimas operaciones observadas'}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3 p-6">
-            {isAdmin && (
-              <div className="grid gap-3 @xl:grid-cols-2">
-                <div className="dashboard-inset rounded-3xl border border-border/10 bg-background/70 p-4">
-                  <p className="text-xs font-black uppercase tracking-[0.18em] text-muted-foreground">Mes actual</p>
-                  <p className="mt-2 text-2xl font-black tabular-nums text-foreground">{fmt(commissionStats?.monthCommission ?? 0)}</p>
-                </div>
-                <div className="dashboard-inset rounded-3xl border border-border/10 bg-background/70 p-4">
-                  <p className="text-xs font-black uppercase tracking-[0.18em] text-muted-foreground">Año actual</p>
-                  <p className="mt-2 text-2xl font-black tabular-nums text-foreground">{fmt(commissionStats?.yearCommission ?? 0)}</p>
-                </div>
-              </div>
-            )}
-            {isAdmin ? (
-              commissionAgents.length === 0 ? (
-                <div className="dashboard-inset rounded-3xl border border-dashed border-border/20 bg-background/50 px-6 py-10 text-center">
-                  <p className="text-sm font-bold text-muted-foreground">No hay datos de comisión todavía.</p>
-                </div>
-              ) : (
-                commissionAgents.map((agent) => (
-                  <div key={agent.agent_id} className="dashboard-inset rounded-3xl border border-border/10 bg-background/70 p-4">
-                    <div className="flex items-start justify-between gap-4">
-                      <div>
-                        <p className="text-sm font-black text-foreground">{agent.agent_name}</p>
-                        <p className="mt-1 text-xs font-semibold text-muted-foreground">
-                          {agent.transfer_count} operaciones
-                        </p>
-                        <p className="mt-1 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                          Costo est. {fmt(agent.estimated_cost)} · margen {agent.net_margin}%
-                        </p>
-                      </div>
-                      <Badge className="rounded-full bg-slate-100 px-3 py-1 text-xs font-black uppercase tracking-[0.18em] text-slate-700">
-                        Neto estimado
-                      </Badge>
-                    </div>
-                    <div className="mt-4">
-                      <p className="text-lg font-black text-foreground">{fmt(agent.net_profit)}</p>
-                    </div>
-                    {/* Las cuatro columnas que tenía la tabla del dashboard. */}
-                    <dl className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2 border-t border-border/10 pt-3 @xl:grid-cols-4">
-                      {([
-                        ['Hoy', agent.today_commission],
-                        ['Mes', agent.month_commission],
-                        ['Año', agent.year_commission],
-                        ['Acumulado', agent.total_commission],
-                      ] as const).map(([label, value]) => (
-                        <div key={label} className="min-w-0">
-                          <dt className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">{label}</dt>
-                          <dd className="mt-1 truncate font-semibold tabular-nums text-foreground">{fmt(value)}</dd>
-                        </div>
-                      ))}
-                    </dl>
-                  </div>
-                ))
-              )
-            ) : (
-              recentTransfers.map((transfer) => (
-                <div key={transfer.id} className="dashboard-inset rounded-3xl border border-border/10 bg-background/70 p-4">
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <p className="text-sm font-black text-foreground">{transfer.transfer_code}</p>
-                      <p className="mt-1 text-xs font-semibold text-muted-foreground">
-                        {transfer.sender_name} · {transfer.receiver_name}
-                      </p>
-                      <p className="mt-1 text-xs font-semibold text-muted-foreground">
-                        {transfer.destination_city} · {formatDateShort(transfer.created_at)}
-                      </p>
-                    </div>
-                    <Badge className={cn('rounded-full px-3 py-1 text-xs font-black uppercase tracking-[0.18em]', getStatusColor(transfer.status))}>
-                      {transfer.status}
-                    </Badge>
-                  </div>
-                  <div className="mt-4 flex items-center justify-between">
-                    <p className="text-lg font-black text-foreground">{fmt(transfer.amount)}</p>
-                    <Button asChild variant="ghost" className="rounded-xl font-bold text-muted-foreground hover:text-foreground">
-              <Link href="/history">
-                        Ver historial
-                      </Link>
-            </Button>
-                  </div>
-                </div>
-              ))
-            )}
-          </CardContent>
-        </Card>
+        {isAdmin ? (
+          <CommissionsPanel
+            agents={commissionAgents}
+            monthCommission={commissionStats?.monthCommission ?? 0}
+            yearCommission={commissionStats?.yearCommission ?? 0}
+            format={fmt}
+          />
+        ) : (
+          <RecentTransfersPanel
+            title="Últimas operaciones observadas"
+            transfers={recentTransfers}
+            format={(amount, source) => formatCurrency(convertCurrency(amount, source, currency), currency)}
+            emptyMessage="Todavía no hay operaciones."
+            newTransfer={{ href: '/transfers' }}
+          />
+        )}
       </section>
 
       {isAdmin && (
-        <section className="grid gap-6">
-          <Card className="min-w-0">
-            <CardHeader className="border-b border-border/5 pb-5">
-              <CardTitle className="text-xl font-black text-foreground">
-                Conciliación mensual
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3 p-6">
-              {reconciliationPeriods.length === 0 ? (
-                <div className="dashboard-inset rounded-3xl border border-dashed border-border/20 bg-background/50 px-6 py-10 text-center">
-                  <p className="text-sm font-bold text-muted-foreground">No hay movimientos suficientes para conciliar.</p>
-                </div>
-              ) : (
-                reconciliationPeriods.slice(0, 4).map((period) => (
-                  <div key={period.period} className="dashboard-inset rounded-3xl border border-border/10 bg-background/70 p-4">
-                    <div className="flex items-start justify-between gap-4">
-                      <div>
-                        <p className="text-sm font-black text-foreground">{formatPeriodLabel(period.period)}</p>
-                        <p className="mt-1 text-xs font-semibold text-muted-foreground">
-                          Topups {fmt(period.topups)} · Salidas {fmt(period.transfersOutflow)}
-                        </p>
-                        <p className="mt-1 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                          Ajustes {fmt(period.resets)} · Reembolsos {fmt(period.refunds)}
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-lg font-black text-foreground">{fmt(period.netFlow)}</p>
-                        <p className="text-xs font-semibold uppercase text-muted-foreground">{period.transactionCount} movimientos</p>
-                      </div>
-                    </div>
-                  </div>
-                ))
-              )}
-
-              {reconciliation && (
-                <div className="dashboard-inset rounded-2xl border border-border/10 bg-background/70 px-4 py-3">
-                  <div className="flex items-center justify-between">
-                    <p className="text-xs font-black uppercase tracking-[0.18em] text-muted-foreground">Neto del período</p>
-                    <p className="text-base font-black text-foreground">{fmt(reconciliation.totalNetFlow)}</p>
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+        <section className="grid grid-cols-1 gap-6">
+          <ReconciliationPanel
+            periods={reconciliationPeriods.slice(0, 4)}
+            totalNetFlow={reconciliation?.totalNetFlow}
+            formatPeriod={formatPeriodLabel}
+            format={fmt}
+          />
         </section>
       )}
       {isSuperAdmin && marketingStats && (

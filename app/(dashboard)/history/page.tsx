@@ -1,28 +1,37 @@
 'use client';
 
-import { DashboardMetric } from '@/components/dashboard/dashboard-metric';
+import { MetricArea, MetricBars, MetricCard, MetricDesk, MetricTiles, ModuleMetrics, ModuleMetricsSkeleton } from '@/components/dashboard/module-metric-card';
+import { lastDaysSeries } from '@/lib/dashboard-series';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useAppStore } from '@/lib/store';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogBody, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Skeleton } from '@/components/ui/skeleton';
 import { correctTransfer, getTransferHistory, type TransferHistoryStatus } from '@/modules/transfers/http/client';
 import { isTransferCompleted, isTransferPending, normalizeTransferStatus } from '@/lib/financial';
-import { formatCurrency, formatDate, getStatusColor, getStatusText } from '@/lib/utils';
+import { formatCurrency, formatDate, getStatusText } from '@/lib/utils';
 import type { Transfer } from '@/types';
-import { AlertTriangle, Download, PencilLine, Search } from '@/components/ui/hugeicons';
+import { DateRangeFilter } from '@/components/dashboard/date-range-filter';
+import { ExpandableSearch } from '@/components/dashboard/expandable-search';
+import { RecordDetailAction, RecordDetailEmpty, RecordDetailNote, RecordListEmpty, RecordTileAction } from '@/components/dashboard/record-panel';
+import { TransferRecordPanel } from '@/components/dashboard/transfer-record-panel';
+import { ArrowUpRight, CheckCircle2, Clock, Download, PencilLine, Receipt } from '@/components/ui/hugeicons';
 import { isAdminRole } from '@/lib/roles';
-import Link from 'next/link';
 
 type StatusFilter = TransferHistoryStatus;
 
 const PAGE_SIZE = 50;
 const SEARCH_DEBOUNCE_MS = 300;
+// Sin contador: el estado se filtra en el servidor y aquí sólo hay una página cargada.
+const HISTORY_TABS = [
+  { value: 'all', label: 'Todas' },
+  { value: 'completed', label: 'Completadas' },
+  { value: 'created', label: 'Pendientes' },
+  { value: 'cancelled', label: 'Canceladas' },
+];
 
 
 export default function HistoryPage() {
@@ -33,6 +42,7 @@ export default function HistoryPage() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [loadMoreError, setLoadMoreError] = useState(false);
   const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
+  const [hasFailedLoad, setHasFailedLoad] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
@@ -76,6 +86,7 @@ export default function HistoryPage() {
         if (id !== requestId.current) return;
         console.error('Error loading transfers:', error);
         setListStatus('error');
+        setHasFailedLoad(true);
       });
   }, [debouncedSearch, statusFilter, fromDate, toDate]);
 
@@ -112,6 +123,14 @@ export default function HistoryPage() {
   const cancelledTransfers = transfers.filter((transfer) => normalizeTransferStatus(transfer.status) === 'cancelled');
   const totalVolume = completedTransfers.reduce((sum, transfer) => sum + transfer.amount, 0);
   const averageTicket = completedTransfers.length ? totalVolume / completedTransfers.length : 0;
+  // Al reintentar tras un fallo aún no hay datos: un 0 aquí parecería un total real.
+  const metricsUnavailable = listStatus === 'error' || !hasLoadedOnce;
+  const metricValue = (value: number) => (metricsUnavailable ? '—' : String(value));
+  // La lista llega de más reciente a más antigua. Las series acaban en la última
+  // operación cargada para que un filtro de fechas antiguas no las deje vacías.
+  const latestLoaded = transfers[0] ? new Date(transfers[0].created_at) : new Date();
+  const completedByDay = lastDaysSeries(completedTransfers, (transfer) => transfer.created_at, () => 1, latestLoaded);
+  const volumeByDay = lastDaysSeries(completedTransfers, (transfer) => transfer.created_at, (transfer) => transfer.amount, latestLoaded);
   const showAdminActions = isAdminRole(user?.role);
 
   const canCorrectTransfer = (transfer: Transfer) =>
@@ -212,15 +231,12 @@ export default function HistoryPage() {
     URL.revokeObjectURL(url);
   };
 
-  if (!user || (!hasLoadedOnce && listStatus === 'loading')) {
+  // Sólo en la primera carga: tras un fallo, el esqueleto desmontaría la búsqueda abierta.
+  if (!user || (!hasLoadedOnce && !hasFailedLoad && listStatus === 'loading')) {
     return (
       <div className="space-y-6">
         <Skeleton className="h-32 w-full rounded-4xl" />
-        <div className="grid gap-4 @2xl:grid-cols-3">
-          <Skeleton className="h-24" />
-          <Skeleton className="h-24" />
-          <Skeleton className="h-24" />
-        </div>
+        <ModuleMetricsSkeleton />
         <Skeleton className="h-72" />
       </div>
     );
@@ -250,174 +266,100 @@ export default function HistoryPage() {
         </div>
       </section>
 
-      <section className="dashboard-metric-group grid gap-4 @xl:grid-cols-2 @4xl:grid-cols-4">
+      <ModuleMetrics label="Resumen del historial">
         {/* Estos totales describen sólo lo cargado en pantalla, no todo el historial. */}
-        <DashboardMetric label="Completadas" value={listStatus === 'error' ? '—' : String(completedTransfers.length)} hint={scopeHint} />
-        <DashboardMetric label="Pendientes" value={listStatus === 'error' ? '—' : String(createdTransfers.length)} hint={scopeHint} />
-        <DashboardMetric label="Canceladas" value={listStatus === 'error' ? '—' : String(cancelledTransfers.length)} hint={scopeHint} />
-        <DashboardMetric label="Ticket medio" value={listStatus === 'error' ? '—' : formatCurrency(averageTicket)} hint={`${formatCurrency(totalVolume)} confirmados · ${transfers.length} cargadas`} />
-      </section>
+        <MetricCard layout="desk" title="Pendientes" value={metricValue(createdTransfers.length)} caption={scopeHint}>
+          <MetricDesk />
+        </MetricCard>
+        <MetricCard title="Completadas" value={metricValue(completedTransfers.length)} caption={scopeHint}>
+          <MetricBars data={completedByDay} seriesLabel="Completadas" />
+        </MetricCard>
+        <MetricCard
+          title="Ticket medio"
+          value={metricsUnavailable ? '—' : formatCurrency(averageTicket)}
+          caption={<><span className="overview-tone-success">{formatCurrency(totalVolume)}</span> confirmados</>}
+        >
+          <MetricArea data={volumeByDay} seriesLabel="Volumen" format={formatCurrency} legend="Volumen confirmado · 7 días" />
+        </MetricCard>
+        <MetricCard
+          layout="tiles"
+          title="Canceladas"
+          value={metricValue(cancelledTransfers.length)}
+          caption={scopeHint}
+          action={{ href: '/transfers', label: 'Ir a envíos', icon: <ArrowUpRight /> }}
+        >
+          <MetricTiles tiles={[
+            { icon: <CheckCircle2 />, title: 'Completas', detail: metricValue(completedTransfers.length) },
+            { icon: <Receipt />, title: 'Cargadas', detail: metricValue(transfers.length), featured: true },
+            { icon: <Clock />, title: 'Pendientes', detail: metricValue(createdTransfers.length) },
+          ]} />
+        </MetricCard>
+      </ModuleMetrics>
 
-      <Card className="overflow-hidden">
-        <CardHeader className="border-b border-border/5 pb-5">
-          <div className="flex flex-col gap-4 @4xl:flex-row @4xl:items-center @4xl:justify-between">
-            <CardTitle className="text-xl font-black text-foreground">
-              Registro operativo
-            </CardTitle>
-
-            <div className="flex flex-col gap-3 @4xl:flex-row @4xl:items-center">
-              <div className="relative w-full min-w-0 @4xl:min-w-[280px]">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  value={searchTerm}
-                  onChange={(event) => setSearchTerm(event.target.value)}
-                  placeholder="Buscar por código, nombre, teléfono o ciudad..."
-                  className="h-11 rounded-2xl border-border/20 bg-background/70 pl-10"
-                />
-              </div>
-
-              <div className="flex flex-wrap gap-2">
-                {[
-                  { id: 'all', label: 'Todos' },
-                  { id: 'completed', label: 'Completadas' },
-                  { id: 'created', label: 'Pendientes' },
-                  { id: 'cancelled', label: 'Canceladas' },
-                ].map((filter) => (
-                  <Button
-                    key={filter.id}
-                    type="button"
-                    variant={statusFilter === filter.id ? 'default' : 'outline'}
-                    className="rounded-xl font-black"
-                    onClick={() => setStatusFilter(filter.id as StatusFilter)}
-                  >
-                    {filter.label}
-                  </Button>
-                ))}
-              </div>
-              <div className="flex gap-2">
-                <Label className="flex flex-col gap-1 text-xs font-semibold text-muted-foreground">
-                  Desde
-                  <Input type="date" value={fromDate} max={toDate || undefined} onChange={(event) => setFromDate(event.target.value)} className="h-11 rounded-2xl border-border/20 bg-background/70" />
-                </Label>
-                <Label className="flex flex-col gap-1 text-xs font-semibold text-muted-foreground">
-                  Hasta
-                  <Input type="date" value={toDate} min={fromDate || undefined} onChange={(event) => setToDate(event.target.value)} className="h-11 rounded-2xl border-border/20 bg-background/70" />
-                </Label>
-              </div>
-            </div>
-          </div>
-        </CardHeader>
-
-        <CardContent className="p-0">
-          <div className="activity-records-scroll">
-            <Table className="activity-records-table" wrapperClassName="is-stacked">
-              <TableHeader className="bg-muted/30">
-                <TableRow className="border-border/5 hover:bg-transparent">
-                  <TableHead className="pl-8 py-4 text-xs font-black uppercase tracking-[0.18em] text-muted-foreground">Código</TableHead>
-                  <TableHead className="py-4 text-xs font-black uppercase tracking-[0.18em] text-muted-foreground">Participantes</TableHead>
-                  <TableHead className="py-4 text-xs font-black uppercase tracking-[0.18em] text-muted-foreground">Destino</TableHead>
-                  <TableHead className="py-4 text-xs font-black uppercase tracking-[0.18em] text-muted-foreground text-right">Monto</TableHead>
-                  <TableHead className="py-4 text-xs font-black uppercase tracking-[0.18em] text-muted-foreground">Estado</TableHead>
-                  <TableHead className="py-4 text-xs font-black uppercase tracking-[0.18em] text-muted-foreground">Fecha</TableHead>
-                  <TableHead className="pr-8 py-4 text-xs font-black uppercase tracking-[0.18em] text-muted-foreground text-right">Acciones</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {listStatus === 'error' ? (
-                  <TableRow>
-                    <TableCell colSpan={7} className="py-20 text-center text-sm font-bold text-muted-foreground">
-                      <div role="alert" className="flex flex-col items-center gap-3">
-                        <AlertTriangle className="h-5 w-5 text-rose-500" />
-                        No se pudo cargar el historial.
-                        <Button type="button" variant="outline" className="rounded-xl font-black" onClick={loadFirstPage}>Reintentar</Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ) : filteredTransfers.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={7} className="py-20 text-center text-sm font-bold text-muted-foreground">
-                      {listStatus === 'loading'
-                        ? 'Buscando operaciones…'
-                        : hasFilters
-                          ? 'No hay operaciones que coincidan con los filtros en todo el historial.'
-                          : 'Todavía no hay operaciones.'}
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  filteredTransfers.map((transfer) => (
-                    <TableRow key={transfer.id} className="activity-record-row border-border/5 hover:bg-muted/30">
-                      <TableCell data-label="Código" className="pl-8">
-                        <p className="font-mono text-sm font-black text-foreground">{transfer.transfer_code}</p>
-                        {transfer.agent?.name && (
-                          <p className="text-xs font-semibold uppercase text-primary">Gestor {transfer.agent.name}</p>
-                        )}
-                      </TableCell>
-                      <TableCell data-label="Participantes">
-                        <div className="space-y-1">
-                          <p className="text-sm font-black text-foreground">{transfer.sender_name}</p>
-                          <p className="text-xs font-semibold text-muted-foreground">{transfer.receiver_name}</p>
-                        </div>
-                      </TableCell>
-                      <TableCell data-label="Destino">
-                        <p className="text-sm font-bold text-foreground">{transfer.destination_city}</p>
-                        <p className="text-xs font-semibold uppercase text-muted-foreground">{transfer.destination_country || 'N/A'}</p>
-                      </TableCell>
-                      <TableCell data-label="Monto" className="text-right">
-                        <p className="text-sm font-black text-foreground">{formatCurrency(transfer.amount, transfer.currency)}</p>
-                      </TableCell>
-                      <TableCell data-label="Estado">
-                        <Badge className={`rounded-full px-3 py-1 text-xs font-black uppercase tracking-[0.18em] ${getStatusColor(transfer.status)}`}>
-                          {getStatusText(transfer.status)}
-                        </Badge>
-                      </TableCell>
-                      <TableCell data-label="Fecha" className="text-xs font-semibold text-muted-foreground">{formatDate(transfer.created_at)}</TableCell>
-                      <TableCell data-label="Acciones" className="pr-8 text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button asChild type="button" size="sm" variant="outline" className="rounded-xl font-black">
-                            <Link href={`/receipts/${transfer.id}`}>
-                              <Download className="mr-2 h-4 w-4" />
-                              Comprobante
-                            </Link>
-                          </Button>
-                          {showAdminActions &&
-                            (canCorrectTransfer(transfer) ? (
-                              <Button
-                                type="button"
-                                size="sm"
-                                variant="outline"
-                                className="rounded-xl font-black"
-                                onClick={() => openCorrectionModal(transfer)}
-                              >
-                                <PencilLine className="mr-2 h-4 w-4" />
-                                Corregir
-                              </Button>
-                            ) : (
-                              <span className="self-center text-xs font-semibold text-muted-foreground">Bloqueada</span>
-                            ))}
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
-          {listStatus !== 'error' && transfers.length > 0 && (
-            <div className="flex flex-col items-center gap-3 border-t border-border/5 p-5 text-xs font-semibold text-muted-foreground @2xl:flex-row @2xl:justify-between" aria-live="polite">
-              <span>
-                {transfers.length} operaciones mostradas{nextCursor ? ' · hay más en el historial' : ' · fin del historial'}
-                {listStatus === 'loading' && ' · actualizando…'}
-              </span>
-              {loadMoreError && <span role="alert" className="text-rose-600 dark:text-rose-300">No se pudieron cargar más operaciones.</span>}
-              {nextCursor && (
-                <Button type="button" variant="outline" className="rounded-xl font-black" onClick={loadMore} disabled={loadingMore || listStatus === 'loading'}>
-                  {loadingMore ? 'Cargando…' : loadMoreError ? 'Reintentar' : 'Cargar más'}
-                </Button>
-              )}
-            </div>
+      <TransferRecordPanel
+        label="Registro operativo"
+        title="Registro operativo"
+        subtitle={`Operaciones cargadas: ${transfers.length}`}
+        transfers={listStatus === 'error' ? [] : filteredTransfers}
+        format={formatCurrency}
+        tabs={HISTORY_TABS}
+        activeTab={statusFilter}
+        onTabChange={(value) => setStatusFilter(value as StatusFilter)}
+        corner={(
+          <>
+            <ExpandableSearch
+              value={searchTerm}
+              onChange={setSearchTerm}
+              label="Buscar por código, nombre, teléfono o ciudad"
+              placeholder="Código, nombre, teléfono o ciudad"
+            />
+            <DateRangeFilter from={fromDate} to={toDate} onFromChange={setFromDate} onToChange={setToDate} />
+          </>
+        )}
+        cornerRow="laptop"
+        detailed
+        emptyList={listStatus === 'error'
+          ? <RecordListEmpty role="alert"><p>No se pudo cargar el historial.</p><button type="button" onClick={loadFirstPage}>Reintentar</button></RecordListEmpty>
+          : (
+            <RecordListEmpty busy={listStatus === 'loading'}>
+              <p>
+                {listStatus === 'loading'
+                  ? 'Buscando operaciones…'
+                  : hasFilters
+                    ? 'No hay operaciones que coincidan con los filtros en todo el historial.'
+                    : 'Todavía no hay operaciones.'}
+              </p>
+            </RecordListEmpty>
           )}
-        </CardContent>
-      </Card>
+        emptyDetail={listStatus === 'error'
+          ? <RecordDetailEmpty title="Historial no disponible" />
+          : listStatus === 'loading'
+            ? <RecordDetailEmpty title="Buscando…" />
+            : hasFilters
+              ? <RecordDetailEmpty title="Sin resultados" description="Ajusta los filtros para consultar una operación." />
+              : <RecordDetailEmpty title="Cada envío, al detalle" description="Aquí aparecerán el importe, el destinatario y el estado de tus operaciones." />}
+        tileAction={(transfer) => <RecordTileAction href={`/receipts/${transfer.id}`} label="Comprobante" icon={<Download />} />}
+        footerAction={(transfer) => {
+          if (!showAdminActions) return null;
+          return canCorrectTransfer(transfer)
+            ? <RecordDetailAction onSelect={() => openCorrectionModal(transfer)}><PencilLine />Corregir</RecordDetailAction>
+            : <RecordDetailNote>Bloqueada</RecordDetailNote>;
+        }}
+        listFooter={listStatus !== 'error' && transfers.length > 0 && (
+          <div className="overview-record-footer" aria-live="polite">
+            <span>
+              {transfers.length} operaciones mostradas{nextCursor ? ' · hay más en el historial' : ' · fin del historial'}
+              {listStatus === 'loading' && ' · actualizando…'}
+            </span>
+            {loadMoreError && <span role="alert">No se pudieron cargar más operaciones.</span>}
+            {nextCursor && (
+              <Button type="button" variant="outline" size="sm" className="rounded-xl font-black" onClick={loadMore} disabled={loadingMore || listStatus === 'loading'}>
+                {loadingMore ? 'Cargando…' : loadMoreError ? 'Reintentar' : 'Cargar más'}
+              </Button>
+            )}
+          </div>
+        )}
+      />
 
       <Dialog open={!!editingTransfer} onOpenChange={(open) => !open && setEditingTransfer(null)}>
         <DialogContent size="xl">

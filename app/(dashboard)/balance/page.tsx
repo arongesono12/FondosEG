@@ -1,43 +1,32 @@
 'use client';
 
-import { DashboardMetric } from '@/components/dashboard/dashboard-metric';
+import { MetricArea, MetricBars, MetricCard, MetricDesk, MetricRate, MetricTiles, ModuleMetrics, ModuleMetricsSkeleton } from '@/components/dashboard/module-metric-card';
+import { AgentAvailabilityPanel } from '@/components/dashboard/panels/agent-record-panels';
+import { AccountMovementsPanel, CurrencyBalancesPanel, WithdrawalsPanel } from '@/components/dashboard/panels/balance-record-panels';
+import { RecentTransfersPanel } from '@/components/dashboard/transfer-record-panel';
+import { lastDaysSeries, rankedSeries, shareOf } from '@/lib/dashboard-series';
 import { useCallback, useEffect, useState } from 'react';
 import { useAppStore } from '@/lib/store';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogBody, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Skeleton } from '@/components/ui/skeleton';
 import { getAgentBalance, getAgentTransactions, getAgents, topUpAgentBalance } from '@/services/agent';
 import { getTransfers } from '@/modules/transfers/http/client';
 import { fetchJSON } from '@/services/http';
-import { formatCurrency, formatDate, getStatusColor } from '@/lib/utils';
-import { getAvailableClientBalance, getWithdrawalStatusLabel } from '@/lib/financial';
+import { formatCurrency } from '@/lib/utils';
+import { getAvailableClientBalance, LOW_FLOAT_THRESHOLD } from '@/lib/financial';
 import { ClientWithdrawalModal } from '@/components/client-withdrawal-modal';
 import type { AgentBalance, AgentWithBalance, BalanceTransaction, ClientBalance, ClientWithdrawal, Transfer } from '@/types';
 import { isAdminRole } from '@/lib/roles';
-import { AlertCircle, CheckCircle } from '@/components/ui/hugeicons';
+import { AlertCircle, ArrowUpRight, Banknote, CheckCircle, Landmark, Receipt, Users, Wallet } from '@/components/ui/hugeicons';
 
 type BalanceResponse = { balances: ClientBalance[] };
 
 
-function transactionTypeLabel(type: BalanceTransaction['type']) {
-  switch (type) {
-    case 'topup':
-      return 'Recarga';
-    case 'transfer':
-      return 'Transferencia';
-    case 'refund':
-      return 'Reembolso';
-    case 'commission':
-      return 'Comisión';
-    default:
-      return type;
-  }
-}
+
 
 export default function BalancePage() {
   const { user } = useAppStore();
@@ -68,7 +57,8 @@ export default function BalancePage() {
   const loadData = useCallback(async () => {
     if (!user) return;
 
-    setLoading(true);
+    // `loading` empieza en true y no se reactiva: al refrescar tras un retiro, el
+    // esqueleto desmontaría las tarjetas y perderían la selección y la pestaña.
     try {
       if (isAdmin) {
         const agentsData = await getAgents();
@@ -113,7 +103,7 @@ export default function BalancePage() {
 
   const totalNetworkFloat = agents.reduce((sum, agent) => sum + Number(agent.balance || 0), 0);
   const totalNetworkCash = agents.reduce((sum, agent) => sum + Number(agent.cash_balance || 0), 0);
-  const lowFloatAgents = agents.filter((agent) => Number(agent.balance || 0) < 25000).length;
+  const lowFloatAgents = agents.filter((agent) => Number(agent.balance || 0) < LOW_FLOAT_THRESHOLD).length;
   const avgFloat = agents.length ? totalNetworkFloat / agents.length : 0;
   const avgCash = agents.length ? totalNetworkCash / agents.length : 0;
 
@@ -131,17 +121,13 @@ export default function BalancePage() {
   const primaryClientCurrency = currencySnapshots.find((item) => item.currency === 'XAF') || currencySnapshots[0];
   const confirmedClientTransfers = clientTransfers.filter((transfer) => transfer.status === 'completed').length;
   const pendingClientTransfers = clientTransfers.filter((transfer) => transfer.status === 'created' || transfer.status === 'available_for_pickup').length;
+  const reservedShare = primaryClientCurrency ? shareOf(primaryClientCurrency.reserved, primaryClientCurrency.gross) : 0;
 
   if (loading) {
     return (
       <div className="space-y-6">
         <Skeleton className="h-36 w-full rounded-4xl" />
-        <div className="grid gap-4 @xl:grid-cols-2 @4xl:grid-cols-4">
-          <Skeleton className="h-28" />
-          <Skeleton className="h-28" />
-          <Skeleton className="h-28" />
-          <Skeleton className="h-28" />
-        </div>
+        <ModuleMetricsSkeleton />
         <Skeleton className="h-80" />
       </div>
     );
@@ -162,90 +148,48 @@ export default function BalancePage() {
           </p>
         </section>
 
-        <section className="dashboard-metric-group grid gap-4 @xl:grid-cols-2 @4xl:grid-cols-3 @7xl:grid-cols-5">
-          <DashboardMetric label="Float de red" value={formatCurrency(totalNetworkFloat)} hint="Saldo agregado de gestores" />
-          <DashboardMetric label="Efectivo en red" value={formatCurrency(totalNetworkCash)} hint="Caja total declarada" />
-          <DashboardMetric label="Gestores activos" value={String(agents.filter((agent) => agent.is_active).length)} hint="Con cuenta habilitada" />
-          <DashboardMetric label="Umbral crítico" value={String(lowFloatAgents)} hint="Por debajo de 25.000 XAF" />
-          <DashboardMetric label="Float medio" value={formatCurrency(avgFloat)} hint={`Efectivo medio ${formatCurrency(avgCash)}`} />
-        </section>
+        <ModuleMetrics label="Resumen de tesorería">
+          <MetricCard layout="desk" title="Efectivo en red" value={formatCurrency(totalNetworkCash)} caption="Caja total declarada">
+            <MetricDesk />
+          </MetricCard>
+          <MetricCard
+            title="Float de red"
+            value={formatCurrency(totalNetworkFloat)}
+            caption={<><span className="overview-tone-primary">{agents.length} gestores</span> saldo agregado</>}
+          >
+            <MetricBars data={rankedSeries(agents, (agent) => agent.name, (agent) => Number(agent.balance || 0))} seriesLabel="Float" format={formatCurrency} />
+          </MetricCard>
+          <MetricCard
+            title="Umbral crítico"
+            value={String(lowFloatAgents)}
+            caption={`Por debajo de ${formatCurrency(LOW_FLOAT_THRESHOLD)}`}
+          >
+            <MetricRate value={shareOf(lowFloatAgents, agents.length)} label={`${shareOf(lowFloatAgents, agents.length)}% de los gestores bajo el umbral`} />
+          </MetricCard>
+          <MetricCard
+            layout="tiles"
+            title="Float medio"
+            value={formatCurrency(avgFloat)}
+            caption={`Efectivo medio ${formatCurrency(avgCash)}`}
+            action={{ href: '/agents', label: 'Ir a gestores', icon: <ArrowUpRight /> }}
+          >
+            <MetricTiles tiles={[
+              { icon: <Users />, title: 'Gestores', detail: String(agents.length) },
+              { icon: <CheckCircle />, title: 'Activos', detail: String(agents.filter((agent) => agent.is_active).length), featured: true },
+              { icon: <AlertCircle />, title: 'Bajo umbral', detail: String(lowFloatAgents) },
+            ]} />
+          </MetricCard>
+        </ModuleMetrics>
 
-        <Card className="overflow-hidden">
-          <CardHeader className="border-b border-border/5 pb-5">
-            <CardTitle className="text-xl font-bold text-foreground">
-              Disponibilidad por gestor
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-0">
-            <div className="activity-records-scroll">
-              <Table className="activity-records-table" wrapperClassName="is-stacked">
-                <TableHeader className="bg-muted/30">
-                  <TableRow className="border-border/5 hover:bg-transparent">
-                    <TableHead className="pl-8 py-4 text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">Gestor</TableHead>
-                    <TableHead className="py-4 text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">Contacto</TableHead>
-                    <TableHead className="py-4 text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">Estado</TableHead>
-                    <TableHead className="py-4 text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground text-right">Float</TableHead>
-                    <TableHead className="py-4 text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground text-right">Efectivo</TableHead>
-                    <TableHead className="py-4 text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground text-right">Total recargado</TableHead>
-                    <TableHead className="pr-8 py-4 text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground text-right">Acción</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {agents.map((agent) => {
-                    const lowFloat = Number(agent.balance || 0) < 25000;
-                    return (
-                      <TableRow key={agent.id} className="activity-record-row border-border/5 hover:bg-muted/30">
-                        <TableCell data-label="Gestor" className="pl-8 py-4">
-                          <p className="text-sm font-bold text-foreground">{agent.name}</p>
-                          <p className="text-xs font-semibold uppercase text-muted-foreground">{agent.email}</p>
-                        </TableCell>
-                        <TableCell data-label="Contacto" className="text-xs font-semibold text-muted-foreground">{agent.phone}</TableCell>
-                        <TableCell data-label="Estado">
-                          <div className="flex flex-col gap-2">
-                            <Badge className={`w-fit rounded-full px-3 py-1 text-xs font-bold uppercase tracking-[0.18em] ${agent.is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-muted text-muted-foreground'}`}>
-                              {agent.is_active ? 'Activo' : 'Inactivo'}
-                            </Badge>
-                            {lowFloat && (
-                              <Badge className="w-fit rounded-full bg-amber-100 px-3 py-1 text-xs font-bold uppercase tracking-[0.18em] text-amber-700">
-                                Bajo float
-                              </Badge>
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell data-label="Float" className="text-right">
-                          <p className="text-base font-bold tabular-nums text-foreground">{formatCurrency(agent.balance)}</p>
-                        </TableCell>
-                        <TableCell data-label="Efectivo" className="text-right">
-                          <p className="text-base font-bold tabular-nums text-foreground">{formatCurrency(agent.cash_balance || 0)}</p>
-                        </TableCell>
-                        <TableCell data-label="Total recargado" className="text-right">
-                          <p className="text-base font-bold tabular-nums text-foreground">{formatCurrency(agent.topup_total || 0)}</p>
-                          {agent.last_topup_at && (
-                            <p className="text-xs font-semibold uppercase text-muted-foreground">{formatDate(agent.last_topup_at)}</p>
-                          )}
-                        </TableCell>
-                        <TableCell data-label="Acción" className="pr-8 text-right">
-                          <Button
-                            variant="outline"
-                            className="rounded-xl font-bold"
-                            onClick={() => {
-                              setSelectedAgent(agent);
-                              setTopUpAmount('');
-                              setErrorMessage('');
-                              setConfirmOpen(true);
-                            }}
-                          >
-                            Recargar
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </div>
-          </CardContent>
-        </Card>
+        <AgentAvailabilityPanel
+          agents={agents}
+          onTopUp={(agent) => {
+            setSelectedAgent(agent);
+            setTopUpAmount('');
+            setErrorMessage('');
+            setConfirmOpen(true);
+          }}
+        />
 
         <Dialog open={successOpen} onOpenChange={setSuccessOpen}>
           <DialogContent size="sm" aria-describedby={undefined}>
@@ -409,66 +353,41 @@ export default function BalancePage() {
           </p>
         </section>
 
-        <section className="dashboard-metric-group grid gap-4 @xl:grid-cols-2 @4xl:grid-cols-4">
-          <DashboardMetric label="Saldo disponible" value={formatCurrency(currentAgentBalance)} hint="Float utilizable ahora mismo" />
-          <DashboardMetric label="Saldo en efectivo" value={formatCurrency(currentAgentCash)} hint="Caja física disponible" />
-          <DashboardMetric label="Total recargado" value={formatCurrency(totalTopups)} hint="Recargas acumuladas en cuenta" />
-          <DashboardMetric label="Total operado" value={formatCurrency(totalOperated)} hint="Salidas por transferencias" />
-        </section>
+        <ModuleMetrics label="Resumen de la billetera">
+          <MetricCard layout="desk" title="Saldo en efectivo" value={formatCurrency(currentAgentCash)} caption="Caja física disponible">
+            <MetricDesk />
+          </MetricCard>
+          <MetricCard title="Total recargado" value={formatCurrency(totalTopups)} caption="Recargas acumuladas en cuenta">
+            <MetricBars
+              data={lastDaysSeries(transactions.filter((item) => item.type === 'topup'), (item) => item.created_at, (item) => item.amount)}
+              seriesLabel="Recargas"
+              format={formatCurrency}
+            />
+          </MetricCard>
+          <MetricCard title="Total operado" value={formatCurrency(totalOperated)} caption="Salidas por transferencias">
+            <MetricArea
+              data={lastDaysSeries(transactions.filter((item) => item.type === 'transfer'), (item) => item.created_at, (item) => Math.abs(item.amount))}
+              seriesLabel="Operado"
+              format={formatCurrency}
+              legend="Salidas por día · 7 días"
+            />
+          </MetricCard>
+          <MetricCard
+            layout="tiles"
+            title="Saldo disponible"
+            value={formatCurrency(currentAgentBalance)}
+            caption="Float utilizable ahora mismo"
+            action={{ href: '/transfers', label: 'Ir a envíos', icon: <ArrowUpRight /> }}
+          >
+            <MetricTiles tiles={[
+              { icon: <Banknote />, title: 'Efectivo', detail: formatCurrency(currentAgentCash) },
+              { icon: <Wallet />, title: 'Disponible', detail: 'XAF', featured: true },
+              { icon: <Receipt />, title: 'Actividad', detail: 'Ver historial', href: '/history' },
+            ]} />
+          </MetricCard>
+        </ModuleMetrics>
 
-        <Card className="overflow-hidden">
-          <CardHeader className="border-b border-border/5 pb-5">
-            <CardTitle className="text-xl font-bold text-foreground">
-              Movimientos de cuenta
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-0">
-            <div className="wallet-movements-scroll">
-              <Table className="wallet-movements-table" wrapperClassName="is-stacked">
-                <TableHeader className="bg-muted/30">
-                  <TableRow className="border-border/5 hover:bg-transparent">
-                    <TableHead className="pl-8 py-4 text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">Operación</TableHead>
-                    <TableHead className="py-4 text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">Monto</TableHead>
-                    <TableHead className="py-4 text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">Detalle</TableHead>
-                    <TableHead className="pr-8 py-4 text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">Fecha</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {transactions.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={4} className="py-16 text-center text-sm font-bold text-muted-foreground">
-                        Sin movimientos registrados todavía.
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    transactions.map((transaction) => (
-                      <TableRow key={transaction.id} className="wallet-movement-row border-border/5 hover:bg-muted/30">
-                        <TableCell data-label="Operación" className="pl-8">
-                          <Badge className={`rounded-full px-3 py-1 text-xs font-bold uppercase tracking-[0.18em] ${transaction.amount >= 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`}>
-                            {transactionTypeLabel(transaction.type)}
-                          </Badge>
-                        </TableCell>
-                        <TableCell data-label="Monto">
-                          <span className={`text-sm font-bold ${transaction.amount >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
-                            {transaction.amount >= 0 ? '+' : ''}
-                            {formatCurrency(transaction.amount)}
-                          </span>
-                        </TableCell>
-                        <TableCell data-label="Detalle">
-                          <p className="text-sm font-bold text-foreground">{transaction.description || 'Sin descripción'}</p>
-                          <p className="text-xs font-semibold uppercase text-muted-foreground">
-                            Saldo resultante: {formatCurrency(transaction.new_balance)}
-                          </p>
-                        </TableCell>
-                        <TableCell data-label="Fecha" className="pr-8 text-xs font-semibold text-muted-foreground">{formatDate(transaction.created_at)}</TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </div>
-          </CardContent>
-        </Card>
+        <AccountMovementsPanel transactions={transactions} />
       </div>
     );
   }
@@ -485,116 +404,50 @@ export default function BalancePage() {
         </p>
       </section>
 
-      <section className="dashboard-metric-group grid gap-4 @xl:grid-cols-2 @4xl:grid-cols-4">
-        <DashboardMetric label="Monedas activas" value={String(currencySnapshots.length)} hint="Balances abiertos en cuenta" />
-        <DashboardMetric label="Saldo principal" value={primaryClientCurrency ? formatCurrency(primaryClientCurrency.available, primaryClientCurrency.currency) : '0 XAF'} hint="Disponible en tu moneda principal" />
-        <DashboardMetric label="Reservado" value={primaryClientCurrency ? formatCurrency(primaryClientCurrency.reserved, primaryClientCurrency.currency) : '0 XAF'} hint="Retenido por códigos de retiro u órdenes pendientes" />
-        <DashboardMetric label="Confirmadas" value={String(confirmedClientTransfers)} hint={`${pendingClientTransfers} pendientes`} />
-      </section>
+      <ModuleMetrics label="Resumen de la billetera">
+        <MetricCard layout="desk" title="Monedas activas" value={String(currencySnapshots.length)} caption="Balances abiertos en cuenta">
+          <MetricDesk />
+        </MetricCard>
+        <MetricCard
+          title="Confirmadas"
+          value={String(confirmedClientTransfers)}
+          caption={<><span className="overview-tone-warning">{pendingClientTransfers} pendientes</span> de {clientTransfers.length} cargadas</>}
+        >
+          <MetricBars data={lastDaysSeries(clientTransfers.filter((transfer) => transfer.status === 'completed'), (transfer) => transfer.created_at, () => 1)} seriesLabel="Confirmadas" />
+        </MetricCard>
+        <MetricCard
+          title="Reservado"
+          value={primaryClientCurrency ? formatCurrency(primaryClientCurrency.reserved, primaryClientCurrency.currency) : '0 XAF'}
+          caption="Retenido por códigos de retiro u órdenes pendientes"
+        >
+          <MetricRate value={reservedShare} label={`${reservedShare}% de tu saldo retenido`} />
+        </MetricCard>
+        <MetricCard
+          layout="tiles"
+          title="Saldo principal"
+          value={primaryClientCurrency ? formatCurrency(primaryClientCurrency.available, primaryClientCurrency.currency) : '0 XAF'}
+          caption="Disponible en tu moneda principal"
+          action={{ href: '/transfers', label: 'Ir a envíos', icon: <ArrowUpRight /> }}
+        >
+          <MetricTiles tiles={[
+            { icon: <Landmark />, title: 'Capital', detail: primaryClientCurrency ? formatCurrency(primaryClientCurrency.gross, primaryClientCurrency.currency) : '0 XAF' },
+            { icon: <Wallet />, title: 'Disponible', detail: primaryClientCurrency?.currency ?? 'XAF', featured: true },
+            { icon: <Receipt />, title: 'Actividad', detail: 'Ver historial', href: '/history' },
+          ]} />
+        </MetricCard>
+      </ModuleMetrics>
 
-      <Card className="overflow-hidden">
-        <CardHeader className="border-b border-border/5 pb-5">
-          <CardTitle className="text-xl font-bold text-foreground">
-            Saldos por moneda
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="grid gap-4 p-6 @2xl:grid-cols-2 @6xl:grid-cols-3">
-          {currencySnapshots.map((snapshot) => (
-            <div key={snapshot.currency} className="dashboard-inset rounded-[1.75rem] border border-border/10 bg-background/70 p-5">
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">{snapshot.currency}</p>
-              <p className="mt-3 text-2xl font-bold text-foreground">{formatCurrency(snapshot.available, snapshot.currency)}</p>
-              <div className="mt-4 space-y-2 text-xs font-semibold text-muted-foreground">
-                <div className="flex items-center justify-between">
-                  <span>Reservado</span>
-                  <span className="font-bold text-foreground">{formatCurrency(snapshot.reserved, snapshot.currency)}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span>Total bruto</span>
-                  <span className="font-bold text-foreground">{formatCurrency(snapshot.gross, snapshot.currency)}</span>
-                </div>
-              </div>
-            </div>
-          ))}
-        </CardContent>
-      </Card>
+      <CurrencyBalancesPanel snapshots={currencySnapshots} onGenerateCode={() => setWithdrawalOpen(true)} />
 
-      <Card className="overflow-hidden">
-        <CardHeader className="flex flex-row items-center justify-between gap-4 border-b border-border/5 pb-5">
-          <CardTitle className="text-xl font-bold text-foreground">
-            Retiros en efectivo
-          </CardTitle>
-          <Button className="rounded-xl font-bold" onClick={() => setWithdrawalOpen(true)}>
-            Generar código
-          </Button>
-        </CardHeader>
-        <CardContent className="space-y-3 p-6">
-          {withdrawals.length === 0 ? (
-            <div className="dashboard-inset rounded-3xl border border-dashed border-border/20 bg-background/50 px-6 py-10 text-center text-sm font-bold text-muted-foreground">
-              Tus fondos son tuyos desde que entran. Genera un código cuando quieras cobrarlos en efectivo.
-            </div>
-          ) : (
-            withdrawals.slice(0, 10).map((withdrawal) => (
-              <div key={withdrawal.id} className="dashboard-inset rounded-3xl border border-border/10 bg-background/70 p-4">
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <p className="text-sm font-bold tracking-[0.12em] text-foreground">{withdrawal.withdrawal_code}</p>
-                    <p className="mt-1 text-xs font-semibold text-muted-foreground">
-                      {withdrawal.destination_city ? `${withdrawal.destination_city} · ` : ''}
-                      {formatDate(withdrawal.created_at)}
-                    </p>
-                    {withdrawal.status === 'pending' && withdrawal.expires_at && (
-                      <p className="mt-1 text-xs font-semibold text-amber-600 dark:text-amber-400">
-                        Retenido hasta {formatDate(withdrawal.expires_at)}
-                      </p>
-                    )}
-                  </div>
-                  <Badge className={`rounded-full px-3 py-1 text-xs font-bold uppercase tracking-[0.18em] ${withdrawal.status === 'paid_out' ? 'bg-emerald-100 text-emerald-700' : withdrawal.status === 'pending' ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-600'}`}>
-                    {getWithdrawalStatusLabel(withdrawal.status)}
-                  </Badge>
-                </div>
-                <p className="mt-4 text-lg font-bold text-foreground">
-                  {formatCurrency(Number(withdrawal.amount), withdrawal.currency)}
-                </p>
-              </div>
-            ))
-          )}
-        </CardContent>
-      </Card>
+      <WithdrawalsPanel withdrawals={withdrawals.slice(0, 10)} onGenerateCode={() => setWithdrawalOpen(true)} />
 
-      <Card className="overflow-hidden">
-        <CardHeader className="border-b border-border/5 pb-5">
-          <CardTitle className="text-xl font-bold text-foreground">
-            Operaciones recientes
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3 p-6">
-          {clientTransfers.length === 0 ? (
-            <div className="dashboard-inset rounded-3xl border border-dashed border-border/20 bg-background/50 px-6 py-10 text-center text-sm font-bold text-muted-foreground">
-              Aún no tienes movimientos registrados.
-            </div>
-          ) : (
-            clientTransfers.slice(0, 12).map((transfer) => (
-            <div key={transfer.id} className="dashboard-inset rounded-3xl border border-border/10 bg-background/70 p-4">
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <p className="text-sm font-bold text-foreground">{transfer.transfer_code}</p>
-                    <p className="mt-1 text-xs font-semibold text-muted-foreground">
-                      {transfer.sender_name} · {transfer.receiver_name}
-                    </p>
-                    <p className="mt-1 text-xs font-semibold text-muted-foreground">
-                      {transfer.destination_city} · {formatDate(transfer.created_at)}
-                    </p>
-                  </div>
-                  <Badge className={`rounded-full px-3 py-1 text-xs font-bold uppercase tracking-[0.18em] ${getStatusColor(transfer.status)}`}>
-                    {transfer.status}
-                  </Badge>
-                </div>
-                <p className="mt-4 text-lg font-bold text-foreground">{formatCurrency(transfer.amount, transfer.currency)}</p>
-              </div>
-            ))
-          )}
-        </CardContent>
-      </Card>
+      <RecentTransfersPanel
+        title="Operaciones recientes"
+        transfers={clientTransfers.slice(0, 12)}
+        format={formatCurrency}
+        emptyMessage="Aún no tienes movimientos registrados."
+        newTransfer={{ href: '/transfers' }}
+      />
 
       <ClientWithdrawalModal
         open={withdrawalOpen}

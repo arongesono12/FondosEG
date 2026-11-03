@@ -210,7 +210,7 @@ html.dark .dashboard-public-page.main-container {
 
 /* Shared card vocabulary for full pages and portaled module panels. Local
    tokens keep dark cards readable even when the surrounding page is light. */
-.dashboard-public-page :is(.app-card, .dashboard-card-surface, .glass, .glass-premium, .dashboard-card),
+.dashboard-public-page :is(.app-card, .dashboard-card-surface, .glass, .glass-premium, .dashboard-card, .overview-operations-corner, .overview-operations-body),
 .dashboard-inset {
   --background: var(--dashboard-ink, #0f172a);
   --foreground: #f8fafc;
@@ -306,24 +306,9 @@ html.dark .dashboard-public-page.main-container {
   color: var(--primary) !important;
 }
 
-.dashboard-metric-group {
-  min-width: 0;
-  gap: 1px;
-  padding: 1px;
-  overflow: hidden;
-  border-radius: 26px 26px 0 0;
-  background: color-mix(in srgb, var(--dashboard-ink, #0f172a) 85%, white);
-}
-
 .dashboard-public-page .dashboard-compact-metric.app-card {
   min-width: 0;
   background: color-mix(in srgb, var(--dashboard-ink, #0f172a) 91%, white) !important;
-}
-
-.dashboard-public-page .dashboard-metric-group > .dashboard-compact-metric.app-card {
-  height: 100%;
-  border: 0 !important;
-  border-radius: 0 !important;
 }
 
 .dashboard-compact-metric .dashboard-metric-content { padding: 20px; }
@@ -352,7 +337,6 @@ html.dark .dashboard-public-page.main-container {
     --dashboard-card-radius: 20px;
     --dashboard-card-padding: 18px;
   }
-  .dashboard-metric-group { border-radius: 20px 20px 0 0; }
   .dashboard-compact-metric .dashboard-metric-content { padding: 16px; }
 }
 
@@ -405,13 +389,23 @@ html.dark .dashboard-public-page.main-container {
   font-size: 12px;
 }
 
-.dashboard-public-page .overview-balance .overview-metric-label .overview-icon-button {
+/* Dentro de la tarjeta `--foreground` es claro y `--accent` translúcido: sin
+   colores propios, el icono quedaba blanco sobre el botón blanco. El margen
+   negativo evita que el botón empuje la cifra respecto a las tarjetas vecinas. */
+.dashboard-public-page .overview-metric-label .overview-icon-button {
   width: 34px;
   height: 34px;
+  margin-block: -3px;
   border-radius: 11px;
+  background: #fff;
+  color: var(--dashboard-ink);
 }
 
-.dashboard-public-page .overview-balance .overview-metric-label .overview-icon-button svg {
+.dashboard-public-page .overview-metric-label .overview-icon-button:hover {
+  background: #e2e8f0;
+}
+
+.dashboard-public-page .overview-metric-label .overview-icon-button svg {
   width: 18px;
   height: 18px;
 }
@@ -978,6 +972,8 @@ html.dark .dashboard-public-page.main-container {
      dos cápsulas en los extremos y deja de leerse como fila.
    - Las tarjetas clicables (`asChild` sobre un <button>) son superficies, no
      controles, y llevan el radio de tarjeta.
+   - Los mosaicos y el botón de esquina de las tarjetas de indicador pueden ser
+     <a> o <button> y deben verse igual en ambos casos.
    - `rounded-none` explícito se respeta: quien lo escribe lo quiere cuadrado.
    - El widget de Clerk (`cl-*`) trae su propia configuración de radios.
    ========================================================================= */
@@ -987,6 +983,6 @@ html.dark .dashboard-public-page.main-container {
   .dialog-shell,
   .landing-root,
   .auth-public-page
-) button:not(.overview-transfer):not([data-dashboard-card]):not(.app-card):not([class*="rounded-none"]):not([class*="cl-"]) {
+) button:not(.overview-transfer):not(.overview-add-transfer):not(.overview-wallet):not(.overview-metric-label > .overview-icon-button):not([data-dashboard-card]):not(.app-card):not([class*="rounded-none"]):not([class*="cl-"]) {
   border-radius: var(--app-control-radius);
 }

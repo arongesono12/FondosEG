@@ -16,6 +16,8 @@ export interface TariffRange {
 export const BASE_CURRENCY = 'XAF';
 export const NATIONAL_TARIFF_VERSION = '2026-default';
 export const ESTIMATED_OPERATING_COST_PER_TRANSFER = 200;
+/** Float por debajo del cual un gestor se considera en umbral crítico, en XAF. */
+export const LOW_FLOAT_THRESHOLD = 25000;
 
 export const nationalTariffs: TariffRange[] = [
   { min: 1000, max: 20000, commission: 500, ruleCode: 'agent-transfer-001', version: NATIONAL_TARIFF_VERSION },

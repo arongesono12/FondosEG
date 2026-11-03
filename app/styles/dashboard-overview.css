@@ -47,7 +47,7 @@
 .overview-rate > span { display: block; height: 7px; border-radius: inherit; background: var(--dashboard-brand); }
 .overview-rate p { padding-top: 10px; font-size: 12px; color: var(--muted-foreground); }
 .overview-commission-context { margin-top: 44px; padding-top: 14px; border-top: 1px solid var(--surface-border); color: var(--muted-foreground); font-size: 12px; line-height: 1.5; }
-.overview-balance .overview-metric-label .overview-icon-button { width: 29px; height: 29px; border-radius: var(--app-control-radius); }
+.overview-metric-label .overview-icon-button { width: 29px; height: 29px; border-radius: var(--app-control-radius); }
 .overview-wallets { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; position: absolute; bottom: 0; left: 18px; right: 18px; align-items: end; }
 .overview-wallet { display: flex; flex-direction: column; align-items: center; gap: 9px; height: 96px; padding: 16px 3px 9px; border-radius: 12px 12px 0 0; background: var(--muted); font-size: 11px; text-align: center; }
 .overview-wallet strong { font-size: 12px; font-weight: 500; }
@@ -110,7 +110,9 @@
 .overview-date input::-webkit-calendar-picker-indicator { width: 16px; height: 16px; padding: 0; margin: 0; opacity: .6; cursor: pointer; }
 .overview-date input::-webkit-calendar-picker-indicator:hover { opacity: 1; }
 .overview-operations { padding: 0 16px 16px; border-radius: 28px; background: var(--dashboard-ink); color: var(--dashboard-on-ink); }
-.overview-operations-heading { display: grid; grid-template-columns: 34% 1fr auto; align-items: center; gap: 12px; min-height: 62px; padding-inline: 10px; }
+.overview-operations-heading { display: grid; grid-template-columns: 34% auto minmax(0, 1fr); align-items: center; gap: 12px; min-height: 62px; padding-inline: 10px; }
+/* Esquina de la tarjeta: enlace, búsqueda o filtros, siempre en la última columna. */
+.overview-operations-corner { grid-column: -2 / -1; display: flex; align-items: center; justify-content: flex-end; gap: 8px; min-width: 0; }
 .overview-operations-heading h2 { font-size: 14px; font-weight: 500; }
 .overview-operations-heading > div > span { display: block; margin-top: 3px; font-size: 11px; color: #b4bdcd; }
 .overview-operation-tabs { position: relative; z-index: 1; display: flex; align-items: center; gap: 4px; justify-self: start; border: 5px solid var(--background); border-top: 0; padding: 7px 5px 5px; margin-top: -1px; border-radius: 0 0 25px 25px; background: var(--background); align-self: start; }
@@ -128,6 +130,9 @@
 .overview-history-link:hover { background: #ffffff16; }
 .overview-history-link svg:last-child { width: 12px; height: 12px; }
 .overview-operations-body { display: grid; grid-template-columns: minmax(0, 34%) minmax(0, 1fr); gap: 16px; }
+.overview-record-column { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.overview-record-column > .overview-transfer-list { flex: 1; }
+.overview-record-footer { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 4px 0; border-top: 1px solid #ffffff1a; font-size: 11px; color: #cbd5e1; }
 .overview-transfer-list { display: flex; flex-direction: column; gap: 4px; max-height: 310px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #ffffff35 transparent; padding-right: 1px; }
 .overview-transfer { display: grid; grid-template-columns: 32px minmax(0, 1fr) auto auto; align-items: center; gap: 9px; min-height: 58px; padding: 9px 11px; width: 100%; border-radius: 18px; text-align: left; background: #ffffff03; }
 .overview-transfer:hover { background: #ffffff0b; }
@@ -154,20 +159,27 @@
 .overview-detail-code h3 { font-size: 20px; letter-spacing: -.5px; font-weight: 500; overflow-wrap: anywhere; }
 .overview-detail-code > span { font-size: 11px; color: #ffffffe0; }
 .overview-recipient { display: flex; align-items: center; gap: 9px; }
-.overview-detail-tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)) minmax(80px, .8fr); gap: 10px; margin-top: 24px; }
+.overview-detail-tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)) minmax(80px, .8fr); gap: 10px; margin-top: 24px; margin-bottom: 12px; }
 .overview-detail-tiles > div { position: relative; display: flex; flex-direction: column; justify-content: space-between; gap: 15px; min-width: 0; min-height: 100px; padding: 19px 12px; border-radius: 15px; background: #ffffff17; }
 .overview-detail-tiles > div > svg { position: absolute; top: 14px; right: 12px; width: 12px; height: 12px; color: #ffffffb8; }
 .overview-detail-tiles strong { font-family: var(--font-fondoseg-primary); font-size: 16px; font-weight: 400; padding-right: 10px; overflow-wrap: anywhere; }
 .overview-detail-tiles span { font-size: 11px; color: #ffffffde; }
 .overview-add-transfer { display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 10px; border: 1px dashed #ffffff52; border-radius: 15px; }
 .overview-add-transfer:hover { background: #ffffff13; }
-.overview-transfer-notes { padding-top: 12px; font-size: 13px; color: #ffffffdb; overflow-wrap: anywhere; }
+button.overview-add-transfer { background: transparent; color: inherit; }
+button.overview-add-transfer:hover { background: #ffffff13; }
+.overview-transfer-notes { padding-bottom: 12px; font-size: 13px; color: #ffffffdb; overflow-wrap: anywhere; }
 .overview-detail-footer { display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 12px; align-items: center; border-top: 1px solid #ffffff25; padding-top: 16px; margin-top: auto; }
 .overview-detail-footer > div { min-width: 0; }
 .overview-detail-footer span { display: block; color: #ffffffbf; font-size: 11px; margin-bottom: 5px; }
 .overview-detail-footer strong { display: block; font-family: var(--font-fondoseg-primary); font-size: 14px; font-weight: 400; overflow-wrap: anywhere; }
 .overview-detail-action { display: flex; align-items: center; justify-content: center; gap: 7px; min-height: 36px; padding: 9px 15px; border-radius: var(--app-control-radius); background: #fff; color: var(--dashboard-ink); font-size: 12px; font-weight: 500; }
 .overview-detail-action svg { width: 13px; height: 13px; }
+.overview-detail-action.is-secondary { border: 1px solid #ffffff60; background: transparent; color: #fff; }
+.overview-detail-action.is-secondary:hover { background: #ffffff13; }
+.overview-detail-actions { grid-column: -2 / -1; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+.overview-detail-actions > * { flex: 1 1 auto; }
+.overview-detail-footer .overview-detail-note { margin: 0; align-self: center; text-align: right; }
 .overview-empty { display: flex; flex: 1; flex-direction: column; align-items: center; justify-content: center; gap: 14px; min-height: 190px; padding: 25px; text-align: center; font-size: 13px; color: #cbd5e1; }
 .overview-empty button { text-decoration: underline; text-underline-offset: 4px; }
 .overview-empty > a { text-decoration: underline; text-underline-offset: 4px; }
@@ -200,6 +212,17 @@
   /* Los controles de cabecera son círculos de 40px: el mismo ritmo que el avatar. */
   .dashboard-desktop-tools button { background: var(--surface); border-radius: var(--app-control-radius); }
   .dashboard-main { padding: 0 30px 24px; }
+  /* Reserva el hombro derecho de las pestañas, que sobresale 45px de su caja. */
+  .overview-operations-corner { padding-left: 33px; }
+  /* Sin mosaico de acción, los mosaicos reparten todo el ancho sin dejar un hueco. */
+  .overview-detail-tiles:not(:has(> .overview-add-transfer)) { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); }
+}
+/* Búsqueda y fechas no caben junto a cuatro pestañas por debajo de 1400px. */
+@media (max-width: 1399.98px) {
+  .overview-operations-corner[data-row="laptop"] { grid-column: 1 / -1; grid-row: auto; }
+}
+@media (min-width: 1024px) and (max-width: 1399.98px) {
+  .overview-operations-corner[data-row="laptop"] { padding: 0 0 12px; }
 }
 /* Menú de escritorio de admin y superadmin: siete enlaces sin salto de línea,
    el buscador de 256px y las herramientas no cabían entre 1024 y ~1400px y la
@@ -225,7 +248,7 @@
   .dashboard-desktop-nav :is(a, .dashboard-desktop-nav-more) { padding-inline: 11px; font-size: 12px; }
   .dashboard-desktop-brand-nav > a span { font-size: 18px; }
   .dashboard-main { padding-inline: 24px; }
-  .overview-transfer { grid-template-columns: 28px minmax(0, 1fr) auto; gap: 6px; padding-inline: 8px; }
+  .overview-transfer { grid-template-columns: 32px minmax(0, 1fr) auto; gap: 6px; padding-inline: 8px; }
   .overview-transfer-state { display: none; }
   .overview-operation-tabs button { padding-inline: 10px; }
   .overview-detail-tiles strong { font-size: 13px; }
@@ -246,9 +269,11 @@
   .overview-operations-heading { grid-template-columns: 1fr auto; padding-block: 12px; }
   .overview-operation-tabs { grid-row: 2; grid-column: 1 / -1; border-radius: 30px; padding: 3px; border: 0; margin: 0; justify-self: start; }
   .overview-operation-tabs::before, .overview-operation-tabs::after { display: none; }
-  .overview-history-link { grid-column: 2; grid-row: 1; }
+  .overview-operations-corner { grid-column: 2; grid-row: 1; }
+  .overview-operations-corner[data-row="laptop"] { grid-column: 1 / -1; grid-row: auto; }
+  .overview-detail-tiles:has(> div:nth-child(4)) { grid-template-columns: 1fr 1fr; }
   .overview-operations-body { grid-template-columns: minmax(0, 36%) minmax(0, 1fr); gap: 12px; }
-  .overview-transfer { grid-template-columns: 28px minmax(0, 1fr) auto; padding-inline: 8px; gap: 6px; }
+  .overview-transfer { grid-template-columns: 32px minmax(0, 1fr) auto; padding-inline: 8px; gap: 6px; }
   .overview-transfer-state { display: none; }
   .overview-transfer-detail { padding: 20px 16px; }
   .overview-detail-heading { grid-template-columns: 1fr 1fr; gap: 12px; }
@@ -283,8 +308,11 @@
   .overview-transfer-state { display: block; }
   .overview-transfer-identity strong { font-size: 12px; }
   .overview-transfer-detail { border-radius: 20px; }
-  .overview-operation-tabs { width: 100%; }
+  .overview-operations-corner[data-row] { grid-column: 1 / -1; grid-row: auto; flex-wrap: wrap; }
+  .overview-operation-tabs { width: 100%; overflow-x: auto; scrollbar-width: none; }
   .overview-operation-tabs button { flex: 1; padding: 10px 9px; font-size: 11px; }
+  /* El carril se recorta: el foco se dibuja por dentro del botón. */
+  .overview .overview-operation-tabs button:focus-visible { outline-offset: -3px; }
   .overview-detail-tiles strong { font-size: 14px; }
   .overview-detail-heading strong { font-size: 13px; }
   .overview-empty { min-height: 100px; }
@@ -294,8 +322,16 @@
   .overview-metrics { grid-template-columns: minmax(0, 1fr); }
   /* Tres columnas de 70px partían los importes a mitad de cifra. */
   .overview-detail-tiles { grid-template-columns: 1fr 1fr; }
-  /* `.dashboard-main` delante para superar al remapeo tipográfico (0,3,1). */
-  .dashboard-main .overview .overview-detail-tiles > div > strong { padding-right: 0; overflow-wrap: normal; white-space: nowrap; font-size: clamp(13px, 4vw, 16px); }
+  /* `.dashboard-main` delante para superar al remapeo tipográfico (0,3,1).
+     Se parte sólo por los espacios: nunca a mitad de cifra, y una fecha con hora
+     o un rol largo no se salen del mosaico. */
+  .dashboard-main .overview .overview-detail-tiles > div > strong { padding-right: 0; overflow-wrap: normal; white-space: normal; font-size: clamp(13px, 4vw, 16px); }
+  /* El estado pasa bajo el importe: a su lado dejaba sin sitio al código o al nombre. */
+  .overview-transfer { grid-template-columns: 32px minmax(0, 1fr) auto; row-gap: 3px; }
+  .overview-transfer > .overview-person-avatar,
+  .overview-transfer > .overview-transfer-identity { grid-row: 1 / span 2; }
+  .overview-transfer > .overview-transfer-amount { grid-column: 3; grid-row: 1; justify-self: end; }
+  .overview-transfer > .overview-transfer-state { grid-column: 3; grid-row: 2; justify-self: end; padding-block: 2px; }
 }
 @media (max-width: 380px) {
   .overview-wallets { left: 9px; right: 9px; gap: 3px; }
@@ -326,4 +362,13 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .overview *, .dashboard-desktop-header, .dashboard-desktop-nav * { transition: none; animation: none; }
+}
+/* La barra lateral resta ancho sin que cambie la ventana: las columnas también
+   responden a `.dashboard-main`. Por debajo de 1150px los mosaicos de una tarjeta
+   en cuatro columnas ya no caben sin partir sus textos. */
+@container (max-width: 1150px) {
+  .overview-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@container (max-width: 479.98px) {
+  .overview-metrics { grid-template-columns: minmax(0, 1fr); }
 }

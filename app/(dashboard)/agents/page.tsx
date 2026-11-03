@@ -1,27 +1,28 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogBody, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { getAgents, toggleAgentStatus, topUpAgentBalance, resetAgentBalance, createAgent } from '@/services/agent';
-import { formatCurrency, formatDate } from '@/lib/utils';
+import { formatCurrency } from '@/lib/utils';
 import type { AgentWithBalance, UserRole } from '@/types';
-import { Users, Phone, Mail, CreditCard, CheckCircle, AlertCircle, RotateCcw } from '@/components/ui/hugeicons';
+import { ArrowUpRight, Users, CheckCircle, AlertCircle } from '@/components/ui/hugeicons';
 import { useAppStore } from '@/lib/store';
 import { isAdminRole } from '@/lib/roles';
+import { MetricBars, MetricCard, MetricDesk, MetricRate, MetricTiles, ModuleMetrics, ModuleMetricsSkeleton } from '@/components/dashboard/module-metric-card';
+import { AgentsRecordPanel } from '@/components/dashboard/panels/agent-record-panels';
+import { rankedSeries, shareOf } from '@/lib/dashboard-series';
+import { LOW_FLOAT_THRESHOLD } from '@/lib/financial';
 
 export default function AgentsPage() {
   const { user } = useAppStore();
   const [agents, setAgents] = useState<AgentWithBalance[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [topUpOpen, setTopUpOpen] = useState(false);
   const [selectedAgent, setSelectedAgent] = useState<AgentWithBalance | null>(null);
@@ -143,11 +144,12 @@ export default function AgentsPage() {
     }
   };
 
-  const filteredAgents = agents.filter((a) =>
-    a.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    a.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    a.phone.includes(searchTerm)
-  );
+
+  // Las tarjetas resumen toda la red; el buscador sólo filtra la lista de gestores.
+  const totalFloat = agents.reduce((sum, agent) => sum + Number(agent.balance || 0), 0);
+  const totalCash = agents.reduce((sum, agent) => sum + Number(agent.cash_balance || 0), 0);
+  const activeAgents = agents.filter((agent) => agent.is_active).length;
+  const lowFloatAgents = agents.filter((agent) => Number(agent.balance || 0) < LOW_FLOAT_THRESHOLD).length;
 
   if (!isAdminRole(user?.role)) {
     return (
@@ -168,6 +170,7 @@ export default function AgentsPage() {
     return (
       <div className="space-y-6">
         <Skeleton className="h-20 w-full rounded-2xl" />
+        <ModuleMetricsSkeleton />
         <Skeleton className="h-72" />
       </div>
     );
@@ -280,123 +283,48 @@ export default function AgentsPage() {
         </Dialog>
       </div>
 
-      <Card>
-        <CardHeader>
-          <div>
-            <Input
-              placeholder="Buscar gestores..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="max-w-md"
-            />
-          </div>
-        </CardHeader>
-        <CardContent className="activity-records-scroll">
-          <Table className="activity-records-table" wrapperClassName="is-stacked">
-            <TableHeader>
-              <TableRow>
-                <TableHead>Gestor</TableHead>
-                <TableHead>Contacto</TableHead>
-                <TableHead>Estado</TableHead>
-                <TableHead className="text-right">Saldo</TableHead>
-                <TableHead className="text-right">Efectivo</TableHead>
-                <TableHead>Registro</TableHead>
-                <TableHead className="text-right">Acciones</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredAgents.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                    No se encontraron gestores
-                  </TableCell>
-                </TableRow>
-              ) : (
-                filteredAgents.map((agent) => (
-                  <TableRow key={agent.id} className="activity-record-row">
-                    <TableCell data-label="Gestor">
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
-                          <Users className="h-5 w-5" />
-                        </div>
-                        <div>
-                          <p className="font-medium">{agent.name}</p>
-                          <p className="text-xs text-muted-foreground capitalize">{agent.role}</p>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell data-label="Contacto">
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2 text-sm">
-                          <Mail className="h-3 w-3" />
-                          {agent.email}
-                        </div>
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Phone className="h-3 w-3" />
-                          {agent.phone}
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell data-label="Estado">
-                      <button
-                        type="button"
-                        onClick={() => handleToggleStatus(agent.id, agent.is_active)}
-                        aria-pressed={agent.is_active}
-                        aria-label={agent.is_active ? `Desactivar a ${agent.name}` : `Activar a ${agent.name}`}
-                        // Escrito a mano, así que no le llega el mínimo táctil
-                        // del primitivo `Button`: lo lleva aquí.
-                        className="inline-flex min-h-[32px] [@media(pointer:coarse)]:min-h-11 items-center rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                      >
-                        <Badge variant={agent.is_active ? 'default' : 'secondary'}>
-                          {agent.is_active ? 'Activo' : 'Inactivo'}
-                        </Badge>
-                      </button>
-                    </TableCell>
-                    <TableCell data-label="Saldo" className="text-right font-medium tabular-nums">
-                      {formatCurrency(agent.balance)}
-                    </TableCell>
-                    <TableCell data-label="Efectivo" className="text-right font-medium tabular-nums">
-                      {formatCurrency(agent.cash_balance || 0)}
-                    </TableCell>
-                    <TableCell data-label="Registro" className="text-sm text-muted-foreground">
-                      {formatDate(agent.created_at)}
-                    </TableCell>
-                    <TableCell data-label="Acciones" className="text-right">
-                      <div className="flex gap-2 justify-end">
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          className="border-pink-200 dark:border-pink-800 hover:bg-linear-to-r hover:from-pink-500/20 hover:to-rose-600/20 hover:border-pink-500/50"
-                          onClick={() => {
-                            setSelectedAgent(agent);
-                            setResetAmount(agent.balance.toString());
-                            setResetOpen(true);
-                          }}
-                          title="Restablecer saldo"
-                        >
-                          <RotateCcw className="h-4 w-4" />
-                        </Button>
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          className="border-pink-200 dark:border-pink-800 hover:bg-linear-to-r hover:from-pink-500/20 hover:to-rose-600/20 hover:border-pink-500/50"
-                          onClick={() => {
-                            setSelectedAgent(agent);
-                            setTopUpOpen(true);
-                          }}
-                        >
-                          <CreditCard className="h-4 w-4 mr-1" />
-                          Recargar
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+      <ModuleMetrics label="Resumen de gestores">
+        <MetricCard layout="desk" title="Efectivo en red" value={formatCurrency(totalCash)} caption="Caja total declarada">
+          <MetricDesk />
+        </MetricCard>
+        <MetricCard
+          title="Float de red"
+          value={formatCurrency(totalFloat)}
+          caption={<><span className="overview-tone-primary">{agents.length} gestores</span> saldo agregado</>}
+        >
+          <MetricBars data={rankedSeries(agents, (agent) => agent.name, (agent) => Number(agent.balance || 0))} seriesLabel="Float" format={formatCurrency} />
+        </MetricCard>
+        <MetricCard title="Bajo umbral" value={String(lowFloatAgents)} caption={`Por debajo de ${formatCurrency(LOW_FLOAT_THRESHOLD)}`}>
+          <MetricRate value={shareOf(lowFloatAgents, agents.length)} label={`${shareOf(lowFloatAgents, agents.length)}% de los gestores bajo el umbral`} />
+        </MetricCard>
+        <MetricCard
+          layout="tiles"
+          title="Gestores activos"
+          value={String(activeAgents)}
+          caption="Con cuenta habilitada"
+          action={{ href: '/balance', label: 'Ver disponibilidad por gestor', icon: <ArrowUpRight /> }}
+        >
+          <MetricTiles tiles={[
+            { icon: <Users />, title: 'Total', detail: String(agents.length) },
+            { icon: <CheckCircle />, title: 'Activos', detail: String(activeAgents), featured: true },
+            { icon: <AlertCircle />, title: 'Inactivos', detail: String(agents.length - activeAgents) },
+          ]} />
+        </MetricCard>
+      </ModuleMetrics>
+
+      <AgentsRecordPanel
+        agents={agents}
+        onToggleStatus={(agent) => handleToggleStatus(agent.id, agent.is_active)}
+        onResetBalance={(agent) => {
+          setSelectedAgent(agent);
+          setResetAmount(agent.balance.toString());
+          setResetOpen(true);
+        }}
+        onTopUp={(agent) => {
+          setSelectedAgent(agent);
+          setTopUpOpen(true);
+        }}
+      />
 
       <Dialog open={topUpOpen} onOpenChange={setTopUpOpen}>
         <DialogContent size="md" aria-describedby={undefined}>

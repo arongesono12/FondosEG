@@ -120,9 +120,9 @@ export const marketingPages = {
     description: 'Un resumen de las mejoras incorporadas a la plataforma y las integraciones disponibles.',
     cta: 'Explorar la plataforma',
     destination: '/register',
-    points: ['Cumplimiento CEMAC', 'Pagos de alquiler', 'API test y production'],
+    points: ['Consentimiento y reclamaciones', 'Pagos de alquiler', 'API test y production'],
     sections: [
-      { title: 'Junio de 2026', description: 'Las incorporaciones más recientes se enfocan en cumplimiento e integraciones de pagos.', items: ['Eventos de consentimiento y cumplimiento CEMAC', 'Reclamaciones con referencia y fecha objetivo', 'Propiedades, alquileres y pagos asociados', 'Entornos test y production para claves API'] },
+      { title: 'Junio de 2026', description: 'Las incorporaciones más recientes se enfocan en consentimiento, reclamaciones e integraciones de pagos.', items: ['Registro de eventos de consentimiento', 'Reclamaciones con referencia y fecha objetivo', 'Propiedades, alquileres y pagos asociados', 'Entornos test y production para claves API'] },
       { title: 'Mayo de 2026', description: 'Se añadió el flujo opcional de payout externo.', items: ['Enlaces de payout mediante Revolut', 'Estados y caducidad del enlace', 'Métodos Revolut y cuenta bancaria configurables', 'Evento webhook al generar el enlace'] },
       { title: 'Abril de 2026', description: 'Se consolidó la base financiera y developer.', items: ['Eventos financieros y reglas tarifarias', 'Outbox de notificaciones SMS', 'Claves API, uso, idempotencia y rate limits', 'Webhooks firmados y rotación de secretos'] },
     ],

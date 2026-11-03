@@ -3,13 +3,11 @@
 import { useState, useEffect } from 'react';
 import { useAppStore } from '@/lib/store';
 import { getDashboardStats, getRecentTransfers, getDailyTransferStats } from '@/services/dashboard';
-import type { DashboardStats, DailyTransferStats, Transfer } from '@/types';
-import { formatCurrency, convertCurrency, formatDateShort, formatDayOfMonth, getInitials, getStatusText, getStatusColor } from '@/lib/utils';
+import type { DashboardStats, DailyTransferStats, Transfer, UserRole } from '@/types';
+import { formatCurrency, convertCurrency, formatDayOfMonth, getInitials, getStatusText, getStatusColor } from '@/lib/utils';
 import { HttpError } from '@/services/http';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { 
   Dialog,
   DialogBody,
@@ -17,9 +15,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import {
-  ArrowUpRight,
-} from '@/components/ui/hugeicons';
+import { ArrowUpRight, ExternalLink, HandCoins, LifeBuoy, QrCode, Receipt, Send, Users } from '@/components/ui/hugeicons';
+import { MetricArea, MetricBars, MetricCard, MetricDesk, MetricRate, MetricTiles, ModuleMetrics, ModuleMetricsSkeleton } from '@/components/dashboard/module-metric-card';
+import { RecentTransfersPanel } from '@/components/dashboard/transfer-record-panel';
+import { dailySeries, lastDaysSeries } from '@/lib/dashboard-series';
+import { isTransferCompleted } from '@/lib/financial';
 import { SupportModal } from '@/components/layout/support-modal';
 import { Bar, BarChart, XAxis, YAxis } from 'recharts';
 import { type ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
@@ -28,37 +28,25 @@ import { AgentPayoutModal } from '@/components/agent-payout-modal';
 import { AgentTransferModal } from '@/components/agent-transfer-modal';
 import { ClientWithdrawalModal } from '@/components/client-withdrawal-modal';
 import { RevolutPayoutModal } from '@/components/revolut-payout-modal';
-import { isAdminRole } from '@/lib/roles';
 
 const weeklyVolumeConfig = {
   amount: { label: 'Volumen', color: 'var(--chart-1)' },
 } satisfies ChartConfig;
 
-/**
- * Tarjeta de acción: la tarjeta entera es el botón. Antes era un `div` con
- * `onClick` —inalcanzable con teclado— y llevaba `p-6` encima del `p-6` de
- * cabecera y contenido, así que el texto quedaba a 48px del borde. El
- * «Iniciar →» de dentro pasa a ser un `span`: un botón dentro de otro no es
- * HTML válido y el objetivo ya es la tarjeta completa.
- */
-function ActionCard({ onSelect, label, children }: { onSelect: () => void; label: string; children: React.ReactNode }) {
-  return (
-    <Card asChild className="transfer-action-card cursor-pointer">
-      <button
-        type="button"
-        onClick={onSelect}
-        // Sin nombre propio, el de la tarjeta sería todo su texto seguido
-        // («Nueva Transferencia Enviar dinero A clientes… Iniciar»).
-        aria-label={label}
-        className="w-full text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-      >
-        {children}
-      </button>
-    </Card>
-  );
+// El servidor sólo sirve la serie diaria a gestores y administración.
+// Si fallan los totales, las tarjetas muestran «—» y la tabla se sigue cargando.
+function fetchTransfersPageData(role?: UserRole) {
+  return Promise.all([
+    getDashboardStats().catch((error: unknown) => {
+      if (!(error instanceof HttpError && error.status === 401)) {
+        console.error('Error loading dashboard stats:', error);
+      }
+      return null;
+    }),
+    getRecentTransfers(20),
+    role && role !== 'cliente' ? getDailyTransferStats(30) : Promise.resolve([]),
+  ]);
 }
-
-const actionHintClasses = 'transfer-mobile-action mt-2 inline-flex items-center gap-2 whitespace-nowrap text-xs font-bold [&_svg]:size-4';
 
 export default function TransfersPage() {
   const { user, preferredCurrency } = useAppStore();
@@ -87,14 +75,8 @@ export default function TransfersPage() {
   useEffect(() => {
     async function loadData() {
       try {
-        const [statsData, transfersData, dailyData] = await Promise.all([
-          isAdminRole(user?.role)
-            ? Promise.resolve(null) 
-            : getDashboardStats(),
-          getRecentTransfers(20),
-          isAdminRole(user?.role) ? getDailyTransferStats(30) : Promise.resolve([]),
-        ]);
-        
+        const [statsData, transfersData, dailyData] = await fetchTransfersPageData(user?.role);
+
         setStats(statsData);
         setRecentTransfers(transfersData || []);
         setDailyStats(dailyData || []);
@@ -114,14 +96,8 @@ export default function TransfersPage() {
 
   const refreshData = async () => {
     try {
-        const [statsData, transfersData, dailyData] = await Promise.all([
-          isAdminRole(user?.role)
-            ? Promise.resolve(null) 
-            : getDashboardStats(),
-          getRecentTransfers(20),
-          isAdminRole(user?.role) ? getDailyTransferStats(30) : Promise.resolve([]),
-        ]);
-      
+      const [statsData, transfersData, dailyData] = await fetchTransfersPageData(user?.role);
+
       setStats(statsData);
       setRecentTransfers(transfersData || []);
       setDailyStats(dailyData || []);
@@ -135,12 +111,7 @@ export default function TransfersPage() {
   if (loading) {
     return (
       <div className="space-y-6">
-        <div className="grid gap-4 @2xl:grid-cols-2 @4xl:grid-cols-4">
-          <Skeleton className="h-28" />
-          <Skeleton className="h-28" />
-          <Skeleton className="h-28" />
-          <Skeleton className="h-28" />
-        </div>
+        <ModuleMetricsSkeleton />
         <Skeleton className="h-72" />
       </div>
     );
@@ -149,9 +120,14 @@ export default function TransfersPage() {
   const totalWeekly = dailyStats.slice(-7).reduce((sum, d) => sum + d.total_amount, 0);
   const totalMonthly = dailyStats.reduce((sum, d) => sum + d.total_amount, 0);
   const avgDaily = dailyStats.length > 0 ? totalMonthly / dailyStats.length : 0;
+  // Sin stats la carga falló: las cifras son desconocidas («—»), no cero.
+  const money = (value: number | undefined) => (stats ? formatBalance(value ?? 0) : '—');
+  const count = (value: number | undefined) => (stats ? String(value ?? 0) : '—');
+  const available = stats?.availableBalance ?? stats?.totalBalance;
+  const supportAction = { label: 'Contactar con soporte, asistencia 24/7', icon: <LifeBuoy />, onSelect: () => setSupportOpen(true) };
 
   return (
-    <div className="transfers-mobile-page space-y-6">
+    <div className="space-y-6">
       {/* Header */}
       {/* Variantes de contenedor (`@2xl:`) según el ancho de la página. */}
       <div className="flex flex-col @2xl:flex-row justify-between items-start @2xl:items-center gap-4">
@@ -161,217 +137,112 @@ export default function TransfersPage() {
         </div>
       </div>
 
-      {/* Stats Grid */}
-      <div className={`grid grid-cols-1 ${user?.role === 'gestor' ? '@xl:grid-cols-2 @6xl:grid-cols-3 @7xl:grid-cols-5' : user?.role === 'cliente' ? '@xl:grid-cols-2' : '@2xl:grid-cols-2 @4xl:grid-cols-4'} gap-4`}>
-        {/* Card: Nueva Transferencia (Solo gestores) */}
-        {user?.role === 'gestor' && (
-          <ActionCard label="Nueva transferencia" onSelect={() => setAgentTransferOpen(true)}>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-bold">
-                Nueva Transferencia
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-xl font-bold tabular-nums sm:text-2xl">Enviar dinero</p>
-              {/* `text-white` sobre la tarjeta clara no se veía en tema claro. */}
-              <p className="text-xs text-muted-foreground mt-1">A clientes y beneficiarios</p>
-              <span className={`${actionHintClasses} text-primary`}>
-                Iniciar <ArrowUpRight className="h-3 w-3 ml-1" />
-              </span>
-            </CardContent>
-          </ActionCard>
-        )}
+      {user?.role === 'cliente' ? (
+        <ModuleMetrics label="Resumen de envíos">
+          <MetricCard
+            layout="desk"
+            title="Saldo retenido"
+            value={money(stats?.reservedBalance ?? stats?.pendingExposure)}
+            caption={<><span className="overview-tone-warning">{count(stats?.pendingTransfers)} pendientes</span> de liquidación</>}
+          >
+            <MetricDesk />
+          </MetricCard>
+          <MetricCard
+            title="Volumen de la semana"
+            value={money(stats?.weeklyVolume)}
+            caption={<><span className="overview-tone-primary">{count(stats?.todayTransfers)} operaciones</span> registradas hoy</>}
+          >
+            {/* La cifra sólo suma completadas: la barra también, en la moneda de la pantalla. */}
+            <MetricBars
+              data={lastDaysSeries(
+                recentTransfers.filter((transfer) => isTransferCompleted(transfer.status)),
+                (transfer) => transfer.created_at,
+                (transfer) => convertCurrency(transfer.amount, transfer.currency, displayCurrency),
+              )}
+              seriesLabel="Volumen"
+              format={(value) => formatCurrency(value, displayCurrency)}
+            />
+          </MetricCard>
+          <MetricCard
+            title="Tasa de cierre"
+            value={<>{count(stats?.settlementRate)}<small> %</small></>}
+            caption={<><span className="overview-tone-success">{count(stats?.completedTransfers)} completadas</span> en total</>}
+          >
+            <MetricRate value={stats?.settlementRate ?? 0} label={`${count(stats?.settlementRate)}% de operaciones liquidadas`} />
+          </MetricCard>
+          <MetricCard
+            layout="tiles"
+            title="Disponible para operar"
+            value={money(available)}
+            caption="Tu billetera FondosEG"
+            action={supportAction}
+          >
+            <MetricTiles tiles={[
+              { icon: <HandCoins />, title: 'Retirar', detail: 'Tu código', label: 'Retirar efectivo', onSelect: () => setWithdrawalOpen(true) },
+              { icon: <Send />, title: 'Transferir', detail: 'Sin comisión', label: 'Transferir a cliente', onSelect: () => setWalletTransferOpen(true), featured: true },
+              { icon: <Receipt />, title: 'Actividad', detail: 'Ver historial', href: '/history' },
+            ]} />
+          </MetricCard>
+        </ModuleMetrics>
+      ) : (
+        <ModuleMetrics label="Resumen de envíos">
+          <MetricCard
+            layout="desk"
+            title="Flujo del día"
+            value={count(stats?.todayTransfers)}
+            caption={<><span className="overview-tone-warning">{money(stats?.todayVolume)}</span> enviados hoy</>}
+            action={{ label: 'Ver flujo del día', icon: <ArrowUpRight />, onSelect: () => setShowDailyModal(true) }}
+          >
+            <MetricDesk />
+          </MetricCard>
+          <MetricCard
+            title="Volumen semanal"
+            value={stats ? formatBalance(totalWeekly) : '—'}
+            caption={<><span className="overview-tone-primary">{dailyStats.slice(-7).reduce((sum, day) => sum + day.transfer_count, 0)} operaciones</span> últimos 7 días</>}
+            action={{ label: 'Ver volumen semanal', icon: <ArrowUpRight />, onSelect: () => setShowWeeklyModal(true) }}
+          >
+            <MetricBars data={dailySeries(dailyStats, (day) => convertCurrency(day.total_amount, 'XAF', displayCurrency))} seriesLabel="Volumen" format={(value) => formatCurrency(value, displayCurrency)} />
+          </MetricCard>
+          <MetricCard
+            title="Envíos de gestores"
+            value={String(recentTransfers.length)}
+            caption="últimas operaciones cargadas"
+            action={{ label: 'Ver envíos de gestores', icon: <ArrowUpRight />, onSelect: () => setShowAgentsModal(true) }}
+          >
+            <MetricArea data={dailySeries(dailyStats, (day) => day.transfer_count)} seriesLabel="Operaciones" legend="Operaciones por día · 7 días" />
+          </MetricCard>
+          <MetricCard
+            layout="tiles"
+            title="Disponible para operar"
+            value={money(available)}
+            caption="Liquidez inmediata"
+            action={supportAction}
+          >
+            <MetricTiles tiles={user?.role === 'gestor' ? [
+              { icon: <QrCode />, title: 'Pagar', detail: 'Con código', label: 'Pagar transferencia', onSelect: () => setAgentPayoutOpen(true) },
+              { icon: <Send />, title: 'Enviar', detail: 'Nueva', label: 'Nueva transferencia', onSelect: () => setAgentTransferOpen(true), featured: true },
+              { icon: <ExternalLink />, title: 'Revolut', detail: 'Payout', label: 'Payout Revolut', onSelect: () => setRevolutPayoutOpen(true) },
+            ] : [
+              { icon: <Users />, title: 'Gestores', detail: 'Ver red', href: '/agents' },
+              { icon: <ExternalLink />, title: 'Revolut', detail: 'Payout', label: 'Payout Revolut', onSelect: () => setRevolutPayoutOpen(true), featured: true },
+              { icon: <Receipt />, title: 'Actividad', detail: 'Ver historial', href: '/history' },
+            ]} />
+          </MetricCard>
+        </ModuleMetrics>
+      )}
 
-        {/* Card: Transferir a Cliente (Solo clientes) */}
-        {user?.role === 'cliente' && (
-          <ActionCard label="Transferir a cliente" onSelect={() => setWalletTransferOpen(true)}>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-bold text-foreground">
-                Transferir a Cliente
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-2xl font-bold text-foreground">Sin comisión</p>
-              <p className="text-xs text-muted-foreground mt-1">Envía dinero a otro cliente</p>
-              <span className={`${actionHintClasses} text-primary`}>
-                Iniciar <ArrowUpRight className="h-3 w-3 ml-1" />
-              </span>
-            </CardContent>
-          </ActionCard>
-        )}
-
-        {/* Sin tarjeta de "Confirmar Recepción": desde 20260826 el envío entre
-            clientes se entrega en el acto y no hay nada que confirmar. El
-            código sobrevive sólo en el retiro de efectivo, que tiene su propia
-            tarjeta justo debajo. */}
-
-        {/* Card: Retirar Efectivo (Solo clientes) */}
-        {user?.role === 'cliente' && (
-          <ActionCard label="Retirar efectivo" onSelect={() => setWithdrawalOpen(true)}>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-bold text-foreground">
-                Retirar Efectivo
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-2xl font-bold text-foreground">Tu código</p>
-              <p className="text-xs text-muted-foreground mt-1">Genera tu código y cóbralo en un gestor</p>
-              <span className={`${actionHintClasses} text-primary`}>
-                Generar <ArrowUpRight className="h-3 w-3 ml-1" />
-              </span>
-            </CardContent>
-          </ActionCard>
-        )}
-
-        {/* Card: Pagar Transferencia (Solo gestores) */}
-        {user?.role === 'gestor' && (
-          <ActionCard label="Pagar transferencia" onSelect={() => setAgentPayoutOpen(true)}>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-bold text-foreground">
-                Pagar transferencia
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-2xl font-bold text-foreground">Código de retiro</p>
-              <p className="text-xs text-muted-foreground mt-1">Valida la transferencia y registra el pago</p>
-              <span className={`${actionHintClasses} text-primary`}>
-                Ver disponibles <ArrowUpRight className="h-3 w-3 ml-1" />
-              </span>
-            </CardContent>
-          </ActionCard>
-        )}
-        {/* Card: Payout Revolut (gestores y administración) */}
-        {user?.role !== 'cliente' && (
-          <ActionCard label="Payout Revolut" onSelect={() => setRevolutPayoutOpen(true)}>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-bold text-foreground">
-                Payout Revolut
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-2xl font-bold text-foreground">Link externo</p>
-              <p className="text-xs text-muted-foreground mt-1">Alternativa cuando no hay gestor</p>
-              <span className={`${actionHintClasses} text-primary`}>
-                Generar <ArrowUpRight className="h-3 w-3 ml-1" />
-              </span>
-            </CardContent>
-          </ActionCard>
-        )}
-        {/* Card 1: Flujo del Día */}
-        {user?.role !== 'cliente' && (
-        <ActionCard label="Flujo del día" onSelect={() => setShowDailyModal(true)}>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-bold text-muted-foreground">
-              Flujo del Día
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-xl font-bold tabular-nums sm:text-2xl">{formatBalance(stats?.todayTransfers || 0)}</p>
-            <p className="text-xs text-muted-foreground mt-1">transacciones hoy</p>
-            <span className={`${actionHintClasses} text-primary`}>
-              Ver todo <ArrowUpRight className="h-3 w-3 ml-1" />
-            </span>
-          </CardContent>
-        </ActionCard>
-
-        )}
-
-        {/* Card 2: Envíos de Gestores */}
-        {user?.role !== 'cliente' && (
-        <ActionCard label="Envíos de gestores" onSelect={() => setShowAgentsModal(true)}>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-bold text-muted-foreground">
-              Envíos de Gestores
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-xl font-bold tabular-nums sm:text-2xl">{recentTransfers.length}</p>
-            <p className="text-xs text-muted-foreground mt-1">transferencias totales</p>
-            <span className={`${actionHintClasses} text-primary`}>
-              Ver todo <ArrowUpRight className="h-3 w-3 ml-1" />
-            </span>
-          </CardContent>
-        </ActionCard>
-        )}
-
-        {/* Card 3: Volumen Semanal */}
-        {user?.role !== 'cliente' && (
-        <ActionCard label="Volumen semanal" onSelect={() => setShowWeeklyModal(true)}>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-bold text-muted-foreground">
-              Volumen Semanal
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-xl font-bold tabular-nums sm:text-2xl">{formatBalance(totalWeekly)}</p>
-            <p className="text-xs text-muted-foreground mt-1">últimos 7 días</p>
-            <span className={`${actionHintClasses} text-primary`}>
-              Ver todo <ArrowUpRight className="h-3 w-3 ml-1" />
-            </span>
-          </CardContent>
-        </ActionCard>
-        )}
-
-        {/* Card 4: Soporte */}
-        <ActionCard label="Soporte" onSelect={() => setSupportOpen(true)}>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-bold text-muted-foreground">
-              Soporte
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-xl font-bold tabular-nums sm:text-2xl">24/7</p>
-            <p className="text-xs text-muted-foreground mt-1">asistencia disponible</p>
-            <span className={`${actionHintClasses} text-primary`}>
-              Contactar <ArrowUpRight className="h-3 w-3 ml-1" />
-            </span>
-          </CardContent>
-        </ActionCard>
-      </div>
-
-      {/* Recent Transfers Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg font-bold">Últimas Transferencias</CardTitle>
-        </CardHeader>
-        {/* Con el primitivo `Table` la tabla tiene un envoltorio que se
-            desplaza y roles ARIA explícitos; la `<table>` suelta de antes no
-            tenía desbordamiento propio y en un teléfono arrastraba la página
-            entera hacia un lado. En contenedores estrechos se apila en
-            tarjetas (app/styles/tables.css). */}
-        <CardContent className="activity-records-scroll">
-          <Table className="activity-records-table" wrapperClassName="is-stacked">
-            <TableHeader>
-              <TableRow className="border-b border-border/10 hover:bg-transparent">
-                <TableHead className="text-left py-3 px-4 text-xs font-bold text-muted-foreground uppercase">Código</TableHead>
-                <TableHead className="text-left py-3 px-4 text-xs font-bold text-muted-foreground uppercase">Remitente</TableHead>
-                <TableHead className="text-left py-3 px-4 text-xs font-bold text-muted-foreground uppercase">Destinatario</TableHead>
-                <TableHead className="text-left py-3 px-4 text-xs font-bold text-muted-foreground uppercase">Monto</TableHead>
-                <TableHead className="text-left py-3 px-4 text-xs font-bold text-muted-foreground uppercase">Estado</TableHead>
-                <TableHead className="text-left py-3 px-4 text-xs font-bold text-muted-foreground uppercase">Fecha</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {recentTransfers.slice(0, 10).map((transfer) => (
-                <TableRow key={transfer.id} className="activity-record-row border-b border-border/5 hover:bg-muted/30">
-                  <TableCell data-label="Código" className="py-3 px-4 text-sm font-bold">{transfer.transfer_code || 'N/A'}</TableCell>
-                  <TableCell data-label="Remitente" className="py-3 px-4 text-sm">{transfer.sender_name || 'N/A'}</TableCell>
-                  <TableCell data-label="Destinatario" className="py-3 px-4 text-sm">{transfer.receiver_name || 'N/A'}</TableCell>
-                  <TableCell data-label="Monto" className="py-3 px-4 text-sm font-bold tabular-nums">{formatBalance(transfer.amount)}</TableCell>
-                  <TableCell data-label="Estado" className="py-3 px-4">
-                    <Badge className={getStatusColor(transfer.status)}>
-                      {getStatusText(transfer.status)}
-                    </Badge>
-                  </TableCell>
-                  <TableCell data-label="Fecha" className="py-3 px-4 text-xs text-muted-foreground">
-                    {formatDateShort(transfer.created_at)}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+      {/* Últimas operaciones */}
+      <RecentTransfersPanel
+        title="Últimas transferencias"
+        transfers={recentTransfers.slice(0, 10)}
+        format={(amount, currency) => formatCurrency(convertCurrency(amount, currency, displayCurrency), displayCurrency)}
+        emptyMessage="Todavía no hay operaciones."
+        newTransfer={user?.role === 'cliente'
+          ? { onSelect: () => setWalletTransferOpen(true) }
+          : user?.role === 'gestor'
+            ? { onSelect: () => setAgentTransferOpen(true) }
+            : undefined}
+      />
 
       {/* Modal: Flujo del Día */}
       <Dialog open={showDailyModal} onOpenChange={setShowDailyModal}>
@@ -422,7 +293,7 @@ export default function TransfersPage() {
                   </div>
                 </div>
                 <div className="shrink-0 text-right">
-                  <p className="text-sm font-bold">{formatBalance(transfer.amount)}</p>
+                  <p className="text-sm font-bold">{formatCurrency(convertCurrency(transfer.amount, transfer.currency, displayCurrency), displayCurrency)}</p>
                   <Badge className={getStatusColor(transfer.status)}>
                     {getStatusText(transfer.status)}
                   </Badge>
