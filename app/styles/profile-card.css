@@ -1,0 +1,81 @@
+/* Perfil en la tarjeta oscura del dashboard (components/profile/profile-record-panel.tsx).
+   La tarjeta, la lista y el detalle son los de dashboard-overview.css; aquí sólo
+   va lo propio del perfil: los campos editables sobre el panel oscuro. */
+
+.profile-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-block: 24px 16px;
+}
+
+.profile-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  font-size: 11px;
+  color: #ffffffcb;
+}
+
+.profile-field.is-wide {
+  grid-column: 1 / -1;
+}
+
+.profile-field input {
+  width: 100%;
+  height: 44px;
+  padding: 0 14px;
+  border: 1px solid #ffffff2e;
+  border-radius: var(--app-control-radius);
+  background: #ffffff12;
+  color: #fff;
+  font-size: 14px;
+  transition: border-color .18s ease, background-color .18s ease;
+}
+
+.profile-field input:hover:not(:disabled) {
+  border-color: #ffffff52;
+}
+
+.profile-field input:focus-visible {
+  border-color: #ffffff80;
+  background: #ffffff1a;
+}
+
+.profile-field input:disabled {
+  color: #ffffffa6;
+  cursor: not-allowed;
+}
+
+.profile-id {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 12px;
+  letter-spacing: -.2px;
+}
+
+.profile-note {
+  max-width: 460px;
+  margin-block: 24px 16px;
+  font-size: 13px;
+  line-height: 1.7;
+  color: #ffffffcb;
+}
+
+/* «Detalles de cuenta» sólo tiene dos mosaicos: por debajo de 1024px la rejilla
+   de tres columnas dejaba un hueco vacío a la derecha. */
+.overview-transfer-detail .overview-detail-tiles:not(:has(> :nth-child(3))) {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@media (max-width: 479.98px) {
+  .profile-form {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .profile-field input {
+    transition: none;
+  }
+}

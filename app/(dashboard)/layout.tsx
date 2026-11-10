@@ -7,6 +7,7 @@ import { getAuthErrorMessage, isAuthServiceUnavailableError } from '@/lib/supaba
 import { DashboardLayoutWrapper } from '@/components/layout/dashboard-layout-wrapper';
 import { AppProvider } from '@/components/providers/app-provider';
 import { ensureProductAccessAndBalances, syncProfileFromClerkIfNeeded } from '@/lib/server/clerk-identity';
+import { ACCOUNT_DISABLED_PATH } from '@/lib/account-status';
 import type { User } from '@/types';
 
 // Todo lo que cuelga del dashboard depende de la sesión de Clerk, que se lee
@@ -128,6 +129,13 @@ export default async function DashboardLayout({
   if (profileError || !user) {
     console.error('No profile found for user:', authUser.id, profileError);
     redirect('/login');
+  }
+
+  // Desactivar una cuenta (módulo Gestores/Administración) sólo cambia
+  // `users.is_active`, no `account_access`. Sin esta comprobación el panel se
+  // pintaba entero y cada widget recibía 403 "Account disabled" de la API.
+  if ((user as User).is_active === false) {
+    redirect(ACCOUNT_DISABLED_PATH);
   }
 
   return (

@@ -3,6 +3,7 @@ import { getAuthErrorMessage, isAuthServiceUnavailableError, isRetryableAuthErro
 import { describeClerkError } from '@/lib/clerk-errors';
 import type { AccessProduct, AccountAccess, User, UserRole } from '@/types';
 import { isAdminRole, isSuperAdminRole } from '@/lib/roles';
+import { ACCOUNT_DISABLED_MESSAGE } from '@/lib/account-status';
 import {
   getClerkIdentity,
   getClerkUserId,
@@ -288,7 +289,7 @@ export async function requireProfile(): Promise<User> {
   }
 
   if (profile.is_active === false) {
-    throw new AuthzError('Account disabled', 403);
+    throw new AuthzError(ACCOUNT_DISABLED_MESSAGE, 403);
   }
 
   return profile;

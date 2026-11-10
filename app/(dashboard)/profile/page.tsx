@@ -1,49 +1,17 @@
 'use client';
 
-import { ChangeEvent, ComponentType, useEffect, useRef, useState, useTransition } from 'react';
+import { ChangeEvent, useEffect, useRef, useState, useTransition } from 'react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { Calendar, Camera, Clock, KeyRound, Mail, PencilLine, Phone, Shield, User as UserIcon } from '@/components/ui/hugeicons';
 import { DashboardLogo } from '@/components/layout/dashboard-logo';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/card';
 import { Dialog, DialogBody, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
 import { ConnectedApps } from '@/components/profile/connected-apps';
+import { ProfileRecordPanel } from '@/components/profile/profile-record-panel';
+import { getRoleLabel } from '@/lib/roles';
 import { useAppStore } from '@/lib/store';
 
-function getInitials(name: string) {
-  return name
-    .split(' ')
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase() ?? '')
-    .join('');
-}
-
-function ProfileReadOnlyField({
-  icon: Icon,
-  label,
-  value,
-}: {
-  icon: ComponentType<{ className?: string }>;
-  label: string;
-  value: string;
-}) {
-  return (
-    <div className="flex items-center gap-4">
-      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-rose-500/10 text-rose-600 dark:text-rose-300">
-        <Icon className="h-6 w-6" />
-      </div>
-      <div className="min-w-0">
-        <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">{label}</p>
-        <p className="break-words text-base font-semibold text-foreground">{value}</p>
-      </div>
-    </div>
-  );
-}
+const ID_COPIED_RESET_MS = 2000;
 
 type ProfileApiResult = {
   success: boolean;
@@ -112,9 +80,11 @@ async function createCroppedAvatarBlob(
 }
 
 export default function ProfilePage() {
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const { user, setUser } = useAppStore();
-  const [isEditing, setIsEditing] = useState(false);
+  const [isEditingPersonal, setIsEditingPersonal] = useState(false);
+  const [isEditingPassword, setIsEditingPassword] = useState(false);
+  const [idCopied, setIdCopied] = useState(false);
+  const idCopiedTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const [name, setName] = useState(user?.name ?? '');
   const [phone, setPhone] = useState(user?.phone ?? '');
   const [newPassword, setNewPassword] = useState('');
@@ -141,19 +111,9 @@ export default function ProfilePage() {
     };
   }, [avatarDraftUrl]);
 
-  const roleLabels: Record<string, string> = {
-    admin: 'Administrador',
-    superadmin: 'Super Admin',
-    gestor: 'Gestor de Fondos',
-    cliente: 'Cliente',
-  };
+  useEffect(() => () => clearTimeout(idCopiedTimer.current), []);
 
-  const roleColors: Record<string, string> = {
-    admin: 'bg-rose-500/10 text-rose-700 ring-1 ring-rose-500/20 dark:text-rose-300',
-    superadmin: 'bg-rose-500/10 text-rose-700 ring-1 ring-rose-500/20 dark:text-rose-300',
-    gestor: 'bg-blue-500/10 text-blue-700 ring-1 ring-blue-500/20 dark:text-blue-300',
-    cliente: 'bg-emerald-500/10 text-emerald-700 ring-1 ring-emerald-500/20 dark:text-emerald-300',
-  };
+  const isBusy = isSaving || isUploadingAvatar || isUpdatingPassword;
 
   const formattedDate = user?.created_at
     ? format(new Date(user.created_at), "d 'de' MMMM, yyyy", { locale: es })
@@ -165,7 +125,7 @@ export default function ProfilePage() {
   };
 
   const handleProfileSave = async () => {
-    if (!user) return;
+    if (!user || isBusy) return;
     setFeedback('');
 
     const formData = new FormData();
@@ -186,26 +146,50 @@ export default function ProfilePage() {
         phone: phone.trim(),
       });
       showFeedback('success', 'Perfil actualizado correctamente.');
-      setIsEditing(false);
+      setIsEditingPersonal(false);
     });
   };
 
-  const startEditing = () => {
+  const startEditingPersonal = () => {
     setFeedback('');
-    setIsEditing(true);
+    setIsEditingPersonal(true);
   };
 
-  const cancelEditing = () => {
+  const cancelEditingPersonal = () => {
+    if (isSaving) return;
     setName(user?.name ?? '');
     setPhone(user?.phone ?? '');
+    setFeedback('');
+    setIsEditingPersonal(false);
+  };
+
+  const startEditingPassword = () => {
+    setFeedback('');
+    setIsEditingPassword(true);
+  };
+
+  const cancelEditingPassword = () => {
+    if (isUpdatingPassword) return;
     setNewPassword('');
     setConfirmPassword('');
     setFeedback('');
-    setIsEditing(false);
+    setIsEditingPassword(false);
+  };
+
+  const handleCopyId = async () => {
+    if (!user) return;
+    try {
+      await navigator.clipboard.writeText(user.id);
+      setIdCopied(true);
+      clearTimeout(idCopiedTimer.current);
+      idCopiedTimer.current = setTimeout(() => setIdCopied(false), ID_COPIED_RESET_MS);
+    } catch {
+      showFeedback('error', 'No se pudo copiar el ID. Selecciónalo y cópialo manualmente.');
+    }
   };
 
   const handleAvatarChange = (event: ChangeEvent<HTMLInputElement>) => {
-    if (!user) return;
+    if (!user || isUploadingAvatar) return;
     const file = event.target.files?.[0];
     if (!file) return;
 
@@ -276,6 +260,7 @@ export default function ProfilePage() {
   };
 
   const handlePasswordSave = async () => {
+    if (isBusy) return;
     setFeedback('');
 
     const formData = new FormData();
@@ -291,6 +276,7 @@ export default function ProfilePage() {
 
       setNewPassword('');
       setConfirmPassword('');
+      setIsEditingPassword(false);
       showFeedback('success', 'Contraseña actualizada correctamente.');
     });
   };
@@ -303,33 +289,16 @@ export default function ProfilePage() {
         </div>
       ) : (
         <>
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div className="flex flex-col space-y-2">
-          <h1 className="text-3xl font-bold tracking-tight">Mi Perfil</h1>
-          <p className="text-muted-foreground">
-            Gestiona tu información personal y preferencias de cuenta.
-          </p>
-        </div>
-        {isEditing ? (
-          <Button
-            type="button"
-            variant="outline"
-            onClick={cancelEditing}
-            disabled={isSaving || isUploadingAvatar || isUpdatingPassword}
-            className="shrink-0"
-          >
-            Cancelar
-          </Button>
-        ) : (
-          <Button type="button" onClick={startEditing} className="shrink-0">
-            <PencilLine className="mr-2 h-4 w-4" />
-            Editar perfil
-          </Button>
-        )}
+      <div className="flex flex-col space-y-2">
+        <h1 className="text-3xl font-bold tracking-tight">Mi Perfil</h1>
+        <p className="text-muted-foreground">
+          Gestiona tu información personal y preferencias de cuenta.
+        </p>
       </div>
 
       {feedback && (
         <div
+          role={feedbackTone === 'error' ? 'alert' : 'status'}
           className={`rounded-xl border px-4 py-3 text-sm font-medium ${
             feedbackTone === 'error'
               ? 'border-rose-500/20 bg-rose-500/10 text-rose-700 dark:text-rose-300'
@@ -340,222 +309,37 @@ export default function ProfilePage() {
         </div>
       )}
 
-      <div className="grid gap-6 md:grid-cols-2">
-        <Card className="text-card-foreground">
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div className="space-y-1">
-                <h2 className="text-xl font-semibold text-foreground">Información Personal</h2>
-                <CardDescription>Datos básicos de tu cuenta</CardDescription>
-              </div>
-              <Badge className={roleColors[user.role] || 'bg-muted text-foreground ring-1 ring-border/20'}>
-                {roleLabels[user.role] || user.role}
-              </Badge>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="flex items-center gap-4">
-              <div className="relative">
-                <Avatar className="h-16 w-16 border border-border/20">
-                  <AvatarImage src={user.avatar_url} alt={user.name} />
-                  <AvatarFallback className="bg-rose-500/10 text-rose-600 text-lg font-bold dark:text-rose-300">
-                    {getInitials(user.name)}
-                  </AvatarFallback>
-                </Avatar>
-                {isEditing && (
-                  <>
-                    <button
-                      type="button"
-                      onClick={() => fileInputRef.current?.click()}
-                      // El dibujo sigue siendo de 28px sobre el avatar; el
-                      // pseudo-elemento `-inset-2` lleva la zona pulsable a 44×44.
-                      className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full bg-rose-600 text-white shadow-sm transition hover:bg-rose-700 before:absolute before:-inset-2 before:content-[''] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                      aria-label="Cambiar avatar"
-                      disabled={isUploadingAvatar}
-                    >
-                      <Camera className="h-3.5 w-3.5" />
-                    </button>
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={handleAvatarChange}
-                    />
-                  </>
-                )}
-              </div>
-              <div>
-                <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Foto de perfil</p>
-                <p className="text-sm text-muted-foreground">
-                  {isUploadingAvatar
-                    ? 'Subiendo avatar...'
-                    : isEditing
-                      ? 'Haz clic en la cámara para cambiar tu foto.'
-                      : 'Pulsa Editar perfil para cambiarla.'}
-                </p>
-              </div>
-            </div>
-
-            {isEditing ? (
-              <>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-muted-foreground uppercase tracking-wider" htmlFor="profile-name">
-                    Nombre Completo
-                  </label>
-                  <div className="relative">
-                    <UserIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-rose-600 dark:text-rose-300" />
-                    <Input
-                      id="profile-name"
-                      value={name}
-                      onChange={(event) => setName(event.target.value)}
-                      className="border-border/20 bg-background/80 pl-10 text-foreground placeholder:text-muted-foreground disabled:text-muted-foreground"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-muted-foreground uppercase tracking-wider" htmlFor="profile-email">
-                    Correo Electrónico
-                  </label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-rose-600 dark:text-rose-300" />
-                    <Input
-                      id="profile-email"
-                      value={user.email}
-                      className="border-border/20 bg-background/80 pl-10 text-foreground placeholder:text-muted-foreground disabled:text-muted-foreground"
-                      disabled
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-muted-foreground uppercase tracking-wider" htmlFor="profile-phone">
-                    Teléfono
-                  </label>
-                  <div className="relative">
-                    <Phone className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-rose-600 dark:text-rose-300" />
-                    <Input
-                      id="profile-phone"
-                      value={phone}
-                      onChange={(event) => setPhone(event.target.value)}
-                      className="border-border/20 bg-background/80 pl-10 text-foreground placeholder:text-muted-foreground disabled:text-muted-foreground"
-                    />
-                  </div>
-                </div>
-
-                <Button
-                  type="button"
-                  onClick={handleProfileSave}
-                  disabled={isSaving || isUploadingAvatar}
-                  className="w-full"
-                >
-                  {isSaving ? 'Guardando...' : 'Guardar cambios'}
-                </Button>
-              </>
-            ) : (
-              <>
-                <ProfileReadOnlyField icon={UserIcon} label="Nombre Completo" value={user.name} />
-                <ProfileReadOnlyField icon={Mail} label="Correo Electrónico" value={user.email} />
-                <ProfileReadOnlyField icon={Phone} label="Teléfono" value={user.phone || 'No indicado'} />
-              </>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card className="text-card-foreground">
-          <CardHeader>
-            <h2 className="text-xl font-semibold text-foreground">Detalles de Cuenta</h2>
-            <CardDescription>Seguridad y ubicación registrada</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="flex items-center gap-4">
-              <div className="h-12 w-12 rounded-full bg-rose-500/10 flex items-center justify-center text-rose-600 dark:text-rose-300">
-                <Shield className="h-6 w-6" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">ID de Usuario</p>
-                <p className="rounded bg-rose-500/10 px-2 py-1 font-mono text-xs text-rose-700 selection:bg-rose-200 dark:text-rose-300 dark:selection:bg-rose-900">
-                  {user.id}
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-4">
-              <div className="h-12 w-12 rounded-full bg-rose-500/10 flex items-center justify-center text-rose-600 dark:text-rose-300">
-                <Calendar className="h-6 w-6" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Miembro desde</p>
-                <p className="text-base font-semibold text-foreground">{formattedDate}</p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-4">
-              <div className="h-12 w-12 rounded-full bg-rose-500/10 flex items-center justify-center text-rose-600 dark:text-rose-300">
-                <Clock className="h-6 w-6" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Última Conexión</p>
-                <p className="text-base font-semibold text-foreground">Hace un momento</p>
-              </div>
-            </div>
-
-            <div className="dashboard-inset space-y-4 rounded-xl border border-border/20 bg-background/80 p-4 dark:bg-slate-900/60">
-              <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-full bg-rose-500/10 flex items-center justify-center text-rose-600 dark:text-rose-300">
-                  <KeyRound className="h-5 w-5" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Contraseña</p>
-                  <p className="text-sm text-muted-foreground">
-                    {isEditing ? 'Actualiza tu contraseña desde tu perfil.' : 'Pulsa Editar perfil para cambiarla.'}
-                  </p>
-                </div>
-              </div>
-
-              {isEditing && (
-                <>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-muted-foreground uppercase tracking-wider" htmlFor="new-password">
-                      Nueva contraseña
-                    </label>
-                    <Input
-                      id="new-password"
-                      type="password"
-                      value={newPassword}
-                      onChange={(event) => setNewPassword(event.target.value)}
-                      className="border-border/20 bg-background/80 text-foreground placeholder:text-muted-foreground"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-muted-foreground uppercase tracking-wider" htmlFor="confirm-password">
-                      Confirmar contraseña
-                    </label>
-                    <Input
-                      id="confirm-password"
-                      type="password"
-                      value={confirmPassword}
-                      onChange={(event) => setConfirmPassword(event.target.value)}
-                      className="border-border/20 bg-background/80 text-foreground placeholder:text-muted-foreground"
-                    />
-                  </div>
-
-                  <Button
-                    type="button"
-                    onClick={handlePasswordSave}
-                    disabled={isUpdatingPassword || isSaving || isUploadingAvatar}
-                    className="w-full"
-                  >
-                    {isUpdatingPassword ? 'Actualizando...' : 'Actualizar contraseña'}
-                  </Button>
-                </>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      <ProfileRecordPanel
+        user={user}
+        roleLabel={getRoleLabel(user.role)}
+        memberSince={formattedDate}
+        personal={{
+          editing: isEditingPersonal,
+          saving: isSaving,
+          name,
+          phone,
+          onNameChange: setName,
+          onPhoneChange: setPhone,
+          onEdit: startEditingPersonal,
+          onCancel: cancelEditingPersonal,
+          onSave: handleProfileSave,
+        }}
+        password={{
+          editing: isEditingPassword,
+          saving: isUpdatingPassword,
+          newPassword,
+          confirmPassword,
+          onNewPasswordChange: setNewPassword,
+          onConfirmPasswordChange: setConfirmPassword,
+          onEdit: startEditingPassword,
+          onCancel: cancelEditingPassword,
+          onSave: handlePasswordSave,
+        }}
+        avatarUploading={isUploadingAvatar}
+        onAvatarSelected={handleAvatarChange}
+        idCopied={idCopied}
+        onCopyId={handleCopyId}
+      />
 
       {user.role === 'cliente' && <ConnectedApps />}
         </>

@@ -1,4 +1,5 @@
 import { isTransientNetworkError, isTransientNetworkMessage } from '@/lib/network-errors';
+import { ACCOUNT_DISABLED_PATH, isAccountDisabledResponse } from '@/lib/account-status';
 
 function getErrorMessage(data: unknown): string | undefined {
   if (!data || typeof data !== 'object') return;
@@ -65,6 +66,15 @@ export async function fetchJSON<T>(input: RequestInfo | URL, init?: RequestInit)
         const message = getErrorMessage(data) || fallbackMessage;
         if (res.status === 401 && typeof window !== 'undefined' && window.location.pathname !== '/login') {
           window.location.assign('/login');
+        }
+        // Cuenta desactivada con el panel ya abierto: ningún reintento ni
+        // sondeo va a recuperarla, así que se sale a la pantalla informativa.
+        if (
+          isAccountDisabledResponse(res.status, message) &&
+          typeof window !== 'undefined' &&
+          window.location.pathname !== ACCOUNT_DISABLED_PATH
+        ) {
+          window.location.assign(ACCOUNT_DISABLED_PATH);
         }
         throw new HttpError(message, res.status, data, url, method);
       }

@@ -206,6 +206,7 @@
 /* Dashboard Mobile */
 @import "./styles/dashboard-mobile.css";
 @import "./styles/dashboard-overview.css";
+@import "./styles/profile-card.css";
 
 /* Modal System */
 @import "./styles/modals.css";
